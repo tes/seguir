@@ -1,5 +1,7 @@
 # Seguir - Backend for a social network
 
+[![Build Status](https://travis-ci.org/cliftonc/seguir.svg)](https://travis-ci.org/cliftonc/seguir)
+
 This is a pure API for a simple social network, it contains the following concepts:
 
 ```
