@@ -11,6 +11,7 @@ describe('Social API', function() {
     var userKeys = [], postId, followId, likeId, friendId;
 
     before(function(done) {
+      this.timeout(20000);
       setup(keyspace, done);
     });
 
