@@ -1,0 +1,31 @@
+<ul class='seguir-feed'>
+{{#feed}}
+  {{#if isPost}}
+    <li class='seguir-feed-item seguir-feed-item-post'>
+      <a class='seguir-user' href='/user/{{user.username}}'>{{user.username}}</a><span class='seguir-from-now'>{{fromNow}}</span>
+      <div class='seguir-post'>Posted {{content}}</div>
+      <a class='seguir-item-link' href='/post/{{post}}'>link</a>
+    </li>
+  {{/if}}
+  {{#if isLike}}
+    <li class='seguir-feed-item seguir-feed-item-lik'>
+      <a class='seguir-user' href='/user/{{user.username}}'>{{user.username}}</a><span class='seguir-from-now'>{{fromNow}}</span>
+      <div class='seguir-like'>Liked {{item}}</div>
+      <a class='seguir-item-link' href='/like/{{user.username}}/{{item}}'>link</a>
+    </li>
+  {{/if}}
+  {{#if isFriend}}
+    <li class='seguir-feed-item seguir-feed-item-post'>
+      <a class='seguir-user' href='/user/{{user.username}}'>{{user.username}}</a><span class='seguir-from-now'>{{fromNow}}</span>
+      <div class='seguir-post'>Is now friends with <a class='seguir-user' href='/user/{{username_friend}}'>{{username_friend}}</a></div>
+    </li>
+  {{/if}}
+  {{#if isFollow}}
+    <li class='seguir-feed-item seguir-feed-item-post'>
+      <a class='seguir-user' href='/user/{{user.username}}'>{{user.username}}</a><span class='seguir-from-now'>{{fromNow}}</span>
+      <div class='seguir-post'>Is now following <a class='seguir-user' href='/user/{{username_follower}}'>{{username_follower}}</a></div>
+    </li>
+  {{/if}}
+{{/feed}}
+</ul>
+<a href='/'>Top</a> | <a href='/?start={{start}}'>More</a>
