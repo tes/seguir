@@ -11,18 +11,6 @@ module.exports = function(client, keyspace) {
 
   var q = require('./queries')(keyspace);
 
-  /**
-   * @api {get} /api/feed/:username Get a feed for a user
-   * @apiName GetFeed
-   * @apiGroup Querying
-   * @apiVersion 1.0.0
-   *
-   * @apiDescription Retrieves a set of feed items for a specific user
-   * @apiParam {String} username the username of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {"status":"OK"}
-   */
   function getFeedForUsername(username, from, limit, next) {
     getUserByUsername(username, function(err, user) {
       /* istanbul ignore if */
@@ -31,36 +19,12 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  /**
-   * @api {get} /api/post/:post Get a specific post
-   * @apiName GetPost
-   * @apiGroup Querying
-   * @apiVersion 1.0.0
-   *
-   * @apiDescription Retrieves details of a specific post
-   * @apiParam {Guid} post The guid of the post
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {"status":"OK"}
-   */
   function getPost(post, next) {
     client.execute(q('selectPost'), [post], {prepare:true}, function(err, result) {
        next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
-  /**
-   * @api {get} /api/like/:like Get a specific like
-   * @apiName GetLike
-   * @apiGroup Querying
-   * @apiVersion 1.0.0
-   *
-   * @apiDescription Retrieves details of a specific like
-   * @apiParam {Guid} post The guid of the like
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {"status":"OK"}
-   */
   function getLike(like, next) {
     client.execute(q('selectLike'), [like], {prepare:true}, function(err, result) {
        next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
@@ -120,6 +84,7 @@ module.exports = function(client, keyspace) {
 
   function checkLike(username, item, next) {
     getUserByUsername(username, function(err, user) {
+      if(!user) { return next(err); }
       client.execute(q('checkLike'), [user.user, item], {prepare:true}, function(err, result) {
          next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
       });

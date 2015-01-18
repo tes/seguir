@@ -63,7 +63,7 @@ describe('Social API', function() {
         });
       });
 
-       it('can retrieve a follow by id', function(done) {
+      it('can retrieve a follow by id', function(done) {
         get.getFollow(followId, function(err, follow) {
           expect(follow.user).to.be(userKeys[0]);
           expect(follow.user_follower).to.be(userKeys[1]);
