@@ -110,9 +110,17 @@ describe('Social API', function() {
         });
       });
 
-       it('can retrieve a like by id', function(done) {
+      it('can retrieve a like by id', function(done) {
         get.getLike(likeId, function(err, like) {
           expect(like.item).to.be('http://github.com');
+          expect(like.user).to.be(userKeys[0]);
+          done();
+        });
+      });
+
+      it('can check if a user likes an item', function(done) {
+        get.checkLike('cliftonc','http://github.com', function(err, like) {
+          expect(like.like).to.be(likeId);
           expect(like.user).to.be(userKeys[0]);
           done();
         });
