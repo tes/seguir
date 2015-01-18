@@ -3,6 +3,7 @@ var async = require('async');
 var KEYSPACE = 'seguir';
 var verbose = false;
 
+/* istanbul ignore next */
 function dropKeyspace(next) {
   if(verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
   client.execute('DROP KEYSPACE ' + KEYSPACE, function(err) {
@@ -11,12 +12,14 @@ function dropKeyspace(next) {
   });
 }
 
+/* istanbul ignore next */
 function createKeyspace(next) {
   if(verbose) console.log('Creating keyspace: ' + KEYSPACE + '...');
   client.execute('CREATE KEYSPACE IF NOT EXISTS ' + KEYSPACE + ' WITH replication ' +
                 '= {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};', next);
 }
 
+/* istanbul ignore next */
 function createTables(next) {
 
   if(verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
@@ -43,6 +46,7 @@ function createTables(next) {
 
 }
 
+/* istanbul ignore next */
 function createSecondaryIndexes(next) {
 
   if(verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
@@ -66,6 +70,7 @@ function createSecondaryIndexes(next) {
 
 }
 
+/* istanbul ignore if */
 if(require.main === module) {
   verbose = true;
   setup(null, function() {
@@ -76,7 +81,7 @@ if(require.main === module) {
 
 function setup(specificKeyspace, next) {
 
-  // Used for test environments
+  /* istanbul ignore else */
   if(specificKeyspace) { KEYSPACE = specificKeyspace};
 
   async.series([
@@ -85,6 +90,7 @@ function setup(specificKeyspace, next) {
     createTables,
     createSecondaryIndexes
   ], function(err, data) {
+    /* istanbul ignore if */
     if(err) console.dir(err);
     next();
   });

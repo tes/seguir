@@ -53,6 +53,7 @@ module.exports = function(client, keyspace) {
     var post = cassandra.types.uuid();
     var data = [post, user, content, timestamp];
     client.execute(q('upsertPost'), data, {prepare:true}, function(err) {
+      /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(user, post, 'post', function(err, result) {
         next(err, {post: post, user: user, content: content, timestamp: timestamp});
@@ -84,6 +85,7 @@ module.exports = function(client, keyspace) {
     var data = [like, user, item, timestamp];
 
     client.execute(q('upsertLike'), data, {prepare:true}, function(err) {
+      /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(user, like, 'like', function(err, result) {
         next(err, {like: like, user: user, item: item, timestamp: timestamp});
@@ -111,6 +113,7 @@ module.exports = function(client, keyspace) {
     var friend = cassandra.types.uuid();
     var data = [friend, user, user_friend, timestamp];
     client.execute(q('upsertFriend'), data, {prepare:true},  function(err) {
+      /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(user, friend, 'friend', function(err, result) {
         next(err, {friend: friend, user: user, user_friend: user_friend, timestamp: timestamp});
@@ -138,6 +141,7 @@ module.exports = function(client, keyspace) {
     var follow = cassandra.types.uuid();
     var data = [follow, user, user_follower, timestamp];
     client.execute(q('upsertFollower'), data, {prepare:true},  function(err) {
+      /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(user, follow, 'follow', function(err, result) {
         next(err, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
@@ -155,6 +159,7 @@ module.exports = function(client, keyspace) {
 
     var insertFollowersTimeline = function(cb) {
       client.execute(q('selectFollowers'), [user], {prepare:true} ,function(err, data) {
+        /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {
           var data = [row.user_follower, item, type, cassandra.types.timeuuid()];

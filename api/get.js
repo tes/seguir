@@ -25,6 +25,7 @@ module.exports = function(client, keyspace) {
    */
   function getFeedForUsername(username, from, limit, next) {
     getUserByUsername(username, function(err, user) {
+      /* istanbul ignore if */
       if(err) { return next(err); }
       _getFeed(user, from, limit, next);
     });
@@ -68,9 +69,10 @@ module.exports = function(client, keyspace) {
 
   function getFriend(friend, next) {
     client.execute(q('selectFriend'), [friend], {prepare:true}, function(err, result) {
+       /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
        var friend = result.rows[0] ? result.rows[0] : undefined;
-       _getUser(friend.user_friend, function(err, user) {
+       getUser(friend.user_friend, function(err, user) {
          friend.username_friend = user.username;
          next(null, friend);
        });
@@ -79,9 +81,10 @@ module.exports = function(client, keyspace) {
 
   function getFollow(follow, next) {
     client.execute(q('selectFollow'), [follow], {prepare:true}, function(err, result) {
+       /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
        var follower = result.rows[0] ? result.rows[0] : undefined;
-       _getUser(follower.user_follower, function(err, user) {
+       getUser(follower.user_follower, function(err, user) {
          follower.username_follower = user.username;
          next(null, follower);
        });
@@ -94,7 +97,13 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function _getUser(user, next) {
+  function getFollowers(user, next) {
+    client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
+       next(err, result.rows);
+    });
+  }
+
+  function getUser(user, next) {
     client.execute(q('selectUser'), [user], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
        next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
@@ -103,6 +112,7 @@ module.exports = function(client, keyspace) {
 
   function getUserByUsername(username, next) {
     client.execute(q('selectUserByUsername'), [username], {prepare:true}, function(err, result) {
+       /* istanbul ignore if */
        if(err) { return next(err); }
        next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
@@ -139,6 +149,7 @@ module.exports = function(client, keyspace) {
             return cb();
          }, function(err, results) {
 
+            /* istanbul ignore if */
             if(err || !results) { return next(err); }
 
             var feed = [], maxTime;
@@ -178,7 +189,7 @@ module.exports = function(client, keyspace) {
                 feedItem.user = user;
                 cb(null, feedItem)
               } else {
-                _getUser(feedItem.user, function(err, follower) {
+                getUser(feedItem.user, function(err, follower) {
                   feedItem.user = follower;
                   cb(null, feedItem);
                 });
@@ -198,8 +209,13 @@ module.exports = function(client, keyspace) {
   }
 
   return {
+    getUser: getUser,
     getFriends: getFriends,
+    getFollowers: getFollowers,
     getPost: getPost,
+    getLike: getLike,
+    getFollow: getFollow,
+    getFriend: getFriend,
     getUserByUsername: getUserByUsername,
     getFeedForUsername: getFeedForUsername,
     checkLike: checkLike
