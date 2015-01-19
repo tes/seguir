@@ -50,6 +50,7 @@ Test coverage is slowly increasing, intention is to get it to 100 and then pin p
 * Un-follow, and cleaning newsfeed
 * Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
+* Configuration and client management - all a bit crap atm
 
 ## Requires
 

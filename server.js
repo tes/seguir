@@ -194,6 +194,7 @@ server.get('/like/:username/:item', function (req, res, next) {
  * @apiParam {String} username of the user
  * @apiParam {String} content of the post
  * @apiParam {Timestamp} timestamp the time that the post occurred
+ * @apiParam {Boolean} private is the post private, e.g. only for friends
  * @apiSuccessExample
  *    HTTP/1.1 200 OK
  *    { 'post': '19a8bfd1-8ebe-4462-bf93-9bd48efe08b7',
@@ -212,7 +213,7 @@ server.post('/post', function (req, res, next) {
   if(!req.params.content) {
     return next(new restify.errors.BadRequestError("You must provide content for the post."));
   }
-  api.create.addPostByName(req.params.username, req.params.content, Date.now(), function(err, post) {
+  api.create.addPostByName(req.params.username, req.params.content, Date.now(), req.params.private, function(err, post) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }

@@ -57,7 +57,7 @@ function addPosts(next) {
   console.log('Creating posts ...');
   var posts = getUsers(numUsers*2);
   async.map(posts, function(post, cb) {
-     api.create.addPost(post.user, casual.text, casual.moment.toDate(), cb);
+     api.create.addPost(post.user, casual.text, casual.moment.toDate(), false, cb);
   }, next);
 }
 

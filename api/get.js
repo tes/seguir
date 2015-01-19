@@ -65,7 +65,7 @@ module.exports = function(client, keyspace) {
     getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       getFriends(user.user, function(err, friends) {
-        _mapGetUser(friends, 'user_friend', user, next);
+        _mapGetUser(friends, ['user_friend'], user, next);
       });
     });
   }
@@ -86,7 +86,7 @@ module.exports = function(client, keyspace) {
     getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       getFollowers(user.user, function(err, followers) {
-        _mapGetUser(followers, 'user_follower', user, next);
+        _mapGetUser(followers, ['user_follower'], user, next);
       });
     });
   }
@@ -115,18 +115,25 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function _mapGetUser(items, field, currentUser, next) {
-    async.map(items, function(item, cb) {
-      if(item[field] === currentUser.user) {
-        item[field] = currentUser;
-        cb(null, item);
-      } else {
-        getUser(item[field], function(err, user) {
-          item[field] = user;
-          cb(err, item);
-        });
-      }
+  function _mapGetUser(items, fields, currentUser, next) {
+
+    async.map(items, function(item, mapCb) {
+      async.each(fields, function(field, eachCb) {
+        if(!item[field]) { return eachCb(null); }
+        if(item[field] === currentUser.user) {
+          item[field] = currentUser;
+          eachCb(null);
+        } else {
+          getUser(item[field], function(err, user) {
+            item[field] = user;
+            eachCb(err);
+          });
+        }
+      }, function(err) {
+        mapCb(err, item);
+      });
     }, next);
+
   }
 
   function _getFeed(user, from, limit, next) {
@@ -137,10 +144,12 @@ module.exports = function(client, keyspace) {
       timeClause = 'AND time < ' + from;
     }
 
-    var query = q('selectTimeline', {timeClause: timeClause, limit: limit});
+    var query = q('selectTimeline', {timeClause: timeClause, privateClause: null, limit: limit});
     client.execute(query, data, {prepare:true}, function(err, data) {
 
-      if(data.rows.length > 0) {
+      if(err) { return next(err); }
+
+      if(data.rows && data.rows.length > 0) {
 
          var timeline = data.rows;
 
@@ -187,7 +196,7 @@ module.exports = function(client, keyspace) {
             });
 
             // Now, go and get user details for all the non own posts
-            _mapGetUser(feed, 'user', user, function(err, mappedFeed) {
+            _mapGetUser(feed, ['user','user_follower','user_friend'], user, function(err, mappedFeed) {
                 next(err, mappedFeed, maxTime);
             });
 

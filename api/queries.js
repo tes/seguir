@@ -47,10 +47,14 @@ queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted)
  *    SELECT friend, user, user_friend, since FROM seguir.friends WHERE friend = ?
  * @apiExample {cql} Select Friends
  *    SELECT user_friend, since from seguir.friends WHERE user = ?
+ * @apiExample {cql} Remove Friend
+ *    DELETE FROM {KEYSPACE}.friends WHERE friend = ?
  */
 queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since) VALUES(?, ?, ?, ?)';
 queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = ?';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = ?';
+queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE friend = ?';
+queries.isFriend = 'SELECT friend from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
 
 /**
  * @apiDefine ExampleCqlFriendRequests
@@ -66,11 +70,14 @@ queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend, us
  * @apiExample {cql} Select Follow
  *    SELECT follow, user, user_follower, since FROM seguir.followers WHERE follow = ?
  * @apiExample {cql} Select Followers
- *    SELECT user_follower, since from seguir.followers WHERE user = ?
+ *    SELECT user, user_follower, since from seguir.followers WHERE user = ?
+ * @apiExample {cql} Remove Follow
+ *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since) VALUES(?, ?, ?, ?);';
 queries.selectFollow = 'SELECT follow, user, user_follower, since FROM {KEYSPACE}.followers WHERE follow = ?';
-queries.selectFollowers = 'SELECT user_follower, since from {KEYSPACE}.followers WHERE user = ?';
+queries.selectFollowers = 'SELECT user, user_follower, since from {KEYSPACE}.followers WHERE user = ?';
+queries.removeFollow = 'DELETE FROM {KEYSPACE}.followers WHERE follow = ?';
 
 /**
  * @apiDefine ExampleCqlLikes
@@ -80,20 +87,26 @@ queries.selectFollowers = 'SELECT user_follower, since from {KEYSPACE}.followers
  *    SELECT like, item, user, since FROM seguir.likes WHERE like = ?
  * @apiExample {cql} Check Like
  *    SELECT like, user, since FROM seguir.likes WHERE user = ? AND item = ?
+ * @apiExample {cql} Remove Like
+ *    DELETE FROM {KEYSPACE}.likes WHERE like = ?
  */
 queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
 queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
 queries.checkLike = 'SELECT like, user, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE like = ?';
 
 /**
  * @apiDefine ExampleCqlFeed
  * @apiExample {cql} Insert Feed Item
  *    INSERT INTO seguir.userline (user, item, type, time) VALUES(?, ?, ?, ?);
  * @apiExample {cql} Select Feed
- *    SELECT user, time, dateOf(time) AS date, item, type FROM seguir.userline WHERE user = ? {timeClause} LIMIT {limit}
+ *    SELECT user, time, dateOf(time) AS date, item, type FROM seguir.userline WHERE user = ? {privateClause}{timeClause} LIMIT {limit}
+ * @apiExample {cql} Remove Item from feed)
+ *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time) VALUES(?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type FROM {KEYSPACE}.userline WHERE user = ? {timeClause} LIMIT {limit}';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, private) VALUES(?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, private FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
+queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?';
 
 module.exports = function(keyspace) {
   return function(name, data) {

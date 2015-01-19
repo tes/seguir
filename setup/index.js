@@ -4,7 +4,6 @@ var KEYSPACE = 'seguir';
 var verbose = false;
 var tables = [], indexes = [];
 
-
 function createTablesAndIndexes() {
   /**
    * @apiDefine Data Data Structure
@@ -133,7 +132,7 @@ function createTablesAndIndexes() {
    * @apiParam {Boolean} private Is this event private and only visible if the user is a friend.
    * @apiUse ExampleCqlFeed
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, private boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, private boolean, PRIMARY KEY (user, time, private)) WITH CLUSTERING ORDER BY (time DESC, private ASC)');
 
 }
 
@@ -163,6 +162,7 @@ function createTables(next) {
   if(verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
 
   async.map(tables, function(cql, cb) {
+    if(verbose) console.log(cql);
     client.execute(cql, function(err) {
       if(err && (err.code == 9216 || err.code == 8704)) { // Already exists
         return cb();
@@ -178,6 +178,7 @@ function createSecondaryIndexes(next) {
 
   if(verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
   async.map(indexes, function(cql, cb) {
+    if(verbose) console.log(cql);
     client.execute(cql, function(err) {
       if(err && (err.code == 9216 || err.code == 8704)) { // Already exists
         return cb();

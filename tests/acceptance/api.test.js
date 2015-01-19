@@ -6,10 +6,11 @@ var create = require('../../api/create')(client, keyspace);
 var get = require('../../api/get')(client, keyspace);
 var setup = require('../../setup');
 var async = require('async');
+var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], postId, followId, likeId, friendId;
+    var users = [], postId, privatePostId, followId, notFriendFollowId, likeId, friendId;
 
     before(function(done) {
       this.timeout(20000);
@@ -43,14 +44,50 @@ describe('Social API', function() {
 
     });
 
+    describe('friends', function () {
+
+       it('can friend a user', function(done) {
+        create.addFriend(users[0].user, users[1].user, Date.now(), function(err, friend) {
+          expect(friend.user).to.be(users[0].user);
+          expect(friend.user_friend).to.be(users[1].user);
+          friendId = friend.friend;
+          done();
+        });
+      });
+
+      it('can retrieve a friend by id', function(done) {
+        get.getFriend(friendId, function(err, friend) {
+          expect(friend.user).to.be(users[0].user);
+          expect(friend.user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can retrieve a list of friends for a user', function(done) {
+        get.getFriends(users[0].user, function(err, friends) {
+          expect(friends[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+    });
 
     describe('follows', function () {
 
-      it('can follow a user', function(done) {
+      it('can follow a user who is a friend', function(done) {
         create.addFollower(users[0].user, users[1].user, Date.now(), function(err, follow) {
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
           followId = follow.follow;
+          done();
+        });
+      });
+
+      it('can follow a user who is not a friend', function(done) {
+        create.addFollower(users[0].user, users[2].user, Date.now(), function(err, follow) {
+          expect(follow.user).to.be(users[0].user);
+          expect(follow.user_follower).to.be(users[2].user);
+          notFriendFollowId = follow.follow;
           done();
         });
       });
@@ -65,7 +102,9 @@ describe('Social API', function() {
 
        it('can retrieve a list of followers for a user', function(done) {
         get.getFollowers(users[0].user, function(err, followers) {
-          expect(followers[0].user_follower).to.be(users[1].user);
+          var followerIds = _.pluck(followers, 'user_follower');
+          expect(followerIds).to.contain(users[1].user);
+          expect(followerIds).to.contain(users[2].user);
           done();
         });
       });
@@ -75,10 +114,19 @@ describe('Social API', function() {
     describe('posts', function () {
 
       it('can post a message from a user', function(done) {
-        create.addPost(users[0].user, 'Hello, this is a post', Date.now(), function(err, post) {
+        create.addPost(users[0].user, 'Hello, this is a post', Date.now(), false, function(err, post) {
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.be(users[0].user);
           postId = post.post;
+          done();
+        });
+      });
+
+      it('can post a private message from a user', function(done) {
+        create.addPost(users[0].user, 'Hello, this is a private post', Date.now(), true, function(err, post) {
+          expect(post.content).to.be('Hello, this is a private post');
+          expect(post.user).to.be(users[0].user);
+          privatePostId = post.post;
           done();
         });
       });
@@ -90,6 +138,7 @@ describe('Social API', function() {
           done();
         });
       });
+
 
     });
 
@@ -121,52 +170,36 @@ describe('Social API', function() {
 
     });
 
-    describe('friends', function () {
-
-      it('can friend a user', function(done) {
-        create.addFriend(users[0].user, users[1].user, Date.now(), function(err, friend) {
-          expect(friend.user).to.be(users[0].user);
-          expect(friend.user_friend).to.be(users[1].user);
-          friendId = friend.friend;
-          done();
-        });
-      });
-
-      it('can retrieve a friend by id', function(done) {
-        get.getFriend(friendId, function(err, friend) {
-          expect(friend.user).to.be(users[0].user);
-          expect(friend.user_friend).to.be(users[1].user);
-          done();
-        });
-      });
-
-      it('can retrieve a list of friends for a user', function(done) {
-        get.getFriends(users[0].user, function(err, friends) {
-          expect(friends[0].user_friend).to.be(users[1].user);
-          done();
-        });
-      });
-
-    });
-
     describe('feed', function () {
 
       it('can get a feed for a user that is in the correct order', function(done) {
         get.getFeedForUser('cliftonc', null, 100, function(err, feed) {
-          expect(feed[0].friend).to.be(friendId);
-          expect(feed[1].like).to.be(likeId);
+          expect(feed[0].like).to.be(likeId);
+          expect(feed[1].post).to.be(privatePostId);
           expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(followId);
+          expect(feed[3].follow).to.be(notFriendFollowId);
+          expect(feed[4].follow).to.be(followId);
+          expect(feed[5].friend).to.be(friendId);
           done();
         });
       });
 
-      it('can get a feed for a follower that is in the correct order', function(done) {
+      it('can get a feed for a friend and follower that is in the correct order', function(done) {
         get.getFeedForUser('phteven', null, 100, function(err, feed) {
-          expect(feed[0].friend).to.be(friendId);
-          expect(feed[1].like).to.be(likeId);
+          expect(feed[0].like).to.be(likeId);
+          expect(feed[1].post).to.be(privatePostId);
           expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(followId);
+          expect(feed[3].follow).to.be(notFriendFollowId);
+          expect(feed[4].follow).to.be(followId);
+          done();
+        });
+      });
+
+      it('can get a feed for a follower that is not a friend in the correct order', function(done) {
+        get.getFeedForUser('ted', null, 100, function(err, feed) {
+          expect(feed[0].like).to.be(likeId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
           done();
         });
       });

@@ -15,24 +15,24 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function addPost(user, content, timestamp, next) {
+  function addPost(user, content, timestamp, private, next) {
 
     var post = cassandra.types.uuid();
     var data = [post, user, content, timestamp];
     client.execute(q('upsertPost'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, post, 'post', function(err, result) {
+      _addFeedItem(user, post, 'post', private, function(err, result) {
         next(err, {post: post, user: user, content: content, timestamp: timestamp});
       });
     });
 
   }
 
-  function addPostByName(username, content, timestamp, next) {
+  function addPostByName(username, content, timestamp, private, next) {
     get.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      addPost(user.user, content, timestamp, next);
+      addPost(user.user, content, timestamp, private, next);
     });
   }
 
@@ -44,7 +44,7 @@ module.exports = function(client, keyspace) {
     client.execute(q('upsertLike'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, like, 'like', function(err, result) {
+      _addFeedItem(user, like, 'like', false, function(err, result) {
         next(err, {like: like, user: user, item: item, timestamp: timestamp});
       });
     });
@@ -59,17 +59,24 @@ module.exports = function(client, keyspace) {
   }
 
   function addFriend(user, user_friend, timestamp, next) {
-
     var friend = cassandra.types.uuid();
     var data = [friend, user, user_friend, timestamp];
     client.execute(q('upsertFriend'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, friend, 'friend', function(err, result) {
+      _addFeedItem(user, friend, 'friend', true, function(err, result) {
         next(err, {friend: friend, user: user, user_friend: user_friend, timestamp: timestamp});
       });
     });
+  }
 
+  function removeFriend(friend, next) {
+    var data = [friend];
+    client.execute(q('removeFriend'), data, {prepare:true},  function(err) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      next(err, {status:'removed'});
+    });
   }
 
   function addFriendByName(username, username_friend, timestamp, next) {
@@ -82,18 +89,27 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function addFollower(user, user_follower, timestamp, next) {
+  function isFriend(user, user_friend, next) {
+    var data = [user, user_friend];
 
+    client.execute(q('isFriend'), data, {prepare:true},  function(err, result) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      var isFriend = result.rows.length > 0;
+      return next(err, isFriend);
+    });
+  }
+
+  function addFollower(user, user_follower, timestamp, next) {
     var follow = cassandra.types.uuid();
     var data = [follow, user, user_follower, timestamp];
     client.execute(q('upsertFollower'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, follow, 'follow', function(err, result) {
+      _addFeedItem(user, follow, 'follow', false, function(err, result) {
         next(err, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
       });
     });
-
   }
 
   function addFollowerByName(username, username_follower, timestamp, next) {
@@ -106,10 +122,10 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function _addFeedItem(user, item, type, next) {
+  function _addFeedItem(user, item, type, private, next) {
 
     var insertUserTimeline = function(cb) {
-      var data = [user, item, type, cassandra.types.timeuuid()];
+      var data = [user, item, type, cassandra.types.timeuuid(), private];
       client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb);
     }
 
@@ -118,8 +134,14 @@ module.exports = function(client, keyspace) {
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {
-          var data = [row.user_follower, item, type, cassandra.types.timeuuid()];
-          client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb2);
+          isFriend(row.user, row.user_follower, function(err, isFriend) {
+            if(!private || private && isFriend) {
+              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), private];
+              client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb2);
+            } else {
+              cb2();
+            }
+          });
         }, cb);
       });
     }
