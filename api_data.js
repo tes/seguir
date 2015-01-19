@@ -263,7 +263,7 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\"status\":\"OK\"}",
+          "content": "HTTP/1.1 200 OK\n  {\n     \"friend\": \"28104896-2e8d-4ba1-9e13-14dd0f096277\",\n     \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n     \"user_friend\": \"379554e7-72b0-4009-b558-aa2804877595\",\n     \"timestamp\": 1421650920521\n  }",
           "type": "json"
         }
       ]
@@ -681,7 +681,7 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\"status\":\"OK\"}",
+          "content": "HTTP/1.1 200 OK\n   {\n       \"post\": \"247455fe-0e8e-4e3f-af4d-458ac13508b8\",\n       \"content\": \"HELLO WORLD!\",\n       \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"posted\": \"2015-01-18T20:37:32.626Z\"\n   }",
           "type": "json"
         }
       ]
