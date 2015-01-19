@@ -1,7 +1,7 @@
 {
   "name": "seguir",
-  "version": "0.1.0",
-  "description": "Social network API",
+  "version": "0.1.1",
+  "description": "Self-hosted social network backend and API",
   "main": "index.js",
   "scripts": {
     "test": "istanbul cover _mocha -- -R spec tests/unit/* tests/acceptance/*",
