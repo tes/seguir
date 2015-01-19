@@ -230,7 +230,12 @@ server.post('/post', function (req, res, next) {
  * @apiParam {Guid} post The guid of the post
  * @apiSuccessExample
  *    HTTP/1.1 200 OK
- *    {"status":"OK"}
+      {
+          "post": "247455fe-0e8e-4e3f-af4d-458ac13508b8",
+          "content": "HELLO WORLD!",
+          "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+          "posted": "2015-01-18T20:37:32.626Z"
+      }
  *
  *  @apiUse MissingPost
  *  @apiUse ServerError
@@ -263,7 +268,12 @@ server.get('/post/:post', function (req, res, next) {
  * @apiParam {String} username_friend the guid of the user to become friends with
  * @apiSuccessExample
  *    HTTP/1.1 200 OK
- *    {"status":"OK"}
+     {
+        "friend": "28104896-2e8d-4ba1-9e13-14dd0f096277",
+        "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+        "user_friend": "379554e7-72b0-4009-b558-aa2804877595",
+        "timestamp": 1421650920521
+     }
  *
  *  @apiUse MissingUsername
  *  @apiUse MissingFriend
