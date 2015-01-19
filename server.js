@@ -10,14 +10,14 @@ server.use(restify.gzipResponse());
 server.pre(restify.pre.userAgentConnection());
 
 /**
- * @apiDefine Users Users
+ * @apiDefine ApiUsers Users
  * This is a collection of methods that allow you to create and retrieve users.
  */
 
 /**
  * @api {post} /user Add a user
- * @apiName AddUser
- * @apiGroup Users
+ * @apiName Users
+ * @apiGroup ApiUsers
  * @apiVersion 1.0.0
  *
  * @apiDescription Creates a new user.
@@ -53,7 +53,7 @@ server.post('/user', function (req, res, next) {
 /**
  * @api {get} /user/:username Get a specific user
  * @apiName GetUser
- * @apiGroup Users
+ * @apiGroup ApiUsers
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves details of a specific user
@@ -90,7 +90,7 @@ server.get('/user/:username', function (req, res, next) {
 });
 
 /**
- * @apiDefine Likes Likes
+ * @apiDefine ApiLikes Likes
  *
  * This is a collection of methods that allow you to create and retrieve likes.
  */
@@ -98,7 +98,7 @@ server.get('/user/:username', function (req, res, next) {
 /**
  * @api {post} /like Add a like by a user
  * @apiName AddLike
- * @apiGroup Likes
+ * @apiGroup ApiLikes
  * @apiVersion 1.0.0
  *
  * @apiDescription Creates a new like of an item
@@ -138,7 +138,7 @@ server.post('/like', function (req, res, next) {
 /**
  * @api {get} /like/:like Get a specific like
  * @apiName GetLike
- * @apiGroup Likes
+ * @apiGroup ApiLikes
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves details of a specific like
@@ -179,7 +179,7 @@ server.get('/like/:username/:item', function (req, res, next) {
 });
 
 /**
- * @apiDefine Posts Posts
+ * @apiDefine ApiPosts Posts
  *
  * This is a collection of methods that allow you to create and retrieve posts.
  */
@@ -187,7 +187,7 @@ server.get('/like/:username/:item', function (req, res, next) {
 /**
  * @api {post} /post Add a post by a user
  * @apiName AddPost
- * @apiGroup Posts
+ * @apiGroup ApiPosts
  * @apiVersion 1.0.0
  *
  * @apiDescription Creates a new post.
@@ -223,7 +223,7 @@ server.post('/post', function (req, res, next) {
 /**
  * @api {get} /post/:post Get a specific post
  * @apiName GetPost
- * @apiGroup Posts
+ * @apiGroup ApiPosts
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves details of a specific post
@@ -253,14 +253,14 @@ server.get('/post/:post', function (req, res, next) {
 });
 
 /**
- * @apiDefine Friends Friends
+ * @apiDefine ApiFriends Friends
  *
  * This is a collection of methods that allow you to create and retrieve friend links.
  */
 /**
  * @api {post} /friend Add a friend to a user
  * @apiName AddFriend
- * @apiGroup Friends
+ * @apiGroup ApiFriends
  * @apiVersion 1.0.0
  *
  * @apiDescription Adds a new friend to a user account.
@@ -300,7 +300,7 @@ server.post('/friend', function (req, res, next) {
 /**
  * @api {get} /user/:username/friends Get friends for a user
  * @apiName GetFriends
- * @apiGroup Friends
+ * @apiGroup ApiFriends
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves a set of friends for a specific user
@@ -335,7 +335,7 @@ server.get('/user/:username/friends', function (req, res, next) {
 });
 
  /**
- * @apiDefine Followers Followers
+ * @apiDefine ApiFollowers Followers
  *
  * This is a collection of methods that allow you to create and retrieve follows.
  */
@@ -343,7 +343,7 @@ server.get('/user/:username/friends', function (req, res, next) {
 /**
  * @api {post} /follow Add a follower to a user
  * @apiName AddFollower
- * @apiGroup Followers
+ * @apiGroup ApiFollowers
  * @apiVersion 1.0.0
  *
  * @apiDescription Adds a new friend to a user account.
@@ -351,7 +351,12 @@ server.get('/user/:username/friends', function (req, res, next) {
  * @apiParam {Guid} user_follower the guid of the user to become friends with
  * @apiSuccessExample
  *    HTTP/1.1 200 OK
- *    {"status":"OK"}
+      {
+          "follow": "b90d442f-8473-4d50-84f2-d8bf0a25f514",
+          "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+          "user_follower": "cbeab41d-2372-4017-ac50-d8d63802d452",
+          "timestamp": 1421663431703
+      }
  *
  *  @apiUse MissingUsername
  *  @apiUse MissingFollow
@@ -376,7 +381,7 @@ server.post('/follow', function (req, res, next) {
 /**
  * @api {get} /user/:username/followers Get followers for a user
  * @apiName GetFollowers
- * @apiGroup Followers
+ * @apiGroup ApiFollowers
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves a set of feed items for a specific user
@@ -418,7 +423,7 @@ server.get('/user/:username/followers', function (req, res, next) {
 });
 
  /**
- * @apiDefine Feeds Feeds
+ * @apiDefine ApiFeeds Feeds
  *
  * This is a collection of methods that allow you to retrieve the news feed for a user.
  */
@@ -426,7 +431,7 @@ server.get('/user/:username/followers', function (req, res, next) {
 /**
  * @api {get} /feed/:username Get a feed for a user
  * @apiName GetFeed
- * @apiGroup Feeds
+ * @apiGroup ApiFeeds
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieves a set of feed items for a specific user

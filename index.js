@@ -1,4 +1,4 @@
-var client = require('./db/client');
+var client = require('./db/client')();
 var apiCreate = require('./api/create');
 var apiGet = require('./api/get');
 var KEYSPACE = 'seguir';

@@ -1,4 +1,4 @@
-var client = require('../db/client');
+var client = require('../db/client')();
 var api = require('../index');
 var cassandra = require('cassandra-driver');
 var async = require('async');

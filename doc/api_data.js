@@ -4,7 +4,7 @@ define({ "api": [
     "url": "/feed/:username",
     "title": "Get a feed for a user",
     "name": "GetFeed",
-    "group": "Feeds",
+    "group": "ApiFeeds",
     "version": "1.0.0",
     "description": "<p>Retrieves a set of feed items for a specific user</p> ",
     "parameter": {
@@ -81,7 +81,7 @@ define({ "api": [
     "url": "/follow",
     "title": "Add a follower to a user",
     "name": "AddFollower",
-    "group": "Followers",
+    "group": "ApiFollowers",
     "version": "1.0.0",
     "description": "<p>Adds a new friend to a user account.</p> ",
     "parameter": {
@@ -108,7 +108,7 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\"status\":\"OK\"}",
+          "content": "HTTP/1.1 200 OK\n   {\n       \"follow\": \"b90d442f-8473-4d50-84f2-d8bf0a25f514\",\n       \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"user_follower\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"timestamp\": 1421663431703\n   }",
           "type": "json"
         }
       ]
@@ -159,7 +159,7 @@ define({ "api": [
     "url": "/user/:username/followers",
     "title": "Get followers for a user",
     "name": "GetFollowers",
-    "group": "Followers",
+    "group": "ApiFollowers",
     "version": "1.0.0",
     "description": "<p>Retrieves a set of feed items for a specific user</p> ",
     "parameter": {
@@ -236,7 +236,7 @@ define({ "api": [
     "url": "/friend",
     "title": "Add a friend to a user",
     "name": "AddFriend",
-    "group": "Friends",
+    "group": "ApiFriends",
     "version": "1.0.0",
     "description": "<p>Adds a new friend to a user account.</p> ",
     "parameter": {
@@ -314,7 +314,7 @@ define({ "api": [
     "url": "/user/:username/friends",
     "title": "Get friends for a user",
     "name": "GetFriends",
-    "group": "Friends",
+    "group": "ApiFriends",
     "version": "1.0.0",
     "description": "<p>Retrieves a set of friends for a specific user</p> ",
     "parameter": {
@@ -391,7 +391,7 @@ define({ "api": [
     "url": "/like",
     "title": "Add a like by a user",
     "name": "AddLike",
-    "group": "Likes",
+    "group": "ApiLikes",
     "version": "1.0.0",
     "description": "<p>Creates a new like of an item</p> ",
     "examples": [
@@ -487,7 +487,7 @@ define({ "api": [
     "url": "/like/:like",
     "title": "Get a specific like",
     "name": "GetLike",
-    "group": "Likes",
+    "group": "ApiLikes",
     "version": "1.0.0",
     "description": "<p>Retrieves details of a specific like</p> ",
     "examples": [
@@ -576,7 +576,7 @@ define({ "api": [
     "url": "/post",
     "title": "Add a post by a user",
     "name": "AddPost",
-    "group": "Posts",
+    "group": "ApiPosts",
     "version": "1.0.0",
     "description": "<p>Creates a new post.</p> ",
     "parameter": {
@@ -661,7 +661,7 @@ define({ "api": [
     "url": "/post/:post",
     "title": "Get a specific post",
     "name": "GetPost",
-    "group": "Posts",
+    "group": "ApiPosts",
     "version": "1.0.0",
     "description": "<p>Retrieves details of a specific post</p> ",
     "parameter": {
@@ -723,84 +723,11 @@ define({ "api": [
     }
   },
   {
-    "type": "post",
-    "url": "/user",
-    "title": "Add a user",
-    "name": "AddUser",
-    "group": "Users",
-    "version": "1.0.0",
-    "description": "<p>Creates a new user.</p> ",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "username",
-            "description": "<p>the name of the user</p> "
-          }
-        ]
-      }
-    },
-    "examples": [
-      {
-        "title": "Example usage:",
-        "content": "curl --data \"username=cliftonc\" http://localhost:3000/user",
-        "type": "curl"
-      }
-    ],
-    "success": {
-      "examples": [
-        {
-          "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"1b869349-d8f8-45b1-864e-19164e1b925a\",\n  \"username\": \"cliftonc\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "./server.js",
-    "groupTitle": "Users",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
-    "error": {
-      "fields": {
-        "4xx": [
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          }
-        ],
-        "5xx": [
-          {
-            "group": "5xx",
-            "optional": false,
-            "field": "ServerError",
-            "description": "<p>There was a server problem.</p> "
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Server-Error:",
-          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
     "type": "get",
     "url": "/user/:username",
     "title": "Get a specific user",
     "name": "GetUser",
-    "group": "Users",
+    "group": "ApiUsers",
     "version": "1.0.0",
     "description": "<p>Retrieves details of a specific user</p> ",
     "examples": [
@@ -878,6 +805,565 @@ define({ "api": [
         }
       ]
     }
+  },
+  {
+    "type": "post",
+    "url": "/user",
+    "title": "Add a user",
+    "name": "Users",
+    "group": "ApiUsers",
+    "version": "1.0.0",
+    "description": "<p>Creates a new user.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>the name of the user</p> "
+          }
+        ]
+      }
+    },
+    "examples": [
+      {
+        "title": "Example usage:",
+        "content": "curl --data \"username=cliftonc\" http://localhost:3000/user",
+        "type": "curl"
+      }
+    ],
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"1b869349-d8f8-45b1-864e-19164e1b925a\",\n  \"username\": \"cliftonc\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "Users",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a username</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "table",
+    "url": "Applications",
+    "title": "Applications",
+    "name": "ApplicationData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores an application name and token to allow / disallow a client application access to seguir.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "application",
+            "description": "<p>The unique guid for the application.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "key",
+            "description": "<p>The key used to gain access.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "name",
+            "description": "<p>The name of the application (for reference).</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "PK",
+            "description": "<p>Primary key is compound on application + key.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Application",
+        "content": "INSERT INTO seguir.applications (application, key, name) VALUES(?, ?, ?)",
+        "type": "cql"
+      },
+      {
+        "title": "Check Application Key",
+        "content": "SELECT application, name FROM seguir.applications WHERE key = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Follower",
+    "title": "Follower",
+    "name": "FollowerData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores follower data from one user to another, this is not necessarily reciprocal, and does not require approval.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "follow",
+            "description": "<p>The unique guid for the follower relationship.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user_follower",
+            "description": "<p>The unique guid for the user they are following.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Timestamp",
+            "optional": false,
+            "field": "since",
+            "description": "<p>The date the follow began.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Follow",
+        "content": "INSERT INTO seguir.followers (follow, user, user_follower, since) VALUES(?, ?, ?, ?);",
+        "type": "cql"
+      },
+      {
+        "title": "Select Follow",
+        "content": "SELECT follow, user, user_follower, since FROM seguir.followers WHERE follow = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Select Followers",
+        "content": "SELECT user_follower, since from seguir.followers WHERE user = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Friends",
+    "title": "Friends",
+    "name": "FriendData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores a reference to between each user and their friends, this is reciprocal so you get two rows per relationship.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "friend",
+            "description": "<p>The unique guid for the friend relationship.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user_friend",
+            "description": "<p>The unique guid for the user they are friends with.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Timestamp",
+            "optional": false,
+            "field": "since",
+            "description": "<p>The date the relationship began.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Friend",
+        "content": "INSERT INTO seguir.friends (friend, user, user_friend, since) VALUES(?, ?, ?, ?)",
+        "type": "cql"
+      },
+      {
+        "title": "Select Friend",
+        "content": "SELECT friend, user, user_friend, since FROM seguir.friends WHERE friend = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Select Friends",
+        "content": "SELECT user_friend, since from seguir.friends WHERE user = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "FriendRequests",
+    "title": "Friend Requests",
+    "name": "FriendRequestData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores pending friend requests, stored in a separate table to simplify the relationship management and newsfeed.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "friend_request",
+            "description": "<p>The unique guid for the friend requyest.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user_friend",
+            "description": "<p>The unique guid for the user they are friends with.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>The message to send with the request</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Timestamp",
+            "optional": false,
+            "field": "time",
+            "description": "<p>The date the request was made.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Friend Request",
+        "content": "INSERT INTO seguir.friend_request (friend_request, user, user_friend, message, time) VALUES(?, ?, ?, ?)",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Likes",
+    "title": "Likes",
+    "name": "LikesData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores items that a user &#39;likes&#39; on their newsfeed, an item can be anything that is representable by a string (e.g. a canonical URL for a page is a typical example, but it can be anything);</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "like",
+            "description": "<p>The unique guid for the like.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "item",
+            "description": "<p>The key of the item liked by the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Timestamp",
+            "optional": false,
+            "field": "since",
+            "description": "<p>The date the like was made.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Like",
+        "content": "INSERT INTO seguir.likes (like, user, item, since) VALUES(?, ?, ?, ?);",
+        "type": "cql"
+      },
+      {
+        "title": "Select Like",
+        "content": "SELECT like, item, user, since FROM seguir.likes WHERE like = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Check Like",
+        "content": "SELECT like, user, since FROM seguir.likes WHERE user = ? AND item = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Posts",
+    "title": "Posts",
+    "name": "PostsData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores posts that a user (or application) make to a users timeline.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "post",
+            "description": "<p>The unique guid for the post.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "content",
+            "description": "<p>The content of the post.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "private",
+            "description": "<p>Is the post only for friends.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Timestamp",
+            "optional": false,
+            "field": "posted",
+            "description": "<p>The date the post was made.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Post",
+        "content": "INSERT INTO seguir.posts (post, user, content, posted) VALUES(?, ?, ?, ?)",
+        "type": "cql"
+      },
+      {
+        "title": "Select Post",
+        "content": "SELECT post, content, user, posted FROM seguir.posts WHERE post = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Users",
+    "title": "Users",
+    "name": "UserData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Stores a reference to each user that can have posts, likes, friends and followers.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>The name of the user.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert User",
+        "content": "INSERT INTO seguir.users (user, username) VALUES(?, ?)",
+        "type": "cql"
+      },
+      {
+        "title": "Select User",
+        "content": "SELECT user, username FROM seguir.users WHERE user = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Select User by Name",
+        "content": "SELECT user, username FROM seguir.users WHERE username = ?",
+        "type": "cql"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "url": "Userline",
+    "title": "Newsfeed",
+    "name": "UserLineData",
+    "group": "Data",
+    "version": "1.0.0",
+    "description": "<p>Contains the newsfeed for each user, updated by performing any of the Add actions, not interacted with directly.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The unique guid for the user.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "time",
+            "description": "<p>The unique timeuuid for the event, this is how the feed is sorted.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "item",
+            "description": "<p>The unique guid for the item in the feed - this can be a post, follow, friend or like event.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "type",
+            "description": "<p>The string short name for the type of event, valid values are: &#39;post&#39;,&#39;follow&#39;,&#39;friend&#39;,&#39;like&#39;.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "private",
+            "description": "<p>Is this event private and only visible if the user is a friend.</p> "
+          }
+        ]
+      }
+    },
+    "filename": "./setup/index.js",
+    "groupTitle": "Data Structure",
+    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
+    "examples": [
+      {
+        "title": "Insert Feed Item",
+        "content": "INSERT INTO seguir.userline (user, item, type, time) VALUES(?, ?, ?, ?);",
+        "type": "cql"
+      },
+      {
+        "title": "Select Feed",
+        "content": "SELECT user, time, dateOf(time) AS date, item, type FROM seguir.userline WHERE user = ? {timeClause} LIMIT {limit}",
+        "type": "cql"
+      }
+    ]
   },
   {
     "success": {
