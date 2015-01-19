@@ -11,8 +11,8 @@ module.exports = function(client, keyspace) {
 
   var q = require('./queries')(keyspace);
 
-  function getFeedForUsername(username, from, limit, next) {
-    getUserByUsername(username, function(err, user) {
+  function getFeedForUser(username, from, limit, next) {
+    getUserByName(username, function(err, user) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _getFeed(user, from, limit, next);
@@ -61,9 +61,33 @@ module.exports = function(client, keyspace) {
     });
   }
 
+  function getFriendsByName(username, next) {
+    getUserByName(username, function(err, user) {
+      if(err || !user) { return next(err); }
+      getFriends(user.user, function(err, friends) {
+        _mapGetUser(friends, 'user_friend', user, next);
+      });
+    });
+  }
+
   function getFollowers(user, next) {
     client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
        next(err, result.rows);
+    });
+  }
+
+  function getFollowers(user, next) {
+    client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
+       next(err, result.rows);
+    });
+  }
+
+  function getFollowersByName(username, next) {
+    getUserByName(username, function(err, user) {
+      if(err || !user) { return next(err); }
+      getFollowers(user.user, function(err, followers) {
+        _mapGetUser(followers, 'user_follower', user, next);
+      });
     });
   }
 
@@ -74,7 +98,7 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function getUserByUsername(username, next) {
+  function getUserByName(username, next) {
     client.execute(q('selectUserByUsername'), [username], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
        if(err) { return next(err); }
@@ -83,12 +107,26 @@ module.exports = function(client, keyspace) {
   }
 
   function checkLike(username, item, next) {
-    getUserByUsername(username, function(err, user) {
+    getUserByName(username, function(err, user) {
       if(!user) { return next(err); }
       client.execute(q('checkLike'), [user.user, item], {prepare:true}, function(err, result) {
          next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
       });
     });
+  }
+
+  function _mapGetUser(items, field, currentUser, next) {
+    async.map(items, function(item, cb) {
+      if(item[field] === currentUser.user) {
+        item[field] = currentUser;
+        cb(null, item);
+      } else {
+        getUser(item[field], function(err, user) {
+          item[field] = user;
+          cb(err, item);
+        });
+      }
+    }, next);
   }
 
   function _getFeed(user, from, limit, next) {
@@ -130,8 +168,8 @@ module.exports = function(client, keyspace) {
                 currentResult.date = timeline[index].date;
                 currentResult.fromNow = moment(currentResult.date).fromNow();
 
-                // Calculated fields
-                currentResult.fromFollow = currentResult.user !== user.user;
+                // Calculated fields to make rendering easier
+                currentResult.fromFollower = currentResult.user !== user.user;
                 currentResult.isLike = currentResult.type === 'like';
                 currentResult.isPost = currentResult.type === 'post';
                 currentResult.isFollow = currentResult.type === 'follow';
@@ -149,18 +187,8 @@ module.exports = function(client, keyspace) {
             });
 
             // Now, go and get user details for all the non own posts
-            async.map(feed, function(feedItem, cb) {
-              if(!feedItem.fromFollow) {
-                feedItem.user = user;
-                cb(null, feedItem)
-              } else {
-                getUser(feedItem.user, function(err, follower) {
-                  feedItem.user = follower;
-                  cb(null, feedItem);
-                });
-              }
-            }, function(err, newFeed) {
-              next(err, feed, maxTime);
+            _mapGetUser(feed, 'user', user, function(err, mappedFeed) {
+                next(err, mappedFeed, maxTime);
             });
 
          });
@@ -180,9 +208,11 @@ module.exports = function(client, keyspace) {
     getPost: getPost,
     getLike: getLike,
     getFollow: getFollow,
+    getFollowersByName: getFollowersByName,
     getFriend: getFriend,
-    getUserByUsername: getUserByUsername,
-    getFeedForUsername: getFeedForUsername,
+    getFriendsByName: getFriendsByName,
+    getUserByName: getUserByName,
+    getFeedForUser: getFeedForUser,
     checkLike: checkLike
   }
 

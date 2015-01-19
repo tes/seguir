@@ -78,7 +78,7 @@ server.get('/user/:username', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a username."));
   }
-  api.get.getUserByUsername(req.params.username, function(err, user) {
+  api.get.getUserByName(req.params.username, function(err, user) {
       if(!user) {
         return next(new restify.errors.NotFoundError("Could not find that user."));
       }
@@ -287,6 +287,43 @@ server.post('/friend', function (req, res, next) {
   });
 });
 
+/**
+ * @api {get} /user/:username/friends Get friends for a user
+ * @apiName GetFriends
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieves a set of friends for a specific user
+ * @apiParam {String} username the username of the user
+ * @apiSuccessExample
+ *    HTTP/1.1 200 OK
+ *  [
+        {
+            "user_friend": {
+                "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                "username": "cliftonc"
+            },
+            "since": "2015-01-18T20:36:38.632Z"
+        }
+    ]
+ *
+ *  @apiUse MissingUsername
+ *  @apiUse UserNotFound
+ *  @apiUse ServerError
+ *
+ */
+server.get('/user/:username/friends', function (req, res, next) {
+  if(!req.params.username) {
+    return next(new restify.errors.BadRequestError("You must provide a user."));
+  }
+  api.get.getFriendsByName(req.params.username, function(err, friends) {
+    if(err) {
+     return next(new restify.errors.ServerError(err.message));
+    }
+    res.send(friends);
+  });
+});
+
  /**
  * @apiDefine Followers Followers
  *
@@ -296,7 +333,7 @@ server.post('/friend', function (req, res, next) {
 /**
  * @api {post} /follow Add a follower to a user
  * @apiName AddFollower
- * @apiGroup Follow
+ * @apiGroup Followers
  * @apiVersion 1.0.0
  *
  * @apiDescription Adds a new friend to a user account.
@@ -322,6 +359,51 @@ server.post('/follow', function (req, res, next) {
      return next(new restify.errors.ServerError(err.message));
     }
     res.send(follow);
+  });
+});
+
+
+/**
+ * @api {get} /user/:username/followers Get followers for a user
+ * @apiName GetFollowers
+ * @apiGroup Followers
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieves a set of feed items for a specific user
+ * @apiParam {String} username the username of the user
+ * @apiSuccessExample
+ *    HTTP/1.1 200 OK
+ *    [
+          {
+              "user_follower": {
+                  "user": "379554e7-72b0-4009-b558-aa2804877595",
+                  "username": "Mabel.Sporer"
+              },
+              "since": "1993-11-19T00:58:16.000Z"
+          },
+          {
+              "user_follower": {
+                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                  "username": "cliftonc"
+              },
+              "since": "2015-01-18T20:37:09.383Z"
+          }
+      ]
+ *
+ *  @apiUse MissingUsername
+ *  @apiUse UserNotFound
+ *  @apiUse ServerError
+ *
+ */
+server.get('/user/:username/followers', function (req, res, next) {
+  if(!req.params.username) {
+    return next(new restify.errors.BadRequestError("You must provide a user."));
+  }
+  api.get.getFollowersByName(req.params.username, function(err, followers) {
+    if(err) {
+     return next(new restify.errors.ServerError(err.message));
+    }
+    res.send(followers);
   });
 });
 
@@ -390,7 +472,7 @@ server.get('/feed/:username', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user guid."));
   }
-  api.get.getFeedForUsername(req.params.username, null, 50, function(err, feed) {
+  api.get.getFeedForUser(req.params.username, null, 50, function(err, feed) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }

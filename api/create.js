@@ -30,7 +30,7 @@ module.exports = function(client, keyspace) {
   }
 
   function addPostByName(username, content, timestamp, next) {
-    get.getUserByUsername(username, function(err, user) {
+    get.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       addPost(user.user, content, timestamp, next);
     });
@@ -52,7 +52,7 @@ module.exports = function(client, keyspace) {
   }
 
   function addLikeByName(username, item, timestamp, next) {
-    get.getUserByUsername(username, function(err, user) {
+    get.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       addLike(user.user, item, timestamp, next);
     });
@@ -73,9 +73,9 @@ module.exports = function(client, keyspace) {
   }
 
   function addFriendByName(username, username_friend, timestamp, next) {
-    get.getUserByUsername(username, function(err, user) {
+    get.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      get.getUserByUsername(username_friend, function(err, friend) {
+      get.getUserByName(username_friend, function(err, friend) {
         if(err || !friend) { return next(err); }
         addFriend(user.user, friend.user, timestamp, next);
       });
@@ -97,9 +97,9 @@ module.exports = function(client, keyspace) {
   }
 
   function addFollowerByName(username, username_follower, timestamp, next) {
-    get.getUserByUsername(username, function(err, user) {
+    get.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      get.getUserByUsername(username_follower, function(err, follower) {
+      get.getUserByName(username_follower, function(err, follower) {
         if(err || !follower) { return next(err); }
         addFollower(user.user, follower.user, timestamp, next);
       });

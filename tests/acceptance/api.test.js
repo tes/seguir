@@ -5,10 +5,11 @@ var client = require('../../db/client');
 var create = require('../../api/create')(client, keyspace);
 var get = require('../../api/get')(client, keyspace);
 var setup = require('../../setup');
+var async = require('async');
 
 describe('Social API', function() {
 
-    var userKeys = [], postId, followId, likeId, friendId;
+    var users = [], postId, followId, likeId, friendId;
 
     before(function(done) {
       this.timeout(20000);
@@ -17,34 +18,25 @@ describe('Social API', function() {
 
     describe('users', function () {
 
-      it('can create a user', function(done) {
-        create.addUser('cliftonc', function(err, user) {
-          expect(user.username).to.be('cliftonc');
-          userKeys.push(user.user); // For later
-          done();
-        });
-      });
-
-      it('can create another user so we can follow the first', function(done) {
-        create.addUser('phteven', function(err, user) {
-          expect(user.username).to.be('phteven');
-          userKeys.push(user.user); // For later
-          done();
+      it('can create users', function(done) {
+        async.map(['cliftonc','phteven','ted'], create.addUser, function(err, results) {
+          users = results;
+          done()
         });
       });
 
       it('can retrieve a user by id', function(done) {
-        get.getUser(userKeys[0], function(err, user) {
-          expect(user.user).to.be(userKeys[0]);
+        get.getUser(users[0].user, function(err, user) {
+          expect(user.user).to.be(users[0].user);
           expect(user.username).to.be('cliftonc');
           done();
         });
       });
 
       it('can retrieve a user by name', function(done) {
-        get.getUserByUsername('cliftonc', function(err, user) {
-          expect(user.user).to.be(userKeys[0]);
-          expect(user.username).to.be('cliftonc');
+        get.getUserByName(users[0].username, function(err, user) {
+          expect(user.user).to.be(users[0].user);
+          expect(user.username).to.be(users[0].username);
           done();
         });
       });
@@ -55,9 +47,9 @@ describe('Social API', function() {
     describe('follows', function () {
 
       it('can follow a user', function(done) {
-        create.addFollower(userKeys[0], userKeys[1], Date.now(), function(err, follow) {
-          expect(follow.user).to.be(userKeys[0]);
-          expect(follow.user_follower).to.be(userKeys[1]);
+        create.addFollower(users[0].user, users[1].user, Date.now(), function(err, follow) {
+          expect(follow.user).to.be(users[0].user);
+          expect(follow.user_follower).to.be(users[1].user);
           followId = follow.follow;
           done();
         });
@@ -65,15 +57,15 @@ describe('Social API', function() {
 
       it('can retrieve a follow by id', function(done) {
         get.getFollow(followId, function(err, follow) {
-          expect(follow.user).to.be(userKeys[0]);
-          expect(follow.user_follower).to.be(userKeys[1]);
+          expect(follow.user).to.be(users[0].user);
+          expect(follow.user_follower).to.be(users[1].user);
           done();
         });
       });
 
        it('can retrieve a list of followers for a user', function(done) {
-        get.getFollowers(userKeys[0], function(err, followers) {
-          expect(followers[0].user_follower).to.be(userKeys[1]);
+        get.getFollowers(users[0].user, function(err, followers) {
+          expect(followers[0].user_follower).to.be(users[1].user);
           done();
         });
       });
@@ -83,9 +75,9 @@ describe('Social API', function() {
     describe('posts', function () {
 
       it('can post a message from a user', function(done) {
-        create.addPost(userKeys[0], 'Hello, this is a post', Date.now(), function(err, post) {
+        create.addPost(users[0].user, 'Hello, this is a post', Date.now(), function(err, post) {
           expect(post.content).to.be('Hello, this is a post');
-          expect(post.user).to.be(userKeys[0]);
+          expect(post.user).to.be(users[0].user);
           postId = post.post;
           done();
         });
@@ -94,7 +86,7 @@ describe('Social API', function() {
       it('can retrieve a post by id', function(done) {
         get.getPost(postId, function(err, post) {
           expect(post.content).to.be('Hello, this is a post');
-          expect(post.user).to.be(userKeys[0]);
+          expect(post.user).to.be(users[0].user);
           done();
         });
       });
@@ -104,7 +96,7 @@ describe('Social API', function() {
     describe('likes', function () {
 
       it('can like an item from a user', function(done) {
-        create.addLike(userKeys[0], 'http://github.com', Date.now(), function(err, like) {
+        create.addLike(users[0].user, 'http://github.com', Date.now(), function(err, like) {
           expect(like.item).to.be('http://github.com');
           likeId = like.like;
           done();
@@ -114,7 +106,7 @@ describe('Social API', function() {
       it('can retrieve a like by id', function(done) {
         get.getLike(likeId, function(err, like) {
           expect(like.item).to.be('http://github.com');
-          expect(like.user).to.be(userKeys[0]);
+          expect(like.user).to.be(users[0].user);
           done();
         });
       });
@@ -122,7 +114,7 @@ describe('Social API', function() {
       it('can check if a user likes an item', function(done) {
         get.checkLike('cliftonc','http://github.com', function(err, like) {
           expect(like.like).to.be(likeId);
-          expect(like.user).to.be(userKeys[0]);
+          expect(like.user).to.be(users[0].user);
           done();
         });
       });
@@ -132,9 +124,9 @@ describe('Social API', function() {
     describe('friends', function () {
 
       it('can friend a user', function(done) {
-        create.addFriend(userKeys[0], userKeys[1], Date.now(), function(err, friend) {
-          expect(friend.user).to.be(userKeys[0]);
-          expect(friend.user_friend).to.be(userKeys[1]);
+        create.addFriend(users[0].user, users[1].user, Date.now(), function(err, friend) {
+          expect(friend.user).to.be(users[0].user);
+          expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
           done();
         });
@@ -142,15 +134,15 @@ describe('Social API', function() {
 
       it('can retrieve a friend by id', function(done) {
         get.getFriend(friendId, function(err, friend) {
-          expect(friend.user).to.be(userKeys[0]);
-          expect(friend.user_friend).to.be(userKeys[1]);
+          expect(friend.user).to.be(users[0].user);
+          expect(friend.user_friend).to.be(users[1].user);
           done();
         });
       });
 
       it('can retrieve a list of friends for a user', function(done) {
-        get.getFriends(userKeys[0], function(err, friends) {
-          expect(friends[0].user_friend).to.be(userKeys[1]);
+        get.getFriends(users[0].user, function(err, friends) {
+          expect(friends[0].user_friend).to.be(users[1].user);
           done();
         });
       });
@@ -160,7 +152,7 @@ describe('Social API', function() {
     describe('feed', function () {
 
       it('can get a feed for a user that is in the correct order', function(done) {
-        get.getFeedForUsername('cliftonc', null, 100, function(err, feed) {
+        get.getFeedForUser('cliftonc', null, 100, function(err, feed) {
           expect(feed[0].friend).to.be(friendId);
           expect(feed[1].like).to.be(likeId);
           expect(feed[2].post).to.be(postId);
@@ -170,7 +162,7 @@ describe('Social API', function() {
       });
 
       it('can get a feed for a follower that is in the correct order', function(done) {
-        get.getFeedForUsername('phteven', null, 100, function(err, feed) {
+        get.getFeedForUser('phteven', null, 100, function(err, feed) {
           expect(feed[0].friend).to.be(friendId);
           expect(feed[1].like).to.be(likeId);
           expect(feed[2].post).to.be(postId);
