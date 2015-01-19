@@ -1,13 +1,26 @@
 {
   "name": "seguir",
-  "version": "1.0.0",
-  "description": "Social network on Cassandra API",
+  "version": "0.1.0",
+  "description": "Social network API",
   "main": "index.js",
   "scripts": {
     "test": "istanbul cover _mocha -- -R spec tests/unit/* tests/acceptance/*",
     "docs": "apidoc -i . -e node_modules"
   },
-  "author": "",
+  "keywords": [
+    "social",
+    "api",
+    "follow",
+    "friend",
+    "like",
+    "post",
+    "cassandra"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cliftonc/seguir.git"
+  },
+  "author": "clifton.cunningham@gmail.com",
   "license": "MIT",
   "dependencies": {
     "async": "^0.9.0",
