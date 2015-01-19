@@ -24,7 +24,7 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n   [\n     {\n         \"post\": \"247455fe-0e8e-4e3f-af4d-458ac13508b8\",\n         \"content\": \"HELLO WORLD!\",\n         \"user\": {\n             \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n             \"username\": \"cliftonc\"\n         },\n         \"posted\": \"2015-01-18T20:37:32.626Z\",\n         \"type\": \"post\",\n         \"timeuuid\": \"d4065671-9f51-11e4-889d-9f08914a01c0\",\n         \"date\": \"2015-01-18T20:37:32.631Z\",\n         \"fromNow\": \"a few seconds ago\",\n         \"fromFollow\": false,\n         \"isLike\": false,\n         \"isPost\": true,\n         \"isFollow\": false,\n         \"isFriend\": false\n     },\n     {\n         \"post\": \"247455fe-0e8e-4e3f-af4d-458ac13508b8\",\n         \"content\": \"HELLO WORLD!\",\n         \"user\": {\n             \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n             \"username\": \"cliftonc\"\n         },\n         \"posted\": \"2015-01-18T20:37:32.626Z\",\n         \"type\": \"post\",\n         \"timeuuid\": \"d4060850-9f51-11e4-889d-9f08914a01c0\",\n         \"date\": \"2015-01-18T20:37:32.629Z\",\n         \"fromNow\": \"a few seconds ago\",\n         \"fromFollow\": false,\n         \"isLike\": false,\n         \"isPost\": true,\n         \"isFollow\": false,\n         \"isFriend\": false\n     }\n   ]",
+          "content": "HTTP/1.1 200 OK\n   [\n     {\n         \"post\": \"247455fe-0e8e-4e3f-af4d-458ac13508b8\",\n         \"content\": \"HELLO WORLD!\",\n         \"user\": {\n             \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n             \"username\": \"cliftonc\"\n         },\n         \"posted\": \"2015-01-18T20:37:32.626Z\",\n         \"type\": \"post\",\n         \"timeuuid\": \"d4065671-9f51-11e4-889d-9f08914a01c0\",\n         \"date\": \"2015-01-18T20:37:32.631Z\",\n         \"fromNow\": \"a few seconds ago\",\n         \"fromFollow\": false,\n         \"isLike\": false,\n         \"isPost\": true,\n         \"isFollow\": false,\n         \"isFriend\": false\n     },\n     {\n       \"friend\": \"7b3891d8-cc27-4284-8fb4-d3b455186f99\",\n       \"user\": {\n           \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n           \"username\": \"cliftonc\"\n       },\n       \"user_friend\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"since\": \"2015-01-18T20:36:38.632Z\",\n       \"username_friend\": \"cliftonc\",\n       \"type\": \"friend\",\n       \"timeuuid\": \"b3d781d0-9f51-11e4-889d-9f08914a01c0\",\n       \"date\": \"2015-01-18T20:36:38.637Z\",\n       \"fromNow\": \"5 minutes ago\",\n       \"fromFollow\": false,\n       \"isLike\": false,\n       \"isPost\": false,\n       \"isFollow\": false,\n       \"isFriend\": true\n   }\n   ]",
           "type": "json"
         }
       ]
@@ -81,7 +81,7 @@ define({ "api": [
     "url": "/follow",
     "title": "Add a follower to a user",
     "name": "AddFollower",
-    "group": "Follow",
+    "group": "Followers",
     "version": "1.0.0",
     "description": "<p>Adds a new friend to a user account.</p> ",
     "parameter": {
@@ -114,7 +114,8 @@ define({ "api": [
       ]
     },
     "filename": "./server.js",
-    "groupTitle": "Follow",
+    "groupTitle": "Followers",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
     "error": {
       "fields": {
         "4xx": [
@@ -143,6 +144,83 @@ define({ "api": [
         {
           "title": "Bad-Request:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a follow guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/user/:username/followers",
+    "title": "Get followers for a user",
+    "name": "GetFollowers",
+    "group": "Followers",
+    "version": "1.0.0",
+    "description": "<p>Retrieves a set of feed items for a specific user</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>the username of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n[\n       {\n           \"user_follower\": {\n               \"user\": \"379554e7-72b0-4009-b558-aa2804877595\",\n               \"username\": \"Mabel.Sporer\"\n           },\n           \"since\": \"1993-11-19T00:58:16.000Z\"\n       },\n       {\n           \"user_follower\": {\n               \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n               \"username\": \"cliftonc\"\n           },\n           \"since\": \"2015-01-18T20:37:09.383Z\"\n       }\n   ]",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "Followers",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a username</p> "
+          },
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
           "type": "json"
         },
         {
@@ -221,6 +299,83 @@ define({ "api": [
         {
           "title": "Bad-Request:",
           "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a friend guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/user/:username/friends",
+    "title": "Get friends for a user",
+    "name": "GetFriends",
+    "group": "Friends",
+    "version": "1.0.0",
+    "description": "<p>Retrieves a set of friends for a specific user</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "username",
+            "description": "<p>the username of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "  HTTP/1.1 200 OK\n[\n       {\n           \"user_friend\": {\n               \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n               \"username\": \"cliftonc\"\n           },\n           \"since\": \"2015-01-18T20:36:38.632Z\"\n       }\n   ]",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "Friends",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a username</p> "
+          },
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
           "type": "json"
         },
         {
