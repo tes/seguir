@@ -1,13 +1,26 @@
 var restify = require('restify');
 var api = require('./index');
 
-var server = restify.createServer();
+var server = restify.createServer({
+  name:'seguir',
+  version:'0.1.0'
+});
 
-server.use(restify.bodyParser({
-    mapParams: true
-}));
+// Default middleware
+server.use(restify.bodyParser({mapParams: true}));
+server.use(restify.queryParser({ mapParams: false }));
 server.use(restify.gzipResponse());
+server.use(restify.CORS());
+server.get(/\/docs\/current\/?.*/, restify.serveStatic({
+  directory: './doc',
+  default: 'index.html'
+}));
+server.use(restify.requestLogger());
+
+// Preflight
+server.pre(restify.pre.sanitizePath());
 server.pre(restify.pre.userAgentConnection());
+server.pre(api.authorise.checkRequest());
 
 /**
  * @apiDefine ApiUsers Users
@@ -41,7 +54,7 @@ server.post('/user', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a username."));
   }
-  api.create.addUser(req.params.username, function(err, user) {
+  api.manage.addUser(req.params.username, function(err, user) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -78,7 +91,7 @@ server.get('/user/:username', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a username."));
   }
-  api.get.getUserByName(req.params.username, function(err, user) {
+  api.query.getUserByName(req.params.username, function(err, user) {
       if(!user) {
         return next(new restify.errors.NotFoundError("Could not find that user."));
       }
@@ -127,7 +140,7 @@ server.post('/like', function (req, res, next) {
   if(!req.params.item) {
     return next(new restify.errors.BadRequestError("You must provide an item."));
   }
-  api.create.addLikeByName(req.params.username, req.params.item, Date.now(), function(err, like) {
+  api.manage.addLikeByName(req.params.username, req.params.item, Date.now(), function(err, like) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -167,7 +180,7 @@ server.get('/like/:username/:item', function (req, res, next) {
   if(!req.params.item) {
     return next(new restify.errors.BadRequestError("You must provide an item."));
   }
-  api.get.checkLike(req.params.username, req.params.item, function(err, like) {
+  api.query.checkLike(req.params.username, req.params.item, function(err, like) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }
@@ -213,7 +226,7 @@ server.post('/post', function (req, res, next) {
   if(!req.params.content) {
     return next(new restify.errors.BadRequestError("You must provide content for the post."));
   }
-  api.create.addPostByName(req.params.username, req.params.content, Date.now(), req.params.private, function(err, post) {
+  api.manage.addPostByName(req.params.username, req.params.content, Date.now(), req.params.private, function(err, post) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -245,7 +258,7 @@ server.get('/post/:post', function (req, res, next) {
   if(!req.params.post) {
     return next(new restify.errors.BadRequestError("You must provide a post guid."));
   }
-  api.get.getPost(req.params.post, function(err, post) {
+  api.query.getPost(req.params.post, function(err, post) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }
@@ -287,7 +300,7 @@ server.post('/friend', function (req, res, next) {
   if(!req.params.username_friend) {
     return next(new restify.errors.BadRequestError("You must provide a user_friend guid."));
   }
-  api.create.addFriendByName(req.params.username, req.params.username_friend, Date.now(), function(err, friend) {
+  api.manage.addFriendByName(req.params.username, req.params.username_friend, Date.now(), function(err, friend) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -327,7 +340,7 @@ server.get('/user/:username/friends', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user."));
   }
-  api.get.getFriendsByName(req.params.username, function(err, friends) {
+  api.query.getFriendsByName(req.params.username, function(err, friends) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -370,7 +383,7 @@ server.post('/follow', function (req, res, next) {
   if(!req.params.username_follower) {
     return next(new restify.errors.BadRequestError("You must provide a user_follower."));
   }
-  api.create.addFollowerByName(req.params.username, req.params.username_follower, Date.now(), function(err, follow) {
+  api.manage.addFollowerByName(req.params.username, req.params.username_follower, Date.now(), function(err, follow) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -415,7 +428,7 @@ server.get('/user/:username/followers', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user."));
   }
-  api.get.getFollowersByName(req.params.username, function(err, followers) {
+  api.query.getFollowersByName(req.params.username, function(err, followers) {
     if(err) {
      return next(new restify.errors.ServerError(err.message));
     }
@@ -488,7 +501,7 @@ server.get('/feed/:username', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user guid."));
   }
-  api.get.getFeedForUser(req.params.username, null, 50, function(err, feed) {
+  api.query.getFeedForUser(req.params.username, null, 50, function(err, feed) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }

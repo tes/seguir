@@ -7,6 +7,13 @@ var numUsers = 10;
 var KEYSPACE = 'seguir';
 var users = [];
 
+function createApplication(next) {
+  // 0 is known for testing
+  api.auth.addFriend(pair[0], pair[1], casual.moment.toDate(), cb);
+
+  next();
+}
+
 function createUsers(next) {
   // 0 is known for testing
   for(var i=0; i < numUsers; i++) {

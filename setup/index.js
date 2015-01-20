@@ -47,13 +47,13 @@ function createTablesAndIndexes() {
    * @apiParam {Guid} post The unique guid for the post.
    * @apiParam {Guid} user The unique guid for the user.
    * @apiParam {String} content The content of the post.
-   * @apiParam {Boolean} private Is the post only for friends.
+   * @apiParam {Boolean} isprivate Is the post only for friends.
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, content text, private boolean, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, content text, isprivate boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(private)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(isprivate)');
 
   /**
    * @api {table} Friends Friends
@@ -129,10 +129,10 @@ function createTablesAndIndexes() {
    * @apiParam {Guid} time The unique timeuuid for the event, this is how the feed is sorted.
    * @apiParam {Guid} item The unique guid for the item in the feed - this can be a post, follow, friend or like event.
    * @apiParam {String} type The string short name for the type of event, valid values are: 'post','follow','friend','like'.
-   * @apiParam {Boolean} private Is this event private and only visible if the user is a friend.
+   * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
    * @apiUse ExampleCqlFeed
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, private boolean, PRIMARY KEY (user, time, private)) WITH CLUSTERING ORDER BY (time DESC, private ASC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, PRIMARY KEY (user, time, isprivate)) WITH CLUSTERING ORDER BY (time DESC, isprivate ASC)');
 
 }
 

@@ -24,6 +24,30 @@ npm install
 node server
 ```
 
+## Integrating
+
+Seguir will ship with a client, that lets you point it at a seguir server and will handle things like the
+authorisation, passing of current user and other configuration.
+
+```
+var Seguir = require('seguir/client');
+seguir = new Seguir({
+  server:'http://localhost:3000',
+  application:'my-amazing-social-app',
+  token:'b90d442f-8473-4d50-84f2-d8bf0a25f514'
+});
+```
+
+Then, within the context of a request (assuming that you are using Seguir within an application, and have middleware that retrieves the seguir ID for the current logged in user and assigns that to req.user.seguirId).
+
+```
+app.get('/user/:username', function(req, res, next) {
+  seguir.query.getUser(req.user.seguirId, req.params.username, function(err, user) {
+    console.dir(user);
+  });
+});
+```
+
 ## Docs
 
 ```

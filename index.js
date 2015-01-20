@@ -1,9 +1,11 @@
 var client = require('./db/client')();
-var apiCreate = require('./api/create');
-var apiGet = require('./api/get');
+var apiManage = require('./api/manage');
+var apiQuery = require('./api/query');
+var apiAuth = require('./api/auth');
 var KEYSPACE = 'seguir';
 
 module.exports = {
-  create: apiCreate(client, KEYSPACE),
-  get: apiGet(client, KEYSPACE)
+  manage: apiCreate(client, KEYSPACE),
+  query: apiGet(client, KEYSPACE),
+  auth: apiAuth(client, KEYSPACE)
 }

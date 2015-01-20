@@ -2,10 +2,20 @@ var cassandra = require('cassandra-driver');
 var async = require('async');
 var moment = require('moment');
 
+/**
+ * This is a collection of methods that allow you to create, update and delete social items.
+ *
+ * These methods all exclude the 'loggedinuser' parameter as they are all carried out only by
+ * the currently logged in user and / or system level calls (e.g. adding a user via integration
+ * with an SSO flow).
+ *
+ * TODO: Exception may be creating a post on someone elses feed.
+ *
+ */
 module.exports = function(client, keyspace) {
 
-  var q = require('./queries')(keyspace);
-  var get = require('./get')(client, keyspace);
+  var q = require('../db/queries')(keyspace);
+  var query = require('./query')(client, keyspace);
 
   function addUser(username, next) {
     var userid = cassandra.types.uuid();
@@ -15,24 +25,24 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function addPost(user, content, timestamp, private, next) {
+  function addPost(user, content, timestamp, isprivate, next) {
 
     var post = cassandra.types.uuid();
-    var data = [post, user, content, timestamp];
+    var data = [post, user, content, timestamp, isprivate];
     client.execute(q('upsertPost'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, post, 'post', private, function(err, result) {
-        next(err, {post: post, user: user, content: content, timestamp: timestamp});
+      _addFeedItem(user, post, 'post', isprivate, function(err, result) {
+        next(err, {post: post, user: user, content: content, timestamp: timestamp, isprivate: isprivate});
       });
     });
 
   }
 
-  function addPostByName(username, content, timestamp, private, next) {
-    get.getUserByName(username, function(err, user) {
+  function addPostByName(username, content, timestamp, isprivate, next) {
+    query.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      addPost(user.user, content, timestamp, private, next);
+      addPost(user.user, content, timestamp, isprivate, next);
     });
   }
 
@@ -52,7 +62,7 @@ module.exports = function(client, keyspace) {
   }
 
   function addLikeByName(username, item, timestamp, next) {
-    get.getUserByName(username, function(err, user) {
+    query.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       addLike(user.user, item, timestamp, next);
     });
@@ -60,13 +70,20 @@ module.exports = function(client, keyspace) {
 
   function addFriend(user, user_friend, timestamp, next) {
     var friend = cassandra.types.uuid();
+    addFriendOneWay(friend, user, user_friend, timestamp, function(err) {
+      var reciprocalFriend = cassandra.types.uuid();
+      addFriendOneWay(reciprocalFriend, user_friend, user, timestamp, function(err) {
+        next(err, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
+      });
+    });
+  }
+
+  function addFriendOneWay(friend, user, user_friend, timestamp, next) {
     var data = [friend, user, user_friend, timestamp];
     client.execute(q('upsertFriend'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, friend, 'friend', true, function(err, result) {
-        next(err, {friend: friend, user: user, user_friend: user_friend, timestamp: timestamp});
-      });
+      _addFeedItem(user, friend, 'friend', true, next);
     });
   }
 
@@ -80,23 +97,12 @@ module.exports = function(client, keyspace) {
   }
 
   function addFriendByName(username, username_friend, timestamp, next) {
-    get.getUserByName(username, function(err, user) {
+    query.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      get.getUserByName(username_friend, function(err, friend) {
+      query.getUserByName(username_friend, function(err, friend) {
         if(err || !friend) { return next(err); }
         addFriend(user.user, friend.user, timestamp, next);
       });
-    });
-  }
-
-  function isFriend(user, user_friend, next) {
-    var data = [user, user_friend];
-
-    client.execute(q('isFriend'), data, {prepare:true},  function(err, result) {
-      /* istanbul ignore if */
-      if(err) { return next(err); }
-      var isFriend = result.rows.length > 0;
-      return next(err, isFriend);
     });
   }
 
@@ -113,19 +119,19 @@ module.exports = function(client, keyspace) {
   }
 
   function addFollowerByName(username, username_follower, timestamp, next) {
-    get.getUserByName(username, function(err, user) {
+    query.getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      get.getUserByName(username_follower, function(err, follower) {
+      query.getUserByName(username_follower, function(err, follower) {
         if(err || !follower) { return next(err); }
         addFollower(user.user, follower.user, timestamp, next);
       });
     });
   }
 
-  function _addFeedItem(user, item, type, private, next) {
+  function _addFeedItem(user, item, type, isprivate, next) {
 
     var insertUserTimeline = function(cb) {
-      var data = [user, item, type, cassandra.types.timeuuid(), private];
+      var data = [user, item, type, cassandra.types.timeuuid(), isprivate];
       client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb);
     }
 
@@ -134,9 +140,9 @@ module.exports = function(client, keyspace) {
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {
-          isFriend(row.user, row.user_follower, function(err, isFriend) {
-            if(!private || private && isFriend) {
-              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), private];
+          query.isFriend(row.user, row.user_follower, function(err, isFriend) {
+            if(!isprivate || (isprivate && isFriend)) {
+              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), isprivate];
               client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb2);
             } else {
               cb2();

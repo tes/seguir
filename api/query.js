@@ -3,25 +3,73 @@ var async = require('async');
 var moment = require('moment');
 
 /**
- * @apiDefine Querying Querying Feeds
- *
  * This is a collection of methods that allow you to query and retrieve social items.
+ *
+ * The 'liu' is a key that is passed in by the client, to identify who the user
+ * accessing the API is (as this in many instances will not be the user to who the
+ * social items and feed belongs to).  It stands for 'logged in user'.
+ *
+ * So user / username always refers to the property of the item - e.g. the post is by a user with a username.
+ *
+ * Public elements (so no liu passed in):
+ *
+ *  - getUser
+ *  - getUserByname
+ *  - getFollow
+ *  - getFollowers
+ *  - getLike
+ *
+ * Possible private elements (so liu passed in):
+ *
+ *  - getFeed
+ *  - getFeedByName
+ *  - getFriend
+ *  - getFriends
+ *  - getFriendsByName
+ *  - getPost
+ *
  */
 module.exports = function(client, keyspace) {
 
-  var q = require('./queries')(keyspace);
+  var q = require('../db/queries')(keyspace);
 
-  function getFeedForUser(username, from, limit, next) {
+  function getFeedForUser(liu, username, from, limit, next) {
     getUserByName(username, function(err, user) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _getFeed(user, from, limit, next);
+      _getFeed(liu, user, from, limit, next);
     });
   }
 
-  function getPost(post, next) {
+  function canSeePrivate(liu, user, next) {
+     if(liu == user) { return next(null, true); }
+     isFriend(liu, user, next);
+  }
+
+  function getPost(liu, post, next) {
     client.execute(q('selectPost'), [post], {prepare:true}, function(err, result) {
-       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       if(err) { return next(err); }
+       if(result.rows.length === 0) { return next(); }
+       var post = result.rows[0];
+       if(post.isprivate) {
+         canSeePrivate(liu, post.user, function(err, canSee) {
+           if(err) { return next(err); }
+           if(!canSee) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+           next(null, post);
+         });
+       } else {
+         next(null, post);
+       }
+    });
+  }
+
+  function isFriend(user, user_friend, next) {
+    var data = [user, user_friend];
+    client.execute(q('isFriend'), data, {prepare:true},  function(err, result) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      var isFriend = result.rows.length > 0;
+      return next(err, isFriend);
     });
   }
 
@@ -31,7 +79,7 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function getFriend(friend, next) {
+  function getFriend(liu, friend, next) {
     client.execute(q('selectFriend'), [friend], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
@@ -55,24 +103,18 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function getFriends(user, next) {
+  function getFriends(liu, user, next) {
     client.execute(q('selectFriends'), [user], {prepare:true}, function(err, result) {
        next(err, result.rows);
     });
   }
 
-  function getFriendsByName(username, next) {
+  function getFriendsByName(liu, username, next) {
     getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
       getFriends(user.user, function(err, friends) {
         _mapGetUser(friends, ['user_friend'], user, next);
       });
-    });
-  }
-
-  function getFollowers(user, next) {
-    client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
-       next(err, result.rows);
     });
   }
 
@@ -89,6 +131,10 @@ module.exports = function(client, keyspace) {
         _mapGetUser(followers, ['user_follower'], user, next);
       });
     });
+  }
+
+  function getFollowersInCommon(liu, user, next) {
+    next();
   }
 
   function getUser(user, next) {
@@ -136,7 +182,7 @@ module.exports = function(client, keyspace) {
 
   }
 
-  function _getFeed(user, from, limit, next) {
+  function _getFeed(liu, user, from, limit, next) {
 
     var data = [user.user], timeClause = '';
 
@@ -154,11 +200,29 @@ module.exports = function(client, keyspace) {
          var timeline = data.rows;
 
          async.map(timeline, function(item, cb) {
-            if(item.type == 'post') { return getPost(item.item, cb); }
+
+            if(item.type == 'post') {
+              return getPost(liu, item.item, function(err, post) {
+                 if(err && err.statusCode === 403) {
+                   cb(); // Silently drop posts from the feed
+                 } else {
+                   cb(err, post);
+                 }
+              });
+            }
             if(item.type == 'like') { return getLike(item.item, cb); }
-            if(item.type == 'friend') { return getFriend(item.item, cb); }
+            if(item.type == 'friend') {
+              return getFriend(liu, item.item, function(err, friend) {
+                 if(err && err.statusCode === 403) {
+                   cb(); // Silently drop these from the feed
+                 } else {
+                   cb(err, friend);
+                 }
+              });
+            }
             if(item.type == 'follow') { return getFollow(item.item, cb); }
             return cb();
+
          }, function(err, results) {
 
             /* istanbul ignore if */
@@ -189,8 +253,6 @@ module.exports = function(client, keyspace) {
 
                 feed.push(currentResult);
 
-              } else {
-                console.error('Unable to locate: ' + timeline[index].item + ' of type ' + timeline[index].type);
               }
 
             });
@@ -219,6 +281,7 @@ module.exports = function(client, keyspace) {
     getFollow: getFollow,
     getFollowersByName: getFollowersByName,
     getFriend: getFriend,
+    isFriend: isFriend,
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
     getFeedForUser: getFeedForUser,

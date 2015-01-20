@@ -10,11 +10,11 @@ var queries = {};
  * @apiDefine ExampleCqlApplications
  * @apiExample {cql} Insert Application
  *    INSERT INTO seguir.applications (application, key, name) VALUES(?, ?, ?)
- * @apiExample {cql} Check Application Key
+ * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
 queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (application, key, name) VALUES(?, ?, ?)';
-queries.checkApplicationKey = 'SELECT application, name FROM {KEYSPACE}.applications WHERE key = ?';
+queries.checkApplication = 'SELECT application, name FROM {KEYSPACE}.applications WHERE key = ?';
 
 /**
  * @apiDefine ExampleCqlUsers
@@ -36,8 +36,8 @@ queries.selectUserByUsername = 'SELECT user, username FROM {KEYSPACE}.users WHER
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, user, posted FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted) VALUES(?, ?, ?, ?);';
+queries.selectPost = 'SELECT post, content, user, posted, isPrivate FROM {KEYSPACE}.posts WHERE post = ?';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted, isPrivate) VALUES(?, ?, ?, ?, ?);';
 
 /**
  * @apiDefine ExampleCqlFriends
@@ -104,8 +104,8 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE like = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, private) VALUES(?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, private FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isPrivate) VALUES(?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isPrivate FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?';
 
 module.exports = function(keyspace) {
