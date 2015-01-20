@@ -938,7 +938,7 @@
         "type": "cql"
       },
       {
-        "title": "Check Application Key",
+        "title": "Check Application",
         "content": "SELECT application, name FROM seguir.applications WHERE key = ?",
         "type": "cql"
       }
@@ -1244,7 +1244,7 @@
             "group": "Parameter",
             "type": "Boolean",
             "optional": false,
-            "field": "private",
+            "field": "isprivate",
             "description": "<p>Is the post only for friends.</p> "
           },
           {
@@ -1365,7 +1365,7 @@
             "group": "Parameter",
             "type": "Boolean",
             "optional": false,
-            "field": "private",
+            "field": "isprivate",
             "description": "<p>Is this event private and only visible if the user is a friend.</p> "
           }
         ]

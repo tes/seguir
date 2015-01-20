@@ -9,8 +9,6 @@ var users = [];
 
 function createApplication(next) {
   // 0 is known for testing
-  api.auth.addFriend(pair[0], pair[1], casual.moment.toDate(), cb);
-
   next();
 }
 
@@ -36,7 +34,7 @@ function deleteData(next) {
 function addUsers(next) {
   console.log('Creating users ...');
   async.map(users, function(user, cb) {
-    api.create.addUser(user, cb);
+    api.manage.addUser(user, cb);
   }, function(err, results) {
     // User array now has ids
     users = results;
@@ -48,7 +46,7 @@ function addFriends(next) {
   console.log('Creating friends ...');
   var pairs = getUserPairs(numUsers*2);
   async.map(pairs, function(pair, cb) {
-     api.create.addFriend(pair[0], pair[1], casual.moment.toDate(), cb);
+     api.manage.addFriend(pair[0], pair[1], casual.moment.toDate(), cb);
   }, next);
 }
 
@@ -56,7 +54,7 @@ function addFollowers(next) {
   console.log('Creating followers ...');
   var pairs = getUserPairs(numUsers*2);
   async.map(pairs, function(pair, cb) {
-     api.create.addFollower(pair[0], pair[1], casual.moment.toDate(), cb);
+     api.manage.addFollower(pair[0], pair[1], casual.moment.toDate(), cb);
   }, next);
 }
 
@@ -64,7 +62,7 @@ function addPosts(next) {
   console.log('Creating posts ...');
   var posts = getUsers(numUsers*2);
   async.map(posts, function(post, cb) {
-     api.create.addPost(post.user, casual.text, casual.moment.toDate(), false, cb);
+     api.manage.addPost(post.user, casual.text, casual.moment.toDate(), false, cb);
   }, next);
 }
 
@@ -72,7 +70,7 @@ function addLikes(next) {
   console.log('Creating likes ...');
   var likes = getUsers(numUsers*2);
   async.map(likes, function(like, cb) {
-     api.create.addLike(like.user, casual.domain, casual.moment.toDate(), cb);
+     api.manage.addLike(like.user, casual.domain, casual.moment.toDate(), cb);
   }, next);
 }
 

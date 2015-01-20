@@ -13,8 +13,8 @@ var queries = {};
  * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
-queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (application, key, name) VALUES(?, ?, ?)';
-queries.checkApplication = 'SELECT application, name FROM {KEYSPACE}.applications WHERE key = ?';
+queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (apptoken, name) VALUES(?, ?, ?)';
+queries.checkApplication = 'SELECT name, apptoken FROM {KEYSPACE}.applications WHERE name = ? AND apptoken = ?';
 
 /**
  * @apiDefine ExampleCqlUsers

@@ -20,7 +20,7 @@ server.use(restify.requestLogger());
 // Preflight
 server.pre(restify.pre.sanitizePath());
 server.pre(restify.pre.userAgentConnection());
-server.pre(api.authorise.checkRequest());
+server.pre(api.auth.checkRequest);
 
 /**
  * @apiDefine ApiUsers Users
@@ -198,7 +198,7 @@ server.get('/like/:username/:item', function (req, res, next) {
  */
 
 /**
- * @api {post} /post Add a post by a user
+ * @api {post} /post Add a post by a user, by default posts are public.
  * @apiName AddPost
  * @apiGroup ApiPosts
  * @apiVersion 1.0.0
@@ -258,7 +258,7 @@ server.get('/post/:post', function (req, res, next) {
   if(!req.params.post) {
     return next(new restify.errors.BadRequestError("You must provide a post guid."));
   }
-  api.query.getPost(req.params.post, function(err, post) {
+  api.query.getPost(req.liu.user, req.params.post, function(err, post) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }
@@ -340,9 +340,9 @@ server.get('/user/:username/friends', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user."));
   }
-  api.query.getFriendsByName(req.params.username, function(err, friends) {
+  api.query.getFriendsByName(req.liu.user, req.params.username, function(err, friends) {
     if(err) {
-     return next(new restify.errors.ServerError(err.message));
+     next.ifError(new restify.errors.ForbiddenError(err.message));
     }
     res.send(friends);
   });
@@ -501,7 +501,7 @@ server.get('/feed/:username', function (req, res, next) {
   if(!req.params.username) {
     return next(new restify.errors.BadRequestError("You must provide a user guid."));
   }
-  api.query.getFeedForUser(req.params.username, null, 50, function(err, feed) {
+  api.query.getFeedForUser(req.liu.user, req.params.username, null, 50, function(err, feed) {
       if(err) {
        return next(new restify.errors.ServerError(err.message));
       }

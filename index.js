@@ -5,7 +5,7 @@ var apiAuth = require('./api/auth');
 var KEYSPACE = 'seguir';
 
 module.exports = {
-  manage: apiCreate(client, KEYSPACE),
-  query: apiGet(client, KEYSPACE),
+  manage: apiManage(client, KEYSPACE),
+  query: apiQuery(client, KEYSPACE),
   auth: apiAuth(client, KEYSPACE)
 }

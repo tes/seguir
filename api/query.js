@@ -64,6 +64,7 @@ module.exports = function(client, keyspace) {
   }
 
   function isFriend(user, user_friend, next) {
+    if(user === user_friend) { return next(null, true); }
     var data = [user, user_friend];
     client.execute(q('isFriend'), data, {prepare:true},  function(err, result) {
       /* istanbul ignore if */
@@ -104,15 +105,21 @@ module.exports = function(client, keyspace) {
   }
 
   function getFriends(liu, user, next) {
-    client.execute(q('selectFriends'), [user], {prepare:true}, function(err, result) {
-       next(err, result.rows);
+    isFriend(user, liu, function(err, ok) {
+      if(err) { return next(err); }
+      if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+      client.execute(q('selectFriends'), [user], {prepare:true}, function(err, result) {
+        next(err, result ? result.rows : undefined);
+      });
     });
   }
 
   function getFriendsByName(liu, username, next) {
+
     getUserByName(username, function(err, user) {
       if(err || !user) { return next(err); }
-      getFriends(user.user, function(err, friends) {
+      getFriends(liu, user.user, function(err, friends) {
+        if(err || !friends) { return next(err); }
         _mapGetUser(friends, ['user_friend'], user, next);
       });
     });
@@ -120,7 +127,7 @@ module.exports = function(client, keyspace) {
 
   function getFollowers(user, next) {
     client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
-       next(err, result.rows);
+       next(err, result ? result.rows : undefined);
     });
   }
 
@@ -148,7 +155,8 @@ module.exports = function(client, keyspace) {
     client.execute(q('selectUserByUsername'), [username], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
        if(err) { return next(err); }
-       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       var user = result && result.rows && result.rows[0] ? result.rows[0] : undefined;
+       next(err, user);
     });
   }
 

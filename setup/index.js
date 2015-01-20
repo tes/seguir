@@ -30,13 +30,12 @@ function createTablesAndIndexes() {
    * @apiGroup Data
    * @apiVersion 1.0.0
    * @apiDescription Stores an application name and token to allow / disallow a client application access to seguir.
-   * @apiParam {Guid} application The unique guid for the application.
-   * @apiParam {String} key The key used to gain access.
+   * @apiParam {String} apptoken The key used to gain access.
    * @apiParam {String} name The name of the application (for reference).
    * @apiParam {String} PK Primary key is compound on application + key.
    * @apiUse ExampleCqlApplications
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.applications (application uuid, key text, name text, PRIMARY KEY (application, key))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.applications (name text, apptoken text, PRIMARY KEY (name, apptoken))');
 
   /**
    * @api {table} Posts Posts
