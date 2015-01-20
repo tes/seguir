@@ -602,6 +602,13 @@
             "optional": false,
             "field": "timestamp",
             "description": "<p>the time that the post occurred</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "private",
+            "description": "<p>is the post private, e.g. only for friends</p> "
           }
         ]
       }
@@ -995,7 +1002,12 @@
       },
       {
         "title": "Select Followers",
-        "content": "SELECT user_follower, since from seguir.followers WHERE user = ?",
+        "content": "SELECT user, user_follower, since from seguir.followers WHERE user = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Remove Follow",
+        "content": "DELETE FROM {KEYSPACE}.followers WHERE follow = ?",
         "type": "cql"
       }
     ]
@@ -1059,6 +1071,11 @@
       {
         "title": "Select Friends",
         "content": "SELECT user_friend, since from seguir.friends WHERE user = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Remove Friend",
+        "content": "DELETE FROM {KEYSPACE}.friends WHERE friend = ?",
         "type": "cql"
       }
     ]
@@ -1182,6 +1199,11 @@
       {
         "title": "Check Like",
         "content": "SELECT like, user, since FROM seguir.likes WHERE user = ? AND item = ?",
+        "type": "cql"
+      },
+      {
+        "title": "Remove Like",
+        "content": "DELETE FROM {KEYSPACE}.likes WHERE like = ?",
         "type": "cql"
       }
     ]
@@ -1360,7 +1382,12 @@
       },
       {
         "title": "Select Feed",
-        "content": "SELECT user, time, dateOf(time) AS date, item, type FROM seguir.userline WHERE user = ? {timeClause} LIMIT {limit}",
+        "content": "SELECT user, time, dateOf(time) AS date, item, type FROM seguir.userline WHERE user = ? {privateClause}{timeClause} LIMIT {limit}",
+        "type": "cql"
+      },
+      {
+        "title": "Remove Item from feed)",
+        "content": "DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?",
         "type": "cql"
       }
     ]
