@@ -5,9 +5,7 @@
 var keyspace = 'test_seguir';
 var expect = require('expect.js');
 var client = require('../../db/client')();
-var manage = require('../../api/manage')(client, keyspace);
-var query = require('../../api/query')(client, keyspace);
-var auth = require('../../api/auth')(client, keyspace);
+var api = require('../../index')(client, keyspace);
 var setup = require('../../setup');
 var async = require('async');
 var _ = require('lodash');
@@ -15,6 +13,9 @@ var _ = require('lodash');
 describe('Social API', function() {
 
     var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId;
+    var manage = api.manage;
+    var query = api.query;
+    var auth = api.auth;
 
     before(function(done) {
       this.timeout(20000);

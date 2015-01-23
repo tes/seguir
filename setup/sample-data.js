@@ -31,6 +31,11 @@ function deleteData(next) {
   }, next);
 }
 
+function addApplication(next) {
+  console.log('Creating application ...');
+  api.auth.addApplication('sample-application', '247455fe-0e8e-4e3f-af4d-458ac13508b8', next);
+}
+
 function addUsers(next) {
   console.log('Creating users ...');
   async.map(users, function(user, cb) {
@@ -109,6 +114,7 @@ function getUser() {
 async.series([
   createUsers,
   deleteData,
+  addApplication,
   addUsers,
   addFriends,
   addFollowers,

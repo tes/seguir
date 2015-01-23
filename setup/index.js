@@ -35,7 +35,7 @@ function createTablesAndIndexes() {
    * @apiParam {String} PK Primary key is compound on application + key.
    * @apiUse ExampleCqlApplications
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.applications (name text, apptoken text, PRIMARY KEY (name, apptoken))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.applications (name text, apptoken uuid, PRIMARY KEY (name, apptoken))');
 
   /**
    * @api {table} Posts Posts

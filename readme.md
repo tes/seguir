@@ -32,9 +32,9 @@ authorisation, passing of current user and other configuration.
 ```
 var Seguir = require('seguir/client');
 seguir = new Seguir({
-  server:'http://localhost:3000',
-  application:'my-amazing-social-app',
-  token:'b90d442f-8473-4d50-84f2-d8bf0a25f514'
+  host:'http://localhost:3000',
+  appName:'my-amazing-social-app',
+  appToken:'b90d442f-8473-4d50-84f2-d8bf0a25f514'
 });
 ```
 
@@ -42,7 +42,7 @@ Then, within the context of a request (assuming that you are using Seguir within
 
 ```
 app.get('/user/:username', function(req, res, next) {
-  seguir.query.getUser(req.user.seguirId, req.params.username, function(err, user) {
+  seguir.getUser(req.user.seguirId, req.params.username, function(err, user) {
     console.dir(user);
   });
 });
