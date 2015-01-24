@@ -229,12 +229,12 @@ function bootstrapServer(config, keyspace, next) {
   });
 
   /**
-   * @api {get} /user/:user/like/:item Get a specific like
+   * @api {get} /user/:user/like/:item Check a specific like
    * @apiName CheckLike
    * @apiGroup ApiLikes
    * @apiVersion 1.0.0
    *
-   * @apiDescription Retrieves details of a specific like
+   * @apiDescription Checks if a user likes a specific item, typically the item is a canonical url.
    *
    * @apiExample {curl} Example usage:
    *     curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com
