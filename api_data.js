@@ -570,11 +570,11 @@ define({ "api": [
   {
     "type": "get",
     "url": "/user/:user/like/:item",
-    "title": "Get a specific like",
+    "title": "Check a specific like",
     "name": "CheckLike",
     "group": "ApiLikes",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific like</p> ",
+    "description": "<p>Checks if a user likes a specific item, typically the item is a canonical url.</p> ",
     "examples": [
       {
         "title": "Example usage:",
