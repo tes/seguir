@@ -9,7 +9,7 @@ var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'}
 
 function Auth(client, keyspace) {
 
-  var q = require('../db/queries')(keyspace);
+  var q = require('./db/queries')(keyspace);
   var query = require('./query')(client, keyspace);
 
   /**

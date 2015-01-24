@@ -14,7 +14,7 @@ var moment = require('moment');
  */
 module.exports = function(client, keyspace) {
 
-  var q = require('../db/queries')(keyspace);
+  var q = require('./db/queries')(keyspace);
   var query = require('./query')(client, keyspace);
 
   function addUser(username, next) {

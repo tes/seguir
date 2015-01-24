@@ -4,7 +4,7 @@
 'use strict';
 var keyspace = 'test_seguir';
 var expect = require('expect.js');
-var client = require('../../db/client')();
+var client = require('../../api/db/client')();
 var api = require('../../index')(client, keyspace);
 var setup = require('../../setup');
 var async = require('async');

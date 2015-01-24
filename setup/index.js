@@ -1,4 +1,4 @@
-var client = require('../db/client')();
+var client = require('../api/db/client')();
 var async = require('async');
 var KEYSPACE = 'seguir';
 var verbose = false;

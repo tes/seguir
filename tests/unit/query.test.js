@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('expect.js');
-var q = require('../../db/queries')('seguir');
+var q = require('../../api/db/queries')('seguir');
 
 describe('Queries', function() {
 

@@ -11,11 +11,20 @@ User -> Like -> Item
 User -> Post
 ```
 
-Any actions taken by a user are posted into a newsfeed for themselves and their followers.  It is expected that the application using this API authenticates users, and just passes a shared key for each user through to seguir.
+Any actions taken by a user are posted into a newsfeed for themselves and their followers. Friends can see posts and other actions that are marked as private.
 
-The friend concept will be used to allow private messaging and control visibility of your newsfeed to others.
+The expected flow between your application and Seguir is:
 
-## Running
+1. Application authenticates user.
+2. Application checks if user already has Seguir ID stored against profile.
+3. IF NOT: Add user to Seguir, store new Seguir ID against their profile.
+4. Use Seguir ID in all requests to API (this is the first parameter in all client APIs).
+
+This approach allows users to modify any of their metadata (username, display name, email) without impacting their social graph in any way - Seguir is not opinionated about how your App defines a user.  However, you can store data against the User record in Seguir, purely as a cache, so that this information is returned in the API to avoid N calls back to your database when rendering a news feed.
+
+If you allow anonymous access, then you simply pass null in as the first parameter (e.g. not logged in).
+
+## Running the Server
 
 ```
 git clone git@github.com:cliftonc/seguir.git
@@ -24,10 +33,24 @@ npm install
 node server
 ```
 
-## Integrating
+## Setup Cassandra and Sample Data
+
+To create the Cassandra schema, note that this will **DROP** all tables in the schema first!
+
+```
+node setup
+```
+
+To create some sample data to work against, this will **TRUNCATE** all tables in the schema before loading!
+
+```
+node setup/sample-data
+```
+
+## Integrating the Client
 
 Seguir ships with a client, that lets you point it at a seguir server and will handle things like the
-authorisation, passing of current user and other configuration.
+authorisation, passing of current user and other configuration.  Will split client out into a separate project once it is a little more stable.
 
 ```
 var Seguir = require('seguir/client');
@@ -41,14 +64,34 @@ seguir = new Seguir({
 Then, within the context of a request (assuming that you are using Seguir within an application, and have middleware that retrieves the seguir ID for the current logged in user and assigns that to req.user.seguirId).
 
 ```
-app.get('/user/:username', function(req, res, next) {
-  seguir.getUser(req.user.seguirId, req.params.username, function(err, user) {
-    console.dir(user);
+app.get('/user/:username/feed', function(req, res, next) {
+
+  // Retrieve the specified :username profile from *your* db
+  db.getUserProfile(req.params.username, function(err, profile) {
+
+    // Get the seguir ID's for both logged in user and user requested
+    var loggedInUserId = req.user.seguirId;
+    var userId = profile.seguirId;
+
+    // Now, get the first 50 items
+    seguir.getFeedForUser(loggedInUserId, userId, null, 50, function(err, feed) {
+
+      // Render it
+      res.render('newsfeed', feed);
+
+    });
+
   });
+
 });
+
 ```
 
-## Docs
+## Developing
+
+Test coverage is slowly increasing, intention is to get it to 100 and then pin pre-commit hooks to it.
+
+### Docs
 
 ```
 npm run docs
@@ -62,19 +105,15 @@ git subtree push --prefix doc origin gh-pages
 
 This will push any documentation changes to gh-pages.
 
-## Developing
-
-Test coverage is slowly increasing, intention is to get it to 100 and then pin pre-commit hooks to it.
-
 ## Todo
 
-* User probably needs shared key other than username, along with avatar
+* User object should allow for arbitrary data to be added.
 * Friend should be a request, reciprocal when accepted
 * Private messaging between friends
 * Un-follow, and cleaning newsfeed
 * Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
-* Configuration and client management - all a bit crap atm
+* Configuration externalised properly
 
 ## Requires
 

@@ -31,7 +31,7 @@ var moment = require('moment');
  */
 module.exports = function(client, keyspace) {
 
-  var q = require('../db/queries')(keyspace);
+  var q = require('./db/queries')(keyspace);
 
   function getFeedForUser(liu, user, from, limit, next) {
       _getFeed(liu, user, from, limit, next);

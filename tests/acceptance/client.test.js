@@ -3,14 +3,14 @@
  */
 'use strict';
 var keyspace = 'test_client_seguir';
-var client = require('../../db/client')();
+var dbClient = require('../../api/db/client')();
 var cassandra = require('cassandra-driver');
 var expect = require('expect.js');
 var Seguir = require('../../client');
 var setup = require('../../setup');
 var async = require('async');
 var _ = require('lodash');
-var api = require('../../index')(client, keyspace);
+var api = require('../../index')(dbClient, keyspace);
 var auth = api.auth;
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001', appName:'sample-application', appToken: cassandra.types.uuid()};
