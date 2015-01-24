@@ -100,7 +100,6 @@ function bootstrapServer(config, keyspace, next) {
    *      "username":"cliftonc"
    *    }
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -136,7 +135,6 @@ function bootstrapServer(config, keyspace, next) {
    *      "username":"cliftonc"
    *    }
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -208,7 +206,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Retrieves details of a specific like
    *
    * @apiExample {curl} Example usage:
-   *     curl -i http://localhost:3000/like/cliftonc/github.com
+   *     curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com
    *
    * @apiParam {Guid} post The guid of the like
    * @apiSuccessExample
@@ -218,8 +216,6 @@ function bootstrapServer(config, keyspace, next) {
    *      'item': 'github.com',
    *      'timestamp': 1421585133444 }
    *
-   *  @apiUse MissingLike
-   *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
    */
@@ -241,7 +237,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Retrieves details of a specific like
    *
    * @apiExample {curl} Example usage:
-   *     curl -i http://localhost:3000/like/cliftonc/github.com
+   *     curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com
    *
    * @apiParam {Guid} user The guid of the user
    * @apiParam {String} item The item to check
@@ -252,8 +248,6 @@ function bootstrapServer(config, keyspace, next) {
    *      'item': 'github.com',
    *      'timestamp': 1421585133444 }
    *
-   *  @apiUse MissingUsername
-   *  @apiUse MissingItem
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -330,7 +324,6 @@ function bootstrapServer(config, keyspace, next) {
             "posted": "2015-01-18T20:37:32.626Z"
         }
    *
-   *  @apiUse MissingPost
    *  @apiUse ServerError
    */
   server.get(u('getPost'), function (req, res, next) {
@@ -407,7 +400,6 @@ function bootstrapServer(config, keyspace, next) {
           }
       ]
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -441,7 +433,6 @@ function bootstrapServer(config, keyspace, next) {
           }
       ]
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -526,7 +517,6 @@ function bootstrapServer(config, keyspace, next) {
             }
         ]
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -565,7 +555,6 @@ function bootstrapServer(config, keyspace, next) {
                 "since": "2015-01-18T20:37:09.383Z"
             }
    *
-   *  @apiUse MissingFollow
    *  @apiUse ServerError
    *
    */

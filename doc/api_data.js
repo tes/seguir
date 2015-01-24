@@ -1,7 +1,7 @@
 define({ "api": [
   {
     "type": "get",
-    "url": "/feed/:username",
+    "url": "/feed/:user",
     "title": "Get a feed for a user",
     "name": "GetFeed",
     "group": "ApiFeeds",
@@ -14,8 +14,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>the username of the user</p> "
+            "field": "user",
+            "description": "<p>the guid of the user</p> "
           }
         ]
       }
@@ -38,12 +38,6 @@ define({ "api": [
           {
             "group": "4xx",
             "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
-          {
-            "group": "4xx",
-            "optional": false,
             "field": "NotFoundError",
             "description": "<p>The user was not found.</p> "
           }
@@ -58,11 +52,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
@@ -156,7 +145,60 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:username/followers",
+    "url": "/followers/:follow",
+    "title": "Get follow details",
+    "name": "GetFollower",
+    "group": "ApiFollowers",
+    "version": "1.0.0",
+    "description": "<p>Retrieves details of a specific follow</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "follow",
+            "description": "<p>the guid of a specific follow</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n         {\n             \"user_follower\": {\n                 \"user\": \"379554e7-72b0-4009-b558-aa2804877595\",\n                 \"username\": \"Mabel.Sporer\"\n             },\n             \"since\": \"1993-11-19T00:58:16.000Z\"\n         },\n         {\n             \"user_follower\": {\n                 \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n                 \"username\": \"cliftonc\"\n             },\n             \"since\": \"2015-01-18T20:37:09.383Z\"\n         }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "Followers",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
+    "error": {
+      "fields": {
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/username/:user/followers",
     "title": "Get followers for a user",
     "name": "GetFollowers",
     "group": "ApiFollowers",
@@ -193,9 +235,68 @@ define({ "api": [
           {
             "group": "4xx",
             "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/friend/:friend",
+    "title": "Get friend",
+    "name": "GetFriend",
+    "group": "ApiFriend",
+    "version": "1.0.0",
+    "description": "<p>Retrieves a specific relationship information</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>the guid of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "  HTTP/1.1 200 OK\n[\n         {\n             \"user_friend\": {\n                 \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n                 \"username\": \"cliftonc\"\n             },\n             \"since\": \"2015-01-18T20:36:38.632Z\"\n         }\n     ]",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "ApiFriend",
+    "error": {
+      "fields": {
+        "4xx": [
           {
             "group": "4xx",
             "optional": false,
@@ -213,11 +314,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
@@ -311,7 +407,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:username/friends",
+    "url": "/user/:user/friends",
     "title": "Get friends for a user",
     "name": "GetFriends",
     "group": "ApiFriends",
@@ -324,8 +420,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>the username of the user</p> "
+            "field": "user",
+            "description": "<p>the guid of the user</p> "
           }
         ]
       }
@@ -348,12 +444,6 @@ define({ "api": [
           {
             "group": "4xx",
             "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
-          {
-            "group": "4xx",
-            "optional": false,
             "field": "NotFoundError",
             "description": "<p>The user was not found.</p> "
           }
@@ -368,11 +458,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
@@ -397,7 +482,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl --data \"username=cliftonc&item=github.com\" http://localhost:3000/like",
+        "content": "curl --data \"user=405d7e5e-c028-449c-abad-9c11d8569b8f&item=github.com\" http://localhost:3000/like",
         "type": "curl"
       }
     ],
@@ -484,6 +569,86 @@ define({ "api": [
   },
   {
     "type": "get",
+    "url": "/user/:user/like/:item",
+    "title": "Get a specific like",
+    "name": "CheckLike",
+    "group": "ApiLikes",
+    "version": "1.0.0",
+    "description": "<p>Retrieves details of a specific like</p> ",
+    "examples": [
+      {
+        "title": "Example usage:",
+        "content": "curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com",
+        "type": "curl"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The guid of the user</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "item",
+            "description": "<p>The item to check</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{ 'like': '8a3c8e57-67a1-4874-8f34-451f59f6d153',\n  'user': '405d7e5e-c028-449c-abad-9c11d8569b8f',\n  'item': 'github.com',\n  'timestamp': 1421585133444 }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server.js",
+    "groupTitle": "Likes",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
     "url": "/like/:like",
     "title": "Get a specific like",
     "name": "GetLike",
@@ -493,7 +658,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/like/cliftonc/github.com",
+        "content": "curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com",
         "type": "curl"
       }
     ],
@@ -524,20 +689,6 @@ define({ "api": [
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
     "error": {
       "fields": {
-        "4xx": [
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "NotFoundError",
-            "description": "<p>The user was not found.</p> "
-          }
-        ],
         "5xx": [
           {
             "group": "5xx",
@@ -548,21 +699,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide an item.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Not-Found:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Server-Error:",
           "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
@@ -586,7 +722,7 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
+            "field": "user",
             "description": "<p>of the user</p> "
           },
           {
@@ -698,14 +834,6 @@ define({ "api": [
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve posts.</p> ",
     "error": {
       "fields": {
-        "4xx": [
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a post guid</p> "
-          }
-        ],
         "5xx": [
           {
             "group": "5xx",
@@ -717,11 +845,6 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a post guid.\"\n}",
-          "type": "json"
-        },
-        {
           "title": "Server-Error:",
           "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
           "type": "json"
@@ -731,7 +854,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/id/:id",
+    "url": "/user/:id",
     "title": "Get a specific user by id",
     "name": "GetUser",
     "group": "ApiUsers",
@@ -740,7 +863,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/id/cbeab41d-2372-4017-ac50-d8d63802d452",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
         "type": "curl"
       }
     ],
@@ -775,12 +898,6 @@ define({ "api": [
           {
             "group": "4xx",
             "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
-          {
-            "group": "4xx",
-            "optional": false,
             "field": "NotFoundError",
             "description": "<p>The user was not found.</p> "
           }
@@ -795,11 +912,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
@@ -815,7 +927,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:username",
+    "url": "/username/:username",
     "title": "Get a specific user",
     "name": "GetUser",
     "group": "ApiUsers",
@@ -824,7 +936,7 @@ define({ "api": [
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/cliftonc",
+        "content": "curl -i http://localhost:3000/username/cliftonc",
         "type": "curl"
       }
     ],
@@ -859,12 +971,6 @@ define({ "api": [
           {
             "group": "4xx",
             "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          },
-          {
-            "group": "4xx",
-            "optional": false,
             "field": "NotFoundError",
             "description": "<p>The user was not found.</p> "
           }
@@ -879,11 +985,6 @@ define({ "api": [
         ]
       },
       "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
