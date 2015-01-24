@@ -1,4 +1,5 @@
 var cassandra = require('cassandra-driver');
+var restify = require('restify');
 var async = require('async');
 var moment = require('moment');
 var appNameHeader = 'x-seguir-app-name';
@@ -34,10 +35,10 @@ function Auth(client, keyspace) {
 
   function checkApplication(appName, appToken, next) {
     if(!appName) {
-      return next(new Error('You must provide an application name via the header "' + appNameHeader + '" to access seguir the seguir API.'));
+      return next(new restify.UnauthorizedError('You must provide an application name via the header "' + appNameHeader + '" to access seguir the seguir API.'));
     }
     if(!appToken) {
-      return next(new Error('You must provide an application token via the header "' + appTokenHeader + '" to access seguir the seguir API.'));
+      return next(new restify.UnauthorizedError('You must provide an application token via the header "' + appTokenHeader + '" to access seguir the seguir API.'));
     }
     var application = [appName, appToken];
     client.execute(q('checkApplication'), application, function(err, result) {
@@ -51,7 +52,7 @@ function Auth(client, keyspace) {
     }
     client.execute(q('selectUser'), [user], function(err, result) {
       if(err) { return next(err); }
-      if(!result || result.rows.length == 0) { return next(new Error('Specified user in header "' + userHeader + '" does not exist.')); }
+      if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user in header "' + userHeader + '" does not exist.')); }
       next(null, result.rows[0]);
     });
   }

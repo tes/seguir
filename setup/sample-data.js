@@ -1,10 +1,10 @@
+var KEYSPACE = 'seguir';
 var client = require('../db/client')();
-var api = require('../index');
+var api = require('../index')(client, KEYSPACE);
 var cassandra = require('cassandra-driver');
 var async = require('async');
 var casual = require('casual');
 var numUsers = 10;
-var KEYSPACE = 'seguir';
 var users = [];
 
 function createApplication(next) {

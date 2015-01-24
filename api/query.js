@@ -33,12 +33,8 @@ module.exports = function(client, keyspace) {
 
   var q = require('../db/queries')(keyspace);
 
-  function getFeedForUser(liu, username, from, limit, next) {
-    getUserByName(username, function(err, user) {
-      /* istanbul ignore if */
-      if(err) { return next(err); }
+  function getFeedForUser(liu, user, from, limit, next) {
       _getFeed(liu, user, from, limit, next);
-    });
   }
 
   function canSeePrivate(liu, user, next) {
@@ -85,9 +81,13 @@ module.exports = function(client, keyspace) {
        /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
        var friend = result.rows[0] ? result.rows[0] : undefined;
-       getUser(friend.user_friend, function(err, user) {
-         friend.username_friend = user.username;
-         next(null, friend);
+       isFriend(friend.user_friend, liu, function(err, ok) {
+        if(err) { return next(err); }
+        if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+         getUser(friend.user_friend, function(err, user) {
+           friend.username_friend = user.username;
+           next(null, friend);
+         });
        });
     });
   }
@@ -160,12 +160,9 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function checkLike(username, item, next) {
-    getUserByName(username, function(err, user) {
-      if(!user) { return next(err); }
-      client.execute(q('checkLike'), [user.user, item], {prepare:true}, function(err, result) {
-         next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
-      });
+  function checkLike(user, item, next) {
+    client.execute(q('checkLike'), [user, item], {prepare:true}, function(err, result) {
+       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
@@ -192,7 +189,7 @@ module.exports = function(client, keyspace) {
 
   function _getFeed(liu, user, from, limit, next) {
 
-    var data = [user.user], timeClause = '';
+    var data = [user], timeClause = '';
 
     if(from) {
       timeClause = 'AND time < ' + from;

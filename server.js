@@ -1,4 +1,10 @@
 var restify = require('restify');
+var u = require('./api/urls');
+var bunyan = require('bunyan');
+var logger = bunyan.createLogger({
+    name: 'seguir',
+    serializers: restify.bunyan.serializers
+});
 
 function bootstrapServer(config, keyspace, next) {
 
@@ -7,7 +13,8 @@ function bootstrapServer(config, keyspace, next) {
 
   var server = restify.createServer({
     name:'seguir',
-    version:'0.1.0'
+    version:'0.1.0',
+    log: logger
   });
 
   // Default middleware
@@ -15,15 +22,22 @@ function bootstrapServer(config, keyspace, next) {
   server.use(restify.queryParser({ mapParams: false }));
   server.use(restify.gzipResponse());
   server.use(restify.CORS());
+  server.use(restify.requestLogger());
+
   server.get(/\/docs\/current\/?.*/, restify.serveStatic({
     directory: './doc',
     default: 'index.html'
   }));
-  server.use(restify.requestLogger());
 
   // Preflight
   server.pre(restify.pre.sanitizePath());
   server.pre(restify.pre.userAgentConnection());
+  server.pre(function (request, response, next) {
+      if(config.logging) {
+        request.log.info({ req: request }, 'REQUEST');
+      }
+      next();
+  });
   server.pre(api.auth.checkRequest);
 
   /**
@@ -54,13 +68,13 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    *
    */
-  server.post('/user', function (req, res, next) {
+  server.post(u('addUser'), function (req, res, next) {
     if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a username."));
+      return next(new restify.InvalidArgumentError("You must provide a username."));
     }
     api.manage.addUser(req.params.username, function(err, user) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       res.send(user);
     });
@@ -68,7 +82,7 @@ function bootstrapServer(config, keyspace, next) {
 
 
   /**
-   * @api {get} /user/:username Get a specific user
+   * @api {get} /username/:username Get a specific user
    * @apiName GetUser
    * @apiGroup ApiUsers
    * @apiVersion 1.0.0
@@ -76,7 +90,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Retrieves details of a specific user
    *
    * @apiExample {curl} Example usage:
-   *     curl -i http://localhost:3000/user/cliftonc
+   *     curl -i http://localhost:3000/username/cliftonc
    *
    * @apiParam {String} username The name of the user
    * @apiSuccessExample
@@ -91,23 +105,20 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    *
    */
-  server.get('/user/:username', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a username."));
-    }
+  server.get(u('getUserByName'), function (req, res, next) {
     api.query.getUserByName(req.params.username, function(err, user) {
         if(!user) {
-          return next(new restify.errors.NotFoundError("Could not find that user."));
+          return next(new restify.NotFoundError("Could not find that user."));
         }
         if(err) {
-         return next(new restify.errors.ServerError(err.message));
+         return next(new restify.ServerError(err.message));
         }
         res.send(user);
     });
   });
 
   /**
-   * @api {get} /user/id/:id Get a specific user by id
+   * @api {get} /user/:id Get a specific user by id
    * @apiName GetUser
    * @apiGroup ApiUsers
    * @apiVersion 1.0.0
@@ -115,7 +126,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Retrieves details of a specific user by id
    *
    * @apiExample {curl} Example usage:
-   *     curl -i http://localhost:3000/user/id/cbeab41d-2372-4017-ac50-d8d63802d452
+   *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452
    *
    * @apiParam {String} username The name of the user
    * @apiSuccessExample
@@ -130,16 +141,13 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    *
    */
-  server.get('/user/id/:id', function (req, res, next) {
-    if(!req.params.id) {
-      return next(new restify.errors.BadRequestError("You must provide an id."));
-    }
-    api.query.getUser(req.params.id, function(err, user) {
+  server.get(u('getUser'), function (req, res, next) {
+    api.query.getUser(req.params.user, function(err, user) {
         if(!user) {
-          return next(new restify.errors.NotFoundError("Could not find that user."));
+          return next(new restify.NotFoundError("Could not find that user."));
         }
         if(err) {
-         return next(new restify.errors.ServerError(err.message));
+         return next(new restify.ServerError(err.message));
         }
         res.send(user);
     });
@@ -160,7 +168,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Creates a new like of an item
    *
    * @apiExample {curl} Example usage:
-   *     curl --data "username=cliftonc&item=github.com" http://localhost:3000/like
+   *     curl --data "user=405d7e5e-c028-449c-abad-9c11d8569b8f&item=github.com" http://localhost:3000/like
    *
    * @apiParam {Guid} user the guid representation of the user
    * @apiParam {String} item a canonical url to the item liked
@@ -176,16 +184,16 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    */
-  server.post('/like', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a username."));
+  server.post(u('addLike'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user."));
     }
     if(!req.params.item) {
-      return next(new restify.errors.BadRequestError("You must provide an item."));
+      return next(new restify.InvalidArgumentError("You must provide an item."));
     }
-    api.manage.addLikeByName(req.params.username, req.params.item, Date.now(), function(err, like) {
+    api.manage.addLike(req.params.user, req.params.item, Date.now(), function(err, like) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       res.send(like);
     });
@@ -210,25 +218,53 @@ function bootstrapServer(config, keyspace, next) {
    *      'item': 'github.com',
    *      'timestamp': 1421585133444 }
    *
+   *  @apiUse MissingLike
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getLike'), function (req, res, next) {
+    api.query.getLike(req.params.like, function(err, like) {
+        if(err) {
+         return next(new restify.ServerError(err.message));
+        }
+        res.send(like);
+    });
+  });
+
+  /**
+   * @api {get} /user/:user/like/:item Get a specific like
+   * @apiName CheckLike
+   * @apiGroup ApiLikes
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves details of a specific like
+   *
+   * @apiExample {curl} Example usage:
+   *     curl -i http://localhost:3000/like/cliftonc/github.com
+   *
+   * @apiParam {Guid} user The guid of the user
+   * @apiParam {String} item The item to check
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *    { 'like': '8a3c8e57-67a1-4874-8f34-451f59f6d153',
+   *      'user': '405d7e5e-c028-449c-abad-9c11d8569b8f',
+   *      'item': 'github.com',
+   *      'timestamp': 1421585133444 }
+   *
    *  @apiUse MissingUsername
    *  @apiUse MissingItem
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
    */
-  server.get('/like/:username/:item', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a username."));
-    }
-    if(!req.params.item) {
-      return next(new restify.errors.BadRequestError("You must provide an item."));
-    }
-    api.query.checkLike(req.params.username, req.params.item, function(err, like) {
+  server.get(u('checkLike'), function (req, res, next) {
+    api.query.checkLike(req.params.user, encodeURIComponent(req.params.item), function(err, like) {
         if(err) {
-         return next(new restify.errors.ServerError(err.message));
+         return next(new restify.ServerError(err.message));
         }
         if(!like) {
-         return next(new restify.errors.NotFoundError('User + item like not found'));
+         return next(new restify.NotFoundError('User + item like not found'));
         }
         res.send(like);
     });
@@ -247,7 +283,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiVersion 1.0.0
    *
    * @apiDescription Creates a new post.
-   * @apiParam {String} username of the user
+   * @apiParam {String} user of the user
    * @apiParam {String} content of the post
    * @apiParam {Timestamp} timestamp the time that the post occurred
    * @apiParam {Boolean} private is the post private, e.g. only for friends
@@ -262,16 +298,16 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse MissingContent
    *  @apiUse ServerError
    */
-  server.post('/post', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a username."));
+  server.post(u('addPost'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user."));
     }
     if(!req.params.content) {
-      return next(new restify.errors.BadRequestError("You must provide content for the post."));
+      return next(new restify.InvalidArgumentError("You must provide content for the post."));
     }
-    api.manage.addPostByName(req.params.username, req.params.content, Date.now(), req.params.private, function(err, post) {
+    api.manage.addPost(req.params.user, req.params.content, Date.now(), req.params.isprivate, function(err, post) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       res.send(post);
     });
@@ -297,13 +333,10 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse MissingPost
    *  @apiUse ServerError
    */
-  server.get('/post/:post', function (req, res, next) {
-    if(!req.params.post) {
-      return next(new restify.errors.BadRequestError("You must provide a post guid."));
-    }
+  server.get(u('getPost'), function (req, res, next) {
     api.query.getPost(req.liu.user, req.params.post, function(err, post) {
         if(err) {
-         return next(new restify.errors.ServerError(err.message));
+          return next(new restify.ForbiddenError(err.message));
         }
         res.send(post);
     });
@@ -336,32 +369,32 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse MissingFriend
    *  @apiUse ServerError
    */
-  server.post('/friend', function (req, res, next) {
+  server.post(u('addFriend'), function (req, res, next) {
     if(!req.params.user) {
-      return next(new restify.errors.BadRequestError("You must provide a user guid."));
+      return next(new restify.InvalidArgumentError("You must provide a user guid."));
     }
     if(!req.params.user_friend) {
-      return next(new restify.errors.BadRequestError("You must provide a user_friend guid."));
+      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
     }
     api.manage.addFriend(req.params.user, req.params.user_friend, Date.now(), function(err, friend) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       if(!friend) {
-         return next(new restify.errors.NotFoundError('User not found'));
+         return next(new restify.NotFoundError('User not found'));
       }
       res.send(friend);
     });
   });
 
-  /**
-   * @api {get} /user/:username/friends Get friends for a user
-   * @apiName GetFriends
-   * @apiGroup ApiFriends
+ /**
+   * @api {get} /friend/:friend Get friend
+   * @apiName GetFriend
+   * @apiGroup ApiFriend
    * @apiVersion 1.0.0
    *
-   * @apiDescription Retrieves a set of friends for a specific user
-   * @apiParam {String} username the username of the user
+   * @apiDescription Retrieves a specific relationship information
+   * @apiParam {String} user the guid of the user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
    *  [
@@ -379,13 +412,44 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    *
    */
-  server.get('/user/:username/friends', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a user."));
-    }
-    api.query.getFriendsByName(req.liu.user, req.params.username, function(err, friends) {
+  server.get(u('getFriend'), function (req, res, next) {
+    api.query.getFriend(req.liu.user, req.params.friend, function(err, friend) {
       if(err) {
-       next.ifError(new restify.errors.ForbiddenError(err.message));
+       return next(new restify.ForbiddenError(err.message));
+      }
+      res.send(friend);
+    });
+  });
+
+  /**
+   * @api {get} /user/:user/friends Get friends for a user
+   * @apiName GetFriends
+   * @apiGroup ApiFriends
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves a set of friends for a specific user
+   * @apiParam {String} user the guid of the user
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *  [
+          {
+              "user_friend": {
+                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                  "username": "cliftonc"
+              },
+              "since": "2015-01-18T20:36:38.632Z"
+          }
+      ]
+   *
+   *  @apiUse MissingUsername
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getFriends'), function (req, res, next) {
+    api.query.getFriends(req.liu.user, req.params.user, function(err, friends) {
+      if(err) {
+       return next(new restify.ForbiddenError(err.message));
       }
       res.send(friends);
     });
@@ -419,16 +483,16 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse MissingFollow
    *  @apiUse ServerError
    */
-  server.post('/follow', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a user."));
+  server.post(u('addFollower'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user."));
     }
-    if(!req.params.username_follower) {
-      return next(new restify.errors.BadRequestError("You must provide a user_follower."));
+    if(!req.params.user_follower) {
+      return next(new restify.InvalidArgumentError("You must provide a user_follower."));
     }
-    api.manage.addFollowerByName(req.params.username, req.params.username_follower, Date.now(), function(err, follow) {
+    api.manage.addFollower(req.params.user, req.params.user_follower, Date.now(), function(err, follow) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       res.send(follow);
     });
@@ -436,7 +500,7 @@ function bootstrapServer(config, keyspace, next) {
 
 
   /**
-   * @api {get} /user/:username/followers Get followers for a user
+   * @api {get} /username/:user/followers Get followers for a user
    * @apiName GetFollowers
    * @apiGroup ApiFollowers
    * @apiVersion 1.0.0
@@ -467,15 +531,50 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    *
    */
-  server.get('/user/:username/followers', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a user."));
-    }
-    api.query.getFollowersByName(req.params.username, function(err, followers) {
+  server.get(u('getFollowers'), function (req, res, next) {
+    api.query.getFollowers(req.params.user, function(err, followers) {
       if(err) {
-       return next(new restify.errors.ServerError(err.message));
+       return next(new restify.ServerError(err.message));
       }
       res.send(followers);
+    });
+  });
+
+  /**
+   * @api {get} /followers/:follow Get follow details
+   * @apiName GetFollower
+   * @apiGroup ApiFollowers
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves details of a specific follow
+   * @apiParam {Guid} follow the guid of a specific follow
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+            {
+                "user_follower": {
+                    "user": "379554e7-72b0-4009-b558-aa2804877595",
+                    "username": "Mabel.Sporer"
+                },
+                "since": "1993-11-19T00:58:16.000Z"
+            },
+            {
+                "user_follower": {
+                    "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                    "username": "cliftonc"
+                },
+                "since": "2015-01-18T20:37:09.383Z"
+            }
+   *
+   *  @apiUse MissingFollow
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getFollow'), function (req, res, next) {
+    api.query.getFollow(req.params.follow, function(err, follow) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      res.send(follow);
     });
   });
 
@@ -486,13 +585,13 @@ function bootstrapServer(config, keyspace, next) {
    */
 
   /**
-   * @api {get} /feed/:username Get a feed for a user
+   * @api {get} /feed/:user Get a feed for a user
    * @apiName GetFeed
    * @apiGroup ApiFeeds
    * @apiVersion 1.0.0
    *
    * @apiDescription Retrieves a set of feed items for a specific user
-   * @apiParam {String} username the username of the user
+   * @apiParam {String} user the guid of the user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
         [
@@ -535,19 +634,19 @@ function bootstrapServer(config, keyspace, next) {
         }
         ]
    *
-   *  @apiUse MissingUsername
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
    */
-  server.get('/feed/:username', function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.errors.BadRequestError("You must provide a user guid."));
-    }
-    api.query.getFeedForUser(req.liu.user, req.params.username, null, 50, function(err, feed) {
+  server.get(u('getFeed'), function (req, res, next) {
+    api.query.getFeedForUser(req.liu.user, req.params.user, null, 50, function(err, feed) {
         if(err) {
-         return next(new restify.errors.ServerError(err.message));
+         return next(new restify.ServerError(err.message));
         }
+        if(!feed) {
+         return next(new restify.NotFoundError('Feed empty or not found.'));
+        }
+
         res.send(feed);
     });
   });
@@ -558,7 +657,7 @@ function bootstrapServer(config, keyspace, next) {
 
 /* istanbul ignore if */
 if(require.main === module) {
-  bootstrapServer(null, 'seguir', function(err, server) {
+  bootstrapServer({logging:true}, 'seguir', function(err, server) {
     server.listen(3000, function() {
       console.log('%s listening at %s', server.name, server.url);
     });

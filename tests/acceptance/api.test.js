@@ -12,7 +12,7 @@ var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId;
+    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId, otherFriendId;
     var manage = api.manage;
     var query = api.query;
     var auth = api.auth;
@@ -25,7 +25,7 @@ describe('Social API', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted'], manage.addUser, function(err, results) {
+        async.map(['cliftonc','phteven','ted','bill'], manage.addUser, function(err, results) {
           users = results;
           liu = users[1].user; // phteven is logged in
           done()
@@ -52,11 +52,20 @@ describe('Social API', function() {
 
     describe('friends', function () {
 
-       it('can friend a user', function(done) {
+      it('can friend a user', function(done) {
         manage.addFriend(users[0].user, users[1].user, Date.now(), function(err, friend) {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
+          done();
+        });
+      });
+
+      it('can friend another user', function(done) {
+        manage.addFriend(users[2].user, users[3].user, Date.now(), function(err, friend) {
+          expect(friend.user).to.be(users[2].user);
+          expect(friend.user_friend).to.be(users[3].user);
+          otherFriendId = friend.friend;
           done();
         });
       });
@@ -69,9 +78,23 @@ describe('Social API', function() {
         });
       });
 
+      it('can not retrieve details of a friendship for someone that you are not friends with', function(done) {
+        query.getFriend(users[0].user, otherFriendId, function(err, friend) {
+          expect(err.message).to.be('You are not allowed to see this item.')
+          done();
+        });
+      });
+
       it('can retrieve a list of friends for a user', function(done) {
         query.getFriends(liu, users[0].user, function(err, friends) {
           expect(friends[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can not retrieve a list of friends for someone that you are not friends with', function(done) {
+        query.getFriends(users[0].user, users[2].user, function(err, friend) {
+          expect(err.message).to.be('You are not allowed to see this item.')
           done();
         });
       });
@@ -182,7 +205,7 @@ describe('Social API', function() {
       });
 
       it('can check if a user likes an item', function(done) {
-        query.checkLike('cliftonc','http://github.com', function(err, like) {
+        query.checkLike(users[0].user,'http://github.com', function(err, like) {
           expect(like.like).to.be(likeId);
           expect(like.user).to.be(users[0].user);
           done();
@@ -194,7 +217,7 @@ describe('Social API', function() {
     describe('feeds', function () {
 
       it('logged in - can get a feed for yourself that is in the correct order', function(done) {
-        query.getFeedForUser(users[0].user, 'cliftonc', null, 100, function(err, feed) {
+        query.getFeedForUser(users[0].user, users[0].user, null, 100, function(err, feed) {
           expect(err).to.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId);
@@ -207,7 +230,7 @@ describe('Social API', function() {
       });
 
       it('logged in - can get a feed for a friend that is in the correct order', function(done) {
-        query.getFeedForUser(users[1].user, 'cliftonc', null, 100, function(err, feed) {
+        query.getFeedForUser(users[1].user, users[0].user, null, 100, function(err, feed) {
           expect(err).to.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId); //
@@ -220,7 +243,7 @@ describe('Social API', function() {
       });
 
       it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
-        query.getFeedForUser(users[0].user, 'phteven', null, 100, function(err, feed) {
+        query.getFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
           expect(err).to.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId);
@@ -232,7 +255,7 @@ describe('Social API', function() {
       });
 
       it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
-        query.getFeedForUser(users[0].user, 'ted', null, 100, function(err, feed) {
+        query.getFeedForUser(users[0].user, users[2].user, null, 100, function(err, feed) {
           expect(err).to.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
@@ -242,7 +265,7 @@ describe('Social API', function() {
       });
 
       it('anonymous - can get a feed that is in correct order', function(done) {
-        query.getFeedForUser('anonymous', 'cliftonc', null, 100, function(err, feed) {
+        query.getFeedForUser('_anonymous_', users[0].user, null, 100, function(err, feed) {
           expect(err).to.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);

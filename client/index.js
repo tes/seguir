@@ -1,10 +1,10 @@
 /**
  * Seguir client
  */
-
 var _ = require('lodash');
 var restify = require('restify');
 var headerNames = require('../api/auth').headerNames;
+var u = require('../api/urls');
 
 var defaults = {
   host:'http://localhost:3000'
@@ -65,7 +65,7 @@ Seguir.prototype.getHeaders = function(liu) {
   if(liu) {
     liuHeader[headerNames.userHeader] = liu;
   }
-  return _.extend(self.headers, liuHeader);
+  return _.extend(_.clone(self.headers), liuHeader);
 }
 
 /**
@@ -73,17 +73,17 @@ Seguir.prototype.getHeaders = function(liu) {
  */
 Seguir.prototype.getUser = function(liu, user, next) {
   var self = this;
-  self.get(liu, '/user/' + user, next);
+  self.get(liu, u('getUser', {user:user}), next);
 }
 
-Seguir.prototype.getUserById = function(liu, userId, next) {
+Seguir.prototype.getUserByName = function(liu, username, next) {
   var self = this;
-  self.get(liu, '/user/id/' + userId, next);
+  self.get(liu, u('getUserByName', {username:username}), next);
 }
 
 Seguir.prototype.addUser = function(liu, username, next) {
   var self = this;
-  self.post(liu, '/user', {username: username}, next);
+  self.post(liu, u('addUser'), {username: username}, next);
 }
 
 /**
@@ -91,8 +91,75 @@ Seguir.prototype.addUser = function(liu, username, next) {
  */
 Seguir.prototype.addFriend = function(liu, user_friend, timestamp, next) {
   var self = this;
-  self.post(liu, '/friend', {user: liu, user_friend: user_friend}, next);
+  self.post(liu, u('addFriend'), {user: liu, user_friend: user_friend}, next);
 }
 
+Seguir.prototype.getFriends = function(liu, user, next) {
+  var self = this;
+  self.get(liu, u('getFriends', {user: user}), next);
+}
+
+Seguir.prototype.getFriend = function(liu, friend, next) {
+  var self = this;
+  self.get(liu, u('getFriend', {friend: friend}), next);
+}
+
+/**
+ * Follow Wrapper
+ */
+Seguir.prototype.addFollower = function(liu, user_follower, timestamp, next) {
+  var self = this;
+  self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower}, next);
+}
+
+Seguir.prototype.getFollowers = function(liu, user, next) {
+  var self = this;
+  self.get(liu, u('getFollowers', {user: user}), next);
+}
+
+Seguir.prototype.getFollow = function(liu, follow, next) {
+  var self = this;
+  self.get(liu, u('getFollow', {follow: follow}), next);
+}
+
+/**
+ * Post Wrapper
+ */
+Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, next) {
+  var self = this;
+  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate:isprivate}, next);
+}
+
+Seguir.prototype.getPost = function(liu, post, next) {
+  var self = this;
+  self.get(liu, u('getPost', {post: post}), next);
+}
+
+
+/**
+ * Like Wrapper
+ */
+Seguir.prototype.addLike = function(liu, item, next) {
+  var self = this;
+  self.post(liu, u('addLike'), {user: liu, item: encodeURIComponent(item) }, next);
+}
+
+Seguir.prototype.getLike = function(liu, like, next) {
+  var self = this;
+  self.get(liu, u('getLike', {like: like}), next);
+}
+
+Seguir.prototype.checkLike = function(liu, item, next) {
+  var self = this;
+  self.get(liu, u('checkLike', {user: liu, item: encodeURIComponent(item) }), next);
+}
+
+/**
+ * Feed Wrapper
+ */
+Seguir.prototype.getFeedForUser = function(liu, user, start, limit, next) {
+  var self = this;
+  self.get(liu, u('getFeed', {user: user}), next);
+}
 
 module.exports = Seguir;

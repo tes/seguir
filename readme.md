@@ -26,7 +26,7 @@ node server
 
 ## Integrating
 
-Seguir will ship with a client, that lets you point it at a seguir server and will handle things like the
+Seguir ships with a client, that lets you point it at a seguir server and will handle things like the
 authorisation, passing of current user and other configuration.
 
 ```
