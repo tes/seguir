@@ -26,7 +26,7 @@ If you allow anonymous access, then you simply pass null in as the first paramet
 
 ## Running the Server
 
-```
+```shell
 git clone git@github.com:cliftonc/seguir.git
 cd seguir
 npm install
@@ -37,13 +37,13 @@ node server
 
 To create the Cassandra schema, note that this will **DROP** all tables in the schema first!
 
-```
+```shell
 node setup
 ```
 
 To create some sample data to work against, this will **TRUNCATE** all tables in the schema before loading!
 
-```
+```shell
 node setup/sample-data
 ```
 
@@ -52,7 +52,7 @@ node setup/sample-data
 Seguir ships with a client, that lets you point it at a seguir server and will handle things like the
 authorisation, passing of current user and other configuration.  Will split client out into a separate project once it is a little more stable.
 
-```
+```js
 var Seguir = require('seguir/client');
 seguir = new Seguir({
   host:'http://localhost:3000',
@@ -63,7 +63,7 @@ seguir = new Seguir({
 
 Then, within the context of a request (assuming that you are using Seguir within an application, and have middleware that retrieves the seguir ID for the current logged in user and assigns that to req.user.seguirId).
 
-```
+```js
 app.get('/user/:username/feed', function(req, res, next) {
 
   // Retrieve the specified :username profile from *your* db
@@ -93,13 +93,13 @@ Test coverage is slowly increasing, intention is to get it to 100 and then pin p
 
 ### Docs
 
-```
+```shell
 npm run docs
 ```
 
 This will create API documents in /docs.
 
-```
+```shell
 git subtree push --prefix doc origin gh-pages
 ```
 
