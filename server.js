@@ -271,12 +271,12 @@ function bootstrapServer(config, keyspace, next) {
    */
 
   /**
-   * @api {post} /post Add a post by a user, by default posts are public.
+   * @api {post} /post Add a post by a user
    * @apiName AddPost
    * @apiGroup ApiPosts
    * @apiVersion 1.0.0
    *
-   * @apiDescription Creates a new post.
+   * @apiDescription Creates a new post, by default all new posts are public, and so can be seen by all users.
    * @apiParam {String} user of the user
    * @apiParam {String} content of the post
    * @apiParam {Timestamp} timestamp the time that the post occurred

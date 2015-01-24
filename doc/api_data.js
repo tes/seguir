@@ -710,11 +710,11 @@ define({ "api": [
   {
     "type": "post",
     "url": "/post",
-    "title": "Add a post by a user, by default posts are public.",
+    "title": "Add a post by a user",
     "name": "AddPost",
     "group": "ApiPosts",
     "version": "1.0.0",
-    "description": "<p>Creates a new post.</p> ",
+    "description": "<p>Creates a new post, by default all new posts are public, and so can be seen by all users.</p> ",
     "parameter": {
       "fields": {
         "Parameter": [
