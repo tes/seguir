@@ -45,11 +45,11 @@ describe('Seguir Social Client API', function() {
 
       it('can create users', function(done) {
         async.map(['cliftonc','phteven','ted','bill'], function(user, cb) {
-          client.addUser(null, user, cb);
+          client.addUser(null, user, {avatar:'test.jpg'}, cb);
         }, function(err, results) {
           users = results;
           liu = users[0].user; // clifton is logged in
-          done()
+          done();
         });
       });
 

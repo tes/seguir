@@ -53,6 +53,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Creates a new user.
    * @apiParam {String} username the name of the user
+   * @apiParam {Object} userdata arbitrary user data
    *
    * @apiExample {curl} Example usage:
    *     curl --data "username=cliftonc" http://localhost:3000/user
@@ -61,7 +62,10 @@ function bootstrapServer(config, keyspace, next) {
    *    HTTP/1.1 200 OK
    *    {
    *      "user":"1b869349-d8f8-45b1-864e-19164e1b925a",
-   *      "username": "cliftonc"
+   *      "username": "cliftonc",
+   *      "userdata": {
+   *        "avatar":"/img/123.jpg"
+   *      }
    *    }
    *
    *  @apiUse MissingUsername
@@ -72,7 +76,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.username) {
       return next(new restify.InvalidArgumentError("You must provide a username."));
     }
-    api.manage.addUser(req.keyspace, req.params.username, function(err, user) {
+    api.manage.addUser(req.keyspace, req.params.username, req.params.userdata, function(err, user) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
