@@ -26,11 +26,12 @@ describe('Social API', function() {
 
       it('can create users', function(done) {
         async.map(['cliftonc','phteven','ted','bill'], function(user, cb) {
-            manage.addUser(keyspace, user, cb);
+            manage.addUser(keyspace, user, {'age':15}, cb);
           }, function(err, results) {
-          users = results;
-          liu = users[1].user; // phteven is logged in
-          done()
+            expect(err).to.be(undefined);
+            users = results;
+            liu = users[1].user; // phteven is logged in
+            done(err);
         });
       });
 

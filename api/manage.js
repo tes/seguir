@@ -1,6 +1,7 @@
 var cassandra = require('cassandra-driver');
 var async = require('async');
 var moment = require('moment');
+var _ = require('lodash');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -17,11 +18,17 @@ module.exports = function(client) {
   var q = require('./db/queries');
   var query = require('./query')(client);
 
-  function addUser(keyspace, username, next) {
+  function addUser(keyspace, username, userdata, next) {
+    if(!next) {
+      next = userdata;
+      userdata = {username:username};
+    }
+    userdata = _.mapValues(userdata , function(value) { return value.toString(); }); // Always ensure our userdata is <text,text>
     var userid = cassandra.types.uuid();
-    var user = [userid, username];
-    client.execute(q(keyspace, 'upsertUser'), user, function(err, result) {
-      next(err, {user: userid, username: username});
+    var user = [userid, username, userdata];
+    client.execute(q(keyspace, 'upsertUser'), user, {prepare:true, hints:[null, null, 'map']}, function(err, result) {
+      if(err) { return next(err); }
+      next(null, {user: userid, username: username, userdata: userdata});
     });
   }
 

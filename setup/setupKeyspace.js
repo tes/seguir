@@ -25,7 +25,7 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {String} username The name of the user.
    * @apiUse ExampleCqlUsers
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, userdata map<text,text>)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
 
   /**
