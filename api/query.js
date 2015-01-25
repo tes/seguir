@@ -65,14 +65,28 @@ module.exports = function(client, keyspace) {
     client.execute(q('isFriend'), data, {prepare:true},  function(err, result) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      var isFriend = result.rows.length > 0;
-      return next(err, isFriend);
+      var isFriend = result.rows.length > 0 ? true : false;
+      var isFriendSince = isFriend ? result.rows[0].since : undefined;
+      return next(null, isFriend, isFriendSince);
+    });
+  }
+
+  function isFollower(user, user_follower, next) {
+    if(user === user_follower) { return next(null, true); }
+    var data = [user, user_follower];
+    client.execute(q('isFollower'), data, {prepare:true},  function(err, result) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      var isFollower = result.rows.length > 0 ? true : false;
+      var isFollowerSince = isFollower ? result.rows[0].since : undefined;
+      return next(null, isFollower, isFollowerSince);
     });
   }
 
   function getLike(like, next) {
     client.execute(q('selectLike'), [like], {prepare:true}, function(err, result) {
-       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       if(err) { return next(err); }
+       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
@@ -109,7 +123,8 @@ module.exports = function(client, keyspace) {
       if(err) { return next(err); }
       if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
       client.execute(q('selectFriends'), [user], {prepare:true}, function(err, result) {
-        next(err, result ? result.rows : undefined);
+        if(err) { return next(err); }
+        next(null, result ? result.rows : undefined);
       });
     });
   }
@@ -127,7 +142,8 @@ module.exports = function(client, keyspace) {
 
   function getFollowers(user, next) {
     client.execute(q('selectFollowers'), [user], {prepare:true}, function(err, result) {
-       next(err, result ? result.rows : undefined);
+       if(err) { return next(err); }
+       next(null, result ? result.rows : undefined);
     });
   }
 
@@ -147,7 +163,7 @@ module.exports = function(client, keyspace) {
   function getUser(user, next) {
     client.execute(q('selectUser'), [user], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
-       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
@@ -156,13 +172,34 @@ module.exports = function(client, keyspace) {
        /* istanbul ignore if */
        if(err) { return next(err); }
        var user = result && result.rows && result.rows[0] ? result.rows[0] : undefined;
-       next(err, user);
+       next(null, user);
+    });
+  }
+
+  function getUserRelationship(user, other_user, next) {
+    isFriend(user, other_user, function(err, isFriend, isFriendSince) {
+      if(err) { return next(err); }
+      isFollower(user, other_user, function(err, theyFollow, theyFollowSince) {
+        if(err) { return next(err); }
+        isFollower(other_user, user, function(err, youFollow, youFollowSince) {
+          if(err) { return next(err); }
+          next(null, {
+            isFriend: isFriend,
+            isFriendSince: isFriendSince,
+            youFollow: youFollow,
+            youFollowSince: youFollowSince,
+            theyFollow: theyFollow,
+            theyFollowSince: theyFollowSince
+          });
+        });
+      });
     });
   }
 
   function checkLike(user, item, next) {
     client.execute(q('checkLike'), [user, item], {prepare:true}, function(err, result) {
-       next(err, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       if(err) { return next(err); }
+       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
@@ -211,7 +248,8 @@ module.exports = function(client, keyspace) {
                  if(err && err.statusCode === 403) {
                    cb(); // Silently drop posts from the feed
                  } else {
-                   cb(err, post);
+                   if(err) { return cb(err); }
+                   cb(null, post);
                  }
               });
             }
@@ -221,7 +259,8 @@ module.exports = function(client, keyspace) {
                  if(err && err.statusCode === 403) {
                    cb(); // Silently drop these from the feed
                  } else {
-                   cb(err, friend);
+                   if(err) { return cb(err); }
+                   cb(null, friend);
                  }
               });
             }
@@ -264,13 +303,15 @@ module.exports = function(client, keyspace) {
 
             // Now, go and get user details for all the non own posts
             _mapGetUser(feed, ['user','user_follower','user_friend'], user, function(err, mappedFeed) {
-                next(err, mappedFeed, maxTime);
+                if(err) { return next(err); }
+                next(null, mappedFeed, maxTime);
             });
 
          });
 
       } else {
-        next && next(err);
+        if(err) { return next(err); }
+        next();
       }
 
     });
@@ -279,6 +320,7 @@ module.exports = function(client, keyspace) {
 
   return {
     getUser: getUser,
+    getUserRelationship: getUserRelationship,
     getFriends: getFriends,
     getFollowers: getFollowers,
     getPost: getPost,
@@ -287,6 +329,7 @@ module.exports = function(client, keyspace) {
     getFollowersByName: getFollowersByName,
     getFriend: getFriend,
     isFriend: isFriend,
+    isFollower: isFollower,
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
     getFeedForUser: getFeedForUser,

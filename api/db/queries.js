@@ -54,7 +54,7 @@ queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_frien
 queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = ?';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = ?';
 queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE friend = ?';
-queries.isFriend = 'SELECT friend from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
+queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
 
 /**
  * @apiDefine ExampleCqlFriendRequests
@@ -78,6 +78,7 @@ queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_f
 queries.selectFollow = 'SELECT follow, user, user_follower, since FROM {KEYSPACE}.followers WHERE follow = ?';
 queries.selectFollowers = 'SELECT user, user_follower, since from {KEYSPACE}.followers WHERE user = ?';
 queries.removeFollow = 'DELETE FROM {KEYSPACE}.followers WHERE follow = ?';
+queries.isFollower = 'SELECT follow, since from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**
  * @apiDefine ExampleCqlLikes

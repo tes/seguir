@@ -26,12 +26,27 @@ If you allow anonymous access, then you simply pass null in as the first paramet
 
 ## Running the Server
 
+You need Cassandra for the server:
+
 ```shell
 git clone git@github.com:cliftonc/seguir.git
 cd seguir
 npm install
 node server
 ```
+
+## Running an Example Client Application
+
+You need MongoDB for the example client application (will remove this dependency in time!):
+
+```
+git clone git@github.com:cliftonc/seguir-example-application.git
+cd seguir-example-application
+npm install
+node server
+```
+
+Then browse to [http://localhost:4000](http://localhost:4000).
 
 ## Setup Cassandra and Sample Data
 

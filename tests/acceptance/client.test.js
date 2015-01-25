@@ -17,7 +17,7 @@ var credentials = {host: 'http://localhost:3001', appName:'sample-application', 
 
 describe('Seguir Social Client API', function() {
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId, seguirServer, client;
+    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, likeId, friendId, seguirServer, client;
 
     before(function(done) {
       this.timeout(20000);
@@ -103,7 +103,7 @@ describe('Seguir Social Client API', function() {
 
     describe('follows', function () {
 
-      it('can follow a user who is a friend', function(done) {
+      it('can add a follower who is a friend', function(done) {
         client.addFollower(liu, users[1].user, Date.now(), function(err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
@@ -113,12 +113,22 @@ describe('Seguir Social Client API', function() {
         });
       });
 
-      it('can follow a user who is not a friend', function(done) {
+      it('can add a follower who is not a friend', function(done) {
         client.addFollower(liu, users[2].user, Date.now(), function(err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[2].user);
           notFriendFollowId = follow.follow;
+          done();
+        });
+      });
+
+       it('can follow a user who is not a friend', function(done) {
+        client.followUser(users[3].user, users[2].user, Date.now(), function(err, follow) {
+          expect(err).to.be(null);
+          expect(follow.user).to.be(users[2].user);
+          expect(follow.user_follower).to.be(users[3].user);
+          followUserId = follow.follow
           done();
         });
       });
@@ -270,7 +280,8 @@ describe('Seguir Social Client API', function() {
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
-          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[2].follow).to.be(followUserId);
+          expect(feed[3].follow).to.be(notFriendFollowId);
           done();
         });
       });
@@ -281,6 +292,51 @@ describe('Seguir Social Client API', function() {
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
           expect(feed[2].follow).to.be(notFriendFollowId);
+          done();
+        });
+      });
+
+    });
+
+
+    describe('relationships', function () {
+
+      it('can query a relationship between a user and themselves', function(done) {
+        client.getUserRelationship(users[0].user, users[0].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(true);
+          expect(relationship.theyFollow).to.be(true);
+          done();
+        });
+      });
+
+      it('can query a relationship between a user and another user', function(done) {
+        client.getUserRelationship(users[0].user, users[1].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(true);
+          done();
+        });
+      });
+
+      it('can query the inverse relationship between a user and another user', function(done) {
+        client.getUserRelationship(users[1].user, users[0].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(true);
+          expect(relationship.theyFollow).to.be(false);
+          done();
+        });
+      });
+
+      it('can query the relationship between users who have no relationship', function(done) {
+        client.getUserRelationship(users[0].user, users[3].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(false);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(false);
           done();
         });
       });

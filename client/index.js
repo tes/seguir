@@ -86,6 +86,11 @@ Seguir.prototype.addUser = function(liu, username, next) {
   self.post(liu, u('addUser'), {username: username}, next);
 }
 
+Seguir.prototype.getUserRelationship = function(liu, user, next) {
+  var self = this;
+  self.get(liu, u('getUserRelationship', {user: user}), next);
+}
+
 /**
  * Friend Wrapper
  */
@@ -107,6 +112,11 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
 /**
  * Follow Wrapper
  */
+Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, next) {
+  var self = this;
+  self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu}, next);
+}
+
 Seguir.prototype.addFollower = function(liu, user_follower, timestamp, next) {
   var self = this;
   self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower}, next);

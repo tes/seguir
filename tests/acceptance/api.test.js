@@ -218,7 +218,7 @@ describe('Social API', function() {
 
       it('logged in - can get a feed for yourself that is in the correct order', function(done) {
         query.getFeedForUser(users[0].user, users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId);
           expect(feed[2].post).to.be(postId);
@@ -231,7 +231,7 @@ describe('Social API', function() {
 
       it('logged in - can get a feed for a friend that is in the correct order', function(done) {
         query.getFeedForUser(users[1].user, users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId); //
           expect(feed[2].post).to.be(postId);
@@ -244,7 +244,7 @@ describe('Social API', function() {
 
       it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
         query.getFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId);
           expect(feed[2].post).to.be(postId);
@@ -256,7 +256,7 @@ describe('Social API', function() {
 
       it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
         query.getFeedForUser(users[0].user, users[2].user, null, 100, function(err, feed) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
           expect(feed[2].follow).to.be(notFriendFollowId);
@@ -266,10 +266,54 @@ describe('Social API', function() {
 
       it('anonymous - can get a feed that is in correct order', function(done) {
         query.getFeedForUser('_anonymous_', users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
           expect(feed[2].follow).to.be(notFriendFollowId);
+          done();
+        });
+      });
+
+    });
+
+    describe('relationships', function () {
+
+      it('can query a relationship between a user and themselves', function(done) {
+        query.getUserRelationship(users[0].user, users[0].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(true);
+          expect(relationship.theyFollow).to.be(true);
+          done();
+        });
+      });
+
+      it('can query a relationship between a user and another user', function(done) {
+        query.getUserRelationship(users[0].user, users[1].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(true);
+          done();
+        });
+      });
+
+      it('can query the inverse relationship between a user and another user', function(done) {
+        query.getUserRelationship(users[1].user, users[0].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(true);
+          expect(relationship.youFollow).to.be(true);
+          expect(relationship.theyFollow).to.be(false);
+          done();
+        });
+      });
+
+      it('can query the relationship between users who have no relationship', function(done) {
+        query.getUserRelationship(users[0].user, users[3].user, function(err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(false);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(false);
           done();
         });
       });

@@ -127,7 +127,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiExample {curl} Example usage:
    *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452
    *
-   * @apiParam {String} username The name of the user
+   * @apiParam {String} user The id of the user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
    *    {
@@ -148,6 +148,43 @@ function bootstrapServer(config, keyspace, next) {
          return next(new restify.ServerError(err.message));
         }
         res.send(user);
+    });
+  });
+
+  /**
+   * @api {get} /user/:id/relationship Get details of any relationship between with a specific user
+   * @apiName GetUserRelationship
+   * @apiGroup ApiUsers
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves details of a specific user relationship by id
+   *
+   * @apiExample {curl} Example usage:
+   *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452/relationship
+   *
+   * @apiParam {String} user The id of the user
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *    {
+   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
+   *      "username":"cliftonc",
+   *      "friend": 1421585133444,
+   *      "follow": null
+   *    }
+   *
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getUserRelationship'), function (req, res, next) {
+    api.query.getUserRelationship(req.liu.user, req.params.user, function(err, relationship) {
+        if(!relationship) {
+          return next(new restify.NotFoundError("Could not find that user."));
+        }
+        if(err) {
+         return next(new restify.ServerError(err.message));
+        }
+        res.send(relationship);
     });
   });
 
@@ -299,7 +336,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.content) {
       return next(new restify.InvalidArgumentError("You must provide content for the post."));
     }
-    api.manage.addPost(req.params.user, req.params.content, Date.now(), req.params.isprivate, function(err, post) {
+    api.manage.addPost(req.params.user, req.params.content, Date.now(), req.params.isprivate ? true : false, function(err, post) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
