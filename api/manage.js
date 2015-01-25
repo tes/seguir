@@ -19,10 +19,6 @@ module.exports = function(client) {
   var query = require('./query')(client);
 
   function addUser(keyspace, username, userdata, next) {
-    if(!next) {
-      next = userdata;
-      userdata = {username:username};
-    }
     userdata = _.mapValues(userdata , function(value) { return value.toString(); }); // Always ensure our userdata is <text,text>
     var userid = cassandra.types.uuid();
     var user = [userid, username, userdata];
