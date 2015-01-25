@@ -1,10 +1,14 @@
-var client = require('../api/db/client')();
 var async = require('async');
-var KEYSPACE = 'seguir';
-var verbose = false;
-var tables = [], indexes = [];
 
-function createTablesAndIndexes() {
+function defineTablesAndIndexes(KEYSPACE) {
+
+  var tables = [], indexes = [];
+
+  if(!KEYSPACE) {
+    console.log('You must specify a keyspace, abandoning keyspace creation.');
+    return;
+  }
+
   /**
    * @apiDefine Data Data Structure
    * This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate
@@ -23,19 +27,6 @@ function createTablesAndIndexes() {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
-
-  /**
-   * @api {table} Applications Applications
-   * @apiName ApplicationData
-   * @apiGroup Data
-   * @apiVersion 1.0.0
-   * @apiDescription Stores an application name and token to allow / disallow a client application access to seguir.
-   * @apiParam {String} apptoken The key used to gain access.
-   * @apiParam {String} name The name of the application (for reference).
-   * @apiParam {String} PK Primary key is compound on application + key.
-   * @apiUse ExampleCqlApplications
-   */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.applications (name text, apptoken uuid, PRIMARY KEY (name, apptoken))');
 
   /**
    * @api {table} Posts Posts
@@ -133,82 +124,24 @@ function createTablesAndIndexes() {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, PRIMARY KEY (user, time, isprivate)) WITH CLUSTERING ORDER BY (time DESC, isprivate ASC)');
 
+  return {
+    tables:tables,
+    indexes:indexes
+  }
 }
 
-/**
- *  Setup code follows below
- */
+function setup(client, keyspace, next) {
 
-/* istanbul ignore next */
-function dropKeyspace(next) {
-  if(verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
-  client.execute('DROP KEYSPACE ' + KEYSPACE, function(err) {
-    if(err && err.code === 8960) { return next(); }
-    return next(err);
-  });
-}
+  var options = defineTablesAndIndexes(keyspace);
+  options.KEYSPACE = keyspace;
 
-/* istanbul ignore next */
-function createKeyspace(next) {
-  if(verbose) console.log('Creating keyspace: ' + KEYSPACE + '...');
-  client.execute('CREATE KEYSPACE IF NOT EXISTS ' + KEYSPACE + ' WITH replication ' +
-                '= {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};', next);
-}
-
-/* istanbul ignore next */
-function createTables(next) {
-
-  if(verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
-
-  async.map(tables, function(cql, cb) {
-    if(verbose) console.log(cql);
-    client.execute(cql, function(err) {
-      if(err && (err.code == 9216 || err.code == 8704)) { // Already exists
-        return cb();
-      }
-      return cb(err);
-    });
-  }, next);
-
-}
-
-/* istanbul ignore next */
-function createSecondaryIndexes(next) {
-
-  if(verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
-  async.map(indexes, function(cql, cb) {
-    if(verbose) console.log(cql);
-    client.execute(cql, function(err) {
-      if(err && (err.code == 9216 || err.code == 8704)) { // Already exists
-        return cb();
-      }
-      return cb(err);
-    });
-  }, next);
-
-}
-
-/* istanbul ignore if */
-if(require.main === module) {
-  verbose = true;
-  setup(null, function() {
-    console.dir('Setup complete.');
-    client.shutdown();
-  });
-}
-
-function setup(specificKeyspace, next) {
-
-  /* istanbul ignore else */
-  if(specificKeyspace) { KEYSPACE = specificKeyspace};
-
-  createTablesAndIndexes();
+  var helpers = require('./helpers')(client, options);
 
   async.series([
-    dropKeyspace,
-    createKeyspace,
-    createTables,
-    createSecondaryIndexes
+    helpers.dropKeyspace,
+    helpers.createKeyspace,
+    helpers.createTables,
+    helpers.createSecondaryIndexes
   ], function(err, data) {
     /* istanbul ignore if */
     if(err) console.dir(err);

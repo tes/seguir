@@ -9,8 +9,8 @@ var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'}
 
 function Auth(client, keyspace) {
 
-  var q = require('./db/queries')(keyspace);
-  var query = require('./query')(client, keyspace);
+  var q = require('./db/queries');
+  var query = require('./query')(client);
 
   /**
    * Checks incoming headers for the application and logged in user tokens.
@@ -24,7 +24,8 @@ function Auth(client, keyspace) {
     checkApplication(appName, appToken, function(err, applicationOk) {
       if(err) { return res.send(err); }
       if(!applicationOk) { res.send(new Error('You must provide an valid application name and token to access seguir the seguir API.')); }
-      checkUser(user, function(err, user) {
+      req.keyspace = keyspace + '_' + appName;
+      checkUser(req.keyspace, user, function(err, user) {
         if(err) { return res.send(err); }
         req.liu = user;
         next();
@@ -41,16 +42,16 @@ function Auth(client, keyspace) {
       return next(new restify.UnauthorizedError('You must provide an application token via the header "' + appTokenHeader + '" to access seguir the seguir API.'));
     }
     var application = [appName, appToken];
-    client.execute(q('checkApplication'), application, function(err, result) {
+    client.execute(q(keyspace,'checkApplication'), application, function(err, result) {
       next(err, result && result.rows.length > 0);
     });
   }
 
-  function checkUser(user, next) {
+  function checkUser(keyspace, user, next) {
     if(!user) {
       return next(null, anonyomousUser);
     }
-    client.execute(q('selectUser'), [user], function(err, result) {
+    client.execute(q(keyspace, 'selectUser'), [user], function(err, result) {
       if(err) { return next(err); }
       if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user in header "' + userHeader + '" does not exist.')); }
       next(null, result.rows[0]);
@@ -59,7 +60,7 @@ function Auth(client, keyspace) {
 
   function addApplication(appName, appToken, next) {
     var app = [appName, appToken];
-    client.execute(q('upsertApplication'), app, function(err, result) {
+    client.execute(q(keyspace, 'upsertApplication'), app, function(err, result) {
       next(err, {name: appName, apptoken: appToken});
     });
   }

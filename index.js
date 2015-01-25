@@ -4,10 +4,9 @@ var apiAuth = require('./api/auth');
 var KEYSPACE = 'seguir';
 
 module.exports = function(client, keyspace) {
-  KEYSPACE = keyspace || KEYSPACE;
   return {
-    manage: apiManage(client, KEYSPACE),
-    query: apiQuery(client, KEYSPACE),
-    auth: apiAuth(client, KEYSPACE)
+    manage: apiManage(client),  // Get their keyspace via the request
+    query: apiQuery(client),    // Get their keyspace via the request
+    auth: apiAuth(client, keyspace)
   }
 }

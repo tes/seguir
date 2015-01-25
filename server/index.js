@@ -72,7 +72,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.username) {
       return next(new restify.InvalidArgumentError("You must provide a username."));
     }
-    api.manage.addUser(req.params.username, function(err, user) {
+    api.manage.addUser(req.keyspace, req.params.username, function(err, user) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -105,7 +105,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserByName'), function (req, res, next) {
-    api.query.getUserByName(req.params.username, function(err, user) {
+    api.query.getUserByName(req.keyspace, req.params.username, function(err, user) {
         if(!user) {
           return next(new restify.NotFoundError("Could not find that user."));
         }
@@ -140,7 +140,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUser'), function (req, res, next) {
-    api.query.getUser(req.params.user, function(err, user) {
+    api.query.getUser(req.keyspace, req.params.user, function(err, user) {
         if(!user) {
           return next(new restify.NotFoundError("Could not find that user."));
         }
@@ -177,7 +177,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserRelationship'), function (req, res, next) {
-    api.query.getUserRelationship(req.liu.user, req.params.user, function(err, relationship) {
+    api.query.getUserRelationship(req.keyspace, req.liu.user, req.params.user, function(err, relationship) {
         if(!relationship) {
           return next(new restify.NotFoundError("Could not find that user."));
         }
@@ -226,7 +226,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.item) {
       return next(new restify.InvalidArgumentError("You must provide an item."));
     }
-    api.manage.addLike(req.params.user, req.params.item, Date.now(), function(err, like) {
+    api.manage.addLike(req.keyspace, req.params.user, req.params.item, Date.now(), function(err, like) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -257,7 +257,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getLike'), function (req, res, next) {
-    api.query.getLike(req.params.like, function(err, like) {
+    api.query.getLike(req.keyspace, req.params.like, function(err, like) {
         if(err) {
          return next(new restify.ServerError(err.message));
         }
@@ -290,7 +290,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('checkLike'), function (req, res, next) {
-    api.query.checkLike(req.params.user, encodeURIComponent(req.params.item), function(err, like) {
+    api.query.checkLike(req.keyspace, req.params.user, encodeURIComponent(req.params.item), function(err, like) {
         if(err) {
          return next(new restify.ServerError(err.message));
         }
@@ -336,7 +336,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.content) {
       return next(new restify.InvalidArgumentError("You must provide content for the post."));
     }
-    api.manage.addPost(req.params.user, req.params.content, Date.now(), req.params.isprivate ? true : false, function(err, post) {
+    api.manage.addPost(req.keyspace, req.params.user, req.params.content, Date.now(), req.params.isprivate ? true : false, function(err, post) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -364,7 +364,7 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.get(u('getPost'), function (req, res, next) {
-    api.query.getPost(req.liu.user, req.params.post, function(err, post) {
+    api.query.getPost(req.keyspace, req.liu.user, req.params.post, function(err, post) {
         if(err) {
           return next(new restify.ForbiddenError(err.message));
         }
@@ -406,7 +406,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.user_friend) {
       return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
     }
-    api.manage.addFriend(req.params.user, req.params.user_friend, Date.now(), function(err, friend) {
+    api.manage.addFriend(req.keyspace, req.params.user, req.params.user_friend, Date.now(), function(err, friend) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -442,7 +442,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriend'), function (req, res, next) {
-    api.query.getFriend(req.liu.user, req.params.friend, function(err, friend) {
+    api.query.getFriend(req.keyspace, req.liu.user, req.params.friend, function(err, friend) {
       if(err) {
        return next(new restify.ForbiddenError(err.message));
       }
@@ -475,7 +475,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriends'), function (req, res, next) {
-    api.query.getFriends(req.liu.user, req.params.user, function(err, friends) {
+    api.query.getFriends(req.keyspace, req.liu.user, req.params.user, function(err, friends) {
       if(err) {
        return next(new restify.ForbiddenError(err.message));
       }
@@ -518,7 +518,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.user_follower) {
       return next(new restify.InvalidArgumentError("You must provide a user_follower."));
     }
-    api.manage.addFollower(req.params.user, req.params.user_follower, Date.now(), function(err, follow) {
+    api.manage.addFollower(req.keyspace, req.params.user, req.params.user_follower, Date.now(), function(err, follow) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -559,7 +559,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollowers'), function (req, res, next) {
-    api.query.getFollowers(req.params.user, function(err, followers) {
+    api.query.getFollowers(req.keyspace, req.params.user, function(err, followers) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -596,7 +596,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollow'), function (req, res, next) {
-    api.query.getFollow(req.params.follow, function(err, follow) {
+    api.query.getFollow(req.keyspace, req.params.follow, function(err, follow) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -665,7 +665,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFeed'), function (req, res, next) {
-    api.query.getFeedForUser(req.liu.user, req.params.user, null, 50, function(err, feed) {
+    api.query.getFeedForUser(req.keyspace, req.liu.user, req.params.user, null, 50, function(err, feed) {
         if(err) {
          return next(new restify.ServerError(err.message));
         }
@@ -683,12 +683,15 @@ function bootstrapServer(config, keyspace, next) {
 
 /* istanbul ignore if */
 if(require.main === module) {
-  bootstrapServer({logging:true}, 'seguir', function(err, server) {
-    server.listen(3000, function() {
-      console.log('%s listening at %s', server.name, server.url);
+  var config = require('./config');
+  bootstrapServer(config, config.keyspace, function(err, server) {
+    server.listen(config.port || 3000, function() {
+      console.log('Server %s listening at %s', server.name, server.url);
     });
   });
+
 } else {
+  // Used for testing
   module.exports = bootstrapServer;
 }
 

@@ -109,10 +109,8 @@ queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type,
 queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isPrivate FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?';
 
-module.exports = function(keyspace) {
-  return function(name, data) {
+module.exports = function(keyspace, name, data) {
     data = data || {};
-    data.KEYSPACE = data.KEYSPACE || keyspace;
+    data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
     return st(queries[name], data);
-  }
 }

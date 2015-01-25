@@ -7,13 +7,14 @@ var dbClient = require('../../api/db/client')();
 var cassandra = require('cassandra-driver');
 var expect = require('expect.js');
 var Seguir = require('../../client');
-var setup = require('../../setup');
+var setupSeguir = require('../../setup/setupSeguir');
+var setupKeyspace = require('../../setup/setupKeyspace');
 var async = require('async');
 var _ = require('lodash');
 var api = require('../../index')(dbClient, keyspace);
 var auth = api.auth;
 var startServer = require('../../server');
-var credentials = {host: 'http://localhost:3001', appName:'sample-application', appToken: cassandra.types.uuid()};
+var credentials = {host: 'http://localhost:3001', appName:'sampleapplication', appToken: cassandra.types.uuid()};
 
 describe('Seguir Social Client API', function() {
 
@@ -21,14 +22,16 @@ describe('Seguir Social Client API', function() {
 
     before(function(done) {
       this.timeout(20000);
-      setup(keyspace, function() {
+      setupSeguir(dbClient, keyspace, function() {
         auth.addApplication(credentials.appName, credentials.appToken, function(err, result) {
-          startServer({logging: false}, keyspace, function(err, server) {
-              seguirServer = server;
-              server.listen(3001, function() {
-                client = new Seguir(credentials);
-                done();
-              });
+          setupKeyspace(dbClient, keyspace + '_' + credentials.appName, function() {
+            startServer({logging: false}, keyspace, function(err, server) {
+                seguirServer = server;
+                server.listen(3001, function() {
+                  client = new Seguir(credentials);
+                  done();
+                });
+            });
           });
         })
       });

@@ -4,6 +4,7 @@
   "description": "Self-hosted social network backend and API",
   "main": "index.js",
   "scripts": {
+    "seguir": "node ./bin/seguir",
     "test": "istanbul cover _mocha -- -R spec tests/unit/* tests/acceptance/*",
     "docs": "apidoc -i . -e node_modules"
   },
@@ -16,6 +17,9 @@
     "post",
     "cassandra"
   ],
+  "bin": {
+    "seguir": "./bin/seguir.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cliftonc/seguir.git"
@@ -29,6 +33,7 @@
     "casual": "^1.4.7",
     "express": "^4.11.0",
     "express-handlebars": "^1.1.0",
+    "inquirer": "^0.8.0",
     "lodash": "^2.4.1",
     "moment": "^2.9.0",
     "restify": "^2.8.4",

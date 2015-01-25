@@ -12,138 +12,138 @@ var moment = require('moment');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function(client, keyspace) {
+module.exports = function(client) {
 
-  var q = require('./db/queries')(keyspace);
-  var query = require('./query')(client, keyspace);
+  var q = require('./db/queries');
+  var query = require('./query')(client);
 
-  function addUser(username, next) {
+  function addUser(keyspace, username, next) {
     var userid = cassandra.types.uuid();
     var user = [userid, username];
-    client.execute(q('upsertUser'), user, function(err, result) {
+    client.execute(q(keyspace, 'upsertUser'), user, function(err, result) {
       next(err, {user: userid, username: username});
     });
   }
 
-  function addPost(user, content, timestamp, isprivate, next) {
+  function addPost(keyspace, user, content, timestamp, isprivate, next) {
 
     var post = cassandra.types.uuid();
     var data = [post, user, content, timestamp, isprivate];
-    client.execute(q('upsertPost'), data, {prepare:true}, function(err) {
+    client.execute(q(keyspace, 'upsertPost'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, post, 'post', isprivate, function(err, result) {
+      _addFeedItem(keyspace, user, post, 'post', isprivate, function(err, result) {
         next(err, {post: post, user: user, content: content, timestamp: timestamp, isprivate: isprivate});
       });
     });
 
   }
 
-  function addPostByName(username, content, timestamp, isprivate, next) {
-    query.getUserByName(username, function(err, user) {
+  function addPostByName(keyspace, username, content, timestamp, isprivate, next) {
+    query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      addPost(user.user, content, timestamp, isprivate, next);
+      addPost(keyspace, user.user, content, timestamp, isprivate, next);
     });
   }
 
-  function addLike(user, item, timestamp, next) {
+  function addLike(keyspace, user, item, timestamp, next) {
 
     var like = cassandra.types.uuid();
     var data = [like, user, item, timestamp];
 
-    client.execute(q('upsertLike'), data, {prepare:true}, function(err) {
+    client.execute(q(keyspace, 'upsertLike'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, like, 'like', false, function(err, result) {
+      _addFeedItem(keyspace, user, like, 'like', false, function(err, result) {
         next(err, {like: like, user: user, item: item, timestamp: timestamp});
       });
     });
 
   }
 
-  function addLikeByName(username, item, timestamp, next) {
-    query.getUserByName(username, function(err, user) {
+  function addLikeByName(keyspace, username, item, timestamp, next) {
+    query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      addLike(user.user, item, timestamp, next);
+      addLike(keyspace, user.user, item, timestamp, next);
     });
   }
 
-  function addFriend(user, user_friend, timestamp, next) {
+  function addFriend(keyspace, user, user_friend, timestamp, next) {
     var friend = cassandra.types.uuid();
-    addFriendOneWay(friend, user, user_friend, timestamp, function(err) {
+    addFriendOneWay(keyspace, friend, user, user_friend, timestamp, function(err) {
       var reciprocalFriend = cassandra.types.uuid();
-      addFriendOneWay(reciprocalFriend, user_friend, user, timestamp, function(err) {
+      addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, function(err) {
         next(err, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
       });
     });
   }
 
-  function addFriendOneWay(friend, user, user_friend, timestamp, next) {
+  function addFriendOneWay(keyspace, friend, user, user_friend, timestamp, next) {
     var data = [friend, user, user_friend, timestamp];
-    client.execute(q('upsertFriend'), data, {prepare:true},  function(err) {
+    client.execute(q(keyspace, 'upsertFriend'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, friend, 'friend', true, next);
+      _addFeedItem(keyspace, user, friend, 'friend', true, next);
     });
   }
 
-  function removeFriend(friend, next) {
+  function removeFriend(keyspace, friend, next) {
     var data = [friend];
-    client.execute(q('removeFriend'), data, {prepare:true},  function(err) {
+    client.execute(q(keyspace, 'removeFriend'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       next(err, {status:'removed'});
     });
   }
 
-  function addFriendByName(username, username_friend, timestamp, next) {
-    query.getUserByName(username, function(err, user) {
+  function addFriendByName(keyspace, username, username_friend, timestamp, next) {
+    query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      query.getUserByName(username_friend, function(err, friend) {
+      query.getUserByName(keyspace, username_friend, function(err, friend) {
         if(err || !friend) { return next(err); }
-        addFriend(user.user, friend.user, timestamp, next);
+        addFriend(keyspace, user.user, friend.user, timestamp, next);
       });
     });
   }
 
-  function addFollower(user, user_follower, timestamp, next) {
+  function addFollower(keyspace, user, user_follower, timestamp, next) {
     var follow = cassandra.types.uuid();
     var data = [follow, user, user_follower, timestamp];
-    client.execute(q('upsertFollower'), data, {prepare:true},  function(err) {
+    client.execute(q(keyspace, 'upsertFollower'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(user, follow, 'follow', false, function(err, result) {
+      _addFeedItem(keyspace, user, follow, 'follow', false, function(err, result) {
         next(err, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
       });
     });
   }
 
   function addFollowerByName(username, username_follower, timestamp, next) {
-    query.getUserByName(username, function(err, user) {
+    query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      query.getUserByName(username_follower, function(err, follower) {
+      query.getUserByName(keyspace, username_follower, function(err, follower) {
         if(err || !follower) { return next(err); }
-        addFollower(user.user, follower.user, timestamp, next);
+        addFollower(keyspace, user.user, follower.user, timestamp, next);
       });
     });
   }
 
-  function _addFeedItem(user, item, type, isprivate, next) {
+  function _addFeedItem(keyspace, user, item, type, isprivate, next) {
 
     var insertUserTimeline = function(cb) {
       var data = [user, item, type, cassandra.types.timeuuid(), isprivate];
-      client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb);
+      client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb);
     }
 
     var insertFollowersTimeline = function(cb) {
-      client.execute(q('selectFollowers'), [user], {prepare:true} ,function(err, data) {
+      client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true} ,function(err, data) {
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {
-          query.isFriend(row.user, row.user_follower, function(err, isFriend) {
+          query.isFriend(keyspace, row.user, row.user_follower, function(err, isFriend) {
             if(!isprivate || (isprivate && isFriend)) {
               var data = [row.user_follower, item, type, cassandra.types.timeuuid(), isprivate];
-              client.execute(q('upsertUserTimeline'), data, {prepare:true}, cb2);
+              client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
             } else {
               cb2();
             }
