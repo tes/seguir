@@ -20,7 +20,7 @@ The expected flow between your application and Seguir is:
 3. IF NOT: Add user to Seguir, store new Seguir ID against their profile.
 4. Use Seguir ID in all requests to API (this is the first parameter in all client APIs).
 
-You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-sample-application](https://github.com/cliftonc/seguir-sample-application).
+You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
 
 This approach allows users to modify any of their metadata (username, display name, email) without impacting their social graph in any way - Seguir is not opinionated about how your App defines a user.  However, you can store data against the User record in Seguir, purely as a cache, so that this information is returned in the API to avoid N calls back to your database when rendering a news feed.
 
