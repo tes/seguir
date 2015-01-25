@@ -1,5 +1,7 @@
 # Seguir - Backend for a social network
 
+[Pronounced: seh-geer]
+
 [![Documentation](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir)
 
 This is a pure API for a simple social network, it contains the following concepts:
@@ -52,17 +54,13 @@ Then browse to [http://localhost:4000](http://localhost:4000).
 
 ## Setup Cassandra and Sample Data
 
-To create the Cassandra schema, note that this will **DROP** all tables in the schema first!
+To setup the Cassandra schema simply use the command line tool:
 
 ```shell
-node setup
+node bin/seguir
 ```
 
-To create some sample data to work against, this will **TRUNCATE** all tables in the schema before loading!
-
-```shell
-node setup/sample-data
-```
+This will provide a number of options that will allow you to setup the server and create an initial application.
 
 ## Integrating the Client
 
@@ -104,6 +102,8 @@ app.get('/user/:username/feed', function(req, res, next) {
 
 ```
 
+You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
+
 ## Developing
 
 Test coverage is slowly increasing, intention is to get it to 100 and then pin pre-commit hooks to it.
@@ -130,7 +130,6 @@ This will push any documentation changes to gh-pages.
 * Un-follow, and cleaning newsfeed
 * Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
-* Configuration externalised properly
 
 ## Requires
 

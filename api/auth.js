@@ -58,6 +58,13 @@ function Auth(client, keyspace) {
     });
   }
 
+  function updateApplicationToken(appName, appToken, next) {
+    var application = [appToken, appName];
+    client.execute(q(keyspace,'updateApplicationToken'), application, function(err) {
+      next(err);
+    });
+  }
+
   function addApplication(appName, appToken, next) {
     var app = [appName, appToken];
     client.execute(q(keyspace, 'upsertApplication'), app, function(err, result) {
@@ -65,9 +72,17 @@ function Auth(client, keyspace) {
     });
   }
 
+  function selectApplications(next) {
+    client.execute(q(keyspace, 'selectApplications'), function(err, result) {
+      next(err, result ? result.rows : null);
+    });
+  }
+
   return {
     addApplication: addApplication,
-    checkRequest: checkRequest
+    checkRequest: checkRequest,
+    selectApplications: selectApplications,
+    updateApplicationToken: updateApplicationToken
   }
 
 }

@@ -5,7 +5,7 @@ var async = require('async');
 
 function setup(client, keyspace, next) {
 
-  var tables =['CREATE TABLE ' + keyspace + '.applications (name text, apptoken uuid, PRIMARY KEY (name, apptoken))'];
+  var tables =['CREATE TABLE ' + keyspace + '.applications (name text, apptoken uuid, PRIMARY KEY (name))'];
 
   var helpers = require('./helpers')(client, {
     KEYSPACE: keyspace,

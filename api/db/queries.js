@@ -15,6 +15,8 @@ var queries = {};
  */
 queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (name, apptoken) VALUES(?, ?)';
 queries.checkApplication = 'SELECT name, apptoken FROM {KEYSPACE}.applications WHERE name = ? AND apptoken = ?';
+queries.selectApplications = 'SELECT name, apptoken FROM {KEYSPACE}.applications';
+queries.updateApplicationToken = 'UPDATE {KEYSPACE}.applications SET apptoken = ? WHERE name = ?';
 
 /**
  * @apiDefine ExampleCqlUsers
