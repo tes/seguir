@@ -132,7 +132,6 @@ This will push any documentation changes to gh-pages.
 
 ## Todo
 
-* Friend should be a request, reciprocal when accepted
 * Private messaging between friends
 * Un-follow, and cleaning newsfeed
 * Un-like, and cleaning newsfeed

@@ -87,6 +87,28 @@ module.exports = function(client) {
     });
   }
 
+  function addFriendRequest(keyspace, user, user_friend, message, timestamp, next) {
+    var friend_request = cassandra.types.uuid();
+    var data = [friend_request, user, user_friend, message, timestamp];
+    client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare:true},  function(err) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: message, timestamp: timestamp});
+    });
+  }
+
+  function acceptFriendRequest(keyspace, liu, friend_request_id, next) {
+    query.getFriendRequest(keyspace, liu, friend_request_id, function(err, friend_request) {
+      if(err) { return next(err); }
+      var data = [friend_request_id];
+      client.execute(q(keyspace, 'acceptFriendRequest'), data, {prepare:true},  function(err) {
+        /* istanbul ignore if */
+        if(err) { return next(err); }
+        addFriend(keyspace, friend_request.user, friend_request.user_friend, Date.now(), next);
+      });
+    });
+  }
+
   function removeFriend(keyspace, friend, next) {
     var data = [friend];
     client.execute(q(keyspace, 'removeFriend'), data, {prepare:true},  function(err) {
@@ -167,6 +189,8 @@ module.exports = function(client) {
     addLikeByName: addLikeByName,
     addFriend: addFriend,
     addFriendByName: addFriendByName,
+    addFriendRequest: addFriendRequest,
+    acceptFriendRequest: acceptFriendRequest,
     addFollower: addFollower,
     addFollowerByName: addFollowerByName
   }

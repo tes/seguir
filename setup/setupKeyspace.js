@@ -73,8 +73,9 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Timestamp} time The date the request was made.
    * @apiUse ExampleCqlFriendRequests
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, time timeuuid, PRIMARY KEY (user, user_friend)) WITH CLUSTERING ORDER BY (time DESC)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(friend_request)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, PRIMARY KEY (friend_request))');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
 
   /**
    * @api {table} Likes Likes

@@ -1,5 +1,6 @@
 var async = require('async');
 var verbose = process.env.SEGUIR_DEBUG ? true : false;
+
 /**
  *  Setup code follows below
  */
@@ -7,8 +8,7 @@ module.exports = function(client, options) {
 
   var KEYSPACE = options.KEYSPACE,
       tables = options.tables || [],
-      indexes = options.indexes || [],
-      verbose = options.verbose;
+      indexes = options.indexes || [];
 
   /* istanbul ignore next */
   function dropKeyspace(next) {
@@ -34,7 +34,7 @@ module.exports = function(client, options) {
     async.map(tables, function(cql, cb) {
       if(verbose) console.log(cql);
       client.execute(cql, function(err) {
-        if(err && (err.code == 9216 || err.code == 8704)) { // Already exists
+        if(err && (err.code == 9216)) { // Already exists
           return cb();
         }
         return cb(err);

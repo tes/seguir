@@ -12,7 +12,7 @@ var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId, otherFriendId;
+    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId;
     var manage = api.manage;
     var query = api.query;
     var auth = api.auth;
@@ -55,16 +55,73 @@ describe('Social API', function() {
 
     });
 
-    describe('friends', function () {
+    describe('friend requests', function () {
 
-      it('can friend a user', function(done) {
-        manage.addFriend(keyspace, users[0].user, users[1].user, Date.now(), function(err, friend) {
+      it('can create a friend request', function(done) {
+        manage.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', Date.now(), function(err, friend_request) {
+          expect(err).to.be(null);
+          expect(friend_request.user).to.be(users[0].user);
+          expect(friend_request.user_friend).to.be(users[1].user);
+          friendRequestId = friend_request.friend_request;
+          done();
+        });
+      });
+
+      it('can see status of outbound friend requests', function(done) {
+        query.getOutgoingFriendRequests(keyspace, users[0].user, function(err, friend_requests) {
+          expect(err).to.be(null);
+          expect(friend_requests[0].user).to.be(users[0].user);
+          expect(friend_requests[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can see status of incoming friend requests', function(done) {
+        query.getIncomingFriendRequests(keyspace, users[1].user, function(err, friend_requests) {
+          expect(err).to.be(null);
+          expect(friend_requests[0].user).to.be(users[0].user);
+          expect(friend_requests[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can see status of all friend requests for incoming', function(done) {
+        query.getFriendRequests(keyspace, users[1].user, function(err, friend_requests) {
+          expect(err).to.be(null);
+          expect(friend_requests.incoming[0].user).to.be(users[0].user);
+          expect(friend_requests.incoming[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can see status of all friend requests for outgoing', function(done) {
+        query.getFriendRequests(keyspace, users[0].user, function(err, friend_requests) {
+          expect(err).to.be(null);
+          expect(friend_requests.outgoing[0].user).to.be(users[0].user);
+          expect(friend_requests.outgoing[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can accept a friend request and create a reciprocal friendship', function(done) {
+        manage.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function(err, friend) {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
           done();
         });
       });
+
+      it('it deletes the friend request after it is accepted', function(done) {
+        query.getFriendRequest(keyspace, users[1].user, friendRequestId, function(err, friend_request) {
+          expect(friend_request).to.be(undefined);
+          done();
+        });
+      });
+
+    });
+
+    describe('friends', function () {
 
       it('can friend another user', function(done) {
         manage.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function(err, friend) {

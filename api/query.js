@@ -33,6 +33,22 @@ module.exports = function(client, keyspace) {
 
   var q = require('./db/queries');
 
+  function getUser(keyspace, user, next) {
+    client.execute(q(keyspace, 'selectUser'), [user], {prepare:true}, function(err, result) {
+       if(err) { return next(err); }
+       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
+    });
+  }
+
+  function getUserByName(keyspace, username, next) {
+    client.execute(q(keyspace, 'selectUserByUsername'), [username], {prepare:true}, function(err, result) {
+       /* istanbul ignore if */
+       if(err) { return next(err); }
+       var user = result && result.rows && result.rows[0] ? result.rows[0] : undefined;
+       next(null, user);
+    });
+  }
+
   function getFeedForUser(keyspace, liu, user, from, limit, next) {
       _getFeed(keyspace, liu, user, from, limit, next);
   }
@@ -56,6 +72,58 @@ module.exports = function(client, keyspace) {
        } else {
          next(null, post);
        }
+    });
+  }
+
+  function getFriends(keyspace, liu, user, next) {
+    isFriend(keyspace, user, liu, function(err, ok) {
+      if(err) { return next(err); }
+      if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+      client.execute(q(keyspace, 'selectFriends'), [user], {prepare:true}, function(err, result) {
+        if(err) { return next(err); }
+        next(null, result ? result.rows : undefined);
+      });
+    });
+  }
+
+  function getFriendRequest(keyspace, liu, friend_request, next) {
+    client.execute(q(keyspace, 'selectFriendRequest'), [friend_request], {prepare:true}, function(err, result) {
+      if(err) { return next(err); }
+      next(null, result ? result.rows[0] : undefined);
+    });
+  }
+
+  function getIncomingFriendRequests(keyspace, liu, next) {
+    client.execute(q(keyspace, 'selectIncomingFriendRequests'), [liu], {prepare:true}, function(err, result) {
+      if(err) { return next(err); }
+      next(null, result ? result.rows : undefined);
+    });
+  }
+
+  function getOutgoingFriendRequests(keyspace, liu, next) {
+    client.execute(q(keyspace, 'selectOutgoingFriendRequests'), [liu], {prepare:true}, function(err, result) {
+      if(err) { return next(err); }
+      next(null, result ? result.rows : undefined);
+    });
+  }
+
+  function getFriendRequests(keyspace, liu, next) {
+      getIncomingFriendRequests(keyspace, liu, function(err, incoming) {
+        if(err) { return next(err); }
+        getOutgoingFriendRequests(keyspace, liu, function(err, outgoing) {
+            if(err) { return next(err); }
+            next(null, {incoming: incoming, outgoing: outgoing});
+        });
+      });
+  }
+
+  function getFriendsByName(keyspace, liu, username, next) {
+    getUserByName(keyspace, username, function(err, user) {
+      if(err || !user) { return next(err); }
+      getFriends(keyspace, liu, user.user, function(err, friends) {
+        if(err || !friends) { return next(err); }
+        _mapGetUser(keyspace, friends, ['user_friend'], user, next);
+      });
     });
   }
 
@@ -90,6 +158,13 @@ module.exports = function(client, keyspace) {
     });
   }
 
+  function checkLike(keyspace, user, item, next) {
+    client.execute(q(keyspace, 'checkLike'), [user, item], {prepare:true}, function(err, result) {
+       if(err) { return next(err); }
+       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
+    });
+  }
+
   function getFriend(keyspace, liu, friend, next) {
     client.execute(q(keyspace, 'selectFriend'), [friend], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
@@ -118,28 +193,6 @@ module.exports = function(client, keyspace) {
     });
   }
 
-  function getFriends(keyspace, liu, user, next) {
-    isFriend(keyspace, user, liu, function(err, ok) {
-      if(err) { return next(err); }
-      if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
-      client.execute(q(keyspace, 'selectFriends'), [user], {prepare:true}, function(err, result) {
-        if(err) { return next(err); }
-        next(null, result ? result.rows : undefined);
-      });
-    });
-  }
-
-  function getFriendsByName(keyspace, liu, username, next) {
-
-    getUserByName(keyspace, username, function(err, user) {
-      if(err || !user) { return next(err); }
-      getFriends(keyspace, liu, user.user, function(err, friends) {
-        if(err || !friends) { return next(err); }
-        _mapGetUser(keyspace, friends, ['user_friend'], user, next);
-      });
-    });
-  }
-
   function getFollowers(keyspace, user, next) {
     client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
@@ -160,22 +213,6 @@ module.exports = function(client, keyspace) {
     next();
   }
 
-  function getUser(keyspace, user, next) {
-    client.execute(q(keyspace, 'selectUser'), [user], {prepare:true}, function(err, result) {
-       if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
-    });
-  }
-
-  function getUserByName(keyspace, username, next) {
-    client.execute(q(keyspace, 'selectUserByUsername'), [username], {prepare:true}, function(err, result) {
-       /* istanbul ignore if */
-       if(err) { return next(err); }
-       var user = result && result.rows && result.rows[0] ? result.rows[0] : undefined;
-       next(null, user);
-    });
-  }
-
   function getUserRelationship(keyspace, user, other_user, next) {
     isFriend(keyspace, user, other_user, function(err, isFriend, isFriendSince) {
       if(err) { return next(err); }
@@ -193,13 +230,6 @@ module.exports = function(client, keyspace) {
           });
         });
       });
-    });
-  }
-
-  function checkLike(keyspace, user, item, next) {
-    client.execute(q(keyspace, 'checkLike'), [user, item], {prepare:true}, function(err, result) {
-       if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
     });
   }
 
@@ -322,6 +352,10 @@ module.exports = function(client, keyspace) {
     getUser: getUser,
     getUserRelationship: getUserRelationship,
     getFriends: getFriends,
+    getFriendRequest: getFriendRequest,
+    getFriendRequests: getFriendRequests,
+    getIncomingFriendRequests: getIncomingFriendRequests,
+    getOutgoingFriendRequests: getOutgoingFriendRequests,
     getFollowers: getFollowers,
     getPost: getPost,
     getLike: getLike,

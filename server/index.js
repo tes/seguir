@@ -424,7 +424,7 @@ function bootstrapServer(config, keyspace, next) {
  /**
    * @api {get} /friend/:friend Get friend
    * @apiName GetFriend
-   * @apiGroup ApiFriend
+   * @apiGroup ApiFriends
    * @apiVersion 1.0.0
    *
    * @apiDescription Retrieves a specific relationship information
@@ -484,6 +484,114 @@ function bootstrapServer(config, keyspace, next) {
        return next(new restify.ForbiddenError(err.message));
       }
       res.send(friends);
+    });
+  });
+
+/**
+   * @apiDefine ApiFriendRequests Friend Requests
+   *
+   * This is a collection of methods that allow you to use the friend request workflow (instead of creating friends automatically).
+   */
+  /**
+   * @api {post} /friend-request Submit a new friend request
+   * @apiName AddFriendRequest
+   * @apiGroup ApiFriendRequests
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Adds a new friend request.
+   * @apiParam {String} user_friend the guid of the user to become friends with
+   * @apiParam {String} message the message to leave
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+       {
+          "friend_request": "28104896-2e8d-4ba1-9e13-14dd0f096277",
+          "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+          "user_friend": "379554e7-72b0-4009-b558-aa2804877595",
+          "message": "Please be my friend!",
+          "timestamp": 1421650920521
+       }
+   *
+   *  @apiUse MissingUser
+   *  @apiUse MissingFriend
+   *  @apiUse ServerError
+   */
+  server.post(u('addFriendRequest'), function (req, res, next) {
+    if(!req.params.user_friend) {
+      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
+    }
+    api.manage.addFriendRequest(req.keyspace, req.liu.user, req.params.user_friend, req.params.message || '', Date.now(), function(err, friend_request) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      if(!friend_request) {
+         return next(new restify.NotFoundError('User not found'));
+      }
+      res.send(friend_request);
+    });
+  });
+
+  /**
+   * @api {get} /friend-request/active Get active friend requests
+   * @apiName GetFriendRequests
+   * @apiGroup ApiFriendRequests
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves active friend Requests for logged in user (inbound and outbound)
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *    { incoming: [],
+          outgoing:
+           [ { friend_request: '648909bf-9039-4e25-8c3d-1d80e9fe3b35',
+               user: '17b4794d-0ec9-4005-a299-13e40dedf670',
+               user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',
+               message: 'Hello world!',
+               since: '2015-01-26T17:15:21.705Z' } ] }
+   *
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getFriendRequests'), function (req, res, next) {
+    api.query.getFriendRequests(req.keyspace, req.liu.user, function(err, friend_requests) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      res.send(friend_requests);
+    });
+  });
+
+  /**
+   * @api {post} /friend-request/accept Accept a friend request
+   * @apiName AcceptFriendRequest
+   * @apiGroup ApiFriendRequests
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Accepts a friend request.
+   * @apiParam {String} friend_request the guid of the user to become friends with
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *    { friend: '2334694d-21a6-42b1-809e-79175654dcd9',
+          reciprocal: '90068d45-efc1-4e86-807d-a9ba1c8d794a',
+          user: '17b4794d-0ec9-4005-a299-13e40dedf670',
+          user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',
+          timestamp: 1422292521727 }
+
+   *  @apiUse MissingUser
+   *  @apiUse MissingFriend
+   *  @apiUse ServerError
+   */
+  server.post(u('acceptFriendRequest'), function (req, res, next) {
+    if(!req.params.friend_request) {
+      return next(new restify.InvalidArgumentError("You must provide a friend_request guid."));
+    }
+    api.manage.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, function(err, friend) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      if(!friend) {
+         return next(new restify.NotFoundError('Friend request not found'));
+      }
+      res.send(friend);
     });
   });
 

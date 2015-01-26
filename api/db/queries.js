@@ -64,7 +64,11 @@ queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? 
  * @apiExample {cql} Insert Friend Request
  *    INSERT INTO seguir.friend_request (friend_request, user, user_friend, message, time) VALUES(?, ?, ?, ?)
  */
-queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend, user, user_friend, since) VALUES(?, ?, ?, ?)';
+queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, user, user_friend, message, since) VALUES(?, ?, ?, ?, ?)';
+queries.selectFriendRequest = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
+queries.selectIncomingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user_friend = ?';
+queries.selectOutgoingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user = ?';
+queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
 
 /**
  * @apiDefine ExampleCqlFollows

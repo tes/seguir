@@ -109,6 +109,25 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
   self.get(liu, u('getFriend', {friend: friend}), next);
 }
 
+
+/**
+ * Friend Request Wrapper
+ */
+Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestamp, next) {
+  var self = this;
+  self.post(liu, u('addFriendRequest'), {user: liu, user_friend: user_friend, message: message, timestamp: timestamp}, next);
+}
+
+Seguir.prototype.getFriendRequests = function(liu, next) {
+  var self = this;
+  self.get(liu, u('getFriendRequests', {user: liu}), next);
+}
+
+Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
+  var self = this;
+  self.post(liu, u('acceptFriendRequest'), {user: liu, friend_request: friend_request}, next);
+}
+
 /**
  * Follow Wrapper
  */

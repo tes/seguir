@@ -18,7 +18,7 @@ var credentials = {host: 'http://localhost:3001', appName:'sampleapplication', a
 
 describe('Seguir Social Client API', function() {
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, likeId, friendId, seguirServer, client;
+    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, friendRequestId, likeId, friendId, seguirServer, client;
 
     before(function(done) {
       this.timeout(20000);
@@ -73,17 +73,40 @@ describe('Seguir Social Client API', function() {
 
     });
 
-    describe('friends', function () {
 
-      it('can friend a user', function(done) {
-        client.addFriend(users[0].user, users[1].user, Date.now(), function(err, friend) {
+    describe('friend requests', function () {
+
+      it('can create a friend request', function(done) {
+        client.addFriendRequest(users[0].user, users[1].user, 'Please be my friend', Date.now(), function(err, friend_request) {
           expect(err).to.be(null);
+          expect(friend_request.user).to.be(users[0].user);
+          expect(friend_request.user_friend).to.be(users[1].user);
+          friendRequestId = friend_request.friend_request;
+          done();
+        });
+      });
+
+      it('can see status of friend requests', function(done) {
+        client.getFriendRequests(users[0].user, function(err, friend_requests) {
+          expect(err).to.be(null);
+          expect(friend_requests.outgoing[0].user).to.be(users[0].user);
+          expect(friend_requests.outgoing[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can accept a friend request and create a reciprocal friendship', function(done) {
+        client.acceptFriendRequest(users[1].user, friendRequestId, function(err, friend) {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
           done();
         });
       });
+
+    });
+
+    describe('friends', function () {
 
       it('can retrieve a friend by id', function(done) {
         client.getFriend(liu, friendId, function(err, friend) {
