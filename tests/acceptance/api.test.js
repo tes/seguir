@@ -37,6 +37,7 @@ describe('Social API', function() {
 
       it('can retrieve a user by id', function(done) {
         query.getUser(keyspace, users[0].user, function(err, user) {
+          expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be('cliftonc');
           done();
@@ -45,6 +46,7 @@ describe('Social API', function() {
 
       it('can retrieve a user by name', function(done) {
         query.getUserByName(keyspace, users[0].username, function(err, user) {
+          expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be(users[0].username);
           done();

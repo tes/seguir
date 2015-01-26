@@ -29,7 +29,7 @@ queries.updateApplicationToken = 'UPDATE {KEYSPACE}.applications SET apptoken = 
  */
 queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, userdata) VALUES(?, ?, ?);';
 queries.selectUser = 'SELECT user, username, userdata FROM {KEYSPACE}.users WHERE user = ?';
-queries.selectUserByUsername = 'SELECT user, username, useradata FROM {KEYSPACE}.users WHERE username = ?';
+queries.selectUserByUsername = 'SELECT user, username, userdata FROM {KEYSPACE}.users WHERE username = ?';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
 
 /**
