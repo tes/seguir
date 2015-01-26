@@ -29,7 +29,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Feeds",
     "groupDescription": "<p>This is a collection of methods that allow you to retrieve the news feed for a user.</p> ",
     "error": {
@@ -102,7 +102,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Followers",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
     "error": {
@@ -173,7 +173,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Followers",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
     "error": {
@@ -226,7 +226,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Followers",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
     "error": {
@@ -263,13 +263,13 @@ define({ "api": [
     }
   },
   {
-    "type": "get",
-    "url": "/friend/:friend",
-    "title": "Get friend",
-    "name": "GetFriend",
-    "group": "ApiFriend",
+    "type": "post",
+    "url": "/friend-request/accept",
+    "title": "Accept a friend request",
+    "name": "AcceptFriendRequest",
+    "group": "ApiFriendRequests",
     "version": "1.0.0",
-    "description": "<p>Retrieves a specific relationship information</p> ",
+    "description": "<p>Accepts a friend request.</p> ",
     "parameter": {
       "fields": {
         "Parameter": [
@@ -277,8 +277,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "user",
-            "description": "<p>the guid of the user</p> "
+            "field": "friend_request",
+            "description": "<p>the guid of the user to become friends with</p> "
           }
         ]
       }
@@ -287,13 +287,150 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "  HTTP/1.1 200 OK\n[\n         {\n             \"user_friend\": {\n                 \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n                 \"username\": \"cliftonc\"\n             },\n             \"since\": \"2015-01-18T20:36:38.632Z\"\n         }\n     ]",
+          "content": "HTTP/1.1 200 OK\n{ friend: '2334694d-21a6-42b1-809e-79175654dcd9',\n       reciprocal: '90068d45-efc1-4e86-807d-a9ba1c8d794a',\n       user: '17b4794d-0ec9-4005-a299-13e40dedf670',\n       user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',\n       timestamp: 1422292521727 }",
           "type": "json"
         }
       ]
     },
-    "filename": "./server.js",
-    "groupTitle": "ApiFriend",
+    "filename": "./server/index.js",
+    "groupTitle": "Friend Requests",
+    "groupDescription": "<p>This is a collection of methods that allow you to use the friend request workflow (instead of creating friends automatically).</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a guid for the user</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a user guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a friend guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "post",
+    "url": "/friend-request",
+    "title": "Submit a new friend request",
+    "name": "AddFriendRequest",
+    "group": "ApiFriendRequests",
+    "version": "1.0.0",
+    "description": "<p>Adds a new friend request.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user_friend",
+            "description": "<p>the guid of the user to become friends with</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "message",
+            "description": "<p>the message to leave</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n    {\n       \"friend_request\": \"28104896-2e8d-4ba1-9e13-14dd0f096277\",\n       \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"user_friend\": \"379554e7-72b0-4009-b558-aa2804877595\",\n       \"message\": \"Please be my friend!\",\n       \"timestamp\": 1421650920521\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Friend Requests",
+    "groupDescription": "<p>This is a collection of methods that allow you to use the friend request workflow (instead of creating friends automatically).</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a guid for the user</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a user guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a friend guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/friend-request/active",
+    "title": "Get active friend requests",
+    "name": "GetFriendRequests",
+    "group": "ApiFriendRequests",
+    "version": "1.0.0",
+    "description": "<p>Retrieves active friend Requests for logged in user (inbound and outbound)</p> ",
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{ incoming: [],\n       outgoing:\n        [ { friend_request: '648909bf-9039-4e25-8c3d-1d80e9fe3b35',\n            user: '17b4794d-0ec9-4005-a299-13e40dedf670',\n            user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',\n            message: 'Hello world!',\n            since: '2015-01-26T17:15:21.705Z' } ] }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Friend Requests",
+    "groupDescription": "<p>This is a collection of methods that allow you to use the friend request workflow (instead of creating friends automatically).</p> ",
     "error": {
       "fields": {
         "4xx": [
@@ -364,7 +501,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Friends",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
     "error": {
@@ -407,6 +544,72 @@ define({ "api": [
   },
   {
     "type": "get",
+    "url": "/friend/:friend",
+    "title": "Get friend",
+    "name": "GetFriend",
+    "group": "ApiFriends",
+    "version": "1.0.0",
+    "description": "<p>Retrieves a specific relationship information</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>the guid of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "  HTTP/1.1 200 OK\n[\n         {\n             \"user_friend\": {\n                 \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n                 \"username\": \"cliftonc\"\n             },\n             \"since\": \"2015-01-18T20:36:38.632Z\"\n         }\n     ]",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Friends",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
     "url": "/user/:user/friends",
     "title": "Get friends for a user",
     "name": "GetFriends",
@@ -435,7 +638,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Friends",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
     "error": {
@@ -515,7 +718,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Likes",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
     "error": {
@@ -611,7 +814,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Likes",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
     "error": {
@@ -684,7 +887,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Likes",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
     "error": {
@@ -758,7 +961,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Posts",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve posts.</p> ",
     "error": {
@@ -829,7 +1032,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Posts",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve posts.</p> ",
     "error": {
@@ -874,8 +1077,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>The name of the user</p> "
+            "field": "user",
+            "description": "<p>The id of the user</p> "
           }
         ]
       }
@@ -889,7 +1092,7 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Users",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
     "error": {
@@ -962,7 +1165,80 @@ define({ "api": [
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
+    "groupTitle": "Users",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
+    "url": "/user/:id/relationship",
+    "title": "Get details of any relationship between with a specific user",
+    "name": "GetUserRelationship",
+    "group": "ApiUsers",
+    "version": "1.0.0",
+    "description": "<p>Retrieves details of a specific user relationship by id</p> ",
+    "examples": [
+      {
+        "title": "Example usage:",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452/relationship",
+        "type": "curl"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The id of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"cbeab41d-2372-4017-ac50-d8d63802d452\",\n  \"username\":\"cliftonc\",\n  \"friend\": 1421585133444,\n  \"follow\": null\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
     "groupTitle": "Users",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
     "error": {
@@ -1015,6 +1291,13 @@ define({ "api": [
             "optional": false,
             "field": "username",
             "description": "<p>the name of the user</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Object",
+            "optional": false,
+            "field": "userdata",
+            "description": "<p>arbitrary user data</p> "
           }
         ]
       }
@@ -1030,12 +1313,12 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"1b869349-d8f8-45b1-864e-19164e1b925a\",\n  \"username\": \"cliftonc\"\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"1b869349-d8f8-45b1-864e-19164e1b925a\",\n  \"username\": \"cliftonc\",\n  \"userdata\": {\n    \"avatar\":\"/img/123.jpg\"\n  }\n}",
           "type": "json"
         }
       ]
     },
-    "filename": "./server.js",
+    "filename": "./server/index.js",
     "groupTitle": "Users",
     "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
     "error": {
@@ -1070,57 +1353,6 @@ define({ "api": [
         }
       ]
     }
-  },
-  {
-    "type": "table",
-    "url": "Applications",
-    "title": "Applications",
-    "name": "ApplicationData",
-    "group": "Data",
-    "version": "1.0.0",
-    "description": "<p>Stores an application name and token to allow / disallow a client application access to seguir.</p> ",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "apptoken",
-            "description": "<p>The key used to gain access.</p> "
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "name",
-            "description": "<p>The name of the application (for reference).</p> "
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "PK",
-            "description": "<p>Primary key is compound on application + key.</p> "
-          }
-        ]
-      }
-    },
-    "filename": "./setup/index.js",
-    "groupTitle": "Data Structure",
-    "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
-    "examples": [
-      {
-        "title": "Insert Application",
-        "content": "INSERT INTO seguir.applications (application, key, name) VALUES(?, ?, ?)",
-        "type": "cql"
-      },
-      {
-        "title": "Check Application",
-        "content": "SELECT application, name FROM seguir.applications WHERE key = ?",
-        "type": "cql"
-      }
-    ]
   },
   {
     "type": "table",
@@ -1164,7 +1396,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1232,7 +1464,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1307,7 +1539,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1360,7 +1592,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1435,7 +1667,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1479,7 +1711,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
@@ -1549,7 +1781,7 @@ define({ "api": [
         ]
       }
     },
-    "filename": "./setup/index.js",
+    "filename": "./setup/setupKeyspace.js",
     "groupTitle": "Data Structure",
     "groupDescription": "<p>This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate this documentation, please read the &#39;parameters&#39; reflects the columns in the tables.</p> ",
     "examples": [
