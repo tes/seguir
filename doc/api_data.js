@@ -1204,7 +1204,7 @@ define({ "api": [
   {
     "type": "get",
     "url": "/user/:id/relationship",
-    "title": "Get details of any relationship between with a specific user",
+    "title": "Get details of a relationship",
     "name": "GetUserRelationship",
     "group": "ApiUsers",
     "version": "1.0.0",
@@ -1233,7 +1233,7 @@ define({ "api": [
       "examples": [
         {
           "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"cbeab41d-2372-4017-ac50-d8d63802d452\",\n  \"username\":\"cliftonc\",\n  \"friend\": 1421585133444,\n  \"follow\": null\n}",
+          "content": "HTTP/1.1 200 OK\n{\n  isFriend: true,\n  youFollow: true,\n  theyFollow: true\n}",
           "type": "json"
         }
       ]

@@ -156,7 +156,7 @@ function bootstrapServer(config, keyspace, next) {
   });
 
   /**
-   * @api {get} /user/:id/relationship Get details of any relationship between with a specific user
+   * @api {get} /user/:id/relationship Get details of a relationship
    * @apiName GetUserRelationship
    * @apiGroup ApiUsers
    * @apiVersion 1.0.0
@@ -170,10 +170,9 @@ function bootstrapServer(config, keyspace, next) {
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
    *    {
-   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
-   *      "username":"cliftonc",
-   *      "friend": 1421585133444,
-   *      "follow": null
+   *      isFriend: true,
+   *      youFollow: true,
+   *      theyFollow: true
    *    }
    *
    *  @apiUse UserNotFound
