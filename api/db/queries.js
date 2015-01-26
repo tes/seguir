@@ -28,8 +28,8 @@ queries.updateApplicationToken = 'UPDATE {KEYSPACE}.applications SET apptoken = 
  *    SELECT user, username FROM seguir.users WHERE username = ?
  */
 queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, userdata) VALUES(?, ?, ?);';
-queries.selectUser = 'SELECT user, username FROM {KEYSPACE}.users WHERE user = ?';
-queries.selectUserByUsername = 'SELECT user, username FROM {KEYSPACE}.users WHERE username = ?';
+queries.selectUser = 'SELECT user, username, userdata FROM {KEYSPACE}.users WHERE user = ?';
+queries.selectUserByUsername = 'SELECT user, username, useradata FROM {KEYSPACE}.users WHERE username = ?';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
 
 /**

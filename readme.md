@@ -30,37 +30,45 @@ If you allow anonymous access, then you simply pass null in as the first paramet
 
 ## Running the Server
 
-You need Cassandra for the server:
+You need Cassandra to be installed for the server to work, then do the following:
 
-```shell
+```bash
 git clone git@github.com:cliftonc/seguir.git
 cd seguir
 npm install
+```
+
+You now need to initialise cassandra, to do this, use the command line tool (from the installation folder):
+
+```bash
+npm run seguir
+```
+
+Select the first option in the list 'Initialise a new cassandra instance', and follow the instructions.  Note down the application token generated for your first application, as you will need to use this in the example application configuration below.
+
+Now, you can run the server:
+
+```bash
 node server
 ```
 
 ## Running an Example Client Application
 
-You need MongoDB for the example client application (will remove this dependency in time!):
+To run the example application:
 
-```
+```bash
 git clone git@github.com:cliftonc/seguir-example-application.git
 cd seguir-example-application
 npm install
+```
+
+Now, edit the '/config/seguir.js' configuration, and use the application name and token you created above.  Now you can run the server:
+
+```bash
 node server
 ```
 
 Then browse to [http://localhost:4000](http://localhost:4000).
-
-## Setup Cassandra and Sample Data
-
-To setup the Cassandra schema simply use the command line tool:
-
-```shell
-node bin/seguir
-```
-
-This will provide a number of options that will allow you to setup the server and create an initial application.
 
 ## Integrating the Client
 
@@ -124,7 +132,6 @@ This will push any documentation changes to gh-pages.
 
 ## Todo
 
-* User object should allow for arbitrary data to be added.
 * Friend should be a request, reciprocal when accepted
 * Private messaging between friends
 * Un-follow, and cleaning newsfeed

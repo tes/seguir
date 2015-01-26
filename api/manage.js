@@ -50,10 +50,8 @@ module.exports = function(client) {
   }
 
   function addLike(keyspace, user, item, timestamp, next) {
-
     var like = cassandra.types.uuid();
     var data = [like, user, item, timestamp];
-
     client.execute(q(keyspace, 'upsertLike'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
@@ -61,7 +59,6 @@ module.exports = function(client) {
         next(err, {like: like, user: user, item: item, timestamp: timestamp});
       });
     });
-
   }
 
   function addLikeByName(keyspace, username, item, timestamp, next) {
