@@ -1,5 +1,6 @@
 var cassandra = require('cassandra-driver');
 var async = require('async');
+var _ = require('lodash');
 var moment = require('moment');
 
 /**
@@ -96,14 +97,24 @@ module.exports = function(client, keyspace) {
   function getIncomingFriendRequests(keyspace, liu, next) {
     client.execute(q(keyspace, 'selectIncomingFriendRequests'), [liu], {prepare:true}, function(err, result) {
       if(err) { return next(err); }
-      next(null, result ? result.rows : undefined);
+      var friendRequests = result.rows;
+      // Now, go and get user details for all the non own posts
+      _mapGetUser(keyspace, friendRequests, ['user','user_friend'], liu, function(err, mappedFriendRequests) {
+          if(err) { return next(err); }
+          next(null, mappedFriendRequests);
+      });
     });
   }
 
   function getOutgoingFriendRequests(keyspace, liu, next) {
     client.execute(q(keyspace, 'selectOutgoingFriendRequests'), [liu], {prepare:true}, function(err, result) {
       if(err) { return next(err); }
-      next(null, result ? result.rows : undefined);
+      var friendRequests = result.rows;
+      // Now, go and get user details for all the non own posts
+      _mapGetUser(keyspace, friendRequests, ['user','user_friend'], liu, function(err, mappedFriendRequests) {
+          if(err) { return next(err); }
+          next(null, mappedFriendRequests);
+      });
     });
   }
 
@@ -148,6 +159,27 @@ module.exports = function(client, keyspace) {
       var isFollower = result.rows.length > 0 ? true : false;
       var isFollowerSince = isFollower ? result.rows[0].since : undefined;
       return next(null, isFollower, isFollowerSince);
+    });
+  }
+
+  function isFriendRequestPending(keyspace, user, user_friend, next) {
+    if(user === user_friend) { return next(null, false); }
+    var data = [user];
+    client.execute(q(keyspace, 'selectOutgoingFriendRequests'), data, {prepare:true},  function(err, result) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+
+      // TODO: Figure out how to do this via CQL!
+      // We have to actually filter the results to look for the given user
+      var friendRequest = _.filter(result.rows, function(row) {
+        if(row.user_friend.toString() === user_friend) {
+          return row;
+        }
+      });
+      var isFriendRequestPending = friendRequest.length > 0 ? true : false;
+      var isFriendRequestSince = isFriendRequestPending ? friendRequest[0].since : undefined;
+
+      return next(null, isFriendRequestPending, isFriendRequestSince);
     });
   }
 
@@ -216,17 +248,22 @@ module.exports = function(client, keyspace) {
   function getUserRelationship(keyspace, user, other_user, next) {
     isFriend(keyspace, user, other_user, function(err, isFriend, isFriendSince) {
       if(err) { return next(err); }
-      isFollower(keyspace, user, other_user, function(err, theyFollow, theyFollowSince) {
+      isFriendRequestPending(keyspace, user, other_user, function(err, isFriendRequestPending, isFriendRequestSince) {
         if(err) { return next(err); }
-        isFollower(keyspace, other_user, user, function(err, youFollow, youFollowSince) {
+        isFollower(keyspace, user, other_user, function(err, theyFollow, theyFollowSince) {
           if(err) { return next(err); }
-          next(null, {
-            isFriend: isFriend,
-            isFriendSince: isFriendSince,
-            youFollow: youFollow,
-            youFollowSince: youFollowSince,
-            theyFollow: theyFollow,
-            theyFollowSince: theyFollowSince
+          isFollower(keyspace, other_user, user, function(err, youFollow, youFollowSince) {
+            if(err) { return next(err); }
+            next(null, {
+              isFriend: isFriend,
+              isFriendSince: isFriendSince,
+              isFriendRequestPending: isFriendRequestPending,
+              isFriendRequestSince: isFriendRequestSince,
+              youFollow: youFollow,
+              youFollowSince: youFollowSince,
+              theyFollow: theyFollow,
+              theyFollowSince: theyFollowSince
+            });
           });
         });
       });

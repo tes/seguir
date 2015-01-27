@@ -70,8 +70,8 @@ describe('Social API', function() {
       it('can see status of outbound friend requests', function(done) {
         query.getOutgoingFriendRequests(keyspace, users[0].user, function(err, friend_requests) {
           expect(err).to.be(null);
-          expect(friend_requests[0].user).to.be(users[0].user);
-          expect(friend_requests[0].user_friend).to.be(users[1].user);
+          expect(friend_requests[0].user.user).to.be(users[0].user);
+          expect(friend_requests[0].user_friend.user).to.be(users[1].user);
           done();
         });
       });
@@ -79,8 +79,8 @@ describe('Social API', function() {
       it('can see status of incoming friend requests', function(done) {
         query.getIncomingFriendRequests(keyspace, users[1].user, function(err, friend_requests) {
           expect(err).to.be(null);
-          expect(friend_requests[0].user).to.be(users[0].user);
-          expect(friend_requests[0].user_friend).to.be(users[1].user);
+          expect(friend_requests[0].user.user).to.be(users[0].user);
+          expect(friend_requests[0].user_friend.user).to.be(users[1].user);
           done();
         });
       });
@@ -88,8 +88,8 @@ describe('Social API', function() {
       it('can see status of all friend requests for incoming', function(done) {
         query.getFriendRequests(keyspace, users[1].user, function(err, friend_requests) {
           expect(err).to.be(null);
-          expect(friend_requests.incoming[0].user).to.be(users[0].user);
-          expect(friend_requests.incoming[0].user_friend).to.be(users[1].user);
+          expect(friend_requests.incoming[0].user.user).to.be(users[0].user);
+          expect(friend_requests.incoming[0].user_friend.user).to.be(users[1].user);
           done();
         });
       });
@@ -97,8 +97,8 @@ describe('Social API', function() {
       it('can see status of all friend requests for outgoing', function(done) {
         query.getFriendRequests(keyspace, users[0].user, function(err, friend_requests) {
           expect(err).to.be(null);
-          expect(friend_requests.outgoing[0].user).to.be(users[0].user);
-          expect(friend_requests.outgoing[0].user_friend).to.be(users[1].user);
+          expect(friend_requests.outgoing[0].user.user).to.be(users[0].user);
+          expect(friend_requests.outgoing[0].user_friend.user).to.be(users[1].user);
           done();
         });
       });

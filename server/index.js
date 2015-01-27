@@ -180,6 +180,9 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserRelationship'), function (req, res, next) {
+    if(!req.liu.user) {
+      return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
+    }
     api.query.getUserRelationship(req.keyspace, req.liu.user, req.params.user, function(err, relationship) {
         if(!relationship) {
           return next(new restify.NotFoundError("Could not find that user."));
@@ -551,6 +554,9 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriendRequests'), function (req, res, next) {
+    if(!req.liu.user) {
+      return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
+    }
     api.query.getFriendRequests(req.keyspace, req.liu.user, function(err, friend_requests) {
       if(err) {
        return next(new restify.ServerError(err.message));
@@ -780,11 +786,7 @@ function bootstrapServer(config, keyspace, next) {
         if(err) {
          return next(new restify.ServerError(err.message));
         }
-        if(!feed) {
-         return next(new restify.NotFoundError('Feed empty or not found.'));
-        }
-
-        res.send(feed);
+        res.send(feed || []);
     });
   });
 

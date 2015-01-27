@@ -89,8 +89,8 @@ describe('Seguir Social Client API', function() {
       it('can see status of friend requests', function(done) {
         client.getFriendRequests(users[0].user, function(err, friend_requests) {
           expect(err).to.be(null);
-          expect(friend_requests.outgoing[0].user).to.be(users[0].user);
-          expect(friend_requests.outgoing[0].user_friend).to.be(users[1].user);
+          expect(friend_requests.outgoing[0].user.user).to.be(users[0].user);
+          expect(friend_requests.outgoing[0].user_friend.user).to.be(users[1].user);
           done();
         });
       });
