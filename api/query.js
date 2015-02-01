@@ -139,31 +139,31 @@ module.exports = function(client, keyspace) {
   }
 
   function isFriend(keyspace, user, user_friend, next) {
-    if(user === user_friend) { return next(null, true); }
+    if(user === user_friend) { return next(null, true, null); }
     var data = [user, user_friend];
     client.execute(q(keyspace, 'isFriend'), data, {prepare:true},  function(err, result) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       var isFriend = result.rows.length > 0 ? true : false;
-      var isFriendSince = isFriend ? result.rows[0].since : undefined;
+      var isFriendSince = isFriend ? result.rows[0].since : null;
       return next(null, isFriend, isFriendSince);
     });
   }
 
   function isFollower(keyspace, user, user_follower, next) {
-    if(user === user_follower) { return next(null, true); }
+    if(user === user_follower) { return next(null, true, null); }
     var data = [user, user_follower];
     client.execute(q(keyspace, 'isFollower'), data, {prepare:true},  function(err, result) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       var isFollower = result.rows.length > 0 ? true : false;
-      var isFollowerSince = isFollower ? result.rows[0].since : undefined;
+      var isFollowerSince = isFollower ? result.rows[0].since : null;
       return next(null, isFollower, isFollowerSince);
     });
   }
 
   function isFriendRequestPending(keyspace, user, user_friend, next) {
-    if(user === user_friend) { return next(null, false); }
+    if(user === user_friend) { return next(null, false, null); }
     var data = [user];
     client.execute(q(keyspace, 'selectOutgoingFriendRequests'), data, {prepare:true},  function(err, result) {
       /* istanbul ignore if */
@@ -177,7 +177,7 @@ module.exports = function(client, keyspace) {
         }
       });
       var isFriendRequestPending = friendRequest.length > 0 ? true : false;
-      var isFriendRequestSince = isFriendRequestPending ? friendRequest[0].since : undefined;
+      var isFriendRequestSince = isFriendRequestPending ? friendRequest[0].since : null;
 
       return next(null, isFriendRequestPending, isFriendRequestSince);
     });
@@ -186,14 +186,14 @@ module.exports = function(client, keyspace) {
   function getLike(keyspace, like, next) {
     client.execute(q(keyspace, 'selectLike'), [like], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       next(null, result.rows && result.rows[0] ? result.rows[0] : null);
     });
   }
 
   function checkLike(keyspace, user, item, next) {
     client.execute(q(keyspace, 'checkLike'), [user, item], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
+       next(null, result.rows && result.rows[0] ? result.rows[0] : null);
     });
   }
 
@@ -201,7 +201,7 @@ module.exports = function(client, keyspace) {
     client.execute(q(keyspace, 'selectFriend'), [friend], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
-       var friend = result.rows[0] ? result.rows[0] : undefined;
+       var friend = result.rows[0] ? result.rows[0] : null;
        isFriend(keyspace, friend.user_friend, liu, function(err, ok) {
         if(err) { return next(err); }
         if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
@@ -217,7 +217,7 @@ module.exports = function(client, keyspace) {
     client.execute(q(keyspace, 'selectFollow'), [follow], {prepare:true}, function(err, result) {
        /* istanbul ignore if */
        if(err || !result.rows || result.rows.length == 0) { return next(err); }
-       var follower = result.rows[0] ? result.rows[0] : undefined;
+       var follower = result.rows[0] ? result.rows[0] : null;
        getUser(keyspace, follower.user_follower, function(err, user) {
          follower.username_follower = user.username;
          next(null, follower);
@@ -228,7 +228,7 @@ module.exports = function(client, keyspace) {
   function getFollowers(keyspace, user, next) {
     client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
-       next(null, result ? result.rows : undefined);
+       next(null, result ? result.rows : null);
     });
   }
 
@@ -246,28 +246,31 @@ module.exports = function(client, keyspace) {
   }
 
   function getUserRelationship(keyspace, user, other_user, next) {
-    isFriend(keyspace, user, other_user, function(err, isFriend, isFriendSince) {
+
+    async.parallel({
+      friend: async.apply(isFriend, keyspace, user, other_user),
+      friendRequest: async.apply(isFriendRequestPending, keyspace, user, other_user),
+      follow: async.apply(isFollower, keyspace, other_user, user),
+      followBack: async.apply(isFollower, keyspace, user, other_user)
+    },function(err, result) {
+
       if(err) { return next(err); }
-      isFriendRequestPending(keyspace, user, other_user, function(err, isFriendRequestPending, isFriendRequestSince) {
-        if(err) { return next(err); }
-        isFollower(keyspace, user, other_user, function(err, theyFollow, theyFollowSince) {
-          if(err) { return next(err); }
-          isFollower(keyspace, other_user, user, function(err, youFollow, youFollowSince) {
-            if(err) { return next(err); }
-            next(null, {
-              isFriend: isFriend,
-              isFriendSince: isFriendSince,
-              isFriendRequestPending: isFriendRequestPending,
-              isFriendRequestSince: isFriendRequestSince,
-              youFollow: youFollow,
-              youFollowSince: youFollowSince,
-              theyFollow: theyFollow,
-              theyFollowSince: theyFollowSince
-            });
-          });
-        });
-      });
+
+      var relationship = {
+        isFriend: result.friend[0],
+        isFriendSince: result.friend[1],
+        isFriendRequestPending: result.friendRequest[0],
+        isFriendRequestSince: result.friendRequest[1],
+        youFollow: result.follow[0],
+        youFollowSince: result.follow[1],
+        theyFollow: result.followBack[0],
+        theyFollowSince: result.followBack[1]
+      };
+
+      next(null,relationship);
+
     });
+
   }
 
   function _mapGetUser(keyspace, items, fields, currentUser, next) {
