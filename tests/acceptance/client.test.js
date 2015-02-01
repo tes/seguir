@@ -44,7 +44,7 @@ describe('Seguir Social Client API', function() {
     describe('Users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill'], function(user, cb) {
+        async.map(['cliftonc','phteven','ted','bill','harold'], function(user, cb) {
           client.addUser(null, user, {avatar:'test.jpg'}, cb);
         }, function(err, results) {
           users = results;
@@ -122,6 +122,17 @@ describe('Seguir Social Client API', function() {
           expect(err).to.be(null);
           expect(friends[0].user_friend).to.be(users[1].user);
           done();
+        });
+      });
+
+      it('can add and then remove a friend', function(done) {
+         client.addFriend(liu, users[4].user, Date.now(), function(err, friend) {
+          client.removeFriend(liu, friend.friend, function(err, result) {
+            expect(result.status).to.be('removed');
+            // Not immediately checking for the delete to have gone through due to
+            // Cassandra not always immediately persisting it.
+            done();
+          })
         });
       });
 

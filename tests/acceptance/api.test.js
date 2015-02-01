@@ -25,7 +25,7 @@ describe('Social API', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill'], function(user, cb) {
+        async.map(['cliftonc','phteven','ted','bill','harold'], function(user, cb) {
             manage.addUser(keyspace, user, {'age':15}, cb);
           }, function(err, results) {
             expect(err).to.be(undefined);
@@ -161,6 +161,17 @@ describe('Social API', function() {
         });
       });
 
+      it('can add and remove a friend', function(done) {
+         manage.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function(err, friend) {
+          manage.removeFriend(keyspace, friend.friend, function(err, result) {
+            expect(result.status).to.be('removed');
+            // Not immediately checking for the delete to have gone through due to
+            // Cassandra not always immediately persisting it.
+            done();
+          })
+        });
+      })
+
     });
 
     describe('follows', function () {
@@ -232,6 +243,7 @@ describe('Social API', function() {
 
       it('anyone not a friend cant retrieve a private post by id', function(done) {
         query.getPost(keyspace, users[2].user, privatePostId, function(err, post) {
+          console.dir(post);
           expect(err.statusCode).to.be(403);
           done();
         });

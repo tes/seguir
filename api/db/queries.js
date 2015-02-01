@@ -56,7 +56,7 @@ queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted,
 queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since) VALUES(?, ?, ?, ?)';
 queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = ?';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = ?';
-queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE friend = ?';
+queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE user = ? AND user_friend=?';
 queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
 
 /**

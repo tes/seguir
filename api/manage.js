@@ -111,10 +111,17 @@ module.exports = function(client) {
 
   function removeFriend(keyspace, friend, next) {
     var data = [friend];
-    client.execute(q(keyspace, 'removeFriend'), data, {prepare:true},  function(err) {
-      /* istanbul ignore if */
-      if(err) { return next(err); }
-      next(err, {status:'removed'});
+    client.execute(q(keyspace, 'selectFriend'), data, {prepare:true}, function(err, result) {
+      if(err) return next(err);
+      var deleteData = [result.rows[0].user, result.rows[0].user_friend];
+      var deleteDataReciprocal = [result.rows[0].user_friend, result.rows[0].user];
+      client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare:true},  function(err, result) {
+        if(err) return next(err);
+        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
+          if(err) return next(err);
+          next(err, {status:'removed'});
+        });
+      });
     });
   }
 
@@ -190,6 +197,7 @@ module.exports = function(client) {
     addFriend: addFriend,
     addFriendByName: addFriendByName,
     addFriendRequest: addFriendRequest,
+    removeFriend: removeFriend,
     acceptFriendRequest: acceptFriendRequest,
     addFollower: addFollower,
     addFollowerByName: addFollowerByName

@@ -52,7 +52,7 @@ Seguir.prototype.post = function(liu, apiPath, data, next) {
   });
 }
 
-Seguir.prototype.delete = function(liu, apiPath, next) {
+Seguir.prototype.del = function(liu, apiPath, next) {
   var self = this;
   self.client.del({path: apiPath, headers: self.getHeaders(liu)}, function(err, req, res, obj) {
     next(err, obj)
@@ -109,6 +109,10 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
   self.get(liu, u('getFriend', {friend: friend}), next);
 }
 
+Seguir.prototype.removeFriend = function(liu, friend, next) {
+  var self = this;
+  self.del(liu, u('getFriend', {friend: friend}), next);
+}
 
 /**
  * Friend Request Wrapper

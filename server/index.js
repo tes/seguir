@@ -488,6 +488,34 @@ function bootstrapServer(config, keyspace, next) {
       res.send(friends);
     });
   });
+/**
+   * @api {delete} /friend/:friend Remove a friendship.
+   * @apiName RemoveFriend
+   * @apiGroup ApiFriends
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Removes a friendship (both sides)
+   * @apiParam {String} friend the guid representation of the relationship (either direction)
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+       {
+          "status":"removed"
+       }
+   *
+   *  @apiUse MissingFriend
+   *  @apiUse ServerError
+   */
+  server.del(u('getFriend'), function (req, res, next) {
+    if(!req.params.friend) {
+      return next(new restify.InvalidArgumentError("You must provide a friend guid."));
+    }
+    api.manage.removeFriend(req.keyspace, req.params.friend, function(err, result) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      res.send(result);
+    });
+  });
 
 /**
    * @apiDefine ApiFriendRequests Friend Requests
