@@ -87,6 +87,30 @@ module.exports = function(client, keyspace) {
     });
   }
 
+  function friendsInCommon(keyspace, liu, user, next) {
+    if(liu === user) return next();
+    async.parallel([
+      function(cb) {
+        client.execute(q(keyspace, 'selectFriends'), [liu], {prepare:true}, function(err, result) {
+          if(err) return cb(err);
+          cb(null, _.pluck(result.rows, 'user_friend'));
+        });
+      },
+      function(cb) {
+        client.execute(q(keyspace, 'selectFriends'), [user], {prepare:true}, function(err, result) {
+          if(err) return cb(err);
+          cb(null, _.pluck(result.rows, 'user_friend'));
+        });
+      }
+    ], function(err, results) {
+        var inCommon = _.uniq(_.filter(_.intersection(results[0],results[1]), function(item) { return (item === liu || item === user) ? null : item; }));
+        async.map(inCommon, function(id, cb) {
+          getUser(keyspace, id, cb);
+        }, next);
+    });
+
+  }
+
   function getFriendRequest(keyspace, liu, friend_request, next) {
     client.execute(q(keyspace, 'selectFriendRequest'), [friend_request], {prepare:true}, function(err, result) {
       if(err) { return next(err); }
@@ -251,7 +275,8 @@ module.exports = function(client, keyspace) {
       friend: async.apply(isFriend, keyspace, user, other_user),
       friendRequest: async.apply(isFriendRequestPending, keyspace, user, other_user),
       follow: async.apply(isFollower, keyspace, other_user, user),
-      followBack: async.apply(isFollower, keyspace, user, other_user)
+      followBack: async.apply(isFollower, keyspace, user, other_user),
+      inCommon: async.apply(friendsInCommon, keyspace, user, other_user)
     },function(err, result) {
 
       if(err) { return next(err); }
@@ -264,7 +289,8 @@ module.exports = function(client, keyspace) {
         youFollow: result.follow[0],
         youFollowSince: result.follow[1],
         theyFollow: result.followBack[0],
-        theyFollowSince: result.followBack[1]
+        theyFollowSince: result.followBack[1],
+        inCommon: result.inCommon
       };
 
       next(null,relationship);
