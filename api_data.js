@@ -198,7 +198,7 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/username/:user/followers",
+    "url": "/user/:user/followers",
     "title": "Get followers for a user",
     "name": "GetFollowers",
     "group": "ApiFollowers",
@@ -252,6 +252,84 @@ define({ "api": [
         {
           "title": "Not-Found:",
           "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "delete",
+    "url": "/user/:user/follower/:user_follower",
+    "title": "Stop following a user.",
+    "name": "RemoveFollower",
+    "group": "ApiFollowers",
+    "version": "1.0.0",
+    "description": "<p>Removes a follow</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>the user guid</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user_follower",
+            "description": "<p>the user who will stop following the first user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n    {\n       \"status\":\"removed\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Followers",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve follows.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a guid for the user</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a user guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a follow guid.\"\n}",
           "type": "json"
         },
         {
@@ -675,6 +753,84 @@ define({ "api": [
     }
   },
   {
+    "type": "delete",
+    "url": "/user/:user/friend/:user_friend",
+    "title": "Remove a friendship.",
+    "name": "RemoveFriend",
+    "group": "ApiFriends",
+    "version": "1.0.0",
+    "description": "<p>Removes a friendship (both sides)</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>the guid representation of the user</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user_friend",
+            "description": "<p>the guid representation of the user they dont want to be friends with</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n    {\n       \"status\":\"removed\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Friends",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a guid for the user</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a user guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a friend guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
     "type": "post",
     "url": "/like",
     "title": "Add a like by a user",
@@ -1057,16 +1213,16 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:id",
-    "title": "Get a specific user by id",
+    "url": "/username/:username",
+    "title": "Get a specific user",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user by id</p> ",
+    "description": "<p>Retrieves details of a specific user</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
+        "content": "curl -i http://localhost:3000/username/cliftonc",
         "type": "curl"
       }
     ],
@@ -1077,8 +1233,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "user",
-            "description": "<p>The id of the user</p> "
+            "field": "username",
+            "description": "<p>The name of the user</p> "
           }
         ]
       }
@@ -1130,16 +1286,16 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/username/:username",
-    "title": "Get a specific user",
+    "url": "/user/:id",
+    "title": "Get a specific user by id",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user</p> ",
+    "description": "<p>Retrieves details of a specific user by id</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/username/cliftonc",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
         "type": "curl"
       }
     ],
@@ -1150,8 +1306,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>The name of the user</p> "
+            "field": "user",
+            "description": "<p>The id of the user</p> "
           }
         ]
       }
