@@ -169,11 +169,17 @@ function bootstrapServer(config, keyspace, next) {
    * @apiParam {String} user The id of the user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
-   *    {
-   *      isFriend: true,
-   *      youFollow: true,
-   *      theyFollow: true
-   *    }
+   *    { isFriend: false,
+          isFriendSince: null,
+          isFriendRequestPending: false,
+          isFriendRequestSince: null,
+          youFollow: true,
+          youFollowSince: '2015-02-02T06:45:55.459Z',
+          theyFollow: false,
+          theyFollowSince: null,
+          inCommon:
+           [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',
+               username: 'ted'} ] }
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
