@@ -163,14 +163,14 @@ describe('Social API', function() {
 
       it('can add and remove a friend', function(done) {
          manage.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function(err, friend) {
-          manage.removeFriend(keyspace, friend.friend, function(err, result) {
+          manage.removeFriend(keyspace, users[0].user, users[4].user, function(err, result) {
             expect(result.status).to.be('removed');
             // Not immediately checking for the delete to have gone through due to
             // Cassandra not always immediately persisting it.
             done();
           })
         });
-      })
+      });
 
     });
 
@@ -208,6 +208,18 @@ describe('Social API', function() {
           expect(followerIds).to.contain(users[1].user);
           expect(followerIds).to.contain(users[2].user);
           done();
+        });
+      });
+
+      it('can remove a follow', function(done) {
+        manage.addFollower(keyspace, users[3].user, users[4].user, Date.now(), function(err, follow) {
+          expect(err).to.be(null);
+          manage.removeFollower(keyspace, users[3].user, users[4].user, function(err, result) {
+            expect(result.status).to.be('removed');
+            // Not immediately checking for the delete to have gone through due to
+            // Cassandra not always immediately persisting it.
+            done();
+          });
         });
       });
 

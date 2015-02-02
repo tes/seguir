@@ -488,28 +488,34 @@ function bootstrapServer(config, keyspace, next) {
       res.send(friends);
     });
   });
+
 /**
-   * @api {delete} /friend/:friend Remove a friendship.
+   * @api {delete} /user/:user/friend/:user_friend Remove a friendship.
    * @apiName RemoveFriend
    * @apiGroup ApiFriends
    * @apiVersion 1.0.0
    *
    * @apiDescription Removes a friendship (both sides)
-   * @apiParam {String} friend the guid representation of the relationship (either direction)
+   * @apiParam {String} user the guid representation of the user
+   * @apiParam {String} user_friend the guid representation of the user they dont want to be friends with
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
        {
           "status":"removed"
        }
    *
+   *  @apiUse MissingUser
    *  @apiUse MissingFriend
    *  @apiUse ServerError
    */
-  server.del(u('getFriend'), function (req, res, next) {
-    if(!req.params.friend) {
-      return next(new restify.InvalidArgumentError("You must provide a friend guid."));
+  server.del(u('removeFriend'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user guid."));
     }
-    api.manage.removeFriend(req.keyspace, req.params.friend, function(err, result) {
+    if(!req.params.user_friend) {
+      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
+    }
+    api.manage.removeFriend(req.keyspace, req.params.user, req.params.user_friend, function(err, result) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -673,7 +679,7 @@ function bootstrapServer(config, keyspace, next) {
 
 
   /**
-   * @api {get} /username/:user/followers Get followers for a user
+   * @api {get} /user/:user/followers Get followers for a user
    * @apiName GetFollowers
    * @apiGroup ApiFollowers
    * @apiVersion 1.0.0
@@ -746,6 +752,40 @@ function bootstrapServer(config, keyspace, next) {
        return next(new restify.ServerError(err.message));
       }
       res.send(follow);
+    });
+  });
+
+  /**
+   * @api {delete} /user/:user/follower/:user_follower Stop following a user.
+   * @apiName RemoveFriend
+   * @apiGroup ApiFollowers
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Removes a follow
+   * @apiParam {String} user the user guid
+   * @apiParam {String} user_follower the user who will stop following
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+       {
+          "status":"removed"
+       }
+   *
+   *  @apiUse MissingUser
+   *  @apiUse MissingFollow
+   *  @apiUse ServerError
+   */
+  server.del(u('removeFollower'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user guid."));
+    }
+    if(!req.params.user_follower) {
+      return next(new restify.InvalidArgumentError("You must provide a user_follower guid."));
+    }
+    api.manage.removeFollower(req.keyspace, req.params.user, req.params.user_follower, function(err, result) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      res.send(result);
     });
   });
 

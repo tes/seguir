@@ -36,7 +36,8 @@ module.exports = function(client) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(keyspace, user, post, 'post', isprivate, function(err, result) {
-        next(err, {post: post, user: user, content: content, timestamp: timestamp, isprivate: isprivate});
+        if(err) { return next(err); }
+        next(null, {post: post, user: user, content: content, timestamp: timestamp, isprivate: isprivate});
       });
     });
 
@@ -56,7 +57,8 @@ module.exports = function(client) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(keyspace, user, like, 'like', false, function(err, result) {
-        next(err, {like: like, user: user, item: item, timestamp: timestamp});
+        if(err) { return next(err); }
+        next(null, {like: like, user: user, item: item, timestamp: timestamp});
       });
     });
   }
@@ -71,9 +73,11 @@ module.exports = function(client) {
   function addFriend(keyspace, user, user_friend, timestamp, next) {
     var friend = cassandra.types.uuid();
     addFriendOneWay(keyspace, friend, user, user_friend, timestamp, function(err) {
+      if(err) { return next(err); }
       var reciprocalFriend = cassandra.types.uuid();
       addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, function(err) {
-        next(err, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
+        if(err) { return next(err); }
+        next(null, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
       });
     });
   }
@@ -109,18 +113,14 @@ module.exports = function(client) {
     });
   }
 
-  function removeFriend(keyspace, friend, next) {
-    var data = [friend];
-    client.execute(q(keyspace, 'selectFriend'), data, {prepare:true}, function(err, result) {
+  function removeFriend(keyspace, user, user_friend, next) {
+    var deleteData = [user, user_friend];
+    var deleteDataReciprocal = [user_friend, user];
+    client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare:true},  function(err, result) {
       if(err) return next(err);
-      var deleteData = [result.rows[0].user, result.rows[0].user_friend];
-      var deleteDataReciprocal = [result.rows[0].user_friend, result.rows[0].user];
-      client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare:true},  function(err, result) {
+      client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
         if(err) return next(err);
-        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
-          if(err) return next(err);
-          next(err, {status:'removed'});
-        });
+        next(null, {status:'removed'});
       });
     });
   }
@@ -142,7 +142,8 @@ module.exports = function(client) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(keyspace, user, follow, 'follow', false, function(err, result) {
-        next(err, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
+        if(err) { return next(err); }
+        next(null, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
       });
     });
   }
@@ -154,6 +155,14 @@ module.exports = function(client) {
         if(err || !follower) { return next(err); }
         addFollower(keyspace, user.user, follower.user, timestamp, next);
       });
+    });
+  }
+
+  function removeFollower(keyspace, user, user_follower, next) {
+    var deleteData = [user, user_follower];
+    client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare:true},  function(err, result) {
+      if(err) return next(err);
+      next(null, {status:'removed'});
     });
   }
 
@@ -200,7 +209,8 @@ module.exports = function(client) {
     removeFriend: removeFriend,
     acceptFriendRequest: acceptFriendRequest,
     addFollower: addFollower,
-    addFollowerByName: addFollowerByName
+    addFollowerByName: addFollowerByName,
+    removeFollower: removeFollower
   }
 
 }

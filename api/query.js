@@ -170,6 +170,7 @@ module.exports = function(client, keyspace) {
       if(err) { return next(err); }
       var isFriend = result.rows.length > 0 ? true : false;
       var isFriendSince = isFriend ? result.rows[0].since : null;
+      var friend = isFriend ? result.rows[0].friend : null;
       return next(null, isFriend, isFriendSince);
     });
   }
@@ -182,6 +183,7 @@ module.exports = function(client, keyspace) {
       if(err) { return next(err); }
       var isFollower = result.rows.length > 0 ? true : false;
       var isFollowerSince = isFollower ? result.rows[0].since : null;
+      var follow = isFollower ? result.rows[0].follow : null;
       return next(null, isFollower, isFollowerSince);
     });
   }

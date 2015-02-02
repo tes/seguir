@@ -127,7 +127,8 @@ describe('Seguir Social Client API', function() {
 
       it('can add and then remove a friend', function(done) {
          client.addFriend(liu, users[4].user, Date.now(), function(err, friend) {
-          client.removeFriend(liu, friend.friend, function(err, result) {
+          client.removeFriend(liu, users[4].user, function(err, result) {
+            expect(err).to.be(null);
             expect(result.status).to.be('removed');
             // Not immediately checking for the delete to have gone through due to
             // Cassandra not always immediately persisting it.
@@ -186,6 +187,19 @@ describe('Seguir Social Client API', function() {
           expect(followerIds).to.contain(users[1].user);
           expect(followerIds).to.contain(users[2].user);
           done();
+        });
+      });
+
+      it('can add and then remove a follower', function(done) {
+         client.addFollower(users[3].user, users[4].user, Date.now(), function(err, follow) {
+          expect(err).to.be(null);
+          client.removeFollower(users[3].user, users[4].user, function(err, result) {
+            expect(err).to.be(null);
+            expect(result.status).to.be('removed');
+            // Not immediately checking for the delete to have gone through due to
+            // Cassandra not always immediately persisting it.
+            done();
+          })
         });
       });
 

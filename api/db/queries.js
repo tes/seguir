@@ -84,7 +84,7 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since) VALUES(?, ?, ?, ?);';
 queries.selectFollow = 'SELECT follow, user, user_follower, since FROM {KEYSPACE}.followers WHERE follow = ?';
 queries.selectFollowers = 'SELECT user, user_follower, since from {KEYSPACE}.followers WHERE user = ?';
-queries.removeFollow = 'DELETE FROM {KEYSPACE}.followers WHERE follow = ?';
+queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 queries.isFollower = 'SELECT follow, since from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**

@@ -109,9 +109,9 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
   self.get(liu, u('getFriend', {friend: friend}), next);
 }
 
-Seguir.prototype.removeFriend = function(liu, friend, next) {
+Seguir.prototype.removeFriend = function(liu, user_friend, next) {
   var self = this;
-  self.del(liu, u('getFriend', {friend: friend}), next);
+  self.del(liu, u('removeFriend', {user: liu, user_friend: user_friend}), next);
 }
 
 /**
@@ -153,6 +153,11 @@ Seguir.prototype.getFollowers = function(liu, user, next) {
 Seguir.prototype.getFollow = function(liu, follow, next) {
   var self = this;
   self.get(liu, u('getFollow', {follow: follow}), next);
+}
+
+Seguir.prototype.removeFollower = function(liu, user_following, next) {
+  var self = this;
+  self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
 }
 
 /**
