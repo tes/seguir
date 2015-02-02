@@ -757,13 +757,13 @@ function bootstrapServer(config, keyspace, next) {
 
   /**
    * @api {delete} /user/:user/follower/:user_follower Stop following a user.
-   * @apiName RemoveFriend
+   * @apiName RemoveFollower
    * @apiGroup ApiFollowers
    * @apiVersion 1.0.0
    *
    * @apiDescription Removes a follow
    * @apiParam {String} user the user guid
-   * @apiParam {String} user_follower the user who will stop following
+   * @apiParam {String} user_follower the user who will stop following the first user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
        {

@@ -191,9 +191,9 @@ describe('Seguir Social Client API', function() {
       });
 
       it('can add and then remove a follower', function(done) {
-         client.addFollower(users[3].user, users[4].user, Date.now(), function(err, follow) {
+         client.followUser(users[3].user, users[4].user, Date.now(), function(err, follow) {
           expect(err).to.be(null);
-          client.removeFollower(users[3].user, users[4].user, function(err, result) {
+          client.unFollowUser(users[3].user, users[4].user, function(err, result) {
             expect(err).to.be(null);
             expect(result.status).to.be('removed');
             // Not immediately checking for the delete to have gone through due to

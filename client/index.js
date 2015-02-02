@@ -140,9 +140,19 @@ Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, next) {
   self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu}, next);
 }
 
+Seguir.prototype.unFollowUser = function(liu, user_follower, next) {
+  var self = this;
+  self.del(liu, u('removeFollower', {user: user_follower, user_follower: liu}), next);
+}
+
 Seguir.prototype.addFollower = function(liu, user_follower, timestamp, next) {
   var self = this;
   self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower}, next);
+}
+
+Seguir.prototype.removeFollower = function(liu, user_follower, next) {
+  var self = this;
+  self.del(liu, u('removeFollower', {user: liu, user_follower: user_follower}), next);
 }
 
 Seguir.prototype.getFollowers = function(liu, user, next) {
@@ -153,11 +163,6 @@ Seguir.prototype.getFollowers = function(liu, user, next) {
 Seguir.prototype.getFollow = function(liu, follow, next) {
   var self = this;
   self.get(liu, u('getFollow', {follow: follow}), next);
-}
-
-Seguir.prototype.removeFollower = function(liu, user_following, next) {
-  var self = this;
-  self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
 }
 
 /**

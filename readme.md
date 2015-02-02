@@ -132,8 +132,8 @@ This will push any documentation changes to gh-pages.
 
 ## Todo
 
+* Tidy up API to make consistent re. logged in user
 * Private messaging between friends
-* Un-follow, and cleaning newsfeed
 * Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
 
