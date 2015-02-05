@@ -56,10 +56,13 @@
                         <a class="page-scroll" href="#about">About</a>
                     </li>
                     <li>
+                        <a class="page-scroll" href="#example">Example</a>
+                    </li>
+                    <li>
                         <a class="page-scroll" href="#api">API</a>
                     </li>
                     <li>
-                        <a class="page-scroll" href="#example">Example</a>
+                        <a class="page-scroll" href="#why">Why</a>
                     </li>
                     <li>
                         <a href="https://github.com/cliftonc/seguir" target="_blank">Github</a>
@@ -78,8 +81,8 @@
                 <div class="row">
                     <div class="col-md-8 col-md-offset-2">
                         <h1 class="brand-heading">Seguir</h1>
-                        <p class="intro-text">An MIT licensed social network API that lets you rapidly add social features to your app.</p>
-                        <a href="#api" class="btn btn-circle page-scroll">
+                        <p class="intro-text">An social network API that lets you rapidly add social features to your app.</p>
+                        <a href="#about" class="btn btn-circle page-scroll">
                             <i class="fa fa-angle-double-down animated"></i>
                         </a>
                     </div>
@@ -87,6 +90,47 @@
             </div>
         </div>
     </header>
+
+    <section id="about" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <p>Seguir provides a backend for a simple social network, with persistence in Cassandra.  It is MIT licensed, with high test coverage (and getting higher) and code driven API docs. So, what can it do?</p>
+                <ul class="about-list list-group">
+                    <li class="list-group-item">Multi-tenant, manage application keys and secrets</li>
+                    <li class="list-group-item">Command line client to let you manage the install and create applications</li>
+                    <li class="list-group-item">Seguir users are created and linked to your own authentication system</li>
+                    <li class="list-group-item">Cache arbitrary data against a user (to avoid n+1 issues when rendering newsfeeds)</li>
+                    <li class="list-group-item">Follow another user (twitter style - not reciprocal)</li>
+                    <li class="list-group-item">Submit a friend request, and become friends with another user if accepted (reciprocal like FB)</li>
+                    <li class="list-group-item">See friends or followers you have in common with another user</li>
+                    <li class="list-group-item">Post publically on your news feed, all followers get this on theirs</li>
+                    <li class="list-group-item">Post privately on your news feed, only your friends can see it</li>
+                </ul>
+                <a href="#example" class="btn btn-circle page-scroll">
+                    <i class="fa fa-angle-double-down animated"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="example" class="content-section text-center">
+        <div class="example-section">
+            <div class="container">
+                <div class="col-lg-8 col-lg-offset-2">
+                    <h2>How about an example?</h2>
+                    <br/>
+                    <a href="https://github.com/cliftonc/seguir-example-application">
+                        <img class='example-screenshot' src="img/example-app.jpg"/>
+                    </div>
+                    <a href="https://github.com/cliftonc/seguir-example-application" class="btn btn-default btn-lg">Visit Github Page</a>
+                </div>
+                <a href="#api" class="btn btn-circle page-scroll">
+                    <i class="fa fa-angle-double-down animated"></i>
+                </a>
+            </div>
+        </div>
+    </section>
 
     <!-- About Section -->
     <section id="api" class="container content-section text-center">
@@ -109,31 +153,19 @@
                     <p class='api-text'>Finally, we provide a Node client tht abstracts away interacting with a remote Seguir Rest API.  Who knows, maybe we'll get clients for other languages soon!  This documentation a work in progress :)</p>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Download Section -->
-    <section id="example" class="content-section text-center">
-        <div class="example-section">
-            <div class="container">
-                <div class="col-lg-8 col-lg-offset-2">
-                    <h2>How about an example?</h2>
-                    <br/>
-                    <a href="https://github.com/cliftonc/seguir-example-application">
-                        <img class='example-screenshot' src="img/example-app.jpg"/>
-                    </div>
-                    <a href="https://github.com/cliftonc/seguir-example-application" class="btn btn-default btn-lg">Visit Github Page</a>
-                </div>
-            </div>
+            <a href="#why" class="btn btn-circle page-scroll">
+                <i class="fa fa-angle-double-down animated"></i>
+            </a>
         </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="container content-section text-center">
-        <div class="row">
+    <section id="why" class="content-section text-center">
+        <div class="why-section">
+        <div class="container">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2>Built for Fun</h2>
-                <p>I started this project to experiment with Cassandra and learn about how to model simple social relationships given a requirement at my company <a href="https://www.tes.co.uk">TES</a>.  If you find this useful or interesting please reach out via the Github repo or Twitter.</p>
+                <p>I started this project to experiment with Cassandra and learn about how to model simple social relationships given a requirement at my company <a href="https://www.tes.co.uk">TES</a>.  If you find this useful or interesting please reach out via the Github repo or Twitter.
                 </p>
                 <ul class="list-inline banner-social-buttons">
                     <li>
@@ -146,6 +178,7 @@
                         <a href="https://github.com/tes" class="btn btn-default btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name">TES @ Github</span></a>
                     </li>
                 </ul>
+            </div>
             </div>
         </div>
     </section>
