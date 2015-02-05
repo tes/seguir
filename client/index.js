@@ -5,7 +5,19 @@ var _ = require('lodash');
 var restify = require('restify');
 var headerNames = require('../api/auth').headerNames;
 var u = require('../api/urls');
+/**
+ * @apiDefine Client Seguir Client
+ * The Seguir client provides a simple and consistent API for interacting with a seguir client
+ * without having to worry about authentication or passing the logged in user details.
+ */
 
+/**
+ * @api {config} Options Options
+ * @apiName ClientOptions
+ * @apiGroup Client
+ * @apiVersion 1.0.0
+ * @apiDescription Default configuration
+ */
 var defaults = {
   host:'http://localhost:3000'
 }

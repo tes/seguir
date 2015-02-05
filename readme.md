@@ -1,8 +1,10 @@
 # Seguir - Backend for a social network
 
+[http://cliftonc.github.io/seguir/server](http://cliftonc.github.io/seguir)
+
 [Pronounced: seh-geer]
 
-[![Documentation](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir)
+[![Server API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/server) [![Client API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir)
 
 This is a pure API for a simple social network, it contains the following concepts:
 
