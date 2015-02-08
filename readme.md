@@ -4,7 +4,7 @@
 
 [Pronounced: seh-geer]
 
-[![Server API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/server) [![Client API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir)
+[![Server API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/server) [![Client API](https://img.shields.io/badge/documentation-apidocs-green.svg)](http://cliftonc.github.io/seguir/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir) [![bitHound Score](https://www.bithound.io/cliftonc/seguir/badges/score.svg?)](https://www.bithound.io/cliftonc/seguir)
 
 This is a pure API for a simple social network, it contains the following concepts:
 
