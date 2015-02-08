@@ -12,7 +12,7 @@ var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId;
+    var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId;
     var manage = api.manage;
     var query = api.query;
     var auth = api.auth;
@@ -255,7 +255,6 @@ describe('Social API', function() {
 
       it('anyone not a friend cant retrieve a private post by id', function(done) {
         query.getPost(keyspace, users[2].user, privatePostId, function(err, post) {
-          console.dir(post);
           expect(err.statusCode).to.be(403);
           done();
         });
@@ -269,6 +268,20 @@ describe('Social API', function() {
         });
       });
 
+      it('you can mention yourself in a post', function(done) {
+        manage.addPost(keyspace, users[4].user, 'Who am I? @harold', Date.now(), false, function(err, post) {
+          expect(post.content).to.be('Who am I? @harold');
+          done();
+        });
+      });
+
+      it('you can mention someone in a post', function(done) {
+        manage.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', Date.now(), false, function(err, post) {
+          expect(post.content).to.be('Hello, this is a post mentioning @harold');
+          mentionPostId = post.post;
+          done();
+        });
+      });
 
     });
 
@@ -356,6 +369,14 @@ describe('Social API', function() {
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
           expect(feed[2].follow).to.be(notFriendFollowId);
+          done();
+        });
+      });
+
+      it('logged in - can get a feed for yourself contains mentions', function(done) {
+        query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed[0].post).to.be(mentionPostId);
           done();
         });
       });

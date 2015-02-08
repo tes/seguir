@@ -17,6 +17,19 @@ var u = require('../api/urls');
  * @apiGroup Client
  * @apiVersion 1.0.0
  * @apiDescription Default configuration
+ * @apiSuccessExample
+ *    HTTP/1.1 200 OK
+ *    { isFriend: false,
+          isFriendSince: null,
+          isFriendRequestPending: false,
+          isFriendRequestSince: null,
+          youFollow: true,
+          youFollowSince: '2015-02-02T06:45:55.459Z',
+          theyFollow: false,
+          theyFollowSince: null,
+          inCommon:
+           [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',
+               username: 'ted'} ] }
  */
 var defaults = {
   host:'http://localhost:3000'

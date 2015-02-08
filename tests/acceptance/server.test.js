@@ -16,7 +16,7 @@ var auth = api.auth;
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001', appName:'sampleapplication', appToken: cassandra.types.uuid()};
 
-describe('Seguir Social Client API', function() {
+describe('Seguir Social Server / Client API', function() {
 
     var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, friendRequestId, likeId, friendId, seguirServer, client;
 
