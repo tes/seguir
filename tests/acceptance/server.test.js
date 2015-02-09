@@ -8,13 +8,12 @@ var cassandra = require('cassandra-driver');
 var expect = require('expect.js');
 var Seguir = require('../../client');
 var setupSeguir = require('../../setup/setupSeguir');
-var setupKeyspace = require('../../setup/setupKeyspace');
 var async = require('async');
 var _ = require('lodash');
 var api = require('../../index')(dbClient, keyspace);
 var auth = api.auth;
 var startServer = require('../../server');
-var credentials = {host: 'http://localhost:3001', appName:'sampleapplication', appToken: cassandra.types.uuid()};
+var credentials = {host: 'http://localhost:3001'};
 
 describe('Seguir Social Server / Client API', function() {
 
@@ -23,11 +22,13 @@ describe('Seguir Social Server / Client API', function() {
     before(function(done) {
       this.timeout(20000);
       setupSeguir(dbClient, keyspace, function() {
-        auth.addApplication(credentials.appName, credentials.appToken, function(err, result) {
-          setupKeyspace(dbClient, keyspace + '_' + credentials.appName, function() {
+        auth.addAccount('test account', false, false, function(err, account) {
+          auth.addApplication(account.account, 'test application', function(err, application) {
             startServer({logging: false}, keyspace, function(err, server) {
                 seguirServer = server;
                 server.listen(3001, function() {
+                  credentials.appid = application.appid;
+                  credentials.appsecret = application.appsecret;
                   client = new Seguir(credentials);
                   done();
                 });

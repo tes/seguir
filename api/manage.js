@@ -3,6 +3,8 @@ var async = require('async');
 var moment = require('moment');
 var _ = require('lodash');
 var mention = new RegExp('@[a-zA-Z0-9]+','g');
+var sanitizeHtml = require('sanitize-html');
+
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -19,6 +21,13 @@ module.exports = function(client) {
   var q = require('./db/queries');
   var query = require('./query')(client);
 
+  function clean(input) {
+    return sanitizeHtml(input, {
+      allowedTags: [],
+      allowedAttributes: {}
+    });
+  }
+
   function addUser(keyspace, username, userdata, next) {
     userdata = _.mapValues(userdata , function(value) { return value.toString(); }); // Always ensure our userdata is <text,text>
     var userid = cassandra.types.uuid();
@@ -30,15 +39,14 @@ module.exports = function(client) {
   }
 
   function addPost(keyspace, user, content, timestamp, isprivate, next) {
-
     var post = cassandra.types.uuid();
-    var data = [post, user, content, timestamp, isprivate];
+    var data = [post, user, clean(content), timestamp, isprivate];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(keyspace, user, post, 'post', isprivate, function(err, result) {
         if(err) { return next(err); }
-        next(null, {post: post, user: user, content: content, timestamp: timestamp, isprivate: isprivate});
+        next(null, {post: post, user: user, content: clean(content), timestamp: timestamp, isprivate: isprivate});
       });
     });
 
@@ -53,7 +61,7 @@ module.exports = function(client) {
 
   function addLike(keyspace, user, item, timestamp, next) {
     var like = cassandra.types.uuid();
-    var data = [like, user, item, timestamp];
+    var data = [like, user, clean(item), timestamp];
     client.execute(q(keyspace, 'upsertLike'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
@@ -94,11 +102,11 @@ module.exports = function(client) {
 
   function addFriendRequest(keyspace, user, user_friend, message, timestamp, next) {
     var friend_request = cassandra.types.uuid();
-    var data = [friend_request, user, user_friend, message, timestamp];
+    var data = [friend_request, user, user_friend, clean(message), timestamp];
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: message, timestamp: timestamp});
+      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: clean(message), timestamp: timestamp});
     });
   }
 
@@ -179,7 +187,6 @@ module.exports = function(client) {
 
     var insertFollowersTimeline = function(cb) {
       client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true} ,function(err, data) {
-        console.dir(data);
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {

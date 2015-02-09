@@ -4,6 +4,7 @@
 var _ = require('lodash');
 var restify = require('restify');
 var headerNames = require('../api/auth').headerNames;
+var authUtils = require('../api/auth/utils');
 var u = require('../api/urls');
 /**
  * @apiDefine Client Seguir Client
@@ -39,12 +40,13 @@ function Seguir(options) {
 
   var self = this;
 
-  if(!options || !options.appToken || !options.appName) {
-    console.log('You must provide an application key and application name to initiate a seguir client!');
+  if(!options || !options.appsecret || !options.appid) {
+    console.log('You must provide an application secret and application id to initiate a seguir client!');
     return;
   }
-  self.appToken = options.appToken;
-  self.appName = options.appName;
+  self.appid = options.appid;
+  self.appsecret = options.appsecret;
+
   self.host = options.host || defaults.host;
 
   var clientConfig = {
@@ -52,10 +54,7 @@ function Seguir(options) {
     version: '*'
   };
 
-  self.headers = {};
-  self.headers[headerNames.appNameHeader] = self.appName;
-  self.headers[headerNames.appTokenHeader] = self.appToken;
-
+  self.headers = authUtils.generateAuthorization(self.appid, self.appsecret);
   self.client = restify.createJsonClient(clientConfig);
 
 }

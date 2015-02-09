@@ -25,7 +25,7 @@ describe('Social API', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill','harold'], function(user, cb) {
+        async.map(['cliftonc','phteven','ted','bill','harold','jenny'], function(user, cb) {
             manage.addUser(keyspace, user, {'age':15}, cb);
           }, function(err, results) {
             expect(err).to.be(undefined);
@@ -279,6 +279,14 @@ describe('Social API', function() {
         manage.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', Date.now(), false, function(err, post) {
           expect(post.content).to.be('Hello, this is a post mentioning @harold');
           mentionPostId = post.post;
+          done();
+        });
+      });
+
+      it('sanitizes any input by default', function(done) {
+        manage.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, function(err, post) {
+          expect(post.content).to.be('Evil hack ');
+          expect(post.user).to.be(users[5].user);
           done();
         });
       });

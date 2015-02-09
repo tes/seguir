@@ -7,16 +7,37 @@ var queries = {};
  */
 
 /**
+ * @apiDefine ExampleCqlAccounts
+ * @apiExample {cql} Insert Account
+ *    INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)
+ */
+queries.upsertAccount = 'INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)';
+queries.selectAccounts = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts';
+queries.selectAccount = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE account = ?';
+queries.updateAccount = 'UPDATE {KEYSPACE}.accounts SET name = ?, isadmin = ?, enabled = ?  WHERE account = ?';
+
+/**
+ * @apiDefine ExampleCqlAccountUsers
+ * @apiExample {cql} Insert Account User
+ *    INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)
+ */
+queries.upsertAccountUser = 'INSERT INTO {KEYSPACE}.account_users (account, username, password, enabled) VALUES(?, ?, ?, ?)';
+queries.selectAccountUsers = 'SELECT account, username, enabled FROM {KEYSPACE}.account_users WHERE account = ?';
+queries.selectAccountUserByName = 'SELECT account, username, password, enabled FROM {KEYSPACE}.account_users WHERE username = ?';
+queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = ?, enabled = ?  WHERE account = ? AND username = ?';
+
+/**
  * @apiDefine ExampleCqlApplications
  * @apiExample {cql} Insert Application
  *    INSERT INTO seguir.applications (application, key, name) VALUES(?, ?, ?)
  * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
-queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (name, apptoken) VALUES(?, ?)';
-queries.checkApplication = 'SELECT name, apptoken FROM {KEYSPACE}.applications WHERE name = ? AND apptoken = ?';
-queries.selectApplications = 'SELECT name, apptoken FROM {KEYSPACE}.applications';
-queries.updateApplicationToken = 'UPDATE {KEYSPACE}.applications SET apptoken = ? WHERE name = ?';
+queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, appsecret, enabled) VALUES(?, ?, ?, ?, ?, ?)';
+queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE appid = ?';
+queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = ?';
+queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = ?, enabled = ? WHERE appid = ?';
+queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = ? WHERE appid = ?';
 
 /**
  * @apiDefine ExampleCqlUsers
