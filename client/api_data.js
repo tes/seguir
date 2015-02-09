@@ -7,36 +7,17 @@ define({ "api": [
     "group": "Client",
     "version": "1.0.0",
     "description": "<p>Default configuration</p> ",
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{ isFriend: false,\n       isFriendSince: null,\n       isFriendRequestPending: false,\n       isFriendRequestSince: null,\n       youFollow: true,\n       youFollowSince: '2015-02-02T06:45:55.459Z',\n       theyFollow: false,\n       theyFollowSince: null,\n       inCommon:\n        [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',\n            username: 'ted'} ] }",
+          "type": "json"
+        }
+      ]
+    },
     "filename": "client/index.js",
     "groupTitle": "Seguir Client",
     "groupDescription": "<p>The Seguir client provides a simple and consistent API for interacting with a seguir client without having to worry about authentication or passing the logged in user details.</p> "
-  },
-  {
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "optional": false,
-            "field": "varname1",
-            "description": "<p>No type.</p> "
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "varname2",
-            "description": "<p>With type.</p> "
-          }
-        ]
-      }
-    },
-    "type": "",
-    "url": "",
-    "version": "0.0.0",
-    "filename": "client/server/main.js",
-    "group": "_Users_cliftonc_work_seguir_client_server_main_js",
-    "groupTitle": "_Users_cliftonc_work_seguir_client_server_main_js",
-    "name": ""
   }
 ] });
