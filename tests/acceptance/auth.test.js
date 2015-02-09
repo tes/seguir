@@ -14,8 +14,9 @@ describe('Account and Application Management', function() {
 
   var auth = api.auth, manage = api.manage, accountId, userId, appId, appSecret;
 
+  this.timeout(10000);
+
   before(function(done) {
-    this.timeout(20000);
     setupSeguir(client, keyspace, done);
   });
 
