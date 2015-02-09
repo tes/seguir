@@ -4,9 +4,10 @@
   "description": "Self-hosted social network backend and API",
   "main": "index.js",
   "scripts": {
+    "start": "node server",
     "seguir": "node ./bin/seguir",
     "test": "istanbul cover _mocha -- -R spec tests/unit/* tests/acceptance/*",
-    "docs": "apidoc -i . -e node_modules,client -o doc/server; apidoc -i client -o doc/client;"
+    "docs": "apidoc -i . -e node_modules -e client -o doc/server; apidoc -i client -o doc/client;"
   },
   "keywords": [
     "social",

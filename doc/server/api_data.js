@@ -1213,16 +1213,16 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:id",
-    "title": "Get a specific user by id",
+    "url": "/username/:username",
+    "title": "Get a specific user",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user by id</p> ",
+    "description": "<p>Retrieves details of a specific user</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
+        "content": "curl -i http://localhost:3000/username/cliftonc",
         "type": "curl"
       }
     ],
@@ -1233,8 +1233,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "user",
-            "description": "<p>The id of the user</p> "
+            "field": "username",
+            "description": "<p>The name of the user</p> "
           }
         ]
       }
@@ -1286,16 +1286,16 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/username/:username",
-    "title": "Get a specific user",
+    "url": "/user/:id",
+    "title": "Get a specific user by id",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user</p> ",
+    "description": "<p>Retrieves details of a specific user by id</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/username/cliftonc",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
         "type": "curl"
       }
     ],
@@ -1306,8 +1306,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>The name of the user</p> "
+            "field": "user",
+            "description": "<p>The id of the user</p> "
           }
         ]
       }
@@ -1509,27 +1509,6 @@ define({ "api": [
         }
       ]
     }
-  },
-  {
-    "type": "config",
-    "url": "Options",
-    "title": "Options",
-    "name": "ClientOptions",
-    "group": "Client",
-    "version": "1.0.0",
-    "description": "<p>Default configuration</p> ",
-    "success": {
-      "examples": [
-        {
-          "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{ isFriend: false,\n       isFriendSince: null,\n       isFriendRequestPending: false,\n       isFriendRequestSince: null,\n       youFollow: true,\n       youFollowSince: '2015-02-02T06:45:55.459Z',\n       theyFollow: false,\n       theyFollowSince: null,\n       inCommon:\n        [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',\n            username: 'ted'} ] }",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "./client/index.js",
-    "groupTitle": "Seguir Client",
-    "groupDescription": "<p>The Seguir client provides a simple and consistent API for interacting with a seguir client without having to worry about authentication or passing the logged in user details.</p> "
   },
   {
     "type": "table",
@@ -2455,34 +2434,6 @@ define({ "api": [
     "type": "",
     "url": "",
     "version": "0.0.0",
-    "filename": "./doc/client/main.js",
-    "group": "_Users_cliftonc_work_seguir_doc_client_main_js",
-    "groupTitle": "_Users_cliftonc_work_seguir_doc_client_main_js",
-    "name": ""
-  },
-  {
-    "success": {
-      "fields": {
-        "Success 200": [
-          {
-            "group": "Success 200",
-            "optional": false,
-            "field": "varname1",
-            "description": "<p>No type.</p> "
-          },
-          {
-            "group": "Success 200",
-            "type": "String",
-            "optional": false,
-            "field": "varname2",
-            "description": "<p>With type.</p> "
-          }
-        ]
-      }
-    },
-    "type": "",
-    "url": "",
-    "version": "0.0.0",
     "filename": "./doc/server/main.js",
     "group": "_Users_cliftonc_work_seguir_doc_server_main_js",
     "groupTitle": "_Users_cliftonc_work_seguir_doc_server_main_js",
@@ -2744,16 +2695,6 @@ define({ "api": [
     "filename": "./node_modules/expect.js/index.js",
     "group": "_Users_cliftonc_work_seguir_node_modules_expect_js_index_js",
     "groupTitle": "_Users_cliftonc_work_seguir_node_modules_expect_js_index_js",
-    "name": "Public"
-  },
-  {
-    "type": "",
-    "url": "public",
-    "title": "",
-    "version": "0.0.0",
-    "filename": "./node_modules/growl/lib/growl.js",
-    "group": "_Users_cliftonc_work_seguir_node_modules_growl_lib_growl_js",
-    "groupTitle": "_Users_cliftonc_work_seguir_node_modules_growl_lib_growl_js",
     "name": "Public"
   },
   {
