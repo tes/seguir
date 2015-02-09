@@ -14,6 +14,7 @@ var queries = {};
 queries.upsertAccount = 'INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)';
 queries.selectAccounts = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts';
 queries.selectAccount = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE account = ?';
+queries.selectAccountByName = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE name = ?';
 queries.updateAccount = 'UPDATE {KEYSPACE}.accounts SET name = ?, isadmin = ?, enabled = ?  WHERE account = ?';
 
 /**

@@ -54,7 +54,6 @@ function Seguir(options) {
     version: '*'
   };
 
-  self.headers = authUtils.generateAuthorization(self.appid, self.appsecret);
   self.client = restify.createJsonClient(clientConfig);
 
 }
@@ -85,11 +84,11 @@ Seguir.prototype.del = function(liu, apiPath, next) {
 
 Seguir.prototype.getHeaders = function(liu) {
   var self = this;
-  var liuHeader = {};
+  var headers = authUtils.generateAuthorization(self.appid, self.appsecret);
   if(liu) {
-    liuHeader[headerNames.userHeader] = liu;
+    headers[headerNames.userHeader] = liu;
   }
-  return _.extend(_.clone(self.headers), liuHeader);
+  return headers;
 }
 
 /**

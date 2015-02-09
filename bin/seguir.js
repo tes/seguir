@@ -9,14 +9,18 @@ var setupKeyspace = require('../setup/setupKeyspace');
 var config = require('../server/config');
 var cassandra = require('cassandra-driver');
 var _ = require('lodash');
+var async = require('async');
 var client = require('../api/db/client')(config);
 var api = require('../index')(client, config.keyspace);
 
 var tasks = [
   'Check current setup',
   'Initialise a new cassandra instance',
-  'Add a new application',
-  'List applications',
+  'Add a new account, user and application',
+  'List users for account',
+  'Add a new user to an account',
+  'List applications for account',
+  'Add a new application to an account',
   'Reset application token'
 ];
 
@@ -35,12 +39,21 @@ inquirer.prompt([
     coreSetup();
   }
   if(answer.task == tasks[2]) {
-    promptApplication();
+    promptAccount();
   }
   if(answer.task == tasks[3]) {
-    listApplications();
+    listUsers();
   }
   if(answer.task == tasks[4]) {
+    addUser();
+  }
+  if(answer.task == tasks[5]) {
+    listApplications();
+  }
+  if(answer.task == tasks[6]) {
+    addApplication();
+  }
+  if(answer.task == tasks[7]) {
     resetApplication();
   }
 
@@ -49,63 +62,126 @@ inquirer.prompt([
 function checkSetup() {
   // Check that the DB exists
   console.log('Checking Cassandra: ' + JSON.stringify(config.cassandra));
-  api.auth.selectApplications(function(err, applications) {
+  api.auth.getAccounts(function(err, accounts) {
     if(err) {
       console.log('An error was encountered: ' + err.message);
       if(err.message == 'Keyspace seguir does not exist') {
         console.log('It looks like you need to initialise this cassandra instance, please re-run this command and select that option.');
       }
     } else {
-      if(applications.length == 0) {
-       console.log('It looks like you need to create your first application, please re-run this command and select that option.');
+      if(accounts.length == 0) {
+       console.log('It looks like you need to create your first account, please re-run this command and select that option.');
       } else {
-        console.log('Cassandra looks OK, ' + applications.length + ' applications found.');
+        console.log('Configuration looks OK on the surface, ' + accounts.length + ' accounts were found.');
       }
     }
     process.exit();
   })
 }
 
-function listApplications() {
-  api.auth.selectApplications(function(err, applications) {
-    applications.forEach(function(application) {
-      console.log(application.name + ': ' + application.apptoken);
+function listUsers() {
+  selectAccount(function(err, account, name) {
+    console.log(name + ' users:');
+    api.auth.getAccountUsers(account, function(err, users) {
+      if(users) {
+        users.forEach(function(user) {
+          console.log(' - ' + user.username);
+        });
+      } else {
+        console.log(' > No users for this account!');
+      }
+      process.exit();
     });
-    process.exit();
+  });
+}
+
+function listApplications() {
+  selectAccount(function(err, account, name) {
+    console.log(name + ' applications:');
+    api.auth.getApplications(account, function(err, apps) {
+      if(apps) {
+        apps.forEach(function(app) {
+          console.log(' - [' + app.name + '] appid: ' + app.appid + ' / appsecret: ' + app.appsecret);
+        });
+      } else {
+        console.log(' > No apps for this account!');
+      }
+      process.exit();
+    });
   });
 }
 
 function resetApplication() {
-  api.auth.selectApplications(function(err, applications) {
+  selectAccount(function(err, account) {
+    selectApplication(account, function(err, application) {
+        confirmReset(application);
+    });
+  });
+}
+
+function selectAccount(next) {
+   api.auth.getAccounts(function(err, accounts) {
+    var accs = _.pluck(accounts,'name');
+    inquirer.prompt([
+      {
+        type: 'list',
+        message: 'Select an account:',
+        name: 'name',
+        choices: accs
+      }
+    ], function( answer ) {
+      next(null, _.result(_.find(accounts, { 'name': answer.name }), 'account'), answer.name);
+    });
+  });
+}
+
+function selectApplication(account, next) {
+   api.auth.getApplications(account, function(err, applications) {
     var apps = _.pluck(applications,'name');
     inquirer.prompt([
       {
         type: 'list',
-        message: 'What application would you like to revoke access:',
+        message: 'Select an application:',
         name: 'name',
         choices: apps
       }
     ], function( answer ) {
-      confirmReset(answer.name);
+      next(null, _.result(_.find(applications, { 'name': answer.name }), 'appid'), answer.name);
     });
-
   });
 }
 
-function confirmReset(appName) {
+function selectAccountUser(account, next) {
+   api.auth.getAccountUsers(account, function(err, users) {
+    var usrs = _.pluck(applications,'username');
+    inquirer.prompt([
+      {
+        type: 'list',
+        message: 'Select a user:',
+        name: 'name',
+        choices: usrs
+      }
+    ], function( answer ) {
+      next(null, answer.name);
+    });
+  });
+}
+
+function confirmReset(appid) {
   inquirer.prompt([
     {
       type: 'confirrm',
-      message: 'This will modify the appToken so that the application can no longer access seguir?',
+      message: 'This will modify the appsecret so that the application can no longer access seguir?',
       name: 'confirm'
     }
   ], function( confirm ) {
     if(confirm.confirm == 'y' || confirm.confirm == 'Y') {
         var appToken = cassandra.types.uuid();
-        api.auth.updateApplicationToken(appName, appToken, function(err, application) {
+        api.auth.updateApplicationSecret(appid, function(err, application) {
           if(!err) {
             console.log('Token updated, update the client application if you still want it to have access!');
-            console.log(appName + ': ' + appToken);
+            console.log('appid:     ' + application.appid);
+            console.log('appsecret: ' + application.appsecret);
           } else {
             console.log('ERROR: ' + err.message);
           }
@@ -127,34 +203,108 @@ function coreSetup() {
   ], function( confirm ) {
     if(confirm.confirm == 'y' || confirm.confirm == 'Y') {
       setupSeguir(client, config.keyspace, function() {
-        console.log("Completed basic setup, you now need to create your first application.");
-        promptApplication();
+        console.log("Completed basic setup, you now need to create your first account and application.");
+        promptAccount();
       });
     }
   });
 }
 
-function promptApplication() {
- inquirer.prompt([
-    {
-      type: 'input',
-      message: 'Enter application name (e.g. app-name):',
-      name: 'appName'
-    }
-  ], function( application ) {
-    setupApplication(application.appName)
+function addUser() {
+  selectAccount(function(err, account, name) {
+    promptAccountUser(account, name, function(err) {
+      process.exit(0);
+    })
   });
 }
 
-function setupApplication(appName) {
-  var appToken = cassandra.types.uuid();
-  api.auth.addApplication(appName, appToken, function(err, application) {
-    var keyspace = config.keyspace + '_' + appName;
-    setupKeyspace(client, keyspace, function() {
-       console.log("Application details are:");
-       console.log("appName: " + appName);
-       console.log("appToken: " + appToken);
-       process.exit();
+function addApplication() {
+  selectAccount(function(err, account, name) {
+    promptApplication(account, name, function(err) {
+      process.exit(0);
+    })
+  });
+}
+
+function promptAccount() {
+ inquirer.prompt([
+    {
+      type: 'input',
+      message: 'Enter an account name:',
+      name: 'name'
+    }
+  ], function( account ) {
+    setupAccount(account.name)
+  });
+}
+
+function setupAccount(accName) {
+  api.auth.addAccount(accName, true, true, function(err, account) {
+    if(err) {
+      console.log(err.message);
+      process.exit(0);
+    }
+    promptAccountUser(account.account, accName, function(err) {
+        promptApplication(account.account, accName, function(err) {
+          process.exit(0);
+        });
     });
+  });
+}
+
+function promptAccountUser(account, name, next) {
+ inquirer.prompt([
+    {
+      type: 'input',
+      message: 'Enter name of user to add to account ' + name + ':',
+      name: 'username'
+    },
+    {
+      type: 'input',
+      message: 'Enter password for this user:',
+      name: 'password'
+    },
+    {
+      type: 'input',
+      message: 'Are they an administrator of the account (y/n)?',
+      name: 'isadmin'
+    }
+  ], function( user ) {
+    setupApplicationUser(account, name, user.username, user.password, user.isadmin === 'y' ? true : false, next);
+  });
+}
+
+function setupApplicationUser(account, name, username, password, isadmin, next) {
+  api.auth.addAccountUser(account, username, password, isadmin, function(err, user) {
+    if(err) {
+        console.log(err.message);
+        process.exit(0);
+    }
+    next();
+  });
+}
+
+function promptApplication(account, name, next) {
+ inquirer.prompt([
+    {
+      type: 'input',
+      message: 'Enter application name (e.g. app-name) to add to account ' + name + ':',
+      name: 'name'
+    }
+  ], function( application ) {
+    setupApplication(account, application.name, next)
+  });
+}
+
+function setupApplication(account, name, next) {
+  api.auth.addApplication(account, name, function(err, application) {
+      if(err) {
+        console.log(err.message);
+        process.exit(0);
+      }
+     console.log("Application details are:");
+     console.log("appid: " + application.appid);
+     console.log("appsecret: " + application.appsecret);
+     next();
   });
 }

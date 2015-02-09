@@ -16,16 +16,29 @@ function Auth(client, keyspace) {
    * Core account API
    */
   function addAccount(name, isadmin, enabled, next) {
-    var account = cassandra.types.uuid();
-    var accountData = [account, name, isadmin, enabled];
-    client.execute(q(keyspace, 'upsertAccount'), accountData, function(err, result) {
+    checkAccountDuplicate(name, function(err, checkAccount) {
       if(err) { return next(err); }
-      next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
+      if(checkAccount) { return next(new Error('An account with that name already exists!')) }
+
+      var account = cassandra.types.uuid();
+      var accountData = [account, name, isadmin, enabled];
+      client.execute(q(keyspace, 'upsertAccount'), accountData, function(err, result) {
+        if(err) { return next(err); }
+        next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
+      });
+
     });
   }
 
   function getAccount(account, next) {
     client.execute(q(keyspace, 'selectAccount'), [account], function(err, result) {
+      if(err) { return next(err); }
+      next(null, result && result.rows ? result.rows[0] : null);
+    });
+  }
+
+  function checkAccountDuplicate(name, next) {
+    client.execute(q(keyspace, 'selectAccountByName'), [name], function(err, result) {
       if(err) { return next(err); }
       next(null, result && result.rows ? result.rows[0] : null);
     });
@@ -50,11 +63,15 @@ function Auth(client, keyspace) {
    * Core account user API
    */
   function addAccountUser(account, username, password, enabled, next) {
-    authUtils.hashPassword(password, function(err, hash) {
-      var userData = [account, username, hash, enabled];
-      client.execute(q(keyspace, 'upsertAccountUser'), userData, function(err, result) {
-        if(err) { return next(err); }
-        next(null, {account: account, username: username, enabled: enabled});
+    getAccountUserByName(username, function(err, checkUser) {
+      if(err) { return next(err); }
+      if(checkUser) { return next(new Error('An user with that username already exists.')) }
+      authUtils.hashPassword(password, function(err, hash) {
+        var userData = [account, username, hash, enabled];
+        client.execute(q(keyspace, 'upsertAccountUser'), userData, function(err, result) {
+          if(err) { return next(err); }
+          next(null, {account: account, username: username, enabled: enabled});
+        });
       });
     });
   }

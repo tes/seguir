@@ -12,6 +12,7 @@ function setup(client, keyspace, next) {
   ];
 
   var indexes = [
+    'CREATE INDEX ON ' + keyspace + '.accounts(name)',
     'CREATE INDEX ON ' + keyspace + '.applications(account)',
     'CREATE INDEX ON ' + keyspace + '.account_users(username)'
   ];
@@ -21,13 +22,6 @@ function setup(client, keyspace, next) {
     tables: tables,
     indexes: indexes
   });
-
-  var setupAdmin = function(cb) {
-
-    // Add the default account
-
-
-  }
 
   async.series([
     helpers.dropKeyspace,
