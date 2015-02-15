@@ -114,9 +114,13 @@ app.get('/user/:username/feed', function(req, res, next) {
 
 You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
 
-## Developing
+## Contributing & Developing
 
 Test coverage is slowly increasing, intention is to get it to 100 and then pin pre-commit hooks to it.
+
+I'm always looking for people to help out, regardless of what you think you can contribute - please reach out, and for high level contribution guidelines please read:
+
+[https://github.com/cliftonc/seguir/blob/master/CONTRIBUTING.md](Contribution Guide)
 
 ### Docs
 
@@ -134,11 +138,17 @@ This will push any documentation changes to gh-pages.
 
 ## Todo
 
+### API
+
 * Tidy up API to make consistent re. logged in user
+* Move some newsfeed work into background worker - use job queue
+
+### Functionality
+
 * Private messaging between friends
 * Un-like, and cleaning newsfeed
-* Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
+
 
 ## Requires
 
