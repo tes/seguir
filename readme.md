@@ -120,7 +120,7 @@ Test coverage is slowly increasing, intention is to get it to 100 and then pin p
 
 I'm always looking for people to help out, regardless of what you think you can contribute - please reach out, and for high level contribution guidelines please read:
 
-[https://github.com/cliftonc/seguir/blob/master/CONTRIBUTING.md](Contribution Guide)
+[Contribution Guide](https://github.com/cliftonc/seguir/blob/master/CONTRIBUTING.md)
 
 ### Docs
 
