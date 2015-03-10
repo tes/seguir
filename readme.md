@@ -149,7 +149,6 @@ This will push any documentation changes to gh-pages.
 * Un-like, and cleaning newsfeed
 * Delete post, and cleaning newsfeed
 
-
 ## Requires
 
 This uses Node, Restify for the API server with Cassandra as a backend.
