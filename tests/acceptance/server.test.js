@@ -128,6 +128,25 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
+      it('can add and remove a friend', function(done) {
+        client.addFriendRequest(users[3].user, users[4].user, 'Please be my friend', Date.now(), function(err, friend_request) {
+          expect(err).to.be(null);
+          client.acceptFriendRequest(users[3].user, friend_request.friend_request, function(err, friend) {
+            expect(err).to.be(null);
+            client.getFriend(users[3].user, friend.friend, function(err, friend) {
+              expect(err).to.be(null);
+              client.removeFriend(users[3].user, users[4].user, function(err, result) {
+                expect(err).to.be(null);
+                client.getFriend(users[3].user, friend.friend, function(err, friend) {
+                  expect(err.statusCode).to.be(404);
+                  done();
+                });
+              })
+            });
+          });
+        });
+      });
+
      });
 
     describe('follows', function () {
@@ -252,8 +271,7 @@ describe('Seguir Social Server / Client API', function() {
           client.removePost(liu, post.post, function(err, result) {
             expect(err).to.be(null);
             client.getPost(users[1].user, post.post, function(err, post) {
-              expect(err).to.be(null);
-              expect(post).to.eql({});
+              expect(err.statusCode).to.be(404);
               done();
             });
           });
@@ -288,6 +306,19 @@ describe('Seguir Social Server / Client API', function() {
           expect(like.like).to.be(likeId);
           expect(like.user).to.be(users[0].user);
           done();
+        });
+      });
+
+       it('can remove a like', function(done) {
+        client.addLike(liu, 'http://seguir.com', function(err, like) {
+          expect(err).to.be(null);
+          client.removeLike(liu, 'http://seguir.com', function(err, result) {
+            expect(err).to.be(null);
+            client.checkLike(liu, 'http://seguir.com', function(err, like) {
+              expect(err.statusCode).to.be(404);
+              done();
+            });
+          });
         });
       });
 

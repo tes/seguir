@@ -273,6 +273,9 @@ function bootstrapServer(config, keyspace, next) {
         if(err) {
          return next(new restify.ServerError(err.message));
         }
+        if(!like) {
+           return next(new restify.NotFoundError('Like not found'));
+        }
         res.send(like);
     });
   });
@@ -339,7 +342,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.item) {
       return next(new restify.InvalidArgumentError("You must provide an item."));
     }
-    api.manage.removeLike(req.keyspace, req.liu.user, req.params.item, function(err, result) {
+    api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function(err, result) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
@@ -414,6 +417,9 @@ function bootstrapServer(config, keyspace, next) {
         if(err) {
           return next(new restify.ForbiddenError(err.message));
         }
+        if(!post) {
+           return next(new restify.NotFoundError('Post not found'));
+        }
         res.send(post);
     });
   });
@@ -475,6 +481,9 @@ function bootstrapServer(config, keyspace, next) {
     api.query.getFriend(req.keyspace, req.liu.user, req.params.friend, function(err, friend) {
       if(err) {
        return next(new restify.ForbiddenError(err.message));
+      }
+      if(!friend) {
+        return next(new restify.NotFoundError('Friend not found'));
       }
       res.send(friend);
     });
@@ -780,6 +789,9 @@ function bootstrapServer(config, keyspace, next) {
     api.query.getFollow(req.keyspace, req.params.follow, function(err, follow) {
       if(err) {
        return next(new restify.ServerError(err.message));
+      }
+      if(!follow) {
+        return next(new restify.NotFoundError('Follow not found'));
       }
       res.send(follow);
     });
