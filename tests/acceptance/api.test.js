@@ -165,10 +165,11 @@ describe('Social API', function() {
          manage.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function(err, friend) {
           manage.removeFriend(keyspace, users[0].user, users[4].user, function(err, result) {
             expect(result.status).to.be('removed');
-            // Not immediately checking for the delete to have gone through due to
-            // Cassandra not always immediately persisting it.
-            done();
-          })
+            query.getRawFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
+              expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);
+              done();
+            });
+          });
         });
       });
 
@@ -216,9 +217,10 @@ describe('Social API', function() {
           expect(err).to.be(null);
           manage.removeFollower(keyspace, users[3].user, users[4].user, function(err, result) {
             expect(result.status).to.be('removed');
-            // Not immediately checking for the delete to have gone through due to
-            // Cassandra not always immediately persisting it.
-            done();
+            query.getRawFeedForUser(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
+              expect(_.pluck(feed, 'item')).to.not.contain(follow.follow);
+              done();
+            });
           });
         });
       });
@@ -291,6 +293,25 @@ describe('Social API', function() {
         });
       });
 
+      it('can add and remove a post', function(done) {
+        manage.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', Date.now(), false, function(err, post) {
+          manage.removePost(keyspace, users[5].user, post.post, function(err, result) {
+            expect(err).to.be(null);
+            query.getRawFeedForUser(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
+              expect(_.pluck(feed, 'item')).to.not.contain(post.post);
+              done();
+            });
+          });
+        });
+      });
+
+      it('can not remove someone elses post', function(done) {
+        manage.removePost(keyspace, users[5].user, mentionPostId, function(err, result) {
+          expect(err.statusCode).to.be(403);
+          done();
+        });
+      });
+
     });
 
     describe('likes', function () {
@@ -316,6 +337,18 @@ describe('Social API', function() {
           expect(like.like).to.be(likeId);
           expect(like.user).to.be(users[0].user);
           done();
+        });
+      });
+
+      it('can add and remove a like', function(done) {
+        manage.addLike(keyspace, users[5].user, 'http://seguir.calip.so', Date.now(), function(err, like) {
+          manage.removeLike(keyspace, users[5].user, 'http://seguir.calip.so', function(err, result) {
+            expect(err).to.be(null);
+            query.getRawFeedForUser(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
+              expect(_.pluck(feed, 'item')).to.not.contain(like.like);
+              done();
+            });
+          });
         });
       });
 

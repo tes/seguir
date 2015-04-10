@@ -11,6 +11,7 @@ var urls = {
   getUserRelationship:        '/user/:user/relationship',
   addPost:                    '/post',
   getPost:                    '/post/:post',
+  removePost:                 '/post/:post',
   addFriend:                  '/friend',
   getFriend:                  '/friend/:friend',
   removeFriend:               '/user/:user/friend/:user_friend',
@@ -25,6 +26,7 @@ var urls = {
   addLike:                    '/like',
   getLike:                    '/like/:like',
   checkLike:                  '/user/:user/like/:item',
+  removeLike:                 '/user/:user/like/:item',
   getFeed:                    '/feed/:user'
 }
 

@@ -201,6 +201,10 @@ Seguir.prototype.getPost = function(liu, post, next) {
   self.get(liu, u('getPost', {post: post}), next);
 }
 
+Seguir.prototype.removePost = function(liu, post, next) {
+  var self = this;
+  self.del(liu, u('removePost', {post: post}), next);
+}
 
 /**
  * Like Wrapper
@@ -218,6 +222,11 @@ Seguir.prototype.getLike = function(liu, like, next) {
 Seguir.prototype.checkLike = function(liu, item, next) {
   var self = this;
   self.get(liu, u('checkLike', {user: liu, item: encodeURIComponent(item) }), next);
+}
+
+Seguir.prototype.removeLike = function(liu, item, next) {
+  var self = this;
+  self.del(liu, u('removeLike', {user: liu, item: encodeURIComponent(item)}), next);
 }
 
 /**

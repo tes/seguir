@@ -54,6 +54,11 @@ module.exports = function(client, keyspace) {
       _getFeed(keyspace, liu, user, from, limit, next);
   }
 
+  function getRawFeedForUser(keyspace, liu, user, from, limit, next) {
+    var raw = true;
+    _getFeed(keyspace, liu, user, from, limit, raw, next);
+  }
+
   function canSeePrivate(keyspace, liu, user, next) {
      if(liu == user) { return next(null, true); }
      isFriend(keyspace, liu, user, next);
@@ -171,7 +176,7 @@ module.exports = function(client, keyspace) {
       var isFriend = result.rows.length > 0 ? true : false;
       var isFriendSince = isFriend ? result.rows[0].since : null;
       var friend = isFriend ? result.rows[0].friend : null;
-      return next(null, isFriend, isFriendSince);
+      return next(null, isFriend, isFriendSince, friend);
     });
   }
 
@@ -184,7 +189,7 @@ module.exports = function(client, keyspace) {
       var isFollower = result.rows.length > 0 ? true : false;
       var isFollowerSince = isFollower ? result.rows[0].since : null;
       var follow = isFollower ? result.rows[0].follow : null;
-      return next(null, isFollower, isFollowerSince);
+      return next(null, isFollower, isFollowerSince, follow);
     });
   }
 
@@ -219,7 +224,7 @@ module.exports = function(client, keyspace) {
   function checkLike(keyspace, user, item, next) {
     client.execute(q(keyspace, 'checkLike'), [user, item], {prepare:true}, function(err, result) {
        if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : null);
+       next(null, result.rows && result.rows[0] ? result.rows[0] : null, result.rows[0]);
     });
   }
 
@@ -322,7 +327,9 @@ module.exports = function(client, keyspace) {
 
   }
 
-  function _getFeed(keyspace, liu, user, from, limit, next) {
+  function _getFeed(keyspace, liu, user, from, limit, raw, next) {
+
+    if(!next) { next = raw; raw = false; }
 
     var data = [user], timeClause = '';
 
@@ -336,6 +343,8 @@ module.exports = function(client, keyspace) {
       if(err) { return next(err); }
 
       if(data.rows && data.rows.length > 0) {
+
+         if(raw) { return next(null, data.rows); }
 
          var timeline = data.rows;
 
@@ -382,6 +391,7 @@ module.exports = function(client, keyspace) {
                 currentResult.timeuuid = timeline[index].time;
                 currentResult.date = timeline[index].date;
                 currentResult.fromNow = moment(currentResult.date).fromNow();
+                currentResult.isdeleted = timeline[index].isdeleted;
 
                 // Calculated fields to make rendering easier
                 currentResult.fromFollower = currentResult.user !== user.user;
@@ -435,6 +445,7 @@ module.exports = function(client, keyspace) {
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
     getFeedForUser: getFeedForUser,
+    getRawFeedForUser: getRawFeedForUser,
     checkLike: checkLike
   }
 

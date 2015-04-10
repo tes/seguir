@@ -123,7 +123,8 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
    * @apiUse ExampleCqlFeed
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, PRIMARY KEY (user, time, isprivate)) WITH CLUSTERING ORDER BY (time DESC, isprivate ASC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.userline(item)');
 
   return {
     tables:tables,

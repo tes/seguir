@@ -314,6 +314,40 @@ function bootstrapServer(config, keyspace, next) {
   });
 
   /**
+   * @api {delete} /user/:user/like/:item Remove a like.
+   * @apiName RemoveLike
+   * @apiGroup ApiLikes
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Removes a like
+   * @apiParam {Guid} user The guid of the user
+   * @apiParam {String} item The item to check
+
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+       {
+          "status":"removed"
+       }
+   *
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   */
+  server.del(u('removeLike'), function (req, res, next) {
+    if(!req.params.user) {
+      return next(new restify.InvalidArgumentError("You must provide a user."));
+    }
+    if(!req.params.item) {
+      return next(new restify.InvalidArgumentError("You must provide an item."));
+    }
+    api.manage.removeLike(req.keyspace, req.liu.user, req.params.item, function(err, result) {
+      if(err) {
+       return next(new restify.ServerError(err.message));
+      }
+      res.send(result);
+    });
+  });
+
+  /**
    * @apiDefine ApiPosts Posts
    *
    * This is a collection of methods that allow you to create and retrieve posts.
@@ -385,47 +419,31 @@ function bootstrapServer(config, keyspace, next) {
   });
 
   /**
-   * @apiDefine ApiFriends Friends
-   *
-   * This is a collection of methods that allow you to create and retrieve friend links.
-   */
-  /**
-   * @api {post} /friend Add a friend to a user
-   * @apiName AddFriend
-   * @apiGroup ApiFriends
+   * @api {delete} /post/:post Remove a post.
+   * @apiName RemovePost
+   * @apiGroup ApiPosts
    * @apiVersion 1.0.0
    *
-   * @apiDescription Adds a new friend to a user account.
-   * @apiParam {String} user the guid representation of the user
-   * @apiParam {String} user_friend the guid of the user to become friends with
+   * @apiDescription Removes a post
+   * @apiParam {String} post the guid representation of the post
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
        {
-          "friend": "28104896-2e8d-4ba1-9e13-14dd0f096277",
-          "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-          "user_friend": "379554e7-72b0-4009-b558-aa2804877595",
-          "timestamp": 1421650920521
+          "status":"removed"
        }
    *
-   *  @apiUse MissingUsername
-   *  @apiUse MissingFriend
+   *  @apiUse MissingPost
    *  @apiUse ServerError
    */
-  server.post(u('addFriend'), function (req, res, next) {
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user guid."));
+  server.del(u('removePost'), function (req, res, next) {
+    if(!req.params.post) {
+      return next(new restify.InvalidArgumentError("You must provide a post guid."));
     }
-    if(!req.params.user_friend) {
-      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
-    }
-    api.manage.addFriend(req.keyspace, req.params.user, req.params.user_friend, Date.now(), function(err, friend) {
+    api.manage.removePost(req.keyspace, req.liu.user, req.params.post, function(err, result) {
       if(err) {
        return next(new restify.ServerError(err.message));
       }
-      if(!friend) {
-         return next(new restify.NotFoundError('User not found'));
-      }
-      res.send(friend);
+      res.send(result);
     });
   });
 
@@ -520,6 +538,9 @@ function bootstrapServer(config, keyspace, next) {
     }
     if(!req.params.user_friend) {
       return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
+    }
+    if(req.params.user !== req.liu.user) {
+      return next(new restify.ForbiddenError("You can only remove your own friendships."));
     }
     api.manage.removeFriend(req.keyspace, req.params.user, req.params.user_friend, function(err, result) {
       if(err) {
@@ -653,8 +674,8 @@ function bootstrapServer(config, keyspace, next) {
    * @apiVersion 1.0.0
    *
    * @apiDescription Adds a new friend to a user account.
-   * @apiParam {Guid} user the guid representation of the user
-   * @apiParam {Guid} user_follower the guid of the user to become friends with
+   * @apiParam {Guid} user the guid representation of the user who will be followed
+   * @apiParam {Guid} user_follower the guid of the user who will be the follower
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
         {
@@ -674,6 +695,9 @@ function bootstrapServer(config, keyspace, next) {
     }
     if(!req.params.user_follower) {
       return next(new restify.InvalidArgumentError("You must provide a user_follower."));
+    }
+    if(req.params.user_follower !== req.liu.user) {
+      return next(new restify.ForbiddenError("You can only add your own follow relationships."));
     }
     api.manage.addFollower(req.keyspace, req.params.user, req.params.user_follower, Date.now(), function(err, follow) {
       if(err) {
@@ -768,7 +792,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiVersion 1.0.0
    *
    * @apiDescription Removes a follow
-   * @apiParam {String} user the user guid
+   * @apiParam {String} user the user guid who is currently being followed
    * @apiParam {String} user_follower the user who will stop following the first user
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
@@ -786,6 +810,9 @@ function bootstrapServer(config, keyspace, next) {
     }
     if(!req.params.user_follower) {
       return next(new restify.InvalidArgumentError("You must provide a user_follower guid."));
+    }
+    if(req.params.user_follower !== req.liu.user) {
+      return next(new restify.ForbiddenError("You can only remove your own follow relationships."));
     }
     api.manage.removeFollower(req.keyspace, req.params.user, req.params.user_follower, function(err, result) {
       if(err) {

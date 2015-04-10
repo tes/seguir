@@ -49,13 +49,27 @@ module.exports = function(client) {
         next(null, {post: post, user: user, content: clean(content), timestamp: timestamp, isprivate: isprivate});
       });
     });
-
   }
 
   function addPostByName(keyspace, username, content, timestamp, isprivate, next) {
     query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
       addPost(keyspace, user.user, content, timestamp, isprivate, next);
+    });
+  }
+
+  function removePost(keyspace, user, post, next) {
+    query.getPost(keyspace, user, post, function(err, postItem) {
+      if(err) { return next(err); }
+      if(postItem.user !== user) { return next({statusCode: 403, message:'You are not allowed to delete other peoples posts.'}); }
+      var deleteData = [post];
+      client.execute(q(keyspace, 'removePost'), deleteData, {prepare:true},  function(err, result) {
+        if(err) return next(err);
+        _removeFeedsForItem(keyspace, post, function(err) {
+          if(err) return next(err);
+          next(null, {status:'removed'});
+        });
+      });
     });
   }
 
@@ -76,6 +90,21 @@ module.exports = function(client) {
     query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
       addLike(keyspace, user.user, item, timestamp, next);
+    });
+  }
+
+  function removeLike(keyspace, user, item, next) {
+    query.checkLike(keyspace, user, item, function(err, doesLike, like) {
+      if(!doesLike) { return next(); }
+      if(like.user !== user) { return next({statusCode: 403, message:'You are not allowed to delete other peoples likes.'}); }
+      var deleteData = [user, item];
+      client.execute(q(keyspace, 'removeLike'), deleteData, {prepare:true},  function(err, result) {
+        if(err) return next(err);
+        _removeFeedsForItem(keyspace, like.like, function(err) {
+          if(err) return next(err);
+          next(null, {status:'removed'});
+        });
+      });
     });
   }
 
@@ -123,13 +152,19 @@ module.exports = function(client) {
   }
 
   function removeFriend(keyspace, user, user_friend, next) {
-    var deleteData = [user, user_friend];
-    var deleteDataReciprocal = [user_friend, user];
-    client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare:true},  function(err, result) {
-      if(err) return next(err);
-      client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
+    query.isFriend(keyspace, user, user_friend, function(err, isFriend, isFriendSince, friend) {
+      if(!isFriend) { return next(); }
+      var deleteData = [user, user_friend];
+      var deleteDataReciprocal = [user_friend, user];
+      client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare:true},  function(err, result) {
         if(err) return next(err);
-        next(null, {status:'removed'});
+        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
+          if(err) return next(err);
+          _removeFeedsForItem(keyspace, friend, function(err) {
+            if(err) return next(err);
+            next(null, {status:'removed'});
+          });
+        });
       });
     });
   }
@@ -168,10 +203,16 @@ module.exports = function(client) {
   }
 
   function removeFollower(keyspace, user, user_follower, next) {
-    var deleteData = [user, user_follower];
-    client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare:true},  function(err, result) {
-      if(err) return next(err);
-      next(null, {status:'removed'});
+    query.isFollower(keyspace, user, user_follower, function(err, isFollower, isFollowerSince, follow) {
+      if(!isFollower) { return next(); }
+      var deleteData = [user, user_follower];
+      client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare:true},  function(err, result) {
+        if(err) return next(err);
+        _removeFeedsForItem(keyspace, follow, function(err) {
+          if(err) return next(err);
+          next(null, {status:'removed'});
+        });
+      });
     });
   }
 
@@ -246,12 +287,35 @@ module.exports = function(client) {
 
   }
 
+  function _removeFeedsForItem(keyspace, item, next) {
+    var queryData = [item];
+    client.execute(q(keyspace, 'selectAllItems'), queryData, {prepare:true},  function(err, data) {
+      /* istanbul ignore if */
+      if(err || data.rows.length == 0) { return next(err); }
+      async.map(data.rows, function(row, cb) {
+        _removeFeedItem(keyspace, row.user, row.time, cb);
+      },function(err, rows) {
+        next(err);
+      });
+    });
+  }
+
+  function _removeFeedItem(keyspace, user, time, next) {
+    var deleteData = [user, time];
+    client.execute(q(keyspace, 'removeFromTimeline'), deleteData, {prepare:true},  function(err, result) {
+      if(err) return next(err);
+      next(null, {status:'removed'});
+    });
+  }
+
   return {
     addUser: addUser,
     addPost: addPost,
     addPostByName: addPostByName,
+    removePost: removePost,
     addLike: addLike,
     addLikeByName: addLikeByName,
+    removeLike: removeLike,
     addFriend: addFriend,
     addFriendByName: addFriendByName,
     addFriendRequest: addFriendRequest,

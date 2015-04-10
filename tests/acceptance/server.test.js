@@ -128,24 +128,12 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
-      it('can add and then remove a friend', function(done) {
-         client.addFriend(liu, users[4].user, Date.now(), function(err, friend) {
-          client.removeFriend(liu, users[4].user, function(err, result) {
-            expect(err).to.be(null);
-            expect(result.status).to.be('removed');
-            // Not immediately checking for the delete to have gone through due to
-            // Cassandra not always immediately persisting it.
-            done();
-          })
-        });
-      });
-
      });
 
     describe('follows', function () {
 
       it('can add a follower who is a friend', function(done) {
-        client.addFollower(liu, users[1].user, Date.now(), function(err, follow) {
+        client.followUser(users[1].user, liu, Date.now(), function(err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
@@ -155,7 +143,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('can add a follower who is not a friend', function(done) {
-        client.addFollower(liu, users[2].user, Date.now(), function(err, follow) {
+        client.followUser(users[2].user, liu,  Date.now(), function(err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[2].user);
@@ -196,13 +184,16 @@ describe('Seguir Social Server / Client API', function() {
       it('can add and then remove a follower', function(done) {
          client.followUser(users[3].user, users[4].user, Date.now(), function(err, follow) {
           expect(err).to.be(null);
-          client.unFollowUser(users[3].user, users[4].user, function(err, result) {
-            expect(err).to.be(null);
-            expect(result.status).to.be('removed');
-            // Not immediately checking for the delete to have gone through due to
-            // Cassandra not always immediately persisting it.
-            done();
-          })
+          client.getFollowers(users[4].user, users[4].user, function(err, followers1) {
+            expect(_.pluck(followers1,'user_follower')).to.contain(users[3].user);
+            client.unFollowUser(users[3].user, users[4].user, function(err, result) {
+              expect(result.status).to.be('removed');
+              client.getFollowers(users[4].user, users[4].user, function(err, followers2) {
+                expect(followers2.length).to.be(0);
+                done();
+              });
+            })
+          });
         });
       });
 
@@ -252,6 +243,20 @@ describe('Seguir Social Server / Client API', function() {
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.be(users[0].user);
           done();
+        });
+      });
+
+      it('can remove a post', function(done) {
+        client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', Date.now(), true, function(err, post) {
+          expect(err).to.be(null);
+          client.removePost(liu, post.post, function(err, result) {
+            expect(err).to.be(null);
+            client.getPost(users[1].user, post.post, function(err, post) {
+              expect(err).to.be(null);
+              expect(post).to.eql({});
+              done();
+            });
+          });
         });
       });
 

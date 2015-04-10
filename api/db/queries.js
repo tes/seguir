@@ -63,6 +63,7 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
  */
 queries.selectPost = 'SELECT post, content, user, posted, isPrivate FROM {KEYSPACE}.posts WHERE post = ?';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted, isPrivate) VALUES(?, ?, ?, ?, ?);';
+queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 
 /**
  * @apiDefine ExampleCqlFriends
@@ -123,7 +124,7 @@ queries.isFollower = 'SELECT follow, since from {KEYSPACE}.followers WHERE user 
 queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
 queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
 queries.checkLike = 'SELECT like, user, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
-queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE like = ?';
+queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
 
 /**
  * @apiDefine ExampleCqlFeed
@@ -134,9 +135,10 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE like = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isPrivate) VALUES(?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isPrivate FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
-queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isprivate) VALUES(?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
+queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND time = ?';
+queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.userline WHERE item = ?';
 
 module.exports = function(keyspace, name, data) {
     data = data || {};
