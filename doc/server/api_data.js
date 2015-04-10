@@ -81,14 +81,14 @@ define({ "api": [
             "type": "Guid",
             "optional": false,
             "field": "user",
-            "description": "<p>the guid representation of the user</p> "
+            "description": "<p>the guid representation of the user who will be followed</p> "
           },
           {
             "group": "Parameter",
             "type": "Guid",
             "optional": false,
             "field": "user_follower",
-            "description": "<p>the guid of the user to become friends with</p> "
+            "description": "<p>the guid of the user who will be the follower</p> "
           }
         ]
       }
@@ -278,7 +278,7 @@ define({ "api": [
             "type": "String",
             "optional": false,
             "field": "user",
-            "description": "<p>the user guid</p> "
+            "description": "<p>the user guid who is currently being followed</p> "
           },
           {
             "group": "Parameter",
@@ -543,84 +543,6 @@ define({ "api": [
     }
   },
   {
-    "type": "post",
-    "url": "/friend",
-    "title": "Add a friend to a user",
-    "name": "AddFriend",
-    "group": "ApiFriends",
-    "version": "1.0.0",
-    "description": "<p>Adds a new friend to a user account.</p> ",
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "user",
-            "description": "<p>the guid representation of the user</p> "
-          },
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "user_friend",
-            "description": "<p>the guid of the user to become friends with</p> "
-          }
-        ]
-      }
-    },
-    "success": {
-      "examples": [
-        {
-          "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n    {\n       \"friend\": \"28104896-2e8d-4ba1-9e13-14dd0f096277\",\n       \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n       \"user_friend\": \"379554e7-72b0-4009-b558-aa2804877595\",\n       \"timestamp\": 1421650920521\n    }",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "./server/index.js",
-    "groupTitle": "Friends",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
-    "error": {
-      "fields": {
-        "4xx": [
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "BadRequestError",
-            "description": "<p>You did not provide a username</p> "
-          }
-        ],
-        "5xx": [
-          {
-            "group": "5xx",
-            "optional": false,
-            "field": "ServerError",
-            "description": "<p>There was a server problem.</p> "
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a username.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Bad-Request:",
-          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a friend guid.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Server-Error:",
-          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
     "type": "get",
     "url": "/friend/:friend",
     "title": "Get friend",
@@ -651,8 +573,7 @@ define({ "api": [
       ]
     },
     "filename": "./server/index.js",
-    "groupTitle": "Friends",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "groupTitle": "ApiFriends",
     "error": {
       "fields": {
         "4xx": [
@@ -717,8 +638,7 @@ define({ "api": [
       ]
     },
     "filename": "./server/index.js",
-    "groupTitle": "Friends",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "groupTitle": "ApiFriends",
     "error": {
       "fields": {
         "4xx": [
@@ -790,8 +710,7 @@ define({ "api": [
       ]
     },
     "filename": "./server/index.js",
-    "groupTitle": "Friends",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve friend links.</p> ",
+    "groupTitle": "ApiFriends",
     "error": {
       "fields": {
         "4xx": [
@@ -1067,6 +986,79 @@ define({ "api": [
     }
   },
   {
+    "type": "delete",
+    "url": "/user/:user/like/:item",
+    "title": "Remove a like.",
+    "name": "RemoveLike",
+    "group": "ApiLikes",
+    "version": "1.0.0",
+    "description": "<p>Removes a like</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Guid",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The guid of the user</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "item",
+            "description": "<p>The item to check</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n    {\n       \"status\":\"removed\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Likes",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve likes.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
     "type": "post",
     "url": "/post",
     "title": "Add a post by a user",
@@ -1212,17 +1204,83 @@ define({ "api": [
     }
   },
   {
+    "type": "delete",
+    "url": "/post/:post",
+    "title": "Remove a post.",
+    "name": "RemovePost",
+    "group": "ApiPosts",
+    "version": "1.0.0",
+    "description": "<p>Removes a post</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "post",
+            "description": "<p>the guid representation of the post</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n    {\n       \"status\":\"removed\"\n    }",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Posts",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve posts.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "BadRequestError",
+            "description": "<p>You did not provide a post guid</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bad-Request:",
+          "content": "HTTP/1.1 400 Bad Request\n{\n  \"code\": \"BadRequestError\",\n  \"message\": \"You must provide a post guid.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
     "type": "get",
-    "url": "/username/:username",
-    "title": "Get a specific user",
+    "url": "/user/:id",
+    "title": "Get a specific user by id",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user</p> ",
+    "description": "<p>Retrieves details of a specific user by id</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/username/cliftonc",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
         "type": "curl"
       }
     ],
@@ -1233,8 +1291,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "username",
-            "description": "<p>The name of the user</p> "
+            "field": "user",
+            "description": "<p>The id of the user</p> "
           }
         ]
       }
@@ -1286,16 +1344,16 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:id",
-    "title": "Get a specific user by id",
+    "url": "/username/:username",
+    "title": "Get a specific user",
     "name": "GetUser",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user by id</p> ",
+    "description": "<p>Retrieves details of a specific user</p> ",
     "examples": [
       {
         "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
+        "content": "curl -i http://localhost:3000/username/cliftonc",
         "type": "curl"
       }
     ],
@@ -1306,8 +1364,8 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
-            "field": "user",
-            "description": "<p>The id of the user</p> "
+            "field": "username",
+            "description": "<p>The name of the user</p> "
           }
         ]
       }
