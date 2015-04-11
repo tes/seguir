@@ -8,5 +8,5 @@ module.exports = function(client, keyspace) {
     manage: apiManage(client),  // Get their keyspace via the request
     query: apiQuery(client),    // Get their keyspace via the request
     auth: apiAuth(client, keyspace)
-  }
-}
+  };
+};

@@ -1,7 +1,8 @@
 FROM dockerfile/nodejs
 
-COPY . /seguir
+COPY package.json /seguir/package.json
 RUN cd /seguir; npm install
+COPY . /seguir
 
 WORKDIR /seguir
 
