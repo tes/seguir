@@ -164,6 +164,7 @@ describe('Social API', function() {
       it('can add and remove a friend', function(done) {
          manage.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function(err, friend) {
           manage.removeFriend(keyspace, users[0].user, users[4].user, function(err, result) {
+            expect(err).to.be(null);
             expect(result.status).to.be('removed');
             query.getRawFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);

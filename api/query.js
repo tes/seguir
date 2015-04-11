@@ -12,46 +12,42 @@ var moment = require('moment');
  *
  * So user / username always refers to the property of the item - e.g. the post is by a user with a username.
  *
- * Public elements (so no liu passed in):
- *
- *  - getUser
- *  - getUserByname
- *  - getFollow
- *  - getFollowers
- *  - getLike
- *
- * Possible private elements (so liu passed in):
- *
- *  - getFeed
- *  - getFeedByName
- *  - getFriend
- *  - getFriends
- *  - getFriendsByName
- *  - getPost
- *
  */
-module.exports = function(client, keyspace) {
+module.exports = function(client) {
 
   var q = require('./db/queries');
 
+  function _error(code, message) {
+    var error = new Error(message);
+    error.statusCode = code;
+    return error;
+  }
+
+  function _get(keyspace, query, data, many, next) {
+    client.execute(q(keyspace, query), data, {prepare:true}, _response(query, data, many, next));
+  }
+
+  function _response(query, data, many, next) {
+    return function(err, result) {
+      /* istanbul ignore if */
+      if(err) { return next(err); }
+      if(!result.rows || (many !== 'many' && result.rows.length !== 1)) {
+        return next(_error(404,'Item not found: "' + query + '"" for "' + data.join(", ") + '"'));
+      }
+      next(null, many === 'many' ? result.rows : result.rows[0]);
+    };
+  }
+
   function getUser(keyspace, user, next) {
-    client.execute(q(keyspace, 'selectUser'), [user], {prepare:true}, function(err, result) {
-       if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : undefined);
-    });
+    _get(keyspace, 'selectUser', [user], 'one', next);
   }
 
   function getUserByName(keyspace, username, next) {
-    client.execute(q(keyspace, 'selectUserByUsername'), [username], {prepare:true}, function(err, result) {
-       /* istanbul ignore if */
-       if(err) { return next(err); }
-       var user = result && result.rows && result.rows[0] ? result.rows[0] : undefined;
-       next(null, user);
-    });
+    _get(keyspace, 'selectUserByUsername', [username], 'one', next);
   }
 
   function getFeedForUser(keyspace, liu, user, from, limit, next) {
-      _getFeed(keyspace, liu, user, from, limit, next);
+    _getFeed(keyspace, liu, user, from, limit, next);
   }
 
   function getRawFeedForUser(keyspace, liu, user, from, limit, next) {
@@ -65,14 +61,12 @@ module.exports = function(client, keyspace) {
   }
 
   function getPost(keyspace, liu, post, next) {
-    client.execute(q(keyspace, 'selectPost'), [post], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectPost', [post], 'one', function(err, post) {
        if(err) { return next(err); }
-       if(result.rows.length === 0) { return next(); }
-       var post = result.rows[0];
        if(post.isprivate) {
          canSeePrivate(keyspace, liu, post.user, function(err, canSee) {
            if(err) { return next(err); }
-           if(!canSee) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+           if(!canSee) { return next(_error(403, 'You are not allowed to see this item.')); }
            next(null, post);
          });
        } else {
@@ -85,9 +79,9 @@ module.exports = function(client, keyspace) {
     isFriend(keyspace, user, liu, function(err, ok) {
       if(err) { return next(err); }
       if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
-      client.execute(q(keyspace, 'selectFriends'), [user], {prepare:true}, function(err, result) {
+      _get(keyspace, 'selectFriends', [user], 'many', function(err, friends) {
         if(err) { return next(err); }
-        next(null, result ? result.rows : undefined);
+        next(null, friends);
       });
     });
   }
@@ -117,16 +111,15 @@ module.exports = function(client, keyspace) {
   }
 
   function getFriendRequest(keyspace, liu, friend_request, next) {
-    client.execute(q(keyspace, 'selectFriendRequest'), [friend_request], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectFriendRequest', [friend_request], 'one', function(err, friendRequest) {
       if(err) { return next(err); }
-      next(null, result ? result.rows[0] : undefined);
+      next(null, friendRequest);
     });
   }
 
   function getIncomingFriendRequests(keyspace, liu, next) {
-    client.execute(q(keyspace, 'selectIncomingFriendRequests'), [liu], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectIncomingFriendRequests', [liu], 'many', function(err, friendRequests) {
       if(err) { return next(err); }
-      var friendRequests = result.rows;
       // Now, go and get user details for all the non own posts
       _mapGetUser(keyspace, friendRequests, ['user','user_friend'], liu, function(err, mappedFriendRequests) {
           if(err) { return next(err); }
@@ -136,9 +129,8 @@ module.exports = function(client, keyspace) {
   }
 
   function getOutgoingFriendRequests(keyspace, liu, next) {
-    client.execute(q(keyspace, 'selectOutgoingFriendRequests'), [liu], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectOutgoingFriendRequests', [liu], 'many', function(err, friendRequests) {
       if(err) { return next(err); }
-      var friendRequests = result.rows;
       // Now, go and get user details for all the non own posts
       _mapGetUser(keyspace, friendRequests, ['user','user_friend'], liu, function(err, mappedFriendRequests) {
           if(err) { return next(err); }
@@ -169,40 +161,28 @@ module.exports = function(client, keyspace) {
 
   function isFriend(keyspace, user, user_friend, next) {
     if(user === user_friend) { return next(null, true, null); }
-    var data = [user, user_friend];
-    client.execute(q(keyspace, 'isFriend'), data, {prepare:true},  function(err, result) {
-      /* istanbul ignore if */
-      if(err) { return next(err); }
-      var isFriend = result.rows.length > 0 ? true : false;
-      var isFriendSince = isFriend ? result.rows[0].since : null;
-      var friend = isFriend ? result.rows[0].friend : null;
+    _get(keyspace, 'isFriend', [user, user_friend], 'one', function(err, friend) {
+      var isFriend = err && err.statusCode === 404 ? false : true;
+      var isFriendSince = isFriend ? friend.since : null;
       return next(null, isFriend, isFriendSince, friend);
     });
   }
 
   function isFollower(keyspace, user, user_follower, next) {
     if(user === user_follower) { return next(null, true, null); }
-    var data = [user, user_follower];
-    client.execute(q(keyspace, 'isFollower'), data, {prepare:true},  function(err, result) {
-      /* istanbul ignore if */
-      if(err) { return next(err); }
-      var isFollower = result.rows.length > 0 ? true : false;
-      var isFollowerSince = isFollower ? result.rows[0].since : null;
-      var follow = isFollower ? result.rows[0].follow : null;
+    _get(keyspace, 'isFollower', [user, user_follower], 'one', function(err, follow) {
+      var isFollower = err && err.statusCode === 404 ? false : true;
+      var isFollowerSince = isFollower ? follow.since : null;
       return next(null, isFollower, isFollowerSince, follow);
     });
   }
 
   function isFriendRequestPending(keyspace, user, user_friend, next) {
     if(user === user_friend) { return next(null, false, null); }
-    var data = [user];
-    client.execute(q(keyspace, 'selectOutgoingFriendRequests'), data, {prepare:true},  function(err, result) {
+    _get(keyspace, 'selectOutgoingFriendRequests', [user], 'many', function(err, friendRequests) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-
-      // TODO: Figure out how to do this via CQL!
-      // We have to actually filter the results to look for the given user
-      var friendRequest = _.filter(result.rows, function(row) {
+      var friendRequest = _.filter(friendRequests, function(row) {
         if(row.user_friend.toString() === user_friend) {
           return row;
         }
@@ -215,40 +195,38 @@ module.exports = function(client, keyspace) {
   }
 
   function getLike(keyspace, like, next) {
-    client.execute(q(keyspace, 'selectLike'), [like], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectLike', [like], 'one', function(err, result) {
        if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : null);
+       next(null, result);
     });
   }
 
   function checkLike(keyspace, user, item, next) {
-    client.execute(q(keyspace, 'checkLike'), [user, item], {prepare:true}, function(err, result) {
+    _get(keyspace, 'checkLike', [user, item], 'one', function(err, like) {
        if(err) { return next(err); }
-       next(null, result.rows && result.rows[0] ? result.rows[0] : null, result.rows[0]);
+       next(null, like);
     });
   }
 
   function getFriend(keyspace, liu, friend, next) {
-    client.execute(q(keyspace, 'selectFriend'), [friend], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectFriend', [friend], 'one', function(err, friendship) {
        /* istanbul ignore if */
-       if(err || !result.rows || result.rows.length == 0) { return next(err); }
-       var friend = result.rows[0] ? result.rows[0] : null;
-       isFriend(keyspace, friend.user_friend, liu, function(err, ok) {
+       if(err) { return next(err); }
+       isFriend(keyspace, friendship.user_friend, liu, function(err, ok) {
         if(err) { return next(err); }
         if(!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
-         getUser(keyspace, friend.user_friend, function(err, user) {
-           friend.username_friend = user.username;
-           next(null, friend);
+         getUser(keyspace, friendship.user_friend, function(err, user) {
+           friendship.username_friend = user.username;
+           next(null, friendship);
          });
        });
     });
   }
 
   function getFollow(keyspace, follow, next) {
-    client.execute(q(keyspace, 'selectFollow'), [follow], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectFollow', [follow], 'one', function(err, follower) {
        /* istanbul ignore if */
-       if(err || !result.rows || result.rows.length == 0) { return next(err); }
-       var follower = result.rows[0] ? result.rows[0] : null;
+       if(err) { return next(err); }
        getUser(keyspace, follower.user_follower, function(err, user) {
          follower.username_follower = user.username;
          next(null, follower);
@@ -257,9 +235,9 @@ module.exports = function(client, keyspace) {
   }
 
   function getFollowers(keyspace, user, next) {
-    client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true}, function(err, result) {
+    _get(keyspace, 'selectFollowers', [user], 'many', function(err, followers) {
        if(err) { return next(err); }
-       next(null, result ? result.rows : null);
+       next(null, followers);
     });
   }
 
@@ -352,7 +330,7 @@ module.exports = function(client, keyspace) {
 
             if(item.type == 'post') {
               return getPost(keyspace, liu, item.item, function(err, post) {
-                 if(err && err.statusCode === 403) {
+                if(err && (err.statusCode === 403 || err.statusCode === 404)) {
                    cb(); // Silently drop posts from the feed
                  } else {
                    if(err) { return cb(err); }
@@ -363,7 +341,7 @@ module.exports = function(client, keyspace) {
             if(item.type == 'like') { return getLike(keyspace, item.item, cb); }
             if(item.type == 'friend') {
               return getFriend(keyspace, liu, item.item, function(err, friend) {
-                 if(err && err.statusCode === 403) {
+                if(err && (err.statusCode === 403 || err.statusCode === 404)) {
                    cb(); // Silently drop these from the feed
                  } else {
                    if(err) { return cb(err); }

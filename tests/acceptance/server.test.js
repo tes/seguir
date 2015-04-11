@@ -17,7 +17,7 @@ var credentials = {host: 'http://localhost:3001'};
 
 describe('Seguir Social Server / Client API', function() {
 
-    this.timeout(10000);
+    this.timeout(3000);
 
     var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, friendRequestId, likeId, friendId, seguirServer, client;
 

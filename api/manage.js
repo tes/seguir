@@ -94,8 +94,8 @@ module.exports = function(client) {
   }
 
   function removeLike(keyspace, user, item, next) {
-    query.checkLike(keyspace, user, item, function(err, doesLike, like) {
-      if(!doesLike) { return next(); }
+    query.checkLike(keyspace, user, item, function(err, like) {
+      if(!like) { return next(); }
       if(like.user !== user) { return next({statusCode: 403, message:'You are not allowed to delete other peoples likes.'}); }
       var deleteData = [user, item];
       client.execute(q(keyspace, 'removeLike'), deleteData, {prepare:true},  function(err, result) {
@@ -160,7 +160,7 @@ module.exports = function(client) {
         if(err) return next(err);
         client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare:true},  function(err, result) {
           if(err) return next(err);
-          _removeFeedsForItem(keyspace, friend, function(err) {
+          _removeFeedsForItem(keyspace, friend.friend, function(err) {
             if(err) return next(err);
             next(null, {status:'removed'});
           });
@@ -208,7 +208,7 @@ module.exports = function(client) {
       var deleteData = [user, user_follower];
       client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare:true},  function(err, result) {
         if(err) return next(err);
-        _removeFeedsForItem(keyspace, follow, function(err) {
+        _removeFeedsForItem(keyspace, follow.follow, function(err) {
           if(err) return next(err);
           next(null, {status:'removed'});
         });
