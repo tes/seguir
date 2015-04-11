@@ -306,13 +306,6 @@ describe('Social API', function() {
         });
       });
 
-      it('can not remove someone elses post', function(done) {
-        manage.removePost(keyspace, users[5].user, mentionPostId, function(err, result) {
-          expect(err.statusCode).to.be(403);
-          done();
-        });
-      });
-
     });
 
     describe('likes', function () {

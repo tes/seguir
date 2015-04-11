@@ -21,6 +21,12 @@ module.exports = function(client) {
   var q = require('./db/queries');
   var query = require('./query')(client);
 
+  function _error(code, message) {
+    var error = new Error(message);
+    error.statusCode = code;
+    return error;
+  }
+
   function clean(input) {
     return sanitizeHtml(input, {
       allowedTags: [],
@@ -60,8 +66,7 @@ module.exports = function(client) {
 
   function removePost(keyspace, user, post, next) {
     query.getPost(keyspace, user, post, function(err, postItem) {
-      if(err) { return next(err); }
-      if(postItem.user !== user) { return next({statusCode: 403, message:'You are not allowed to delete other peoples posts.'}); }
+      if(err) { return next(err); }      
       var deleteData = [post];
       client.execute(q(keyspace, 'removePost'), deleteData, {prepare:true},  function(err, result) {
         if(err) return next(err);
@@ -96,7 +101,6 @@ module.exports = function(client) {
   function removeLike(keyspace, user, item, next) {
     query.checkLike(keyspace, user, item, function(err, like) {
       if(!like) { return next(); }
-      if(like.user !== user) { return next({statusCode: 403, message:'You are not allowed to delete other peoples likes.'}); }
       var deleteData = [user, item];
       client.execute(q(keyspace, 'removeLike'), deleteData, {prepare:true},  function(err, result) {
         if(err) return next(err);
@@ -139,8 +143,8 @@ module.exports = function(client) {
     });
   }
 
-  function acceptFriendRequest(keyspace, liu, friend_request_id, next) {
-    query.getFriendRequest(keyspace, liu, friend_request_id, function(err, friend_request) {
+  function acceptFriendRequest(keyspace, user, friend_request_id, next) {
+    query.getFriendRequest(keyspace, user, friend_request_id, function(err, friend_request) {
       if(err) { return next(err); }
       var data = [friend_request_id];
       client.execute(q(keyspace, 'acceptFriendRequest'), data, {prepare:true},  function(err) {

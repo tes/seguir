@@ -153,7 +153,10 @@ function bootstrapServer(config, keyspace, next) {
    * @apiGroup ApiUsers
    * @apiVersion 1.0.0
    *
-   * @apiDescription Retrieves details of a specific user relationship by id
+   * @apiDescription
+   *
+   * Retrieves details of a specific user relationship with the current logged in user, intended to be used
+   * when viewing someone elses profile.
    *
    * @apiExample {curl} Example usage:
    *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452/relationship
@@ -316,6 +319,9 @@ function bootstrapServer(config, keyspace, next) {
     }
     if(!req.params.item) {
       return next(new restify.InvalidArgumentError("You must provide an item."));
+    }
+    if(req.liu.user !== req.params.user) {
+      return next(new restify.ForbiddenError("You can't delete someone elses like."));
     }
     api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function(err, result) {
       if(err) { return next(_error(err)); }

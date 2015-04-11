@@ -250,7 +250,7 @@ module.exports = function(client) {
     });
   }
 
-  function getFollowersInCommon(keyspace, liu, user, next) {
+  function getFollowersInCommon(keyspace, user, other_user, next) {
     next();
   }
 
