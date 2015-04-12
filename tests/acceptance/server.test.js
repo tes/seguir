@@ -47,7 +47,7 @@ describe('Seguir Social Server / Client API', function() {
     describe('Users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill','harold'], function(user, cb) {
+        async.map(['cliftonc','phteven','ted','bill','harold','jenny'], function(user, cb) {
           client.addUser(null, user, {avatar:'test.jpg'}, cb);
         }, function(err, results) {
           users = results;
@@ -221,7 +221,7 @@ describe('Seguir Social Server / Client API', function() {
     describe('posts', function () {
 
       it('can post a message from a user', function(done) {
-        client.addPost(liu, 'Hello, this is a post', Date.now(), false, function(err, post) {
+        client.addPost(liu, 'Hello, this is a post', Date.now(), false, false, function(err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.be(users[0].user);
@@ -231,7 +231,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('can post a private message from a user', function(done) {
-        client.addPost(liu, 'Hello, this is a private post', Date.now(), true, function(err, post) {
+        client.addPost(liu, 'Hello, this is a private post', Date.now(), true, false, function(err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.be(users[0].user);
@@ -266,12 +266,25 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('can remove a post', function(done) {
-        client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', Date.now(), true, function(err, post) {
+        client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', Date.now(), true, false, function(err, post) {
           expect(err).to.be(null);
           client.removePost(liu, post.post, function(err, result) {
             expect(err).to.be(null);
             client.getPost(users[1].user, post.post, function(err, post) {
               expect(err.statusCode).to.be(404);
+              done();
+            });
+          });
+        });
+      });
+
+      it('can add a personal post', function(done) {
+        client.addPost(users[5].user, 'Only you may see me', Date.now(), false, true, function(err, post) {
+          expect(err).to.be(null);
+          client.getPost(users[5].user, post.post, function(err, post) {
+            expect(err).to.be(null);
+            client.getPost(users[1].user, post.post, function(err, post) {
+              expect(err.statusCode).to.be(403);
               done();
             });
           });

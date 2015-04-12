@@ -197,9 +197,9 @@ Seguir.prototype.getFollow = function(liu, follow, next) {
 /**
  * Post Wrapper
  */
-Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, next) {
+Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, ispersonal, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate:isprivate}, next);
+  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate:isprivate, ispersonal: ispersonal}, next);
 }
 
 Seguir.prototype.getPost = function(liu, post, next) {
