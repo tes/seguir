@@ -364,7 +364,11 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.content) {
       return next(new restify.InvalidArgumentError("You must provide content for the post."));
     }
-    api.manage.addPost(req.keyspace, req.params.user, req.params.content, Date.now(), req.params.isprivate ? true : false, function(err, post) {
+
+    var isprivate = req.params.isprivate ? true : false,
+        ispersonal = req.params.ispersonal ? true : false;
+
+    api.manage.addPost(req.keyspace, req.params.user, req.params.content, Date.now(), isprivate, ispersonal, function(err, post) {
       if(err) { return next(_error(err)); }
       res.send(post);
     });
@@ -839,14 +843,14 @@ function bootstrapServer(config, keyspace, next) {
     });
   });
 
-  next(null, server);
+  next(null, server, client);
 
 }
 
 /* istanbul ignore if */
 if(require.main === module) {
   var config = require('./config');
-  bootstrapServer(config, config.keyspace, function(err, server) {
+  bootstrapServer(config, config.keyspace, function(err, server, client) {
     server.listen(config.port || 3000, function() {
       console.log('Server %s listening at %s', server.name, server.url);
     });

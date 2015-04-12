@@ -44,29 +44,29 @@ module.exports = function(client) {
     });
   }
 
-  function addPost(keyspace, user, content, timestamp, isprivate, next) {
+  function addPost(keyspace, user, content, timestamp, isprivate, ispersonal, next) {
     var post = cassandra.types.uuid();
-    var data = [post, user, clean(content), timestamp, isprivate];
+    var data = [post, user, clean(content), timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(keyspace, user, post, 'post', isprivate, function(err, result) {
+      _addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, function(err, result) {
         if(err) { return next(err); }
-        next(null, {post: post, user: user, content: clean(content), timestamp: timestamp, isprivate: isprivate});
+        next(null, {post: post, user: user, content: clean(content), timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal});
       });
     });
   }
 
-  function addPostByName(keyspace, username, content, timestamp, isprivate, next) {
+  function addPostByName(keyspace, username, content, timestamp, isprivate, ispersonal, next) {
     query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      addPost(keyspace, user.user, content, timestamp, isprivate, next);
+      addPost(keyspace, user.user, content, timestamp, isprivate, ispersonal, next);
     });
   }
 
   function removePost(keyspace, user, post, next) {
     query.getPost(keyspace, user, post, function(err, postItem) {
-      if(err) { return next(err); }      
+      if(err) { return next(err); }
       var deleteData = [post];
       client.execute(q(keyspace, 'removePost'), deleteData, {prepare:true},  function(err, result) {
         if(err) return next(err);
@@ -84,7 +84,7 @@ module.exports = function(client) {
     client.execute(q(keyspace, 'upsertLike'), data, {prepare:true}, function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(keyspace, user, like, 'like', false, function(err, result) {
+      _addFeedItem(keyspace, user, like, 'like', false, false, function(err, result) {
         if(err) { return next(err); }
         next(null, {like: like, user: user, item: item, timestamp: timestamp});
       });
@@ -129,7 +129,7 @@ module.exports = function(client) {
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(keyspace, user, friend, 'friend', true, next);
+      _addFeedItem(keyspace, user, friend, 'friend', true, false, next);
     });
   }
 
@@ -189,7 +189,7 @@ module.exports = function(client) {
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(keyspace, user, follow, 'follow', false, function(err, result) {
+      _addFeedItem(keyspace, user, follow, 'follow', false, false, function(err, result) {
         if(err) { return next(err); }
         next(null, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
       });
@@ -220,17 +220,18 @@ module.exports = function(client) {
     });
   }
 
-  function _addFeedItem(keyspace, user, item, type, isprivate, next) {
+  function _addFeedItem(keyspace, user, item, type, isprivate, ispersonal, next) {
 
     var inTimeline = [];
 
     var insertUserTimeline = function(cb) {
       inTimeline.push(user);
-      var data = [user, item, type, cassandra.types.timeuuid(), isprivate];
+      var data = [user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
       client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb);
     }
 
     var insertFollowersTimeline = function(cb) {
+      if(ispersonal) { return cb(); }
       client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true} ,function(err, data) {
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
@@ -238,7 +239,7 @@ module.exports = function(client) {
           query.isFriend(keyspace, row.user, row.user_follower, function(err, isFriend) {
             if(!isprivate || (isprivate && isFriend)) {
               inTimeline.push(row.user_follower);
-              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), isprivate];
+              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
               client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
             } else {
               cb2();
@@ -249,7 +250,7 @@ module.exports = function(client) {
     }
 
     var insertMentionedTimeline = function(cb) {
-      if(type === 'post') {
+      if(type === 'post' && !ispersonal) {
         query.getPost(keyspace, user, item, function(err, post) {
           if(err || !post) return cb();
           var users = post.content.match(mention);
@@ -263,7 +264,7 @@ module.exports = function(client) {
                 if(!_.contains(inTimeline, mentionedUser.user)) {
                   query.isFriend(keyspace, mentionedUser.user, user, function(err, isFriend) {
                     if(!isprivate || (isprivate && isFriend)) {
-                      var data = [mentionedUser.user, item, type, cassandra.types.timeuuid(), isprivate];
+                      var data = [mentionedUser.user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
                       client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
                     } else {
                       cb2();

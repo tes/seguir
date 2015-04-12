@@ -7,9 +7,15 @@ var headerNames = require('../api/auth').headerNames;
 var authUtils = require('../api/auth/utils');
 var u = require('../api/urls');
 /**
- * @apiDefine Client Seguir Client
+ * @apiDefine Client Server Side Seguir Client
  * The Seguir client provides a simple and consistent API for interacting with a seguir client
  * without having to worry about authentication or passing the logged in user details.
+ *
+ * This can only be used server side, as it uses the appId and appSecret which should never be
+ * shared within pure client side code.  This client allows you to provide the 'logged in user'
+ * which means that you can effectively create any relationship or item you like (even outside of)
+ * an actual true user session.
+ *
  */
 
 /**
@@ -163,9 +169,9 @@ Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, next) {
   self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu}, next);
 }
 
-Seguir.prototype.unFollowUser = function(liu, user_follower, next) {
+Seguir.prototype.unFollowUser = function(liu, user_following, next) {
   var self = this;
-  self.del(liu, u('removeFollower', {user: user_follower, user_follower: liu}), next);
+  self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
 }
 
 Seguir.prototype.addFollower = function(liu, user_follower, timestamp, next) {

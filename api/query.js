@@ -63,11 +63,15 @@ module.exports = function(client) {
   function getPost(keyspace, liu, post, next) {
     _get(keyspace, 'selectPost', [post], 'one', function(err, post) {
        if(err) { return next(err); }
+       if(post.ispersonal) {
+        if(liu !== post.user) { return next(_error(403, 'You are not allowed to see this item.')); }
+        return next(null, post);
+       }
        if(post.isprivate) {
          canSeePrivate(keyspace, liu, post.user, function(err, canSee) {
            if(err) { return next(err); }
            if(!canSee) { return next(_error(403, 'You are not allowed to see this item.')); }
-           next(null, post);
+           return next(null, post);
          });
        } else {
          next(null, post);
@@ -369,7 +373,8 @@ module.exports = function(client) {
                 currentResult.timeuuid = timeline[index].time;
                 currentResult.date = timeline[index].date;
                 currentResult.fromNow = moment(currentResult.date).fromNow();
-                currentResult.isdeleted = timeline[index].isdeleted;
+                currentResult.isprivate = timeline[index].isprivate;
+                currentResult.ispersonal = timeline[index].ispersonal;
 
                 // Calculated fields to make rendering easier
                 currentResult.fromFollower = currentResult.user !== user.user;

@@ -41,9 +41,10 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, content text, isprivate boolean, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, content text, isprivate boolean, ispersonal boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(isprivate)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(ispersonal)');
 
   /**
    * @api {table} Friends Friends
@@ -123,7 +124,7 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
    * @apiUse ExampleCqlFeed
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.userline(item)');
 
   return {

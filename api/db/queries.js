@@ -61,8 +61,8 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, user, posted, isPrivate FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted, isPrivate) VALUES(?, ?, ?, ?, ?);';
+queries.selectPost = 'SELECT post, content, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = ?';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 
 /**
@@ -135,8 +135,8 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isprivate) VALUES(?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.userline WHERE item = ?';
 
