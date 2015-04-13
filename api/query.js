@@ -227,28 +227,64 @@ module.exports = function(client) {
     });
   }
 
-  function getFollow(keyspace, follow, next) {
+  function getFollow(keyspace, liu, follow, next) {
+
     _get(keyspace, 'selectFollow', [follow], 'one', function(err, follower) {
+
        /* istanbul ignore if */
        if(err) { return next(err); }
-       getUser(keyspace, follower.user_follower, function(err, user) {
-         follower.username_follower = user.username;
-         next(null, follower);
-       });
+
+       var userIsInFollow = liu === follower.user || liu === follower.user_follower;
+
+       var returnUser = function() {
+          getUser(keyspace, follower.user_follower, function(err, user) {
+             follower.username_follower = user.username;
+             next(null, follower);
+          });
+       }
+
+       // If the relationship is personal, the user must be one of the two parties.
+       if(follower.ispersonal && !userIsInFollow) {
+        return next({statusCode: 403, message:'You are not allowed to see this item.'});
+       }
+
+       // If the relationship is private, the user must be friends with one of the two parties.
+       if(follower.isprivate) {
+        async.parallel({
+          user: async.apply(isFriend, keyspace, liu, follower.user),
+          follower: async.apply(isFriend, keyspace, liu, follower.user_follower)
+        }, function(err, result) {
+          if(!result.user[0] && !result.follower[0]) {
+            return next({statusCode: 403, message:'You are not allowed to see this item.'});
+          }
+          returnUser();
+        });
+       } else {
+         returnUser();
+       }
+
     });
   }
 
-  function getFollowers(keyspace, user, next) {
-    _get(keyspace, 'selectFollowers', [user], 'many', function(err, followers) {
-       if(err) { return next(err); }
-       next(null, followers);
+  function getFollowers(keyspace, liu, user, next) {
+    var isUser = liu === user;
+    isFriend(keyspace, liu, user, function(err, isFriend) {
+      _get(keyspace, 'selectFollowers', [user], 'many', function(err, followers) {
+         if(err) { return next(err); }
+         var filteredFollowers = _.filter(followers, function(item) {
+           if(item.ispersonal && !isUser) { return false; }
+           if(item.isprivate && !isFriend) { return false; }
+           return true;
+         });
+         next(null, filteredFollowers);
+      });
     });
   }
 
-  function getFollowersByName(keyspace, username, next) {
+  function getFollowersByName(keyspace, liu, username, next) {
     getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
-      getFollowers(keyspace, user.user, function(err, followers) {
+      getFollowers(keyspace, liu, user.user, function(err, followers) {
         _mapGetUser(keyspace, followers, ['user_follower'], user, next);
       });
     });
@@ -357,7 +393,17 @@ module.exports = function(client) {
                  }
               });
             }
-            if(item.type == 'follow') { return getFollow(keyspace, item.item, cb); }
+            if(item.type == 'follow') {
+              return getFollow(keyspace, liu, item.item, function(err, follow) {
+                if(err && (err.statusCode === 403 || err.statusCode === 404)) {
+                   cb(); // Silently drop private items from the feed
+                 } else {
+                   if(err) { return cb(err); }
+                   cb(null, follow);
+                 }
+              });
+            }
+
             return cb();
 
          }, function(err, results) {

@@ -218,18 +218,62 @@ describe('Social API', function() {
       });
 
       it('can retrieve a follow by id', function(done) {
-        query.getFollow(keyspace, followId, function(err, follow) {
+        query.getFollow(keyspace, users[0].user, followId, function(err, follow) {
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
           done();
         });
       });
 
-       it('can retrieve a list of followers for a user', function(done) {
-        query.getFollowers(keyspace, users[0].user, function(err, followers) {
+      it('can not see a private follow if not a friend ', function(done) {
+        query.getFollow(keyspace, users[0].user, privateFollowId, function(err, follow) {
+          expect(err.statusCode).to.be(403);
+          done();
+        });
+      });
+
+      it('can not see a personal follow if not the user', function(done) {
+        query.getFollow(keyspace, users[0].user, personalFollowId, function(err, follow) {
+          expect(err.statusCode).to.be(403);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user', function(done) {
+        query.getFollowers(keyspace, users[0].user, users[0].user, function(err, followers) {
           var followerIds = _.pluck(followers, 'user_follower');
           expect(followerIds).to.contain(users[1].user);
           expect(followerIds).to.contain(users[2].user);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user but will not show private if not a friend', function(done) {
+        query.getFollowers(keyspace, users[0].user, users[4].user, function(err, followers) {
+          expect(followers.length).to.be(0);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user but will not show personal if not the user', function(done) {
+        query.getFollowers(keyspace, users[0].user, users[6].user, function(err, followers) {
+          expect(followers.length).to.be(0);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user but will show personal if one of the two users', function(done) {
+        query.getFollowers(keyspace, users[6].user, users[6].user, function(err, followers) {
+          var followerIds = _.pluck(followers, 'user_follower');
+          expect(followerIds).to.contain(users[5].user);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user but will show private if one of the two users', function(done) {
+        query.getFollowers(keyspace, users[4].user, users[4].user, function(err, followers) {
+          var followerIds = _.pluck(followers, 'user_follower');
+          expect(followerIds).to.contain(users[5].user);
           done();
         });
       });
