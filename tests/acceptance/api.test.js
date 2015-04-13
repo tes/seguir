@@ -482,6 +482,38 @@ describe('Social API', function() {
         });
       });
 
+      it('can see private follows as the user', function(done) {
+        query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed[2].follow).to.be(privateFollowId);
+          done();
+        });
+      });
+
+      it('can see personal follows as the user', function(done) {
+        query.getFeedForUser(keyspace, users[6].user, users[6].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed[0].follow).to.be(personalFollowId);
+          done();
+        });
+      });
+
+      it('anonymous - cant see personal follows as the anonymous user', function(done) {
+        query.getFeedForUser(keyspace, '_anonymous_', users[6].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed.length).to.be(0);
+          done();
+        });
+      });
+
+      it('anonymous - cant see private follows as anonymous user', function(done) {
+        query.getFeedForUser(keyspace, '_anonymous_', users[4].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed.length).to.be(2);
+          done();
+        });
+      });
+
       it('logged in - can get a feed for yourself contains mentions', function(done) {
         query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
           expect(err).to.be(null);

@@ -707,7 +707,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollowers'), function (req, res, next) {
-    api.query.getFollowers(req.keyspace, req.params.user, function(err, followers) {
+    api.query.getFollowers(req.keyspace, req.liu.user, req.params.user, function(err, followers) {
       if(err) { return next(_error(err)); }
       res.send(followers);
     });
@@ -742,7 +742,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollow'), function (req, res, next) {
-    api.query.getFollow(req.keyspace, req.params.follow, function(err, follow) {
+    api.query.getFollow(req.keyspace, req.liu.user, req.params.follow, function(err, follow) {
       if(err) { return next(_error(err)); }
       res.send(follow);
     });
