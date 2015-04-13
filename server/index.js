@@ -346,6 +346,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiParam {String} content of the post
    * @apiParam {Timestamp} timestamp the time that the post occurred
    * @apiParam {Boolean} private is the post private, e.g. only for friends
+   * @apiParam {Boolean} private is the post personal, e.g. only for you
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
    *    { 'post': '19a8bfd1-8ebe-4462-bf93-9bd48efe08b7',
@@ -638,6 +639,8 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Adds a new friend to a user account.
    * @apiParam {Guid} user the guid representation of the user who will be followed
    * @apiParam {Guid} user_follower the guid of the user who will be the follower
+   * @apiParam {Boolean} private is the follow private, e.g. only for friends
+   * @apiParam {Boolean} private is the follow personal, e.g. only for you
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
         {
@@ -661,7 +664,11 @@ function bootstrapServer(config, keyspace, next) {
     if(req.params.user_follower !== req.liu.user) {
       return next(new restify.ForbiddenError("You can only add your own follow relationships."));
     }
-    api.manage.addFollower(req.keyspace, req.params.user, req.params.user_follower, Date.now(), function(err, follow) {
+
+    var isprivate = req.params.isprivate ? true : false,
+        ispersonal = req.params.ispersonal ? true : false;
+
+    api.manage.addFollower(req.keyspace, req.params.user, req.params.user_follower, Date.now(), isprivate, ispersonal, function(err, follow) {
       if(err) { return next(_error(err)); }
       res.send(follow);
     });

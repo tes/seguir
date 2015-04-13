@@ -174,9 +174,9 @@ Seguir.prototype.unFollowUser = function(liu, user_following, next) {
   self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
 }
 
-Seguir.prototype.addFollower = function(liu, user_follower, timestamp, next) {
+Seguir.prototype.addFollower = function(liu, user_follower, timestamp, isprivate, ispersonal, next) {
   var self = this;
-  self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower}, next);
+  self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower, isprivate: isprivate, ispersonal: ispersonal}, next);
 }
 
 Seguir.prototype.removeFollower = function(liu, user_follower, next) {

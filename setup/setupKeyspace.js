@@ -36,15 +36,15 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiDescription Stores posts that a user (or application) make to a users timeline.
    * @apiParam {Guid} post The unique guid for the post.
    * @apiParam {Guid} user The unique guid for the user.
+   * @apiParam {String} type Optional sub-type for the post, defaults to 'text'.
    * @apiParam {String} content The content of the post.
    * @apiParam {Boolean} isprivate Is the post only for friends.
+   * @apiParam {Boolean} ispersonal Is the post only for the user.
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, content text, isprivate boolean, ispersonal boolean, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, isprivate boolean, ispersonal boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(isprivate)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(ispersonal)');
 
   /**
    * @api {table} Friends Friends
@@ -105,10 +105,12 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Guid} follow The unique guid for the follower relationship.
    * @apiParam {Guid} user The unique guid for the user.
    * @apiParam {Guid} user_follower The unique guid for the user they are following.
+   * @apiParam {Boolean} isprivate Is the follow visible only to friends.
+   * @apiParam {Boolean} ispersonal Is the follow visible only for the user and the person being followed.
    * @apiParam {Timestamp} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow uuid, user uuid, user_follower uuid, since timestamp, PRIMARY KEY (user, user_follower))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow uuid, user uuid, user_follower uuid, isprivate boolean, ispersonal boolean, since timestamp, PRIMARY KEY (user, user_follower))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers(follow)');
 
   /**
@@ -122,6 +124,7 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Guid} item The unique guid for the item in the feed - this can be a post, follow, friend or like event.
    * @apiParam {String} type The string short name for the type of event, valid values are: 'post','follow','friend','like'.
    * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
+   * @apiParam {Boolean} ispersonal Is this event personal and only visible to the user.
    * @apiUse ExampleCqlFeed
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');

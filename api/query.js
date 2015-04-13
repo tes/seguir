@@ -168,16 +168,16 @@ module.exports = function(client) {
     _get(keyspace, 'isFriend', [user, user_friend], 'one', function(err, friend) {
       var isFriend = err && err.statusCode === 404 ? false : true;
       var isFriendSince = isFriend ? friend.since : null;
-      return next(null, isFriend, isFriendSince, friend);
+      return next(null, isFriend, isFriendSince, friend ? friend : null);
     });
   }
 
   function isFollower(keyspace, user, user_follower, next) {
-    if(user === user_follower) { return next(null, true, null); }
+    if(user === user_follower) { return next(null, true, null, {isprivate: false, ispersonal: false}); }
     _get(keyspace, 'isFollower', [user, user_follower], 'one', function(err, follow) {
       var isFollower = err && err.statusCode === 404 ? false : true;
       var isFollowerSince = isFollower ? follow.since : null;
-      return next(null, isFollower, isFollowerSince, follow);
+      return next(null, isFollower, isFollowerSince, follow ? follow : null);
     });
   }
 
@@ -277,8 +277,12 @@ module.exports = function(client) {
         isFriendRequestSince: result.friendRequest[1],
         youFollow: result.follow[0],
         youFollowSince: result.follow[1],
+        youFollowPrivate: result.follow[2] ? result.follow[2].isprivate : null,
+        youFollowPersonal: result.follow[2] ? result.follow[2].ispersonal : null,
         theyFollow: result.followBack[0],
         theyFollowSince: result.followBack[1],
+        theyFollowPrivate: result.followBack[2] ? result.followBack[2].isprivate : null,
+        theyFollowPersonal: result.followBack[2] ? result.followBack[2].ispersonal : null,
         inCommon: result.inCommon
       };
 

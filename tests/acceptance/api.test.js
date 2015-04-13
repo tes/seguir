@@ -179,7 +179,8 @@ describe('Social API', function() {
     describe('follows', function () {
 
       it('can follow a user who is a friend', function(done) {
-        manage.addFollower(keyspace, users[0].user, users[1].user, Date.now(), function(err, follow) {
+        manage.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function(err, follow) {
+          expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
           followId = follow.follow;
@@ -188,7 +189,7 @@ describe('Social API', function() {
       });
 
       it('can follow a user who is not a friend', function(done) {
-        manage.addFollower(keyspace, users[0].user, users[2].user, Date.now(), function(err, follow) {
+        manage.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function(err, follow) {
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[2].user);
           notFriendFollowId = follow.follow;
@@ -214,7 +215,7 @@ describe('Social API', function() {
       });
 
       it('can remove a follow', function(done) {
-        manage.addFollower(keyspace, users[3].user, users[4].user, Date.now(), function(err, follow) {
+        manage.addFollower(keyspace, users[3].user, users[4].user, Date.now(), false, false, function(err, follow) {
           expect(err).to.be(null);
           manage.removeFollower(keyspace, users[3].user, users[4].user, function(err, result) {
             expect(result.status).to.be('removed');

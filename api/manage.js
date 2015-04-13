@@ -183,25 +183,25 @@ module.exports = function(client) {
     });
   }
 
-  function addFollower(keyspace, user, user_follower, timestamp, next) {
+  function addFollower(keyspace, user, user_follower, timestamp, isprivate, ispersonal, next) {
     var follow = cassandra.types.uuid();
-    var data = [follow, user, user_follower, timestamp];
+    var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare:true},  function(err) {
       /* istanbul ignore if */
       if(err) { return next(err); }
-      _addFeedItem(keyspace, user, follow, 'follow', false, false, function(err, result) {
+      _addFeedItem(keyspace, user, follow, 'follow', isprivate, ispersonal, function(err, result) {
         if(err) { return next(err); }
-        next(null, {follow: follow, user: user, user_follower: user_follower, timestamp: timestamp});
+        next(null, {follow: follow, user: user, user_follower: user_follower, isprivate: isprivate, ispersonal: ispersonal, timestamp: timestamp});
       });
     });
   }
 
-  function addFollowerByName(username, username_follower, timestamp, next) {
+  function addFollowerByName(username, username_follower, timestamp, isprivate, ispersonal, next) {
     query.getUserByName(keyspace, username, function(err, user) {
       if(err || !user) { return next(err); }
       query.getUserByName(keyspace, username_follower, function(err, follower) {
         if(err || !follower) { return next(err); }
-        addFollower(keyspace, user.user, follower.user, timestamp, next);
+        addFollower(keyspace, user.user, follower.user, timestamp, isprivate, ispersonal, next);
       });
     });
   }
@@ -236,10 +236,11 @@ module.exports = function(client) {
         /* istanbul ignore if */
         if(err || data.rows.length == 0) { return cb(err); }
         async.map(data.rows, function(row, cb2) {
+          var followIsPrivate = row.isprivate, followIsPersonal = row.ispersonal;
           query.isFriend(keyspace, row.user, row.user_follower, function(err, isFriend) {
             if(!isprivate || (isprivate && isFriend)) {
               inTimeline.push(row.user_follower);
-              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
+              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), followIsPrivate, followIsPersonal];
               client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
             } else {
               cb2();

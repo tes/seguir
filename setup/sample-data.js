@@ -59,7 +59,7 @@ function addFollowers(next) {
   console.log('Creating followers ...');
   var pairs = getUserPairs(numUsers*2);
   async.map(pairs, function(pair, cb) {
-     api.manage.addFollower(pair[0], pair[1], casual.moment.toDate(), cb);
+     api.manage.addFollower(pair[0], pair[1], casual.moment.toDate(), false, false, cb);
   }, next);
 }
 
@@ -67,7 +67,7 @@ function addPosts(next) {
   console.log('Creating posts ...');
   var posts = getUsers(numUsers*2);
   async.map(posts, function(post, cb) {
-     api.manage.addPost(post.user, casual.text, casual.moment.toDate(), false, cb);
+     api.manage.addPost(post.user, casual.text, casual.moment.toDate(), false, false, cb);
   }, next);
 }
 
