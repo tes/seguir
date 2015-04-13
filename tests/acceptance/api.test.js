@@ -12,7 +12,7 @@ var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId;
+    var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
     var manage = api.manage;
     var query = api.query;
     var auth = api.auth;
@@ -25,7 +25,7 @@ describe('Social API', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill','harold','jenny'], function(user, cb) {
+        async.map(['cliftonc','phteven','ted','bill','harold','jenny','alfred'], function(user, cb) {
             manage.addUser(keyspace, user, {'age':15}, cb);
           }, function(err, results) {
             expect(err).to.be(undefined);
@@ -193,6 +193,26 @@ describe('Social API', function() {
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[2].user);
           notFriendFollowId = follow.follow;
+          done();
+        });
+      });
+
+      it('can follow a user privately so only your friends can see', function(done) {
+        manage.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function(err, follow) {
+          expect(follow.user).to.be(users[4].user);
+          expect(follow.user_follower).to.be(users[5].user);
+          expect(follow.isprivate).to.be(true);
+          privateFollowId = follow.follow;
+          done();
+        });
+      });
+
+      it('can follow a user personally so only you can see', function(done) {
+        manage.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function(err, follow) {
+          expect(follow.user).to.be(users[6].user);
+          expect(follow.user_follower).to.be(users[5].user);
+          expect(follow.ispersonal).to.be(true);
+          personalFollowId = follow.follow;
           done();
         });
       });
