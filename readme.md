@@ -140,14 +140,11 @@ This will push any documentation changes to gh-pages.
 
 ### API
 
-* Tidy up API to make consistent re. logged in user
 * Move some newsfeed work into background worker - use job queue
 
 ### Functionality
 
-* Private messaging between friends
-* Un-like, and cleaning newsfeed
-* Delete post, and cleaning newsfeed
+* Private messaging between friends ?
 
 ## Requires
 
