@@ -28,7 +28,7 @@ describe('Messaging primitives', function() {
 
       it('can spawn multiple workers where only one responds', function(done) {
 
-        var workers = spawn('node', [path.resolve('tests', 'worker')]).on('error', function( err ){ throw err });
+        var workers = spawn('node', [path.resolve('tests', 'worker')], {cwd: __dirname}).on('error', function( err ){ throw err });
 
         setTimeout(function() {
           messaging.submit('seguir-test-queue', {hello:'world'});
