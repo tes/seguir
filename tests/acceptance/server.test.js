@@ -4,13 +4,14 @@
 'use strict';
 var keyspace = 'test_client_seguir';
 var dbClient = require('../../api/db/client')();
+var messaging = {enabled: false}
+var api = require('../../index')(dbClient, messaging, keyspace);
 var cassandra = require('cassandra-driver');
 var expect = require('expect.js');
 var Seguir = require('../../client');
 var setupSeguir = require('../../setup/setupSeguir');
 var async = require('async');
 var _ = require('lodash');
-var api = require('../../index')(dbClient, keyspace);
 var auth = api.auth;
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001'};

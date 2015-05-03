@@ -7,7 +7,7 @@ var authUtils = require('./utils');
 var setupKeyspace = require('../../setup/setupKeyspace');
 var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'}
 
-function Auth(client, keyspace) {
+function Auth(client, redis, keyspace) {
 
   var q = require('../db/queries');
   var query = require('../query')(client);

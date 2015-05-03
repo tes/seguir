@@ -5,7 +5,8 @@
 var keyspace = 'test_seguir_app';
 var expect = require('expect.js');
 var client = require('../../api/db/client')();
-var api = require('../../index')(client, keyspace);
+var messaging = {enabled: false};
+var api = require('../../index')(client, messaging, keyspace);
 var setupKeyspace = require('../../setup/setupKeyspace');
 var async = require('async');
 var _ = require('lodash');
@@ -424,103 +425,105 @@ describe('Social API', function() {
 
     describe('feeds', function () {
 
-      it('logged in - can get a feed for yourself that is in the correct order', function(done) {
-        query.getFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
-          done();
-        });
-      });
+        this.timeout(10000);
 
-      it('logged in - can get a feed for a friend that is in the correct order', function(done) {
-        query.getFeedForUser(keyspace, users[1].user, users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId); //
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
-          done();
+        it('logged in - can get a feed for yourself that is in the correct order', function(done) {
+          query.getFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(privatePostId);
+            expect(feed[2].post).to.be(postId);
+            expect(feed[3].follow).to.be(notFriendFollowId);
+            expect(feed[4].follow).to.be(followId);
+            expect(feed[5].friend).to.be(friendId);
+            done();
+          });
         });
-      });
 
-      it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
-        query.getFeedForUser(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          done();
+        it('logged in - can get a feed for a friend that is in the correct order', function(done) {
+          query.getFeedForUser(keyspace, users[1].user, users[0].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(privatePostId); //
+            expect(feed[2].post).to.be(postId);
+            expect(feed[3].follow).to.be(notFriendFollowId);
+            expect(feed[4].follow).to.be(followId);
+            expect(feed[5].friend).to.be(friendId);
+            done();
+          });
         });
-      });
 
-      it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
-        query.getFeedForUser(keyspace, users[0].user, users[2].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(postId);
-          expect(feed[2].follow).to.be(notFriendFollowId);
-          done();
+        it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
+          query.getFeedForUser(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(privatePostId);
+            expect(feed[2].post).to.be(postId);
+            expect(feed[3].follow).to.be(notFriendFollowId);
+            expect(feed[4].follow).to.be(followId);
+            done();
+          });
         });
-      });
 
-      it('anonymous - can get a feed that is in correct order', function(done) {
-        query.getFeedForUser(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(postId);
-          expect(feed[2].follow).to.be(notFriendFollowId);
-          done();
+        it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
+          query.getFeedForUser(keyspace, users[0].user, users[2].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(postId);
+            expect(feed[2].follow).to.be(notFriendFollowId);
+            done();
+          });
         });
-      });
 
-      it('can see private follows as the user', function(done) {
-        query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[2].follow).to.be(privateFollowId);
-          done();
+        it('anonymous - can get a feed that is in correct order', function(done) {
+          query.getFeedForUser(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(postId);
+            expect(feed[2].follow).to.be(notFriendFollowId);
+            done();
+          });
         });
-      });
 
-      it('can see personal follows as the user', function(done) {
-        query.getFeedForUser(keyspace, users[6].user, users[6].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].follow).to.be(personalFollowId);
-          done();
+        it('can see private follows as the user', function(done) {
+          query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[2].follow).to.be(privateFollowId);
+            done();
+          });
         });
-      });
 
-      it('anonymous - cant see personal follows as the anonymous user', function(done) {
-        query.getFeedForUser(keyspace, '_anonymous_', users[6].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed.length).to.be(0);
-          done();
+        it('can see personal follows as the user', function(done) {
+          query.getFeedForUser(keyspace, users[6].user, users[6].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].follow).to.be(personalFollowId);
+            done();
+          });
         });
-      });
 
-      it('anonymous - cant see private follows as anonymous user', function(done) {
-        query.getFeedForUser(keyspace, '_anonymous_', users[4].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed.length).to.be(2);
-          done();
+        it('anonymous - cant see personal follows as the anonymous user', function(done) {
+          query.getFeedForUser(keyspace, '_anonymous_', users[6].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed.length).to.be(0);
+            done();
+          });
         });
-      });
 
-      it('logged in - can get a feed for yourself contains mentions', function(done) {
-        query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
-          expect(err).to.be(null);
-          expect(feed[0].post).to.be(mentionPostId);
-          done();
+        it('anonymous - cant see private follows as anonymous user', function(done) {
+          query.getFeedForUser(keyspace, '_anonymous_', users[4].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed.length).to.be(2);
+            done();
+          });
         });
-      });
+
+        it('logged in - can get a feed for yourself contains mentions', function(done) {
+          query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].post).to.be(mentionPostId);
+            done();
+          });
+        });
 
     });
 
@@ -569,3 +572,4 @@ describe('Social API', function() {
     });
 
 });
+

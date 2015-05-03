@@ -13,7 +13,7 @@ var moment = require('moment');
  * So user / username always refers to the property of the item - e.g. the post is by a user with a username.
  *
  */
-module.exports = function(client) {
+module.exports = function(client, redis) {
 
   var q = require('./db/queries');
 

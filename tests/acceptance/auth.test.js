@@ -5,7 +5,8 @@
 var keyspace = 'test_seguir_auth';
 var expect = require('expect.js');
 var client = require('../../api/db/client')();
-var api = require('../../index')(client, keyspace);
+var messaging = {enabled: false};
+var api = require('../../index')(client, messaging, keyspace);
 var setupSeguir = require('../../setup/setupSeguir');
 var async = require('async');
 var _ = require('lodash');

@@ -11,6 +11,6 @@ if(process.env.SEGUIR_CONFIG) {
     process.exit();
   }
 } else {
-  config = require('./seguir.json');
+  config = require(__dirname + '/seguir.json');
 }
 module.exports = config;

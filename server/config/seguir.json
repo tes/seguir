@@ -4,5 +4,9 @@
   "keyspace":"seguir",
   "cassandra": {
     "contactPoints": ["127.0.0.1","cassandra"]
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379
   }
 }

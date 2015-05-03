@@ -5,7 +5,6 @@ var _ = require('lodash');
 var mention = new RegExp('@[a-zA-Z0-9]+','g');
 var sanitizeHtml = require('sanitize-html');
 
-
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -16,7 +15,7 @@ var sanitizeHtml = require('sanitize-html');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function(client) {
+module.exports = function(client, messaging) {
 
   var q = require('./db/queries');
   var query = require('./query')(client);
@@ -220,75 +219,130 @@ module.exports = function(client) {
     });
   }
 
+
+  function insertFollowersTimeline(item, next) {
+    if(item.ispersonal) { return next(); }
+    client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare:true} ,function(err, data) {
+      /* istanbul ignore if */
+      if(err || data.rows.length == 0) { return next(err); }
+      async.map(data.rows, function(row, cb2) {
+        var followIsPrivate = item.isprivate, followIsPersonal = item.ispersonal;
+        query.isFriend(item.keyspace, row.user, row.user_follower, function(err, isFriend) {
+          if(!item.isprivate || (item.isprivate && isFriend)) {
+            var data = [row.user_follower, item.item, item.type, cassandra.types.timeuuid(), followIsPrivate, followIsPersonal];
+            client.execute(q(item.keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
+          } else {
+            cb2();
+          }
+        });
+      }, next);
+    });
+  }
+
+  function insertMentionedTimeline(item, next) {
+
+      if(item.type !== 'post' || item.ispersonal) { return next(); }
+
+      var getPost = function(cb) {
+        query.getPost(item.keyspace, item.user, item.item, function(err, post) {
+          if(err || !post) return cb();
+          cb(null, post.content);
+        });
+      }
+
+      var getMentionedUsers = function(content, cb) {
+        var users = content.match(mention);
+        if(users && users.length > 0) {
+          users = users.map(function(user) { return user.replace('@',''); });
+          async.map(users, function(username, cb2) {
+            query.getUserByName(item.keyspace, username, function(err, mentionedUser) {
+              if(err || !mentionedUser) {
+                return cb2();
+              }
+              query.isFriend(item.keyspace, mentionedUser.user, item.user, function(err, isFriend) {
+                if(err) return cb2(err);
+                mentionedUser.isFriend = isFriend;
+                cb2(null, mentionedUser);
+              });
+            });
+          }, cb);
+        } else {
+          return cb();
+        }
+      }
+
+      var getMentionedNotFollowers = function(mentioned, cb) {
+        if(!cb) { return mentioned(); } // no mentioned users
+        client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare:true} ,function(err, data) {
+          if(err) { return cb(err); }
+          var followers = _.pluck(data.rows || [],'user_follower');
+          var mentionedNotFollowers = _.filter(mentioned, function(mentionedUser) {
+            return !(_.contains(followers, mentionedUser.user) || mentionedUser.user === item.user);
+          });
+          cb(null, mentionedNotFollowers);
+        });
+      }
+
+      var insertMentioned = function(users, cb) {
+        if(!cb) { return users(); } // no mentioned users
+        async.map(users, function(mentionedUser, cb2) {
+          if(!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
+            var data = [mentionedUser.user, item.item, item.type, cassandra.types.timeuuid(), item.isprivate, item.ispersonal];
+            client.execute(q(item.keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
+          } else {
+            cb2();
+          }
+        }, cb);
+
+      }
+
+      async.waterfall([
+        getPost,
+        getMentionedUsers,
+        getMentionedNotFollowers,
+        insertMentioned
+      ], next);
+
+  }
+
   function _addFeedItem(keyspace, user, item, type, isprivate, ispersonal, next) {
 
-    var inTimeline = [];
+    var jobData = {
+      keyspace: keyspace,
+      user:user,
+      item:item,
+      type:type,
+      isprivate:isprivate,
+      ispersonal:ispersonal
+    }
+
+    var _insertFollowersTimeline = function(cb) {
+      if(messaging.enabled) {
+        messaging.submit('seguir:publish-to-followers', jobData);
+        cb();
+      } else {
+        insertFollowersTimeline(jobData, cb)
+      }
+    }
+
+    var _insertMentionedTimeline = function(cb) {
+      if(messaging.enabled) {
+        messaging.submit('seguir:process-mentioned', jobData);
+        cb();
+      } else {
+        insertMentionedTimeline(jobData, cb)
+      }
+    }
 
     var insertUserTimeline = function(cb) {
-      inTimeline.push(user);
       var data = [user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
       client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb);
     }
 
-    var insertFollowersTimeline = function(cb) {
-      if(ispersonal) { return cb(); }
-      client.execute(q(keyspace, 'selectFollowers'), [user], {prepare:true} ,function(err, data) {
-        /* istanbul ignore if */
-        if(err || data.rows.length == 0) { return cb(err); }
-        async.map(data.rows, function(row, cb2) {
-          var followIsPrivate = row.isprivate, followIsPersonal = row.ispersonal;
-          query.isFriend(keyspace, row.user, row.user_follower, function(err, isFriend) {
-            if(!isprivate || (isprivate && isFriend)) {
-              inTimeline.push(row.user_follower);
-              var data = [row.user_follower, item, type, cassandra.types.timeuuid(), followIsPrivate, followIsPersonal];
-              client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
-            } else {
-              cb2();
-            }
-          });
-        }, cb);
-      });
-    }
-
-    var insertMentionedTimeline = function(cb) {
-      if(type === 'post' && !ispersonal) {
-        query.getPost(keyspace, user, item, function(err, post) {
-          if(err || !post) return cb();
-          var users = post.content.match(mention);
-          if(users && users.length > 0) {
-            users = users.map(function(user) { return user.replace('@',''); });
-            async.map(users, function(username, cb2) {
-              query.getUserByName(keyspace, username, function(err, mentionedUser) {
-                if(err || !mentionedUser) {
-                  return cb2();
-                }
-                if(!_.contains(inTimeline, mentionedUser.user)) {
-                  query.isFriend(keyspace, mentionedUser.user, user, function(err, isFriend) {
-                    if(!isprivate || (isprivate && isFriend)) {
-                      var data = [mentionedUser.user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
-                      client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
-                    } else {
-                      cb2();
-                    }
-                  });
-                } else {
-                  cb2();
-                }
-              });
-            }, cb);
-          } else {
-            return cb();
-          }
-        });
-      } else {
-        return cb();
-      }
-    }
-
     async.series([
       insertUserTimeline,
-      insertFollowersTimeline,
-      insertMentionedTimeline
+      _insertFollowersTimeline,
+      _insertMentionedTimeline
     ], next);
 
   }

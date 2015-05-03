@@ -9,7 +9,8 @@ var logger = bunyan.createLogger({
 function bootstrapServer(config, keyspace, next) {
 
   var client = require('../api/db/client')(config);
-  var api = require('../index')(client, keyspace);
+  var messaging = require('../api/db/messaging')(config);
+  var api = require('../index')(client, messaging, keyspace);
 
   var server = restify.createServer({
     name:'seguir',
