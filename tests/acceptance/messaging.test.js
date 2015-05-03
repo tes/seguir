@@ -20,6 +20,7 @@ describe('Messaging primitives', function() {
 
         messaging.client.ping(function(err, result) {
           expect(result).to.be('PONG');
+          console.dir(messaging.client.server_info.redis_version);
           done();
         })
 
