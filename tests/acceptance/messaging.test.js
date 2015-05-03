@@ -16,6 +16,15 @@ describe('Messaging primitives', function() {
 
     describe('Job queue', function () {
 
+      it('redis client is working', function(done) {
+
+        messaging.client.ping(function(err, result) {
+          expect(result).to.be('PONG');
+          done();
+        })
+
+      });
+
       it('can spawn multiple workers where only one responds', function(done) {
 
         var workers = spawn('node', [path.resolve('tests', 'worker')]).on('error', function( err ){ throw err });

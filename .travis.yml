@@ -4,6 +4,6 @@ node_js:
   - "0.12"
   - "0.10"
 services:
-  - cassandra
   - redis-server
+  - cassandra
 
