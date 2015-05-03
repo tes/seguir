@@ -20,31 +20,12 @@ describe('Messaging primitives', function() {
 
         messaging.client.ping(function(err, result) {
           expect(result).to.be('PONG');
-          console.dir(messaging.client.server_info.redis_version);
           done();
         })
 
       });
 
-      it('can spawn multiple workers where only one responds', function(done) {
-
-        console.dir(process.env);
-
-        var workers = spawn('node', [path.resolve('tests', 'worker')], {cwd: __dirname}).on('error', function( err ){ throw err });
-
-        setTimeout(function() {
-          messaging.submit('seguir-test-queue', {hello:'world'});
-          setTimeout(function() {
-            messaging.client.get('seguir:test:counter', function(err, result) {
-              expect(result).to.be('1');
-              done();
-            });
-          }, 500)
-        }, 500);
-
-      });
-
-      it('can create multiple queues', function(done) {
+      it('can create multiple queues and consume messages', function(done) {
 
         var counter = 0;
         messaging.listen('q1', function(data, jobDone) {
