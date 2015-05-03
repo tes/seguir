@@ -28,6 +28,8 @@ describe('Messaging primitives', function() {
 
       it('can spawn multiple workers where only one responds', function(done) {
 
+        console.dir(process.env);
+
         var workers = spawn('node', [path.resolve('tests', 'worker')], {cwd: __dirname}).on('error', function( err ){ throw err });
 
         setTimeout(function() {
