@@ -46,7 +46,7 @@ module.exports = function(client, messaging) {
   function addPost(keyspace, user, content, timestamp, isprivate, ispersonal, next) {
     var post = cassandra.types.uuid();
     var data = [post, user, clean(content), timestamp, isprivate, ispersonal];
-    client.execute(q(keyspace, 'upsertPost'), data, {prepare:true}, function(err) {
+    client.execute(q(keyspace, 'upsertPost'), data, {prepare:true}, function(err, result) {
       /* istanbul ignore if */
       if(err) { return next(err); }
       _addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, function(err, result) {
@@ -241,8 +241,6 @@ module.exports = function(client, messaging) {
 
   function insertMentionedTimeline(item, next) {
 
-      if(item.type !== 'post' || item.ispersonal) { return next(); }
-
       var getPost = function(cb) {
         query.getPost(item.keyspace, item.user, item.item, function(err, post) {
           if(err || !post) return cb();
@@ -251,6 +249,7 @@ module.exports = function(client, messaging) {
       }
 
       var getMentionedUsers = function(content, cb) {
+        if(!cb) { return content(); } // no mentioned users
         var users = content.match(mention);
         if(users && users.length > 0) {
           users = users.map(function(user) { return user.replace('@',''); });
@@ -293,7 +292,6 @@ module.exports = function(client, messaging) {
             cb2();
           }
         }, cb);
-
       }
 
       async.waterfall([
@@ -318,17 +316,16 @@ module.exports = function(client, messaging) {
 
     var _insertFollowersTimeline = function(cb) {
       if(messaging.enabled) {
-        messaging.submit('seguir:publish-to-followers', jobData);
-        cb();
+        messaging.submit('seguir-publish-to-followers', jobData, cb);
       } else {
         insertFollowersTimeline(jobData, cb)
       }
     }
 
     var _insertMentionedTimeline = function(cb) {
+      if(type !== 'post' || ispersonal) { return cb(); }
       if(messaging.enabled) {
-        messaging.submit('seguir:process-mentioned', jobData);
-        cb();
+        messaging.submit('seguir-publish-mentioned', jobData, cb);
       } else {
         insertMentionedTimeline(jobData, cb)
       }
@@ -383,7 +380,9 @@ module.exports = function(client, messaging) {
     acceptFriendRequest: acceptFriendRequest,
     addFollower: addFollower,
     addFollowerByName: addFollowerByName,
-    removeFollower: removeFollower
+    removeFollower: removeFollower,
+    insertFollowersTimeline: insertFollowersTimeline,
+    insertMentionedTimeline: insertMentionedTimeline
   }
 
 }

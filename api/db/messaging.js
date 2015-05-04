@@ -2,38 +2,51 @@
 
 var redis = require('redis');
 var _ = require('lodash');
-var Queue = require('bull');
+var RSMQ = require('rsmq');
+var RSMQWorker = require('rsmq-worker');
+var queues = {};
 
 module.exports = function(config) {
 
+    if(!config || !config.redis) {
+        return { enabled: false }
+    }
+
     var redisClient = client(config);
-    var queues = {};
+    var rsmq = new RSMQ({host: redisClient.connectionOption.host, port: redisClient.connectionOption.port, ns: "rsmq"});
 
     /**
      * Create queues on demand on first use
      */
-    function createOrSelectQueue(name) {
-        if(queues[name]) { return queues[name]; }
-        queues[name] = Queue(name, redisClient.connectionOption.port, redisClient.connectionOption.host);
-        return queues[name];
+    function createOrSelectQueue(name, next) {
+        rsmq.listQueues(function(err, queues) {
+            if(_.contains(queues,name)) { return next(); }
+            rsmq.createQueue({qname:name}, function(err, response) {
+                next();
+            });
+        });
     }
 
     /**
      * Submit a job for processing
      */
-    function submit(name, data) {
-        var queue = createOrSelectQueue(name);
-        queue.add(data);
+    function submit(name, data, next) {
+        createOrSelectQueue(name, function(err) {
+            rsmq.sendMessage({qname:name, message:JSON.stringify(data)}, function(err, response) {
+                next && next();
+            });
+        });
     }
 
     /**
      * Listen to a queue to process jobs
      */
-    function listen(name, callback) {
-        var queue = createOrSelectQueue(name);
-        queue.process(function(job, done) {
-            callback(job.data, done);
+    function listen(name, callback, next) {
+        var worker = new RSMQWorker(name, {rsmq:rsmq, autostart:true, interval:[0.1,0.2,0.5,1,2,3,5]});
+        worker.on('message', function (msg, cb) {
+            callback(JSON.parse(msg), cb);
         });
+        next && next();
     }
 
     /**
@@ -55,7 +68,8 @@ module.exports = function(config) {
         listen: listen,
         publish: publish,
         subscribe: subscribe,
-        client: redisClient
+        client: redisClient,
+        enabled: true
     }
 
 }

@@ -8,7 +8,7 @@ var async = require('async');
 var _ = require('lodash');
 var path = require('path');
 var spawn = require('child_process').spawn;
-var messaging = require('../../api/db/messaging')();
+var messaging = require('../../api/db/messaging')({redis:{}});
 
 describe('Messaging primitives', function() {
 
