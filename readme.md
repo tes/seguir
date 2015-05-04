@@ -136,16 +136,11 @@ git subtree push --prefix doc origin gh-pages
 
 This will push any documentation changes to gh-pages.
 
-## Todo
-
-### API
-
-* Move some newsfeed work into background worker - use job queue
-
-### Functionality
+### Future Functionality / Roadmap
 
 * Private messaging between friends ?
+* Circles vs Friends / tighter privacy controls
 
 ## Requires
 
-This uses Node, Restify for the API server with Cassandra as a backend.
+This uses Node, Restify for the API server with Cassandra as a backend, and if using background workers requires Redis to manage the worker scheduling.
