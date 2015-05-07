@@ -436,6 +436,7 @@ module.exports = function(client, redis) {
                 currentResult.isPost = currentResult.type === 'post';
                 currentResult.isFollow = currentResult.type === 'follow';
                 currentResult.isFriend = currentResult.type === 'friend';
+                currentResult.isUsersItem = currentResult.user === liu;
 
                 // To page 'more'
                 maxTime = currentResult.timeuuid;
