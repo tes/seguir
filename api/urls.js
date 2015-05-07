@@ -27,7 +27,8 @@ var urls = {
   getLike:                    '/like/:like',
   checkLike:                  '/user/:user/like/:item',
   removeLike:                 '/user/:user/like/:item',
-  getFeed:                    '/feed/:user'
+  getFeed:                    '/feed/:user',
+  getUserFeed:                '/feed/:user/direct'
 }
 
 module.exports = function(url, data) {

@@ -243,4 +243,12 @@ Seguir.prototype.getFeedForUser = function(liu, user, start, limit, next) {
   self.get(liu, u('getFeed', {user: user}), next);
 }
 
+/**
+ * Feed Wrapper
+ */
+Seguir.prototype.getUserFeedForUser = function(liu, user, start, limit, next) {
+  var self = this;
+  self.get(liu, u('getUserFeed', {user: user}), next);
+}
+
 module.exports = Seguir;

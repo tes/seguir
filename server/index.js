@@ -851,6 +851,67 @@ function bootstrapServer(config, keyspace, next) {
     });
   });
 
+ /**
+   * @api {get} /feed/:user/direct Get a direct feed for a user
+   * @apiName GetFeedDirect
+   * @apiGroup ApiFeeds
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves a set of feed items for a specific user that are directly posted to their feed, so not including items that come via follows or mentions.
+   * @apiParam {String} user the guid of the user
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+        [
+          {
+              "post": "247455fe-0e8e-4e3f-af4d-458ac13508b8",
+              "content": "HELLO WORLD!",
+              "user": {
+                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                  "username": "cliftonc"
+              },
+              "posted": "2015-01-18T20:37:32.626Z",
+              "type": "post",
+              "timeuuid": "d4065671-9f51-11e4-889d-9f08914a01c0",
+              "date": "2015-01-18T20:37:32.631Z",
+              "fromNow": "a few seconds ago",
+              "fromFollow": false,
+              "isLike": false,
+              "isPost": true,
+              "isFollow": false,
+              "isFriend": false
+          },
+          {
+            "friend": "7b3891d8-cc27-4284-8fb4-d3b455186f99",
+            "user": {
+                "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
+                "username": "cliftonc"
+            },
+            "user_friend": "cbeab41d-2372-4017-ac50-d8d63802d452",
+            "since": "2015-01-18T20:36:38.632Z",
+            "username_friend": "cliftonc",
+            "type": "friend",
+            "timeuuid": "b3d781d0-9f51-11e4-889d-9f08914a01c0",
+            "date": "2015-01-18T20:36:38.637Z",
+            "fromNow": "5 minutes ago",
+            "fromFollow": false,
+            "isLike": false,
+            "isPost": false,
+            "isFollow": false,
+            "isFriend": true
+        }
+        ]
+   *
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getUserFeed'), function (req, res, next) {
+    api.query.getUserFeedForUser(req.keyspace, req.liu.user, req.params.user, null, 50, function(err, feed) {
+        if(err) { return next(_error(err)); }
+        res.send(feed || []);
+    });
+  });
+
   next(null, server, client);
 
 }

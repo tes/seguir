@@ -20,7 +20,7 @@ describe('Seguir Social Server / Client API', function() {
 
     this.timeout(3000);
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, friendRequestId, likeId, friendId, seguirServer, client;
+    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client;
 
     before(function(done) {
       this.timeout(20000);
@@ -104,6 +104,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
+          reciprocalFriendId = friend.reciprocal;
           done();
         });
       });
@@ -396,6 +397,23 @@ describe('Seguir Social Server / Client API', function() {
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
           expect(feed[2].follow).to.be(notFriendFollowId);
+          done();
+        });
+      });
+
+      it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
+        client.getUserFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          console.dir(feed);
+          expect(feed[0].friend).to.be(reciprocalFriendId);
+          done();
+        });
+      });
+
+      it('anonymous - can get a users personal feed anonymously and only see direct, public items', function(done) {
+        client.getUserFeedForUser(null, users[1].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed.length).to.be(0);
           done();
         });
       });

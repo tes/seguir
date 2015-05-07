@@ -13,7 +13,7 @@ var _ = require('lodash');
 
 describe('Social API', function() {
 
-    var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
+    var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, reciprocalFriendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
     var manage = api.manage;
     var query = api.query;
     var auth = api.auth;
@@ -108,7 +108,9 @@ describe('Social API', function() {
         manage.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function(err, friend) {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
+          console.dir(friend);
           friendId = friend.friend;
+          reciprocalFriendId = friend.reciprocal;
           done();
         });
       });
@@ -521,6 +523,40 @@ describe('Social API', function() {
           query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].post).to.be(mentionPostId);
+            done();
+          });
+        });
+
+        it('cant see follows or mentions on a users personal feed, only direct items', function(done) {
+          query.getUserFeedForUser(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].like).to.be(likeId);
+            expect(feed[1].post).to.be(postId);
+            expect(feed[2].follow).to.be(notFriendFollowId);
+            done();
+          });
+        });
+
+        it('logged in - can get a users personal feed as the user and see direct actions', function(done) {
+          query.getUserFeedForUser(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].post).to.be(mentionPostId);
+            done();
+          });
+        });
+
+        it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
+          query.getUserFeedForUser(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].friend).to.be(reciprocalFriendId);
+            done();
+          });
+        });
+
+        it('anonymus - can get a users personal feed anonymously and only see direct, public items', function(done) {
+          query.getUserFeedForUser(keyspace, '_anonymous_', users[1].user, null, 100, function(err, feed) {
+            expect(err).to.be(null);
+            expect(feed.length).to.be(0);
             done();
           });
         });

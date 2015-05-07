@@ -1,4 +1,5 @@
 var async = require('async');
+var _ = require('lodash');
 
 function defineTablesAndIndexes(KEYSPACE) {
 
@@ -127,8 +128,12 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {Boolean} ispersonal Is this event personal and only visible to the user.
    * @apiUse ExampleCqlFeed
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.userline (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.userline(item)');
+  var feedTables = ['feed_timeline', 'user_timeline'];
+
+  feedTables.forEach(function(table) {
+    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+    indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
+  });
 
   return {
     tables:tables,

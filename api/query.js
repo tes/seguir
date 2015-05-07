@@ -46,13 +46,17 @@ module.exports = function(client, redis) {
     _get(keyspace, 'selectUserByUsername', [username], 'one', next);
   }
 
+  function getUserFeedForUser(keyspace, liu, user, from, limit, next) {
+    _getFeed(keyspace, liu, 'user_timeline', user, from, limit, next);
+  }
+
   function getFeedForUser(keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, user, from, limit, next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, next);
   }
 
   function getRawFeedForUser(keyspace, liu, user, from, limit, next) {
     var raw = true;
-    _getFeed(keyspace, liu, user, from, limit, raw, next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, raw, next);
   }
 
   function canSeePrivate(keyspace, liu, user, next) {
@@ -349,7 +353,7 @@ module.exports = function(client, redis) {
 
   }
 
-  function _getFeed(keyspace, liu, user, from, limit, raw, next) {
+  function _getFeed(keyspace, liu, timeline, user, from, limit, raw, next) {
 
     if(!next) { next = raw; raw = false; }
 
@@ -359,7 +363,7 @@ module.exports = function(client, redis) {
       timeClause = 'AND time < ' + from;
     }
 
-    var query = q(keyspace, 'selectTimeline', {timeClause: timeClause, privateClause: null, limit: limit});
+    var query = q(keyspace, 'selectTimeline', {timeClause: timeClause, privateClause: null, limit: limit, TIMELINE: timeline});
     client.execute(query, data, {prepare:true}, function(err, data) {
 
       if(err) { return next(err); }
@@ -478,6 +482,7 @@ module.exports = function(client, redis) {
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
     getFeedForUser: getFeedForUser,
+    getUserFeedForUser: getUserFeedForUser,
     getRawFeedForUser: getRawFeedForUser,
     checkLike: checkLike
   }

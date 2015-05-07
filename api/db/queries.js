@@ -135,10 +135,10 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.userline (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.userline WHERE user = ?{timeClause} LIMIT {limit}';
-queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.userline WHERE user = ? AND time = ?';
-queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.userline WHERE item = ?';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause} LIMIT {limit}';
+queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
+queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
 
 module.exports = function(keyspace, name, data) {
     data = data || {};

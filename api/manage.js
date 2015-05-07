@@ -4,6 +4,7 @@ var moment = require('moment');
 var _ = require('lodash');
 var mention = new RegExp('@[a-zA-Z0-9]+','g');
 var sanitizeHtml = require('sanitize-html');
+var FEEDS = ['feed_timeline', 'user_timeline'];
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -230,7 +231,7 @@ module.exports = function(client, messaging) {
         query.isFriend(item.keyspace, row.user, row.user_follower, function(err, isFriend) {
           if(!item.isprivate || (item.isprivate && isFriend)) {
             var data = [row.user_follower, item.item, item.type, cassandra.types.timeuuid(), followIsPrivate, followIsPersonal];
-            client.execute(q(item.keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
+            client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE:'feed_timeline'}), data, {prepare:true}, cb2);
           } else {
             cb2();
           }
@@ -287,7 +288,7 @@ module.exports = function(client, messaging) {
         async.map(users, function(mentionedUser, cb2) {
           if(!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
             var data = [mentionedUser.user, item.item, item.type, cassandra.types.timeuuid(), item.isprivate, item.ispersonal];
-            client.execute(q(item.keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb2);
+            client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE:'feed_timeline'}), data, {prepare:true}, cb2);
           } else {
             cb2();
           }
@@ -331,13 +332,15 @@ module.exports = function(client, messaging) {
       }
     }
 
-    var insertUserTimeline = function(cb) {
-      var data = [user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
-      client.execute(q(keyspace, 'upsertUserTimeline'), data, {prepare:true}, cb);
+    var insertUserTimelines = function(cb) {
+      async.map(FEEDS, function(timeline, cb2) {
+        var data = [user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
+        client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE:timeline}), data, {prepare:true}, cb2);
+      }, cb);
     }
 
     async.series([
-      insertUserTimeline,
+      insertUserTimelines,
       _insertFollowersTimeline,
       _insertMentionedTimeline
     ], next);
@@ -345,21 +348,27 @@ module.exports = function(client, messaging) {
   }
 
   function _removeFeedsForItem(keyspace, item, next) {
+    async.map(FEEDS, function(timeline, cb) {
+      _removeFeedsForItemFromTimeline(keyspace, timeline, item, cb)
+    }, next);
+  }
+
+  function _removeFeedsForItemFromTimeline(keyspace, timeline, item, next) {
     var queryData = [item];
-    client.execute(q(keyspace, 'selectAllItems'), queryData, {prepare:true},  function(err, data) {
+    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {prepare:true},  function(err, data) {
       /* istanbul ignore if */
       if(err || data.rows.length == 0) { return next(err); }
       async.map(data.rows, function(row, cb) {
-        _removeFeedItem(keyspace, row.user, row.time, cb);
+        _removeFeedItemFromTimeline(keyspace, timeline, row.user, row.time, cb);
       },function(err, rows) {
         next(err);
       });
     });
   }
 
-  function _removeFeedItem(keyspace, user, time, next) {
+  function _removeFeedItemFromTimeline(keyspace, timeline, user, time, next) {
     var deleteData = [user, time];
-    client.execute(q(keyspace, 'removeFromTimeline'), deleteData, {prepare:true},  function(err, result) {
+    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {prepare:true},  function(err, result) {
       if(err) return next(err);
       next(null, {status:'removed'});
     });
