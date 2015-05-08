@@ -24,40 +24,67 @@ var tasks = [
   'Reset application token'
 ];
 
-inquirer.prompt([
-  {
-    type: 'list',
-    message: 'What would you like to do:',
-    name: 'task',
-    choices: tasks
-  }
-], function( answer ) {
-  if(answer.task == tasks[0]) {
-    checkSetup();
-  }
-  if(answer.task == tasks[1]) {
-    coreSetup();
-  }
-  if(answer.task == tasks[2]) {
-    promptAccount();
-  }
-  if(answer.task == tasks[3]) {
-    listUsers();
-  }
-  if(answer.task == tasks[4]) {
-    addUser();
-  }
-  if(answer.task == tasks[5]) {
-    listApplications();
-  }
-  if(answer.task == tasks[6]) {
-    addApplication();
-  }
-  if(answer.task == tasks[7]) {
-    resetApplication();
+
+var setupFile = process.argv.length > 2 ? process.argv[2] : null;
+
+if(setupFile) {
+  var setup;
+  try {
+     setup = require(setupFile);
+  } catch(ex) {
+    console.dir('Unable to load config: ' + ex.message);
+    process.exit(1);
   }
 
-});
+  console.log('Setting up seguir based on provided configuration ...');
+  setupSeguir(client, setup.keyspace, function() {
+      setupAccount(setup.account, function(err, account) {
+        setupApplicationUser(account.account, setup.account, setup.user, setup.password, setup.admin, function(err, user) {
+          setupApplication(account.account, setup.application, setup.appid, setup.appsecret, function() {
+            process.exit(0);
+          });
+        });
+      });
+  });
+
+} else {
+
+  inquirer.prompt([
+    {
+      type: 'list',
+      message: 'What would you like to do:',
+      name: 'task',
+      choices: tasks
+    }
+  ], function( answer ) {
+    if(answer.task == tasks[0]) {
+      checkSetup();
+    }
+    if(answer.task == tasks[1]) {
+      coreSetup();
+    }
+    if(answer.task == tasks[2]) {
+      promptAccount();
+    }
+    if(answer.task == tasks[3]) {
+      listUsers();
+    }
+    if(answer.task == tasks[4]) {
+      addUser();
+    }
+    if(answer.task == tasks[5]) {
+      listApplications();
+    }
+    if(answer.task == tasks[6]) {
+      addApplication();
+    }
+    if(answer.task == tasks[7]) {
+      resetApplication();
+    }
+
+  });
+
+}
 
 function checkSetup() {
   // Check that the DB exists
@@ -233,22 +260,24 @@ function promptAccount() {
       message: 'Enter an account name:',
       name: 'name'
     }
-  ], function( account ) {
-    setupAccount(account.name)
+  ], function( acc ) {
+    setupAccount(acc.name, function(err, account) {
+      promptAccountUser(account.account, account.name, function(err) {
+          promptApplication(account.account, account.name, function(err) {
+            process.exit(0);
+          });
+      });
+    })
   });
 }
 
-function setupAccount(accName) {
+function setupAccount(accName, next) {
   api.auth.addAccount(accName, true, true, function(err, account) {
     if(err) {
       console.log(err.message);
       process.exit(0);
     }
-    promptAccountUser(account.account, accName, function(err) {
-        promptApplication(account.account, accName, function(err) {
-          process.exit(0);
-        });
-    });
+    next(null, account);
   });
 }
 
@@ -292,12 +321,12 @@ function promptApplication(account, name, next) {
       name: 'name'
     }
   ], function( application ) {
-    setupApplication(account, application.name, next)
+    setupApplication(account, application.name, null, null, next)
   });
 }
 
-function setupApplication(account, name, next) {
-  api.auth.addApplication(account, name, function(err, application) {
+function setupApplication(account, name, appid, appsecret, next) {
+  api.auth.addApplication(account, name, appid, appsecret, function(err, application) {
       if(err) {
         console.log(err.message);
         process.exit(0);

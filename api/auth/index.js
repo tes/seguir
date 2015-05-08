@@ -7,7 +7,7 @@ var authUtils = require('./utils');
 var setupKeyspace = require('../../setup/setupKeyspace');
 var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'}
 
-function Auth(client, redis, keyspace) {
+function Auth(client, redis, keyspace, options) {
 
   var q = require('../db/queries');
   var query = require('../query')(client);
@@ -131,9 +131,9 @@ function Auth(client, redis, keyspace) {
     });
   }
 
-  function addApplication(account, name, next) {
-    var appid = cassandra.types.uuid();
-    var appsecret = authUtils.generateSecret(cassandra.types.uuid());
+  function addApplication(account, name, appid, appsecret, next) {
+    var appid = appid || cassandra.types.uuid();
+    var appsecret = appsecret || authUtils.generateSecret(cassandra.types.uuid());
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
     var app = [account, name, appkeyspace, appid, appsecret, enabled];
@@ -156,8 +156,6 @@ function Auth(client, redis, keyspace) {
    * Checks incoming headers for the application and logged in user tokens.
    */
   function checkRequest(req, res, next) {
-
-    // Authorization: Seguir 44CF9590006BF252F707:jZNOcbfWmD/A/f3hSvVzXZjM2HU=
 
     var appAuthorization = req.headers.authorization,
         user = req.headers[userHeader];
@@ -187,6 +185,8 @@ function Auth(client, redis, keyspace) {
     });
 
   }
+
+
 
   function checkApplication(appid, next) {
     if(!appid) {
