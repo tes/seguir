@@ -66,6 +66,72 @@ define({ "api": [
     }
   },
   {
+    "type": "get",
+    "url": "/feed/:user/direct",
+    "title": "Get a direct feed for a user",
+    "name": "GetFeedDirect",
+    "group": "ApiFeeds",
+    "version": "1.0.0",
+    "description": "<p>Retrieves a set of feed items for a specific user that are directly posted to their feed, so not including items that come via follows or mentions.</p> ",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>the guid of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n     [\n       {\n           \"post\": \"247455fe-0e8e-4e3f-af4d-458ac13508b8\",\n           \"content\": \"HELLO WORLD!\",\n           \"user\": {\n               \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n               \"username\": \"cliftonc\"\n           },\n           \"posted\": \"2015-01-18T20:37:32.626Z\",\n           \"type\": \"post\",\n           \"timeuuid\": \"d4065671-9f51-11e4-889d-9f08914a01c0\",\n           \"date\": \"2015-01-18T20:37:32.631Z\",\n           \"fromNow\": \"a few seconds ago\",\n           \"fromFollow\": false,\n           \"isLike\": false,\n           \"isPost\": true,\n           \"isFollow\": false,\n           \"isFriend\": false\n       },\n       {\n         \"friend\": \"7b3891d8-cc27-4284-8fb4-d3b455186f99\",\n         \"user\": {\n             \"user\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n             \"username\": \"cliftonc\"\n         },\n         \"user_friend\": \"cbeab41d-2372-4017-ac50-d8d63802d452\",\n         \"since\": \"2015-01-18T20:36:38.632Z\",\n         \"username_friend\": \"cliftonc\",\n         \"type\": \"friend\",\n         \"timeuuid\": \"b3d781d0-9f51-11e4-889d-9f08914a01c0\",\n         \"date\": \"2015-01-18T20:36:38.637Z\",\n         \"fromNow\": \"5 minutes ago\",\n         \"fromFollow\": false,\n         \"isLike\": false,\n         \"isPost\": false,\n         \"isFollow\": false,\n         \"isFriend\": true\n     }\n     ]",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Feeds",
+    "groupDescription": "<p>This is a collection of methods that allow you to retrieve the news feed for a user.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
     "type": "post",
     "url": "/follow",
     "title": "Add a follower to a user",
@@ -89,6 +155,13 @@ define({ "api": [
             "optional": false,
             "field": "user_follower",
             "description": "<p>the guid of the user who will be the follower</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "private",
+            "description": "<p>is the follow private, e.g. only for friends</p> "
           }
         ]
       }
@@ -1271,79 +1344,6 @@ define({ "api": [
   },
   {
     "type": "get",
-    "url": "/user/:id",
-    "title": "Get a specific user by id",
-    "name": "GetUser",
-    "group": "ApiUsers",
-    "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user by id</p> ",
-    "examples": [
-      {
-        "title": "Example usage:",
-        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
-        "type": "curl"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "String",
-            "optional": false,
-            "field": "user",
-            "description": "<p>The id of the user</p> "
-          }
-        ]
-      }
-    },
-    "success": {
-      "examples": [
-        {
-          "title": "HTTP/1.1 200 OK",
-          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"cbeab41d-2372-4017-ac50-d8d63802d452\",\n  \"username\":\"cliftonc\"\n}",
-          "type": "json"
-        }
-      ]
-    },
-    "filename": "./server/index.js",
-    "groupTitle": "Users",
-    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
-    "error": {
-      "fields": {
-        "4xx": [
-          {
-            "group": "4xx",
-            "optional": false,
-            "field": "NotFoundError",
-            "description": "<p>The user was not found.</p> "
-          }
-        ],
-        "5xx": [
-          {
-            "group": "5xx",
-            "optional": false,
-            "field": "ServerError",
-            "description": "<p>There was a server problem.</p> "
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "Not-Found:",
-          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
-          "type": "json"
-        },
-        {
-          "title": "Server-Error:",
-          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
-          "type": "json"
-        }
-      ]
-    }
-  },
-  {
-    "type": "get",
     "url": "/username/:username",
     "title": "Get a specific user",
     "name": "GetUser",
@@ -1417,12 +1417,85 @@ define({ "api": [
   },
   {
     "type": "get",
+    "url": "/user/:id",
+    "title": "Get a specific user by id",
+    "name": "GetUser",
+    "group": "ApiUsers",
+    "version": "1.0.0",
+    "description": "<p>Retrieves details of a specific user by id</p> ",
+    "examples": [
+      {
+        "title": "Example usage:",
+        "content": "curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452",
+        "type": "curl"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The id of the user</p> "
+          }
+        ]
+      }
+    },
+    "success": {
+      "examples": [
+        {
+          "title": "HTTP/1.1 200 OK",
+          "content": "HTTP/1.1 200 OK\n{\n  \"user\":\"cbeab41d-2372-4017-ac50-d8d63802d452\",\n  \"username\":\"cliftonc\"\n}",
+          "type": "json"
+        }
+      ]
+    },
+    "filename": "./server/index.js",
+    "groupTitle": "Users",
+    "groupDescription": "<p>This is a collection of methods that allow you to create and retrieve users.</p> ",
+    "error": {
+      "fields": {
+        "4xx": [
+          {
+            "group": "4xx",
+            "optional": false,
+            "field": "NotFoundError",
+            "description": "<p>The user was not found.</p> "
+          }
+        ],
+        "5xx": [
+          {
+            "group": "5xx",
+            "optional": false,
+            "field": "ServerError",
+            "description": "<p>There was a server problem.</p> "
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Not-Found:",
+          "content": "HTTP/1.1 404 Not Found\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Could not find that user.\"\n}",
+          "type": "json"
+        },
+        {
+          "title": "Server-Error:",
+          "content": "HTTP/1.1 500 Server Error\n{\n  \"code\": \"NotFoundError\",\n  \"message\": \"Something specific about the server error\"\n}",
+          "type": "json"
+        }
+      ]
+    }
+  },
+  {
+    "type": "get",
     "url": "/user/:id/relationship",
     "title": "Get details of a relationship",
     "name": "GetUserRelationship",
     "group": "ApiUsers",
     "version": "1.0.0",
-    "description": "<p>Retrieves details of a specific user relationship by id</p> ",
+    "description": "<p>Retrieves details of a specific user relationship with the current logged in user, intended to be used when viewing someone elses profile.</p> ",
     "examples": [
       {
         "title": "Example usage:",
@@ -1599,6 +1672,20 @@ define({ "api": [
             "optional": false,
             "field": "user_follower",
             "description": "<p>The unique guid for the user they are following.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "isprivate",
+            "description": "<p>Is the follow visible only to friends.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "ispersonal",
+            "description": "<p>Is the follow visible only for the user and the person being followed.</p> "
           },
           {
             "group": "Parameter",
@@ -1861,6 +1948,13 @@ define({ "api": [
             "group": "Parameter",
             "type": "String",
             "optional": false,
+            "field": "type",
+            "description": "<p>Optional sub-type for the post, defaults to &#39;text&#39;.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
             "field": "content",
             "description": "<p>The content of the post.</p> "
           },
@@ -1870,6 +1964,13 @@ define({ "api": [
             "optional": false,
             "field": "isprivate",
             "description": "<p>Is the post only for friends.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "ispersonal",
+            "description": "<p>Is the post only for the user.</p> "
           },
           {
             "group": "Parameter",
@@ -1991,6 +2092,13 @@ define({ "api": [
             "optional": false,
             "field": "isprivate",
             "description": "<p>Is this event private and only visible if the user is a friend.</p> "
+          },
+          {
+            "group": "Parameter",
+            "type": "Boolean",
+            "optional": false,
+            "field": "ispersonal",
+            "description": "<p>Is this event personal and only visible to the user.</p> "
           }
         ]
       }
