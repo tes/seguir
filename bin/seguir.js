@@ -10,6 +10,7 @@ var config = require('../server/config');
 var cassandra = require('cassandra-driver');
 var _ = require('lodash');
 var async = require('async');
+var path = require('path');
 var client = require('../api/db/client')(config);
 var api = require('../index')(client, config.keyspace);
 
@@ -28,15 +29,17 @@ var tasks = [
 var setupFile = process.argv.length > 2 ? process.argv[2] : null;
 
 if(setupFile) {
-  var setup;
+
+  var setup, setupFile = path.resolve('.', setupFile);
+
   try {
      setup = require(setupFile);
   } catch(ex) {
-    console.dir('Unable to load config: ' + ex.message);
+    console.log('Cant open config: ' + ex.message);
     process.exit(1);
   }
 
-  console.log('Setting up seguir based on provided configuration ...');
+  console.log('Setting up seguir based on: ' + setupFile);
   setupSeguir(client, setup.keyspace, function() {
       setupAccount(setup.account, function(err, account) {
         setupApplicationUser(account.account, setup.account, setup.user, setup.password, setup.admin, function(err, user) {

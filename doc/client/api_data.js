@@ -17,7 +17,7 @@ define({ "api": [
       ]
     },
     "filename": "client/index.js",
-    "groupTitle": "Seguir Client",
-    "groupDescription": "<p>The Seguir client provides a simple and consistent API for interacting with a seguir client without having to worry about authentication or passing the logged in user details.</p> "
+    "groupTitle": "Server Side Seguir Client",
+    "groupDescription": "<p>The Seguir client provides a simple and consistent API for interacting with a seguir client without having to worry about authentication or passing the logged in user details.</p> <p>This can only be used server side, as it uses the appId and appSecret which should never be shared within pure client side code.  This client allows you to provide the &#39;logged in user&#39; which means that you can effectively create any relationship or item you like (even outside of) an actual true user session.</p> "
   }
 ] });
