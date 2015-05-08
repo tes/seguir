@@ -123,7 +123,7 @@ describe('Account and Application Management', function() {
   describe('Account Applications', function () {
 
     it('can create account applications', function(done) {
-      auth.addApplication(accountId, 'Fancy Application', function(err, application) {
+      auth.addApplication(accountId, 'Fancy Application', null, null, function(err, application) {
         expect(err).to.be(null);
         expect(application.name).to.be('Fancy Application');
         expect(application.appkeyspace).to.be('fancy_application');
@@ -171,7 +171,7 @@ describe('Account and Application Management', function() {
     });
 
     it('can check if a provided app id is valid', function(done) {
-      auth.addApplication(accountId, 'another application', function(err, application) {
+      auth.addApplication(accountId, 'another application', null, null, function(err, application) {
         auth.checkApplication(application.appid, function(err, checkedApplication) {
           expect(err).to.be(null);
           expect(application.appid).to.be(checkedApplication.appid);
@@ -181,7 +181,7 @@ describe('Account and Application Management', function() {
     });
 
     it('can check if a provided user id is valid', function(done) {
-      auth.addApplication(accountId, 'yet another application', function(err, application) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
         appId = application.appid;
         appSecret = application.appsecret;
         manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', {}, function(err, user) {

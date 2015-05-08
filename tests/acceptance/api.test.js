@@ -108,7 +108,6 @@ describe('Social API', function() {
         manage.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function(err, friend) {
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
-          console.dir(friend);
           friendId = friend.friend;
           reciprocalFriendId = friend.reciprocal;
           done();

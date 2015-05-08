@@ -26,7 +26,7 @@ describe('Seguir Social Server / Client API', function() {
       this.timeout(20000);
       setupSeguir(dbClient, keyspace, function() {
         auth.addAccount('test account', false, false, function(err, account) {
-          auth.addApplication(account.account, 'test application', function(err, application) {
+          auth.addApplication(account.account, 'test application', null, null, function(err, application) {
             startServer({logging: false}, keyspace, function(err, server) {
                 seguirServer = server;
                 server.listen(3001, function() {
@@ -404,7 +404,6 @@ describe('Seguir Social Server / Client API', function() {
       it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
         client.getUserFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
           expect(err).to.be(null);
-          console.dir(feed);
           expect(feed[0].friend).to.be(reciprocalFriendId);
           done();
         });
