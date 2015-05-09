@@ -173,7 +173,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserByAltId'), function (req, res, next) {
-    api.query.getUserByAltId(req.keyspace, req.params.id, function(err, user) {
+    api.query.getUserByAltId(req.keyspace, req.params.altid, function(err, user) {
         if(err) { return next(_error(err)); }
         res.send(user);
     });

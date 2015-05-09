@@ -83,6 +83,15 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
+      it('can retrieve a user by altid', function(done) {
+        client.getUserByAltId(null, '1', function(err, user) {
+          expect(err).to.be(null);
+          expect(user.user).to.be(users[0].user);
+          expect(user.username).to.be(users[0].username);
+          done();
+        });
+      });
+
     });
 
 
