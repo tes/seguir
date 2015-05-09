@@ -30,8 +30,12 @@ describe('Worker Processing', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','bill'], function(user, cb) {
-            manage.addUser(keyspace, user, {'age':15}, cb);
+        async.map([
+            {username: 'cliftonc', altid: '1'},
+            {username: 'phteven', altid: '2'},
+            {username: 'ted', altid: '3'}
+          ], function(user, cb) {
+            manage.addUser(keyspace, user.username, user.altid, {'age':15}, cb);
           }, function(err, results) {
             expect(err).to.be(undefined);
             users = results;
