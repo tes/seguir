@@ -58,6 +58,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Creates a new user.
    * @apiParam {String} username the name of the user
+   * @apiParam {String} altid the alternate ID of the user
    * @apiParam {Object} userdata arbitrary user data
    *
    * @apiExample {curl} Example usage:
@@ -81,7 +82,7 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.username) {
       return next(new restify.InvalidArgumentError("You must provide a username."));
     }
-    api.manage.addUser(req.keyspace, req.params.username, req.params.userdata, function(err, user) {
+    api.manage.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, function(err, user) {
       if(err) { return next(_error(err)); }
       res.send(user);
     });
@@ -145,6 +146,36 @@ function bootstrapServer(config, keyspace, next) {
     api.query.getUser(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
       res.send(user);
+    });
+  });
+
+  /**
+   * @api {get} /useraltid/:id Get a specific user by altid
+   * @apiName GetUser
+   * @apiGroup ApiUsers
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves details of a specific user by altid
+   *
+   * @apiExample {curl} Example usage:
+   *     curl -i http://localhost:3000/useraltid/1234
+   *
+   * @apiParam {String} id The alternate id of the user as a string
+   * @apiSuccessExample
+   *    HTTP/1.1 200 OK
+   *    {
+   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
+   *      "username":"cliftonc"
+   *    }
+   *
+   *  @apiUse UserNotFound
+   *  @apiUse ServerError
+   *
+   */
+  server.get(u('getUserByAltId'), function (req, res, next) {
+    api.query.getUserByAltId(req.keyspace, req.params.id, function(err, user) {
+        if(err) { return next(_error(err)); }
+        res.send(user);
     });
   });
 

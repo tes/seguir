@@ -46,6 +46,10 @@ module.exports = function(client, redis) {
     _get(keyspace, 'selectUserByUsername', [username], 'one', next);
   }
 
+  function getUserByAltId(keyspace, altid, next) {
+    _get(keyspace, 'selectUserByAltId', [altid], 'one', next);
+  }
+
   function getUserFeedForUser(keyspace, liu, user, from, limit, next) {
     _getFeed(keyspace, liu, 'user_timeline', user, from, limit, next);
   }
@@ -482,6 +486,7 @@ module.exports = function(client, redis) {
     isFollower: isFollower,
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
+    getUserByAltId: getUserByAltId,
     getFeedForUser: getFeedForUser,
     getUserFeedForUser: getUserFeedForUser,
     getRawFeedForUser: getRawFeedForUser,

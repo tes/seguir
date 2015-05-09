@@ -48,8 +48,16 @@ describe('Seguir Social Server / Client API', function() {
     describe('Users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill','harold','jenny'], function(user, cb) {
-          client.addUser(null, user, {avatar:'test.jpg'}, cb);
+        async.map([
+            {username: 'cliftonc', altid: '1'},
+            {username: 'phteven', altid: '2'},
+            {username: 'ted', altid: '3'},
+            {username: 'bill', altid: '4'},
+            {username: 'harold', altid: '5'},
+            {username: 'jenny', altid: '6'},
+            {username: 'alfred', altid: '7'}
+          ], function(user, cb) {
+          client.addUser(null, user.username, user.altid, {avatar:'test.jpg'}, cb);
         }, function(err, results) {
           users = results;
           liu = users[0].user; // clifton is logged in

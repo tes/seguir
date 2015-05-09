@@ -49,9 +49,10 @@ queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret 
  * @apiExample {cql} Select User by Name
  *    SELECT user, username FROM seguir.users WHERE username = ?
  */
-queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, userdata) VALUES(?, ?, ?);';
-queries.selectUser = 'SELECT user, username, userdata FROM {KEYSPACE}.users WHERE user = ?';
-queries.selectUserByUsername = 'SELECT user, username, userdata FROM {KEYSPACE}.users WHERE username = ?';
+queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, altid, userdata) VALUES(?, ?, ?, ?);';
+queries.selectUser = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE user = ?';
+queries.selectUserByUsername = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE username = ?';
+queries.selectUserByAltId = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE altid = ?';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
 
 /**

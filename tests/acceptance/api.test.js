@@ -26,8 +26,16 @@ describe('Social API', function() {
     describe('users', function () {
 
       it('can create users', function(done) {
-        async.map(['cliftonc','phteven','ted','bill','harold','jenny','alfred'], function(user, cb) {
-            manage.addUser(keyspace, user, {'age':15}, cb);
+        async.map([
+            {username: 'cliftonc', altid: '1'},
+            {username: 'phteven', altid: '2'},
+            {username: 'ted', altid: '3'},
+            {username: 'bill', altid: '4'},
+            {username: 'harold', altid: '5'},
+            {username: 'jenny', altid: '6'},
+            {username: 'alfred', altid: '7'}
+          ], function(user, cb) {
+            manage.addUser(keyspace, user.username, user.altid, {'age':15}, cb);
           }, function(err, results) {
             expect(err).to.be(undefined);
             users = results;
@@ -47,6 +55,15 @@ describe('Social API', function() {
 
       it('can retrieve a user by name', function(done) {
         query.getUserByName(keyspace, users[0].username, function(err, user) {
+          expect(err).to.be(null);
+          expect(user.user).to.be(users[0].user);
+          expect(user.username).to.be(users[0].username);
+          done();
+        });
+      });
+
+      it('can retrieve a user by alternate id', function(done) {
+        query.getUserByAltId(keyspace, users[0].altid, function(err, user) {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be(users[0].username);

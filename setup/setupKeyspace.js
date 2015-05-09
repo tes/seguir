@@ -1,4 +1,4 @@
-var async = require('async');
+  var async = require('async');
 var _ = require('lodash');
 
 function defineTablesAndIndexes(KEYSPACE) {
@@ -26,8 +26,9 @@ function defineTablesAndIndexes(KEYSPACE) {
    * @apiParam {String} username The name of the user.
    * @apiUse ExampleCqlUsers
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, userdata map<text,text>)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, altid text, userdata map<text,text>)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(altid)');
 
   /**
    * @api {table} Posts Posts

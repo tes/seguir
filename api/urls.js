@@ -8,6 +8,7 @@ var urls = {
   addUser:                    '/user',
   getUser:                    '/user/:user',
   getUserByName:              '/username/:username',
+  getUserByAltId:             '/useraltid/:altid',
   getUserRelationship:        '/user/:user/relationship',
   addPost:                    '/post',
   getPost:                    '/post/:post',

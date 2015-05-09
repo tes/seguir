@@ -110,9 +110,14 @@ Seguir.prototype.getUserByName = function(liu, username, next) {
   self.get(liu, u('getUserByName', {username:username}), next);
 }
 
-Seguir.prototype.addUser = function(liu, username, userdata, next) {
+Seguir.prototype.getUserByAltId = function(liu, altid, next) {
   var self = this;
-  self.post(liu, u('addUser'), {username: username, userdata: userdata}, next);
+  self.get(liu, u('getUserByAltId', {altid: altid}), next);
+}
+
+Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
+  var self = this;
+  self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata}, next);
 }
 
 Seguir.prototype.getUserRelationship = function(liu, user, next) {
