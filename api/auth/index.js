@@ -186,8 +186,6 @@ function Auth(client, redis, keyspace, options) {
 
   }
 
-
-
   function checkApplication(appid, next) {
     if(!appid) {
       return next(new restify.UnauthorizedError('You must provide an application name via the header "' + appIdHeader + '" to access seguir the seguir API.'));
@@ -201,15 +199,60 @@ function Auth(client, redis, keyspace, options) {
     });
   }
 
-  function checkUser(keyspace, user, next) {
-    if(!user) {
-      return next(null, anonyomousUser);
-    }
-    client.execute(q(keyspace, 'selectUser'), [user], function(err, result) {
+  function isUuid(value) {
+      return (typeof value === 'string' && value.length === 36);
+  }
+
+  function getUserBySeguirId(user_keyspace, user, next) {
+    client.execute(q(user_keyspace, 'selectUser'), [user], function(err, result) {
       if(err) { return next(err); }
-      if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result.rows[0]);
     });
+  }
+
+  function getUserByAltId(user_keyspace, user, next) {
+    client.execute(q(user_keyspace, 'selectUserByAltId'), [user], function(err, result) {
+      if(err) { return next(err); }
+      if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      next(null, result.rows[0]);
+    });
+  }
+
+  function getUserByName(user_keyspace, user, next) {
+    client.execute(q(user_keyspace, 'selectUserByUsername'), [user], function(err, result) {
+      if(err) { return next(err); }
+      if(!result || result.rows.length == 0) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      next(null, result.rows[0]);
+    });
+  }
+
+  function checkUser(user_keyspace, id, next) {
+
+    if(!id) {
+      return next(null, anonyomousUser);
+    }
+
+    if(isUuid(id)) {
+      // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
+      getUserBySeguirId(user_keyspace, id, function(err, user) {
+        if(err) {
+          // If missed, lets check to see if it is the altid
+          // This does mean a performance hit for altids that look like guids!
+          return getUserByAltId(user_keyspace, id, next);
+        }
+        return next(null, user);
+      })
+    } else {
+      // Assume altid first, then try name
+      getUserByAltId(user_keyspace, id, function(err, user) {
+        if(err) {
+          return getUserByName(user_keyspace, id, next);
+        }
+        return next(null, user);
+      });
+    }
+
   }
 
   return {

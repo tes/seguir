@@ -195,6 +195,36 @@ describe('Account and Application Management', function() {
       });
     });
 
+    it('can check if a provided user id is valid - if passed an altid instead of a uuid', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.checkUser(keyspace + '_' + application.appkeyspace, '1', function(err, checkedUser) {
+              expect(err).to.be(null);
+              expect(checkedUser.user).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
+    it('can check if a provided user id is valid - if passed a username instead of a uuid', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.checkUser(keyspace + '_' + application.appkeyspace, 'cliftonc', function(err, checkedUser) {
+              expect(err).to.be(null);
+              expect(checkedUser.user).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
     it('can check if a request has been signed by a valid client', function(done) {
       var authUtils = require('../../api/auth/utils');
       var request = {

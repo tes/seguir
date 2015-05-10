@@ -372,6 +372,35 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
+      it('logged in - can get a feed for yourself that is in the correct order - if LIU is username', function(done) {
+        client.getFeedForUser(users[0].username, users[0].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed).to.not.be(undefined);
+          expect(feed[0].like).to.be(likeId);
+          expect(feed[1].post).to.be(privatePostId);
+          expect(feed[2].post).to.be(postId);
+          expect(feed[3].follow).to.be(notFriendFollowId);
+          expect(feed[4].follow).to.be(followId);
+          expect(feed[5].friend).to.be(friendId);
+          done();
+        });
+      });
+
+
+      it('logged in - can get a feed for yourself that is in the correct order - if LIU is altid', function(done) {
+        client.getFeedForUser(users[0].altid, users[0].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed).to.not.be(undefined);
+          expect(feed[0].like).to.be(likeId);
+          expect(feed[1].post).to.be(privatePostId);
+          expect(feed[2].post).to.be(postId);
+          expect(feed[3].follow).to.be(notFriendFollowId);
+          expect(feed[4].follow).to.be(followId);
+          expect(feed[5].friend).to.be(friendId);
+          done();
+        });
+      });
+
       it('logged in - can get a feed for a friend that is in the correct order', function(done) {
         client.getFeedForUser(users[1].user, users[0].user, null, 100, function(err, feed) {
           expect(err).to.be(null);
