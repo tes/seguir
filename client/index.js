@@ -61,6 +61,7 @@ function Seguir(options) {
   };
 
   self.client = restify.createJsonClient(clientConfig);
+  self.urls = u;
 
 }
 

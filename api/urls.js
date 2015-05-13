@@ -37,7 +37,7 @@ module.exports = function(url, data) {
     if(data) {
       var pattern = urls[url];
       _.keys(data).forEach(function(key) {
-        pattern = pattern.replace(':' + key, data[key]);
+          pattern = pattern.replace(':' + key, data[key]);
       });
       return pattern;
     } else {
@@ -45,6 +45,7 @@ module.exports = function(url, data) {
     }
   } else {
     console.log('Unable to locate URL: ' + url);
+    return '';
   }
 }
 
