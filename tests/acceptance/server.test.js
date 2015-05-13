@@ -20,7 +20,7 @@ describe('Seguir Social Server / Client API', function() {
 
     this.timeout(3000);
 
-    var users = [], liu, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client;
+    var users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client;
 
     before(function(done) {
       this.timeout(20000);
@@ -61,12 +61,22 @@ describe('Seguir Social Server / Client API', function() {
         }, function(err, results) {
           users = results;
           liu = users[0].user; // clifton is logged in
+          liuAltId = users[0].altid;
           done();
         });
       });
 
       it('can retrieve a user by id', function(done) {
         client.getUser(null, users[0].user, function(err, user) {
+          expect(err).to.be(null);
+          expect(user.user).to.be(users[0].user);
+          expect(user.username).to.be('cliftonc');
+          done();
+        });
+      });
+
+       it('can retrieve a user by altid but coerced by server to uuid', function(done) {
+        client.getUser(null, users[0].altid, function(err, user) {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be('cliftonc');
@@ -84,7 +94,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('can retrieve a user by altid', function(done) {
-        client.getUserByAltId(null, '1', function(err, user) {
+        client.getUserByAltId(null, users[0].altid, function(err, user) {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be(users[0].username);
@@ -141,6 +151,14 @@ describe('Seguir Social Server / Client API', function() {
 
       it('can retrieve a list of friends for a user', function(done) {
         client.getFriends(liu, users[0].user, function(err, friends) {
+          expect(err).to.be(null);
+          expect(friends[0].user_friend).to.be(users[1].user);
+          done();
+        });
+      });
+
+      it('can retrieve a list of friends for a user by altids', function(done) {
+        client.getFriends(liuAltId, users[0].altid, function(err, friends) {
           expect(err).to.be(null);
           expect(friends[0].user_friend).to.be(users[1].user);
           done();
@@ -219,6 +237,16 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
+      it('can retrieve a list of followers for a user by altids', function(done) {
+        client.getFollowers(liuAltId, users[0].altid, function(err, followers) {
+          expect(err).to.be(null);
+          var followerIds = _.pluck(followers, 'user_follower');
+          expect(followerIds).to.contain(users[1].user);
+          expect(followerIds).to.contain(users[2].user);
+          done();
+        });
+      });
+
       it('can add and then remove a follower', function(done) {
          client.followUser(users[3].user, users[4].user, Date.now(), function(err, follow) {
           expect(err).to.be(null);
@@ -249,8 +277,8 @@ describe('Seguir Social Server / Client API', function() {
         });
       });
 
-      it('can post a private message from a user', function(done) {
-        client.addPost(liu, 'Hello, this is a private post', Date.now(), true, false, function(err, post) {
+      it('can post a private message from a user using their altid', function(done) {
+        client.addPost(liuAltId, 'Hello, this is a private post', Date.now(), true, false, function(err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.be(users[0].user);
@@ -449,6 +477,15 @@ describe('Seguir Social Server / Client API', function() {
 
       it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
         client.getUserFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
+          expect(err).to.be(null);
+          expect(feed[0].friend).to.be(reciprocalFriendId);
+          done();
+        });
+      });
+
+
+      it('logged in - can get a users personal feed as a friend and see direct items private or public by altids', function(done) {
+        client.getUserFeedForUser(users[0].altid, users[1].altid, null, 100, function(err, feed) {
           expect(err).to.be(null);
           expect(feed[0].friend).to.be(reciprocalFriendId);
           done();

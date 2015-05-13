@@ -41,6 +41,8 @@ function bootstrapServer(config, keyspace, next) {
   });
   server.pre(api.auth.checkRequest);
 
+  var coerce = api.auth.coerceUserToUuid;
+
   function _error(err) {
     return new restify.HttpError(err);
   }
@@ -143,9 +145,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUser'), function (req, res, next) {
-    api.query.getUser(req.keyspace, req.params.user, function(err, user) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(user);
+      api.query.getUser(req.keyspace, user, function(err, user) {
+        if(err) { return next(_error(err)); }
+        res.send(user);
+      });
     });
   });
 
@@ -216,9 +221,12 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.liu.user) {
       return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
     }
-    api.query.getUserRelationship(req.keyspace, req.liu.user, req.params.user, function(err, relationship) {
-        if(err) { return next(_error(err)); }
-        res.send(relationship);
+    coerce(req.keyspace, req.params.user, function(err, user) {
+      if(err) { return next(_error(err)); }
+      api.query.getUserRelationship(req.keyspace, req.liu.user, user, function(err, relationship) {
+          if(err) { return next(_error(err)); }
+          res.send(relationship);
+      });
     });
   });
 
@@ -260,9 +268,12 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.item) {
       return next(new restify.InvalidArgumentError("You must provide an item."));
     }
-    api.manage.addLike(req.keyspace, req.params.user, req.params.item, Date.now(), function(err, like) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(like);
+      api.manage.addLike(req.keyspace, user, req.params.item, Date.now(), function(err, like) {
+        if(err) { return next(_error(err)); }
+        res.send(like);
+      });
     });
   });
 
@@ -320,9 +331,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('checkLike'), function (req, res, next) {
-    api.query.checkLike(req.keyspace, req.params.user, encodeURIComponent(req.params.item), function(err, like) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(like);
+      api.query.checkLike(req.keyspace, user, encodeURIComponent(req.params.item), function(err, like) {
+        if(err) { return next(_error(err)); }
+        res.send(like);
+      });
     });
   });
 
@@ -352,12 +366,15 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.item) {
       return next(new restify.InvalidArgumentError("You must provide an item."));
     }
-    if(req.liu.user !== req.params.user) {
-      return next(new restify.ForbiddenError("You can't delete someone elses like."));
-    }
-    api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function(err, result) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(result);
+      if(req.liu.user !== user) {
+        return next(new restify.ForbiddenError("You can't delete someone elses like."));
+      }
+      api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function(err, result) {
+        if(err) { return next(_error(err)); }
+        res.send(result);
+      });
     });
   });
 
@@ -397,13 +414,15 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.content) {
       return next(new restify.InvalidArgumentError("You must provide content for the post."));
     }
-
     var isprivate = req.params.isprivate ? true : false,
         ispersonal = req.params.ispersonal ? true : false;
 
-    api.manage.addPost(req.keyspace, req.params.user, req.params.content, Date.now(), isprivate, ispersonal, function(err, post) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(post);
+      api.manage.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, function(err, post) {
+        if(err) { return next(_error(err)); }
+        res.send(post);
+      });
     });
   });
 
@@ -485,9 +504,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriend'), function (req, res, next) {
-    api.query.getFriend(req.keyspace, req.liu.user, req.params.friend, function(err, friend) {
+    coerce(req.keyspace, req.params.friend, function(err, friend) {
       if(err) { return next(_error(err)); }
-      res.send(friend);
+      api.query.getFriend(req.keyspace, req.liu.user, friend, function(err, friend) {
+        if(err) { return next(_error(err)); }
+        res.send(friend);
+      });
     });
   });
 
@@ -516,9 +538,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriends'), function (req, res, next) {
-    api.query.getFriends(req.keyspace, req.liu.user, req.params.user, function(err, friends) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(friends);
+      api.query.getFriends(req.keyspace, req.liu.user, user, function(err, friends) {
+        if(err) { return next(_error(err)); }
+        res.send(friends);
+      });
     });
   });
 
@@ -548,12 +573,16 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.user_friend) {
       return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
     }
-    if(req.params.user !== req.liu.user) {
-      return next(new restify.ForbiddenError("You can only remove your own friendships."));
-    }
-    api.manage.removeFriend(req.keyspace, req.params.user, req.params.user_friend, function(err, result) {
+    coerce(req.keyspace, [req.params.user, req.params.user_friend], function(err, users) {
       if(err) { return next(_error(err)); }
-      res.send(result);
+      var user = users[0], user_friend = users[1];
+      if(user !== req.liu.user) {
+        return next(new restify.ForbiddenError("You can only remove your own friendships."));
+      }
+      api.manage.removeFriend(req.keyspace, user, user_friend, function(err, result) {
+        if(err) { return next(_error(err)); }
+        res.send(result);
+      });
     });
   });
 
@@ -587,11 +616,14 @@ function bootstrapServer(config, keyspace, next) {
    */
   server.post(u('addFriendRequest'), function (req, res, next) {
     if(!req.params.user_friend) {
-      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
+      return next(new restify.InvalidArgumentError("You must provide a user_friend id."));
     }
-    api.manage.addFriendRequest(req.keyspace, req.liu.user, req.params.user_friend, req.params.message || '', Date.now(), function(err, friend_request) {
+    coerce(req.keyspace, req.params.user_friend, function(err, user_friend) {
       if(err) { return next(_error(err)); }
-      res.send(friend_request);
+      api.manage.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), function(err, friend_request) {
+        if(err) { return next(_error(err)); }
+        res.send(friend_request);
+      });
     });
   });
 
@@ -693,17 +725,24 @@ function bootstrapServer(config, keyspace, next) {
     if(!req.params.user_follower) {
       return next(new restify.InvalidArgumentError("You must provide a user_follower."));
     }
-    if(req.params.user_follower !== req.liu.user) {
-      return next(new restify.ForbiddenError("You can only add your own follow relationships."));
-    }
 
     var isprivate = req.params.isprivate ? true : false,
         ispersonal = req.params.ispersonal ? true : false;
 
-    api.manage.addFollower(req.keyspace, req.params.user, req.params.user_follower, Date.now(), isprivate, ispersonal, function(err, follow) {
+    coerce(req.keyspace, [req.params.user, req.params.user_follower], function(err, users) {
       if(err) { return next(_error(err)); }
-      res.send(follow);
+      var user = users[0], user_follower = users[1];
+
+      if(user_follower !== req.liu.user) {
+        return next(new restify.ForbiddenError("You can only add your own follow relationships."));
+      }
+
+      api.manage.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, function(err, follow) {
+        if(err) { return next(_error(err)); }
+        res.send(follow);
+      });
     });
+
   });
 
 
@@ -739,9 +778,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollowers'), function (req, res, next) {
-    api.query.getFollowers(req.keyspace, req.liu.user, req.params.user, function(err, followers) {
+    coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
-      res.send(followers);
+      api.query.getFollowers(req.keyspace, req.liu.user, user, function(err, followers) {
+        if(err) { return next(_error(err)); }
+        res.send(followers);
+      });
     });
   });
 
@@ -800,19 +842,29 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.del(u('removeFollower'), function (req, res, next) {
+
     if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user guid."));
+      return next(new restify.InvalidArgumentError("You must provide a user id."));
     }
     if(!req.params.user_follower) {
-      return next(new restify.InvalidArgumentError("You must provide a user_follower guid."));
+      return next(new restify.InvalidArgumentError("You must provide a user_follower id."));
     }
-    if(req.params.user_follower !== req.liu.user) {
-      return next(new restify.ForbiddenError("You can only remove your own follow relationships."));
-    }
-    api.manage.removeFollower(req.keyspace, req.params.user, req.params.user_follower, function(err, result) {
+
+    coerce(req.keyspace, [req.params.user, req.params.user_follower], function(err, users) {
+
       if(err) { return next(_error(err)); }
-      res.send(result);
+      var user = users[0], user_follower = users[1];
+
+      if(user_follower !== req.liu.user) {
+        return next(new restify.ForbiddenError("You can only remove your own follow relationships."));
+      }
+      api.manage.removeFollower(req.keyspace, user, user_follower, function(err, result) {
+        if(err) { return next(_error(err)); }
+        res.send(result);
+      });
+
     });
+
   });
 
    /**
@@ -876,9 +928,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFeed'), function (req, res, next) {
-    api.query.getFeedForUser(req.keyspace, req.liu.user, req.params.user, null, 50, function(err, feed) {
-        if(err) { return next(_error(err)); }
-        res.send(feed || []);
+    coerce(req.keyspace, req.params.user, function(err, user) {
+      if(err) { return next(_error(err)); }
+      api.query.getFeedForUser(req.keyspace, req.liu.user, user, null, 50, function(err, feed) {
+          if(err) { return next(_error(err)); }
+          res.send(feed || []);
+      });
     });
   });
 
@@ -937,9 +992,12 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserFeed'), function (req, res, next) {
-    api.query.getUserFeedForUser(req.keyspace, req.liu.user, req.params.user, null, 50, function(err, feed) {
-        if(err) { return next(_error(err)); }
-        res.send(feed || []);
+    coerce(req.keyspace, req.params.user, function(err, user) {
+      if(err) { return next(_error(err)); }
+      api.query.getUserFeedForUser(req.keyspace, req.liu.user, user, null, 50, function(err, feed) {
+          if(err) { return next(_error(err)); }
+          res.send(feed || []);
+      });
     });
   });
 

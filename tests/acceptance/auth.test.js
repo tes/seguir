@@ -225,6 +225,66 @@ describe('Account and Application Management', function() {
       });
     });
 
+    it('can coerce a display name to a uuid', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, 'cliftonc', function(err, id) {
+              expect(err).to.be(null);
+              expect(id).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
+    it('can coerce an altid name to a uuid', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, '1', function(err, id) {
+              expect(err).to.be(null);
+              expect(id).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
+    it('can coerce a uuid to a uuid', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user, function(err, id) {
+              expect(err).to.be(null);
+              expect(id).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
+    it('can coerce an array of altids to uuids', function(done) {
+      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
+        appId = application.appid;
+        appSecret = application.appsecret;
+        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
+            userId = user.user;
+            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, ['1'], function(err, ids) {
+              expect(err).to.be(null);
+              expect(ids[0]).to.be(user.user);
+              done();
+            });
+          });
+      });
+    });
+
     it('can check if a request has been signed by a valid client', function(done) {
       var authUtils = require('../../api/auth/utils');
       var request = {

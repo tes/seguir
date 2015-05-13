@@ -227,6 +227,42 @@ function Auth(client, redis, keyspace, options) {
     });
   }
 
+  function coerceUserToUuid(user_keyspace, ids, next) {
+
+    if(!ids) {
+      return next();
+    }
+
+    var coerce = function(id, cb) {
+
+      if(isUuid(id)) {
+        // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
+        return cb(null, id);
+      } else {
+        // Assume altid first, then try name
+        getUserByAltId(user_keyspace, id, function(err, user) {
+          if(err) {
+            return getUserByName(user_keyspace, id, function(err, user) {
+              return cb(null, user && user.user);
+            });
+          }
+          return cb(null, user.user);
+        });
+      }
+
+    }
+
+    if(typeof ids === 'string' ) {
+      coerce(ids, next);
+    } else {
+      async.map(ids, coerce, function(err, uuids) {
+        if(err) { return next(err); }
+        next(null, uuids);
+      });
+    }
+
+  }
+
   function checkUser(user_keyspace, id, next) {
 
     if(!id) {
@@ -271,7 +307,8 @@ function Auth(client, redis, keyspace, options) {
     updateApplicationSecret: updateApplicationSecret,
     checkRequest: checkRequest,
     checkApplication: checkApplication,
-    checkUser: checkUser
+    checkUser: checkUser,
+    coerceUserToUuid: coerceUserToUuid
   }
 
 }
