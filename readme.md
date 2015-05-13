@@ -21,8 +21,8 @@ The expected flow between your application and Seguir is:
 
 1. Application authenticates user.
 2. Application checks if user already has Seguir ID stored against profile.
-3. IF NOT: Add user to Seguir, store new Seguir ID against their profile.
-4. Use Seguir ID in all requests to API (this is the first parameter in all client APIs).
+3. IF NOT: Add user to Seguir, store new Seguir ID against their profile, along with a username an 'alternate' ID and any user data.
+4. Use Seguir ID in all requests to API (this is the first parameter in all client APIs), or use the alternate ID or username (with a small performance hit due to the lookup).
 
 You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
 
