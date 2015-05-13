@@ -235,6 +235,8 @@ function Auth(client, redis, keyspace, options) {
 
     var coerce = function(id, cb) {
 
+      id = '' + id; // Ensure ID is a string
+
       if(isUuid(id)) {
         // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
         return cb(null, id);
@@ -252,7 +254,7 @@ function Auth(client, redis, keyspace, options) {
 
     }
 
-    if(typeof ids === 'string' ) {
+    if(typeof ids === 'string' || typeof ids === 'number') {
       coerce(ids, next);
     } else {
       async.map(ids, coerce, function(err, uuids) {

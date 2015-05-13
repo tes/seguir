@@ -147,6 +147,7 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getUser'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
+      if(!user) { return next(_error({statusCode:404,message:'User not found'})); }
       api.query.getUser(req.keyspace, user, function(err, user) {
         if(err) { return next(_error(err)); }
         res.send(user);
