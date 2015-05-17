@@ -30,6 +30,10 @@ function bootstrapServer(config, keyspace, next) {
     default: 'index.html'
   }));
 
+  server.get('/status', function(req, res) {
+    res.send({status:'OK'});
+  });
+
   // Preflight
   server.pre(restify.pre.sanitizePath());
   server.pre(restify.pre.userAgentConnection());

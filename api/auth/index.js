@@ -157,6 +157,11 @@ function Auth(client, redis, keyspace, options) {
    */
   function checkRequest(req, res, next) {
 
+    // TODO: Cleaner way of excluding some paths from the auth check
+    if(req.url === '/status') {
+      return next();
+    }
+
     var appAuthorization = req.headers.authorization,
         user = req.headers[userHeader];
 

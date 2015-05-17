@@ -29,7 +29,6 @@ var tasks = [
   'Reset application token'
 ];
 
-var setupFile = program.setup;
 var configFile = program.config ? path.resolve('.', program.config) : '../server/config';
 var configFn;
 
@@ -52,6 +51,8 @@ configFn(function(err, config) {
 
   var client = require('../api/db/client')(config);
   var api = require('../index')(client, config.keyspace);
+
+  var setupFile = program.setup;
 
   if(setupFile) {
 
