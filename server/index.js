@@ -31,7 +31,10 @@ function bootstrapServer(config, keyspace, next) {
   }));
 
   server.get('/status', function(req, res) {
-    res.send({status:'OK'});
+    api.auth.getAccounts(function(err, accounts) {
+      if(err) { return _error(err); }
+      res.send({status:'OK', config: config, accounts: accounts});
+    });
   });
 
   // Preflight
