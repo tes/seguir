@@ -103,7 +103,7 @@ Seguir.prototype.getHeaders = function(liu) {
  */
 Seguir.prototype.getUser = function(liu, user, next) {
   var self = this;
-  self.get(liu, u('getUser', {user:user}), next);
+  self.get(liu, u('getUser', {user: user}), next);
 }
 
 Seguir.prototype.getUserByName = function(liu, username, next) {

@@ -37,7 +37,7 @@ module.exports = function(client, messaging) {
   function addUser(keyspace, username, altid, userdata, next) {
     userdata = _.mapValues(userdata , function(value) { return value.toString(); }); // Always ensure our userdata is <text,text>
     var userid = cassandra.types.uuid();
-    var user = [userid, username, altid, userdata];
+    var user = [userid, username, '' + altid, userdata];
     client.execute(q(keyspace, 'upsertUser'), user, {prepare:true, hints:[null, null, 'map']}, function(err, result) {
       if(err) { return next(err); }
       next(null, {user: userid, username: username, altid: altid, userdata: userdata});

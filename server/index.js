@@ -413,6 +413,7 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.post(u('addPost'), function (req, res, next) {
+
     if(!req.params.user) {
       return next(new restify.InvalidArgumentError("You must provide a user."));
     }

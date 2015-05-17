@@ -176,6 +176,8 @@ function Auth(client, redis, keyspace, options) {
       if(err) { return res.send(err); }
       if(!application) { return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.')); }
 
+      console.dir(application);
+
       if(authUtils.validateAuthorization(req.headers, application.appid, application.appsecret)) {
         req.keyspace = keyspace + '_' + application.appkeyspace;
         checkUser(req.keyspace, user, function(err, user) {
