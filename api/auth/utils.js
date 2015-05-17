@@ -14,7 +14,7 @@ function generateAuthorization(appid, appsecret) {
 }
 
 function validateAuthorization(headers, appid, appsecret) {
-  var d = headers.date || '';
+  var d = headers.date;
   var hmac = headers.authorization.split(":")[1];
   return hmac === generateHmac(d, appsecret);
 }
