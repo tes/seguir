@@ -8,13 +8,15 @@ function setup(client, keyspace, next) {
   var tables =[
     'CREATE TABLE ' + keyspace + '.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))',
     'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',
-    'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, appsecret text, account uuid, enabled boolean, PRIMARY KEY (appid))'
+    'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, appsecret text, account uuid, enabled boolean, PRIMARY KEY (appid))',
+    'CREATE TABLE ' + keyspace + '.application_tokens (appid uuid, appkeyspace text, tokenid uuid,  tokensecret text, enabled boolean, PRIMARY KEY (tokenid))'
   ];
 
   var indexes = [
     'CREATE INDEX ON ' + keyspace + '.accounts(name)',
     'CREATE INDEX ON ' + keyspace + '.applications(account)',
-    'CREATE INDEX ON ' + keyspace + '.account_users(username)'
+    'CREATE INDEX ON ' + keyspace + '.account_users(username)',
+    'CREATE INDEX ON ' + keyspace + '.application_tokens(appid)'
   ];
 
   var helpers = require('./helpers')(client, {

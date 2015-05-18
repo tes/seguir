@@ -13,7 +13,7 @@ var _ = require('lodash');
 
 describe('Account and Application Management', function() {
 
-  var auth = api.auth, manage = api.manage, accountId, userId, appId, appSecret;
+  var auth = api.auth, manage = api.manage, accountId, userId, appId, appSecret, tokenId;
 
   this.timeout(10000);
 
@@ -158,9 +158,47 @@ describe('Account and Application Management', function() {
       });
     });
 
+    it('can add an additional application token', function(done) {
+      auth.addApplicationToken(appId, 'test-seguir', null, null, function(err, token) {
+        tokenId = token.tokenid;
+        expect(err).to.be(null);
+        expect(token.appid).to.equal(appId);
+        expect(token.enabled).to.equal(true);
+        done();
+      });
+    });
+
+    it('can update application tokens', function(done) {
+      auth.updateApplicationToken(tokenId, false, function(err, token) {
+        expect(err).to.be(null);
+        expect(token.enabled).to.equal(false);
+        done();
+      });
+    });
+
+    it('can retrieve application tokens', function(done) {
+      auth.getApplicationTokens(appId, function(err, tokens) {
+        expect(err).to.be(null);
+        expect(tokens[0].enabled).to.equal(false);
+        done();
+      });
+    });
+
   });
 
   describe('Server access checks', function () {
+
+    var application, token;
+
+    before(function(done) {
+      auth.addApplication(accountId, 'another application', null, null, function(err, anotherApplication) {
+        application = anotherApplication;
+        auth.addApplicationToken(application.appid, application.appkeyspace, null, null, function(err, anotherToken) {
+          token = anotherToken;
+          done();
+        });
+      });
+    });
 
     it('can check if a provided app id is valid and fail if not enabled', function(done) {
       auth.checkApplication(appId, function(err, checkedApplication) {
@@ -171,124 +209,96 @@ describe('Account and Application Management', function() {
     });
 
     it('can check if a provided app id is valid', function(done) {
-      auth.addApplication(accountId, 'another application', null, null, function(err, application) {
-        auth.checkApplication(application.appid, function(err, checkedApplication) {
+      auth.checkApplication(application.appid, function(err, checkedApplication) {
+        expect(err).to.be(null);
+        expect(application.appid).to.be(checkedApplication.appid);
+        done();
+      });
+    });
+
+    it('can check if a provided app token id is valid', function(done) {
+      auth.checkApplicationToken(token.tokenid, function(err, checkedToken) {
+        expect(err).to.be(null);
+        expect(token.tokenid).to.be(checkedToken.tokenid);
+        done();
+      });
+    });
+
+    it('can check if a provided user id is valid', function(done) {
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc1', '1', {}, function(err, user) {
+        userId = user.user;
+        auth.checkUser(keyspace + '_' + application.appkeyspace, user.user, function(err, checkedUser) {
           expect(err).to.be(null);
-          expect(application.appid).to.be(checkedApplication.appid);
+          expect(checkedUser.user).to.be(user.user);
           done();
         });
       });
     });
 
-    it('can check if a provided user id is valid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.checkUser(keyspace + '_' + application.appkeyspace, user.user, function(err, checkedUser) {
-              expect(err).to.be(null);
-              expect(checkedUser.user).to.be(user.user);
-              done();
-            });
-          });
-      });
-    });
-
     it('can check if a provided user id is valid - if passed an altid instead of a uuid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.checkUser(keyspace + '_' + application.appkeyspace, '1', function(err, checkedUser) {
-              expect(err).to.be(null);
-              expect(checkedUser.user).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc2', '2', {}, function(err, user) {
+        auth.checkUser(keyspace + '_' + application.appkeyspace, '2', function(err, checkedUser) {
+          expect(err).to.be(null);
+          expect(checkedUser.user).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can check if a provided user id is valid - if passed a username instead of a uuid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.checkUser(keyspace + '_' + application.appkeyspace, 'cliftonc', function(err, checkedUser) {
-              expect(err).to.be(null);
-              expect(checkedUser.user).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', '3', {}, function(err, user) {
+        auth.checkUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', function(err, checkedUser) {
+          expect(err).to.be(null);
+          expect(checkedUser.user).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can coerce a display name to a uuid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, 'cliftonc', function(err, id) {
-              expect(err).to.be(null);
-              expect(id).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc4', '4', {}, function(err, user) {
+        auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, 'cliftonc4', function(err, id) {
+          expect(err).to.be(null);
+          expect(id).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can coerce an altid name to a uuid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, '1', function(err, id) {
-              expect(err).to.be(null);
-              expect(id).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc5', '5', {}, function(err, user) {
+        auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, '5', function(err, id) {
+          expect(err).to.be(null);
+          expect(id).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can coerce a uuid to a uuid', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user, function(err, id) {
-              expect(err).to.be(null);
-              expect(id).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function(err, user) {
+        auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user, function(err, id) {
+          expect(err).to.be(null);
+          expect(id).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can coerce an array of altids to uuids', function(done) {
-      auth.addApplication(accountId, 'yet another application', null, null, function(err, application) {
-        appId = application.appid;
-        appSecret = application.appsecret;
-        manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc', '1', {}, function(err, user) {
-            userId = user.user;
-            auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, ['1'], function(err, ids) {
-              expect(err).to.be(null);
-              expect(ids[0]).to.be(user.user);
-              done();
-            });
-          });
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, function(err, user) {
+        auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, ['7'], function(err, ids) {
+          expect(err).to.be(null);
+          expect(ids[0]).to.be(user.user);
+          done();
+        });
       });
     });
 
     it('can check if a request has been signed by a valid client', function(done) {
       var authUtils = require('../../api/auth/utils');
       var request = {
-        headers: _.assign(authUtils.generateAuthorization(appId, appSecret), {'x-seguir-user-token': userId})
+        headers: _.assign(authUtils.generateAuthorization(application.appid, application.appsecret), {'x-seguir-user-token': userId})
       }
       var response = {
         send: function(response) {
@@ -296,7 +306,7 @@ describe('Account and Application Management', function() {
         }
       }
       auth.checkRequest(request, response, function(err) {
-        expect(request.keyspace).to.be('test_seguir_auth_yet_another_application');
+        expect(request.keyspace).to.be('test_seguir_auth_another_application');
         expect(request.liu.user).to.be(userId);
         done();
       });
@@ -305,7 +315,7 @@ describe('Account and Application Management', function() {
     it('can work with anonymous users', function(done) {
       var authUtils = require('../../api/auth/utils');
       var request = {
-        headers: authUtils.generateAuthorization(appId, appSecret)
+        headers: authUtils.generateAuthorization(application.appid, application.appsecret)
       }
       var response = {
         send: function(response) {
@@ -313,7 +323,7 @@ describe('Account and Application Management', function() {
         }
       }
       auth.checkRequest(request, response, function(err) {
-        expect(request.keyspace).to.be('test_seguir_auth_yet_another_application');
+        expect(request.keyspace).to.be('test_seguir_auth_another_application');
         expect(request.liu.user).to.be('_anonymous_');
         done();
       });
@@ -322,7 +332,7 @@ describe('Account and Application Management', function() {
     it('can fail requests with an invalid secret', function(done) {
       var authUtils = require('../../api/auth/utils');
       var request = {
-        headers: authUtils.generateAuthorization(appId, 'MY INVALID SECRET')
+        headers: authUtils.generateAuthorization(application.appid, 'MY INVALID SECRET')
       }
       var response = {
         send: function(response) {
@@ -332,6 +342,23 @@ describe('Account and Application Management', function() {
       }
       auth.checkRequest(request, response, function(err) {
         // Not called
+      });
+    });
+
+    it('can user application tokens to generate an authorization', function(done) {
+      var authUtils = require('../../api/auth/utils');
+      var request = {
+        headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret, 'SeguirAppToken'), {'x-seguir-user-token': userId})
+      }
+      var response = {
+        send: function(response) {
+          // Not expected to be called
+        }
+      }
+      auth.checkRequest(request, response, function(err) {
+        expect(request.keyspace).to.be('test_seguir_auth_another_application');
+        expect(request.liu.user).to.be(userId);
+        done();
       });
     });
 

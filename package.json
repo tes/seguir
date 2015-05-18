@@ -45,7 +45,7 @@
     "string-template": "^0.2.0"
   },
   "devDependencies": {
-    "apidoc": "^0.12.1",
+    "apidoc": "^0.13.0",
     "casual": "^1.4.7",
     "expect.js": "^0.3.1",
     "istanbul": "^0.3.5",

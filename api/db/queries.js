@@ -30,7 +30,7 @@ queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = ?, e
 /**
  * @apiDefine ExampleCqlApplications
  * @apiExample {cql} Insert Application
- *    INSERT INTO seguir.applications (application, key, name) VALUES(?, ?, ?)
+ *    INSERT INTO seguir.applications (account, name, appid, appsecret, enabled) VALUES(?, ?, ?, ?, ?)
  * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
@@ -39,6 +39,15 @@ queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret,
 queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = ?';
 queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = ?, enabled = ? WHERE appid = ?';
 queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = ? WHERE appid = ?';
+
+/**
+ * @apiDefine ExampleCqlApplicationTokens
+ */
+queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, enabled) VALUES(?, ?, ?, ?, ?)';
+queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
+queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE appid = ?';
+queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = ? WHERE tokenid = ?';
+queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid=?';
 
 /**
  * @apiDefine ExampleCqlUsers

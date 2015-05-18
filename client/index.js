@@ -8,14 +8,12 @@ var authUtils = require('../api/auth/utils');
 var u = require('../api/urls');
 /**
  * @apiDefine Client Server Side Seguir Client
- * The Seguir client provides a simple and consistent API for interacting with a seguir client
- * without having to worry about authentication or passing the logged in user details.
+ * The Seguir client provides a simple and consistent API for interacting with a seguir server.
  *
  * This can only be used server side, as it uses the appId and appSecret which should never be
  * shared within pure client side code.  This client allows you to provide the 'logged in user'
  * which means that you can effectively create any relationship or item you like (even outside of)
- * an actual true user session.
- *
+ * an actual true user session - e.g. by system events.
  */
 
 /**
@@ -26,17 +24,10 @@ var u = require('../api/urls');
  * @apiDescription Default configuration
  * @apiSuccessExample
  *    HTTP/1.1 200 OK
- *    { isFriend: false,
-          isFriendSince: null,
-          isFriendRequestPending: false,
-          isFriendRequestSince: null,
-          youFollow: true,
-          youFollowSince: '2015-02-02T06:45:55.459Z',
-          theyFollow: false,
-          theyFollowSince: null,
-          inCommon:
-           [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',
-               username: 'ted'} ] }
+ *    { appid: '12345',
+ *      appsecret: '12345',
+ *      host: 'http://seguir.server.com',
+      }
  */
 var defaults = {
   host:'http://localhost:3000'
@@ -99,90 +90,250 @@ Seguir.prototype.getHeaders = function(liu) {
 }
 
 /**
- * User Functions
+ * @apiDefine Users Users
+ * This is a collection of methods that allow you to create and retrieve users.
+ */
+
+/**
+ * @api {function} getUser(liu,user,next) getUser
+ * @apiName getUser
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get a user details
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the id of the user
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.getUser = function(liu, user, next) {
   var self = this;
-  self.get(liu, u('getUser', {user: user}), next);
+  self.get(liu, u('getUser', {user: '' + user}), next);
 }
 
+/**
+ * @api {function} getUserByName(liu,username,next) getUserByName
+ * @apiName getUserByName
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get a user details
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} username the username of the user
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getUserByName = function(liu, username, next) {
   var self = this;
   self.get(liu, u('getUserByName', {username:username}), next);
 }
 
+/**
+ * @api {function} getUserByAltId(liu,altid,next) getUserByAltId
+ * @apiName getUserByAltId
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get a user details
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} altid the altid of the user
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getUserByAltId = function(liu, altid, next) {
   var self = this;
   self.get(liu, u('getUserByAltId', {altid: altid}), next);
 }
 
+/**
+ * @api {function} addUser(liu,username,altid,userdata,next) addUser
+ * @apiName addUser
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Creates a new user.
+ * @apiParam {String} liu the id of the current logged in user [not used]
+ * @apiParam {String} username the username
+ * @apiParam {String} altid the local / alternate id
+ * @apiParam {Object} userdata arbitrary user data (one level of key values only)
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
   var self = this;
   self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata}, next);
 }
 
+/**
+ * @api {function} getUserRelationship(liu,user,next) getUserRelationship
+ * @apiName getUserRelationship
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get a user details
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the id of the user
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getUserRelationship = function(liu, user, next) {
   var self = this;
   self.get(liu, u('getUserRelationship', {user: user}), next);
 }
 
 /**
- * Friend Wrapper
+ * @apiDefine Friends Friends
+ * This is a collection of methods that allow you to manage the friend request process.
+ */
+
+/**
+ * @api {function} addFriend(liu,user_friend,timestamp,next) addFriend
+ * @apiName addFriend
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Add a friend directly
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_friend the id of the user to become friends with
+ * @apiParam {Number} timestamp when the relationship began - Date.now()
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.addFriend = function(liu, user_friend, timestamp, next) {
   var self = this;
-  self.post(liu, u('addFriend'), {user: liu, user_friend: user_friend}, next);
+  self.post(liu, u('addFriend'), {user: liu, user_friend: user_friend, timestamp: timestamp}, next);
 }
 
+/**
+ * @api {function} getFriends(liu,user,next) getFriends
+ * @apiName getFriends
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve a list of friends for a specific user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the id of the user to get the list of friends for
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getFriends = function(liu, user, next) {
   var self = this;
   self.get(liu, u('getFriends', {user: user}), next);
 }
 
+/**
+ * @api {function} getFriend(liu,friend,next) getFriend
+ * @apiName getFriend
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Get details of a specific friendship
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} friend the id of the friend relationship
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getFriend = function(liu, friend, next) {
   var self = this;
   self.get(liu, u('getFriend', {friend: friend}), next);
 }
 
+/**
+ * @api {function} removeFriend(liu,user_friend,next) removeFriend
+ * @apiName removeFriend
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription End a friendship
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_friend the id of the user to stop being friends with
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.removeFriend = function(liu, user_friend, next) {
   var self = this;
   self.del(liu, u('removeFriend', {user: liu, user_friend: user_friend}), next);
 }
 
 /**
- * Friend Request Wrapper
+ * @api {function} addFriendRequest(liu,user_friend,message,timestamp,next) addFriendRequest
+ * @apiName addFriendRequest
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Create a friend request with message
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_friend the id of the user to send a friend request to
+ * @apiParam {String} message a message to leave with the request
+ * @apiParam {Timestamp} timestamp time to leave the request
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestamp, next) {
   var self = this;
   self.post(liu, u('addFriendRequest'), {user_friend: user_friend, message: message, timestamp: timestamp}, next);
 }
 
+/**
+ * @api {function} getFriendRequests(liu,next) getFriendRequests
+ * @apiName getFriendRequests
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve pending friend requests for the current logged in user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getFriendRequests = function(liu, next) {
   var self = this;
   self.get(liu, u('getFriendRequests'), next);
 }
 
+/**
+ * @api {function} acceptFriendRequest(liu,friend_request,next) acceptFriendRequest
+ * @apiName acceptFriendRequest
+ * @apiGroup Friends
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Create a friend request with message
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} friend_request the id of friend request to accept
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
   var self = this;
   self.post(liu, u('acceptFriendRequest'), {friend_request: friend_request}, next);
 }
 
+
 /**
- * Follow Wrapper
+ * @apiDefine Following Following
+ * This is a collection of methods that allow you to manage follow relationships.
  */
-Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, next) {
+
+/**
+ * @api {function} followUser(liu,user_to_follow,timestamp,isprivate,ispersonal,next) followUser
+ * @apiName followUser
+ * @apiGroup Following
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Follow a user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_to_follow the id of the user to follow
+ * @apiParam {Timestamp} timestamp time to leave the request
+ * @apiParam {Boolean} isprivate is this visible only to friends
+ * @apiParam {Boolean} ispersonal is this visible only to the user
+ * @apiParam {Function} next callback
+ */
+Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, isprivate, ispersonal,  next) {
   var self = this;
-  self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu}, next);
+  self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, isprivate: isprivate, ispersonal: ispersonal}, next);
 }
 
+/**
+ * @api {function} unFollowUser(liu,user_following,timestamp,next) unFollowUser
+ * @apiName unFollowUser
+ * @apiGroup Following
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Stop following a user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_following the id of follow relationship
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.unFollowUser = function(liu, user_following, next) {
   var self = this;
   self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
-}
-
-Seguir.prototype.addFollower = function(liu, user_follower, timestamp, isprivate, ispersonal, next) {
-  var self = this;
-  self.post(liu, u('addFollower'), {user: liu, user_follower: user_follower, isprivate: isprivate, ispersonal: ispersonal}, next);
 }
 
 Seguir.prototype.removeFollower = function(liu, user_follower, next) {

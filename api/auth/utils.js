@@ -4,12 +4,13 @@
 var bcrypt = require('bcrypt');
 var crypto = require("crypto");
 
-function generateAuthorization(appid, appsecret) {
+function generateAuthorization(appid, appsecret, type) {
   var d = new Date().toUTCString();
   var signature = generateHmac(d, appsecret);
+  type = type || 'SeguirApp';
   return {
     'date':d,
-    'authorization': 'Seguir ' + appid + ':' + generateHmac(d, appsecret)
+    'authorization': type + ' ' + appid + ':' + generateHmac(d, appsecret)
   }
 }
 

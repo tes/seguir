@@ -26,7 +26,9 @@ var tasks = [
   'Add a new user to an account',
   'List applications for account',
   'Add a new application to an account',
-  'Reset application token'
+  'Reset application token',
+  'Add a new application token',
+  'List application tokens for an application'
 ];
 
 var configFile = program.config ? path.resolve('.', program.config) : '../server/config';
@@ -110,6 +112,12 @@ configFn(function(err, config) {
       if(answer.task == tasks[7]) {
         resetApplication();
       }
+      if(answer.task == tasks[8]) {
+        addToken();
+      }
+      if(answer.task == tasks[9]) {
+        listTokens();
+      }
 
     });
 
@@ -167,6 +175,37 @@ configFn(function(err, config) {
     });
   }
 
+  function addToken() {
+    selectAccount(function(err, account, name) {
+      selectApplication(account, function(err, application, name, appkeyspace) {
+        api.auth.addApplicationToken(application, appkeyspace, null, null, function(err, token) {
+          if(token) {
+            console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+          }
+          process.exit();
+        });
+      });
+    });
+  }
+
+  function listTokens() {
+    selectAccount(function(err, account, name) {
+      selectApplication(account, function(err, application, name) {
+        console.log(name + ' applications:');
+        api.auth.getApplicationTokens(application, function(err, tokens) {
+          if(tokens) {
+            tokens.forEach(function(token) {
+              console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+            });
+          } else {
+            console.log(' > No tokens for this account!');
+          }
+          process.exit();
+        });
+      });
+    });
+  }
+
   function resetApplication() {
     selectAccount(function(err, account) {
       selectApplication(account, function(err, application) {
@@ -202,7 +241,8 @@ configFn(function(err, config) {
           choices: apps
         }
       ], function( answer ) {
-        next(null, _.result(_.find(applications, { 'name': answer.name }), 'appid'), answer.name);
+        var application = _.find(applications, { 'name': answer.name });
+        next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
       });
     });
   }
