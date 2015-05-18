@@ -939,6 +939,7 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getFeed'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
+      if(!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
       api.query.getFeedForUser(req.keyspace, req.liu.user, user, null, 50, function(err, feed) {
           if(err) { return next(_error(err)); }
           res.send(feed || []);
@@ -1003,6 +1004,7 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getUserFeed'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function(err, user) {
       if(err) { return next(_error(err)); }
+      if(!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
       api.query.getUserFeedForUser(req.keyspace, req.liu.user, user, null, 50, function(err, feed) {
           if(err) { return next(_error(err)); }
           res.send(feed || []);
