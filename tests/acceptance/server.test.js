@@ -12,6 +12,8 @@ var Seguir = require('../../client');
 var setupSeguir = require('../../setup/setupSeguir');
 var async = require('async');
 var _ = require('lodash');
+var fs = require('fs');
+var hbs = require('handlebars');
 var auth = api.auth;
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001'};
@@ -20,7 +22,25 @@ describe('Seguir Social Server / Client API', function() {
 
     this.timeout(3000);
 
-    var users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client;
+    var users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client, samples = [];
+
+    function addSample(name, sample) {
+      samples.push({name: name, sample: JSON.stringify(sample, null, 2)})
+    }
+
+    function writeJsFile(folder) {
+      var sampleMarker = "// MARKER: Samples";
+      var template = hbs.compile(fs.readFileSync(folder + '/samples.hbs').toString());
+      var sampleContent = template({samples: samples});
+      var sourceJs = fs.readFileSync(folder + '/index.js').toString();
+      var newSourceJs = [sourceJs.split(sampleMarker)[0],sampleMarker + "\n",sampleContent].join('');
+      fs.writeFileSync(folder + '/index.js', newSourceJs);
+    }
+
+    function updateSamples() {
+      writeJsFile('client');
+      writeJsFile('server');
+    }
 
     before(function(done) {
       this.timeout(20000);
@@ -43,6 +63,7 @@ describe('Seguir Social Server / Client API', function() {
 
     after(function() {
       seguirServer.close();
+      updateSamples();
     })
 
     describe('Users', function () {
@@ -62,6 +83,7 @@ describe('Seguir Social Server / Client API', function() {
           users = results;
           liu = users[0].user; // clifton is logged in
           liuAltId = users[0].altid;
+          addSample('addUser',users[0]);
           done();
         });
       });
@@ -71,6 +93,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be('cliftonc');
+          addSample('getUser',users[0]);
           done();
         });
       });
@@ -89,6 +112,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be(users[0].username);
+          addSample('getUserByName',users[0]);
           done();
         });
       });
@@ -98,6 +122,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(user.user).to.be(users[0].user);
           expect(user.username).to.be(users[0].username);
+          addSample('getUserByAltId',users[0]);
           done();
         });
       });
@@ -113,6 +138,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(friend_request.user).to.be(users[0].user);
           expect(friend_request.user_friend).to.be(users[1].user);
           friendRequestId = friend_request.friend_request;
+          addSample('addFriendRequest', friend_request);
           done();
         });
       });
@@ -122,6 +148,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(friend_requests.outgoing[0].user.user).to.be(users[0].user);
           expect(friend_requests.outgoing[0].user_friend.user).to.be(users[1].user);
+          addSample('getFriendRequests', friend_requests);
           done();
         });
       });
@@ -132,6 +159,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(friend.user_friend).to.be(users[1].user);
           friendId = friend.friend;
           reciprocalFriendId = friend.reciprocal;
+          addSample('acceptFriendRequest', friend);
           done();
         });
       });
@@ -145,6 +173,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(friend.user).to.be(users[0].user);
           expect(friend.user_friend).to.be(users[1].user);
+          addSample('getFriend', friend);
           done();
         });
       });
@@ -153,6 +182,7 @@ describe('Seguir Social Server / Client API', function() {
         client.getFriends(liu, users[0].user, function(err, friends) {
           expect(err).to.be(null);
           expect(friends[0].user_friend).to.be(users[1].user);
+          addSample('getFriends', friends);
           done();
         });
       });
@@ -174,6 +204,7 @@ describe('Seguir Social Server / Client API', function() {
               expect(err).to.be(null);
               client.removeFriend(users[3].user, users[4].user, function(err, result) {
                 expect(err).to.be(null);
+                addSample('removeFriend', result);
                 client.getFriend(users[3].user, friend.friend, function(err, friend) {
                   expect(err.statusCode).to.be(404);
                   done();
@@ -194,6 +225,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
           followId = follow.follow;
+          addSample('followUser', follow);
           done();
         });
       });
@@ -223,6 +255,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(follow.user).to.be(users[0].user);
           expect(follow.user_follower).to.be(users[1].user);
+          addSample('getFollow', follow);
           done();
         });
       });
@@ -233,6 +266,7 @@ describe('Seguir Social Server / Client API', function() {
           var followerIds = _.pluck(followers, 'user_follower');
           expect(followerIds).to.contain(users[1].user);
           expect(followerIds).to.contain(users[2].user);
+          addSample('getFollowers', followers);
           done();
         });
       });
@@ -253,6 +287,7 @@ describe('Seguir Social Server / Client API', function() {
           client.getFollowers(users[4].user, users[4].user, function(err, followers1) {
             expect(_.pluck(followers1,'user_follower')).to.contain(users[3].user);
             client.unFollowUser(users[3].user, users[4].user, function(err, result) {
+              addSample('unFollowUser', result);
               expect(result.status).to.be('removed');
               client.getFollowers(users[4].user, users[4].user, function(err, followers2) {
                 expect(followers2.length).to.be(0);
@@ -273,6 +308,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.be(users[0].user);
           postId = post.post;
+          addSample('addPost', post);
           done();
         });
       });
@@ -292,6 +328,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.be(users[0].user);
+          addSample('getPost', post);
           done();
         });
       });
@@ -317,6 +354,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           client.removePost(liu, post.post, function(err, result) {
             expect(err).to.be(null);
+            addSample('removePost', result);
             client.getPost(users[1].user, post.post, function(err, post) {
               expect(err.statusCode).to.be(404);
               done();
@@ -347,6 +385,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(like.item).to.be(encodeURIComponent('http://github.com'));
           likeId = like.like;
+          addSample('addLike', like);
           done();
         });
       });
@@ -356,6 +395,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(like.item).to.be(encodeURIComponent('http://github.com'));
           expect(like.user).to.be(users[0].user);
+          addSample('getLike', like);
           done();
         });
       });
@@ -365,6 +405,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           expect(like.like).to.be(likeId);
           expect(like.user).to.be(users[0].user);
+          addSample('checkLike', like);
           done();
         });
       });
@@ -374,6 +415,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(err).to.be(null);
           client.removeLike(liu, 'http://seguir.com', function(err, result) {
             expect(err).to.be(null);
+            addSample('removeLike', result);
             client.checkLike(liu, 'http://seguir.com', function(err, like) {
               expect(err.statusCode).to.be(404);
               done();
@@ -396,6 +438,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(feed[3].follow).to.be(notFriendFollowId);
           expect(feed[4].follow).to.be(followId);
           expect(feed[5].friend).to.be(friendId);
+          addSample('getFeed', feed);
           done();
         });
       });
@@ -479,6 +522,7 @@ describe('Seguir Social Server / Client API', function() {
         client.getUserFeedForUser(users[0].user, users[1].user, null, 100, function(err, feed) {
           expect(err).to.be(null);
           expect(feed[0].friend).to.be(reciprocalFriendId);
+          addSample('getUserFeed', feed);
           done();
         });
       });
@@ -521,6 +565,7 @@ describe('Seguir Social Server / Client API', function() {
           expect(relationship.isFriend).to.be(true);
           expect(relationship.youFollow).to.be(false);
           expect(relationship.theyFollow).to.be(true);
+          addSample('getUserRelationship', relationship);
           done();
         });
       });

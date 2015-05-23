@@ -104,6 +104,8 @@ Seguir.prototype.getHeaders = function(liu) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of the user
  * @apiParam {Function} next callback
+ *
+ * @apiUse getUserSuccessExample
  */
 Seguir.prototype.getUser = function(liu, user, next) {
   var self = this;
@@ -120,6 +122,7 @@ Seguir.prototype.getUser = function(liu, user, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} username the username of the user
  * @apiParam {Function} next callback
+ * @apiUse getUserByNameSuccessExample
  */
 Seguir.prototype.getUserByName = function(liu, username, next) {
   var self = this;
@@ -136,6 +139,7 @@ Seguir.prototype.getUserByName = function(liu, username, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} altid the altid of the user
  * @apiParam {Function} next callback
+ * @apiUse getUserByAltIdSuccessExample
  */
 Seguir.prototype.getUserByAltId = function(liu, altid, next) {
   var self = this;
@@ -155,6 +159,7 @@ Seguir.prototype.getUserByAltId = function(liu, altid, next) {
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
  * @apiParam {Function} next callback
  *
+ * @apiUse addUserSuccessExample
  */
 Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
   var self = this;
@@ -171,6 +176,7 @@ Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of the user
  * @apiParam {Function} next callback
+ * @apiUse getUserRelationshipSuccessExample
  */
 Seguir.prototype.getUserRelationship = function(liu, user, next) {
   var self = this;
@@ -183,23 +189,6 @@ Seguir.prototype.getUserRelationship = function(liu, user, next) {
  */
 
 /**
- * @api {function} addFriend(liu,user_friend,timestamp,next) addFriend
- * @apiName addFriend
- * @apiGroup Friends
- * @apiVersion 1.0.0
- *
- * @apiDescription Add a friend directly
- * @apiParam {String} liu the id of the current logged in user
- * @apiParam {String} user_friend the id of the user to become friends with
- * @apiParam {Number} timestamp when the relationship began - Date.now()
- * @apiParam {Function} next callback
- */
-Seguir.prototype.addFriend = function(liu, user_friend, timestamp, next) {
-  var self = this;
-  self.post(liu, u('addFriend'), {user: liu, user_friend: user_friend, timestamp: timestamp}, next);
-}
-
-/**
  * @api {function} getFriends(liu,user,next) getFriends
  * @apiName getFriends
  * @apiGroup Friends
@@ -209,6 +198,7 @@ Seguir.prototype.addFriend = function(liu, user_friend, timestamp, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of the user to get the list of friends for
  * @apiParam {Function} next callback
+ * @apiUse getFriendsSuccessExample
  */
 Seguir.prototype.getFriends = function(liu, user, next) {
   var self = this;
@@ -225,6 +215,7 @@ Seguir.prototype.getFriends = function(liu, user, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} friend the id of the friend relationship
  * @apiParam {Function} next callback
+ * @apiUse getFriendSuccessExample
  */
 Seguir.prototype.getFriend = function(liu, friend, next) {
   var self = this;
@@ -241,6 +232,7 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_friend the id of the user to stop being friends with
  * @apiParam {Function} next callback
+ * @apiUse removeFriendSuccessExample
  */
 Seguir.prototype.removeFriend = function(liu, user_friend, next) {
   var self = this;
@@ -264,6 +256,7 @@ Seguir.prototype.removeFriend = function(liu, user_friend, next) {
  * @apiParam {String} message a message to leave with the request
  * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Function} next callback
+ * @apiUse addFriendRequestSuccessExample
  */
 Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestamp, next) {
   var self = this;
@@ -279,6 +272,7 @@ Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestam
  * @apiDescription Retrieve pending friend requests for the current logged in user
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {Function} next callback
+ * @apiUse getFriendRequestsSuccessExample
  */
 Seguir.prototype.getFriendRequests = function(liu, next) {
   var self = this;
@@ -295,6 +289,7 @@ Seguir.prototype.getFriendRequests = function(liu, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} friend_request the id of friend request to accept
  * @apiParam {Function} next callback
+ * @apiUse acceptFriendRequestSuccessExample
  */
 Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
   var self = this;
@@ -320,6 +315,7 @@ Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
  * @apiParam {Function} next callback
+ * @apiUse followUserSuccessExample
  */
 Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, isprivate, ispersonal,  next) {
   var self = this;
@@ -336,6 +332,7 @@ Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, isprivate
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_following the id of follow relationship
  * @apiParam {Function} next callback
+ * @apiUse unFollowUserSuccessExample
  */
 Seguir.prototype.unFollowUser = function(liu, user_following, next) {
   var self = this;
@@ -352,6 +349,7 @@ Seguir.prototype.unFollowUser = function(liu, user_following, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_follower the id of user to remove as a follower
  * @apiParam {Function} next callback
+ * @apiUse unFollowUserSuccessExample
  */
 Seguir.prototype.removeFollower = function(liu, user_follower, next) {
   var self = this;
@@ -368,6 +366,7 @@ Seguir.prototype.removeFollower = function(liu, user_follower, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of user to retrieve followers for
  * @apiParam {Function} next callback
+ * @apiUse getFollowersSuccessExample
  */
 Seguir.prototype.getFollowers = function(liu, user, next) {
   var self = this;
@@ -384,6 +383,7 @@ Seguir.prototype.getFollowers = function(liu, user, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} follow the id of the follow relationship
  * @apiParam {Function} next callback
+ * @apiUse getFollowSuccessExample
  */
 Seguir.prototype.getFollow = function(liu, follow, next) {
   var self = this;
@@ -408,6 +408,7 @@ Seguir.prototype.getFollow = function(liu, follow, next) {
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
  * @apiParam {Function} next callback
+ * @apiUse addPostSuccessExample
  */
 Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, ispersonal, next) {
   var self = this;
@@ -424,6 +425,7 @@ Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, isperson
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} post the id of the post to retrieve
  * @apiParam {Function} next callback
+ * @apiUse getPostSuccessExample
  */
 Seguir.prototype.getPost = function(liu, post, next) {
   var self = this;
@@ -440,6 +442,7 @@ Seguir.prototype.getPost = function(liu, post, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} post the id of the post to remove
  * @apiParam {Function} next callback
+ * @apiUse removePostSuccessExample
  */
 Seguir.prototype.removePost = function(liu, post, next) {
   var self = this;
@@ -461,6 +464,7 @@ Seguir.prototype.removePost = function(liu, post, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} item the url of the page to like
  * @apiParam {Function} next callback
+ * @apiUse addLikeSuccessExample
  */
 Seguir.prototype.addLike = function(liu, item, next) {
   var self = this;
@@ -477,6 +481,7 @@ Seguir.prototype.addLike = function(liu, item, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} like the id of the like that you want to retrieve details for
  * @apiParam {Function} next callback
+ * @apiUse getLikeSuccessExample
  */
 Seguir.prototype.getLike = function(liu, like, next) {
   var self = this;
@@ -493,6 +498,7 @@ Seguir.prototype.getLike = function(liu, like, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} item the url to check if the user likes
  * @apiParam {Function} next callback
+ * @apiUse checkLikeSuccessExample
  */
 Seguir.prototype.checkLike = function(liu, item, next) {
   var self = this;
@@ -509,6 +515,7 @@ Seguir.prototype.checkLike = function(liu, item, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} item the url to remove the like for
  * @apiParam {Function} next callback
+ * @apiUse removeLikeSuccessExample
  */
 Seguir.prototype.removeLike = function(liu, item, next) {
   var self = this;
@@ -532,6 +539,7 @@ Seguir.prototype.removeLike = function(liu, item, next) {
  * @apiParam {Number} start pagination - item to start at
  * @apiParam {Number} limit pagination - number of items to show
  * @apiParam {Function} next callback
+ * @apiUse getFeedSuccessExample
  */
 Seguir.prototype.getFeedForUser = function(liu, user, start, limit, next) {
   var self = this;
@@ -551,6 +559,7 @@ Seguir.prototype.getFeedForUser = function(liu, user, start, limit, next) {
  * @apiParam {Number} start pagination - item to start at
  * @apiParam {Number} limit pagination - number of items to show
  * @apiParam {Function} next callback
+ * @apiUse getUserFeedSuccessExample
  */
 Seguir.prototype.getUserFeedForUser = function(liu, user, start, limit, next) {
   var self = this;
@@ -558,3 +567,514 @@ Seguir.prototype.getUserFeedForUser = function(liu, user, start, limit, next) {
 }
 
 module.exports = Seguir;
+
+// MARKER: Samples
+/**
+ * @apiDefine addUserSuccessExample
+ * @apiSuccessExample
+addUser result
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserSuccessExample
+ * @apiSuccessExample
+getUser result
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserByNameSuccessExample
+ * @apiSuccessExample
+getUserByName result
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserByAltIdSuccessExample
+ * @apiSuccessExample
+getUserByAltId result
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine addFriendRequestSuccessExample
+ * @apiSuccessExample
+addFriendRequest result
+{
+  "friend_request": "383f18d2-aaa9-4f3f-998b-bb4ae3173c34",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "message": "Please be my friend",
+  "timestamp": 1432372714807
+}
+ */
+/**
+ * @apiDefine getFriendRequestsSuccessExample
+ * @apiSuccessExample
+getFriendRequests result
+{
+  "incoming": [],
+  "outgoing": [
+    {
+      "friend_request": "383f18d2-aaa9-4f3f-998b-bb4ae3173c34",
+      "user": {
+        "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+        "username": "cliftonc",
+        "altid": "1",
+        "userdata": {
+          "avatar": "test.jpg"
+        }
+      },
+      "user_friend": {
+        "user": "be9cf377-035e-4268-8548-fb314b85a202",
+        "username": "phteven",
+        "altid": "2",
+        "userdata": {
+          "avatar": "test.jpg"
+        }
+      },
+      "message": "Please be my friend",
+      "since": "2015-05-23T09:18:34.807Z"
+    }
+  ]
+}
+ */
+/**
+ * @apiDefine acceptFriendRequestSuccessExample
+ * @apiSuccessExample
+acceptFriendRequest result
+{
+  "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+  "reciprocal": "abd8ad08-9812-4dc1-880a-4d45f71ac178",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "timestamp": 1432372714894
+}
+ */
+/**
+ * @apiDefine getFriendSuccessExample
+ * @apiSuccessExample
+getFriend result
+{
+  "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "since": "2015-05-23T09:18:34.894Z",
+  "username_friend": "phteven"
+}
+ */
+/**
+ * @apiDefine getFriendsSuccessExample
+ * @apiSuccessExample
+getFriends result
+[
+  {
+    "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+    "since": "2015-05-23T09:18:34.894Z"
+  }
+]
+ */
+/**
+ * @apiDefine removeFriendSuccessExample
+ * @apiSuccessExample
+removeFriend result
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine followUserSuccessExample
+ * @apiSuccessExample
+followUser result
+{
+  "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+  "isprivate": false,
+  "ispersonal": false,
+  "timestamp": 1432372715140
+}
+ */
+/**
+ * @apiDefine getFollowSuccessExample
+ * @apiSuccessExample
+getFollow result
+{
+  "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+  "since": "2015-05-23T09:18:35.140Z",
+  "isprivate": false,
+  "ispersonal": false,
+  "username_follower": "phteven"
+}
+ */
+/**
+ * @apiDefine getFollowersSuccessExample
+ * @apiSuccessExample
+getFollowers result
+[
+  {
+    "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+    "user_follower": "2be14c27-9f42-4169-ad87-0f3cd64d9407",
+    "since": "2015-05-23T09:18:35.162Z",
+    "isprivate": false,
+    "ispersonal": false
+  },
+  {
+    "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+    "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+    "since": "2015-05-23T09:18:35.140Z",
+    "isprivate": false,
+    "ispersonal": false
+  }
+]
+ */
+/**
+ * @apiDefine unFollowUserSuccessExample
+ * @apiSuccessExample
+unFollowUser result
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine addPostSuccessExample
+ * @apiSuccessExample
+addPost result
+{
+  "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "content": "Hello, this is a post",
+  "timestamp": 1432372715316,
+  "isprivate": false,
+  "ispersonal": false
+}
+ */
+/**
+ * @apiDefine getPostSuccessExample
+ * @apiSuccessExample
+getPost result
+{
+  "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+  "content": "Hello, this is a post",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "posted": "2015-05-23T09:18:35.316Z",
+  "isprivate": false,
+  "ispersonal": false
+}
+ */
+/**
+ * @apiDefine removePostSuccessExample
+ * @apiSuccessExample
+removePost result
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine addLikeSuccessExample
+ * @apiSuccessExample
+addLike result
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "item": "http%3A%2F%2Fgithub.com",
+  "timestamp": 1432372715614
+}
+ */
+/**
+ * @apiDefine getLikeSuccessExample
+ * @apiSuccessExample
+getLike result
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "item": "http%3A%2F%2Fgithub.com",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "since": "2015-05-23T09:18:35.614Z"
+}
+ */
+/**
+ * @apiDefine checkLikeSuccessExample
+ * @apiSuccessExample
+checkLike result
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "since": "2015-05-23T09:18:35.614Z"
+}
+ */
+/**
+ * @apiDefine removeLikeSuccessExample
+ * @apiSuccessExample
+removeLike result
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine getFeedSuccessExample
+ * @apiSuccessExample
+getFeed result
+[
+  {
+    "like": "cf902b18-02c2-437e-887e-31003049d634",
+    "item": "http%3A%2F%2Fgithub.com",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.614Z",
+    "type": "like",
+    "timeuuid": "b0823420-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.618Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": false,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": true,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "post": "5cd2c131-e83c-49d0-9b67-f7576e975121",
+    "content": "Hello, this is a private post",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "posted": "2015-05-23T09:18:35.404Z",
+    "isprivate": true,
+    "ispersonal": false,
+    "type": "post",
+    "timeuuid": "b0631360-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.414Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": true,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+    "content": "Hello, this is a post",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "posted": "2015-05-23T09:18:35.316Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "type": "post",
+    "timeuuid": "b057a1b0-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.339Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": true,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "follow": "9808174e-a14a-4f36-a1a3-63347590f98f",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_follower": {
+      "user": "2be14c27-9f42-4169-ad87-0f3cd64d9407",
+      "username": "ted",
+      "altid": "3",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.162Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "username_follower": "ted",
+    "type": "follow",
+    "timeuuid": "b03cedc0-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.164Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": true,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_follower": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.140Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "username_follower": "phteven",
+    "type": "follow",
+    "timeuuid": "b03a0790-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.145Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": true,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_friend": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:34.894Z",
+    "username_friend": "phteven",
+    "type": "friend",
+    "timeuuid": "b0154180-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:34.904Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": true,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": true,
+    "isUsersItem": true
+  }
+]
+ */
+/**
+ * @apiDefine getUserFeedSuccessExample
+ * @apiSuccessExample
+getUserFeed result
+[
+  {
+    "friend": "abd8ad08-9812-4dc1-880a-4d45f71ac178",
+    "user": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_friend": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:34.894Z",
+    "username_friend": "cliftonc",
+    "type": "friend",
+    "timeuuid": "b018eb01-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:34.928Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": true,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": true,
+    "isUsersItem": false
+  }
+]
+ */
+/**
+ * @apiDefine getUserRelationshipSuccessExample
+ * @apiSuccessExample
+getUserRelationship result
+{
+  "isFriend": true,
+  "isFriendSince": "2015-05-23T09:18:34.894Z",
+  "isFriendRequestPending": false,
+  "isFriendRequestSince": null,
+  "youFollow": false,
+  "youFollowSince": null,
+  "youFollowPrivate": null,
+  "youFollowPersonal": null,
+  "theyFollow": true,
+  "theyFollowSince": "2015-05-23T09:18:35.140Z",
+  "theyFollowPrivate": false,
+  "theyFollowPersonal": false,
+  "inCommon": []
+}
+ */

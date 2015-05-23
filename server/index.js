@@ -75,16 +75,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    *  @apiUse MissingUsername
    *  @apiUse ServerError
-   *
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {
-   *      "user":"1b869349-d8f8-45b1-864e-19164e1b925a",
-   *      "username": "cliftonc",
-   *      "userdata": {
-   *        "avatar":"/img/123.jpg"
-   *      }
-   *    }
+   *  @apiUse addUserSuccessExample
    */
   server.post(u('addUser'), function (req, res, next) {
     if(!req.params.username) {
@@ -109,13 +100,8 @@ function bootstrapServer(config, keyspace, next) {
    *     curl -i http://localhost:3000/username/cliftonc
    *
    * @apiParam {String} username The name of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {
-   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
-   *      "username":"cliftonc"
-   *    }
    *
+   *  @apiUse getUserByNameSuccessExample
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -139,12 +125,7 @@ function bootstrapServer(config, keyspace, next) {
    *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452
    *
    * @apiParam {String} user The id of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {
-   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
-   *      "username":"cliftonc"
-   *    }
+   * @apiUse getUserSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -173,12 +154,7 @@ function bootstrapServer(config, keyspace, next) {
    *     curl -i http://localhost:3000/useraltid/1234
    *
    * @apiParam {String} id The alternate id of the user as a string
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    {
-   *      "user":"cbeab41d-2372-4017-ac50-d8d63802d452",
-   *      "username":"cliftonc"
-   *    }
+   * @apiUse getUserByAltIdSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -206,19 +182,7 @@ function bootstrapServer(config, keyspace, next) {
    *     curl -i http://localhost:3000/user/cbeab41d-2372-4017-ac50-d8d63802d452/relationship
    *
    * @apiParam {String} user The id of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { isFriend: false,
-          isFriendSince: null,
-          isFriendRequestPending: false,
-          isFriendRequestSince: null,
-          youFollow: true,
-          youFollowSince: '2015-02-02T06:45:55.459Z',
-          theyFollow: false,
-          theyFollowSince: null,
-          inCommon:
-           [ { user: '67528c2a-dd02-45a1-bc00-e240697a2256',
-               username: 'ted'} ] }
+   * @apiUse getUserRelationshipSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -256,12 +220,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiParam {Guid} user the guid representation of the user
    * @apiParam {String} item a canonical url to the item liked
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { 'like': '8a3c8e57-67a1-4874-8f34-451f59f6d153',
-   *      'user': '405d7e5e-c028-449c-abad-9c11d8569b8f',
-   *      'item': 'http://github.com',
-   *      'timestamp': 1421585133444 }
+   * @apiUse addLikeSuccessExample
    *
    *  @apiUse MissingUsername
    *  @apiUse MissingItem
@@ -296,12 +255,7 @@ function bootstrapServer(config, keyspace, next) {
    *     curl -i http://localhost:3000/like/405d7e5e-c028-449c-abad-9c11d8569b8f/github.com
    *
    * @apiParam {Guid} post The guid of the like
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { 'like': '8a3c8e57-67a1-4874-8f34-451f59f6d153',
-   *      'user': '405d7e5e-c028-449c-abad-9c11d8569b8f',
-   *      'item': 'github.com',
-   *      'timestamp': 1421585133444 }
+   * @apiUse getLikeSuccessExample
    *
    *  @apiUse ServerError
    *
@@ -326,12 +280,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiParam {Guid} user The guid of the user
    * @apiParam {String} item The item to check
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { 'like': '8a3c8e57-67a1-4874-8f34-451f59f6d153',
-   *      'user': '405d7e5e-c028-449c-abad-9c11d8569b8f',
-   *      'item': 'github.com',
-   *      'timestamp': 1421585133444 }
+   * @apiUse checkLikeSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -356,12 +305,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Removes a like
    * @apiParam {Guid} user The guid of the user
    * @apiParam {String} item The item to check
-
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-       {
-          "status":"removed"
-       }
+   * @apiUse removeLikeSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -403,12 +347,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiParam {Timestamp} timestamp the time that the post occurred
    * @apiParam {Boolean} private is the post private, e.g. only for friends
    * @apiParam {Boolean} private is the post personal, e.g. only for you
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { 'post': '19a8bfd1-8ebe-4462-bf93-9bd48efe08b7',
-   *      'user': '4be37f53-7b79-4b77-9b08-c06346f507aa',
-   *      'content': 'Hello, this is a post',
-   *      'timestamp': 1421584990835 }
+   * @apiUse addPostSuccessExample
    *
    *  @apiUse MissingUser
    *  @apiUse MissingContent
@@ -442,14 +381,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves details of a specific post
    * @apiParam {Guid} post The guid of the post
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-        {
-            "post": "247455fe-0e8e-4e3f-af4d-458ac13508b8",
-            "content": "HELLO WORLD!",
-            "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-            "posted": "2015-01-18T20:37:32.626Z"
-        }
+   * @apiUse getPostSuccessExample
    *
    *  @apiUse ServerError
    */
@@ -468,11 +400,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Removes a post
    * @apiParam {String} post the guid representation of the post
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-       {
-          "status":"removed"
-       }
+   * @apiUse removePostSuccessExample
    *
    *  @apiUse MissingPost
    *  @apiUse ServerError
@@ -495,17 +423,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves a specific relationship information
    * @apiParam {String} user the guid of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *  [
-          {
-              "user_friend": {
-                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                  "username": "cliftonc"
-              },
-              "since": "2015-01-18T20:36:38.632Z"
-          }
-      ]
+   * @apiUse getFriendSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -529,18 +447,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves a set of friends for a specific user
    * @apiParam {String} user the guid of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *  [
-          {
-              "user_friend": {
-                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                  "username": "cliftonc"
-              },
-              "since": "2015-01-18T20:36:38.632Z"
-          }
-      ]
-   *
+   * @apiUse getFriendsSuccessExample
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -564,12 +471,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Removes a friendship (both sides)
    * @apiParam {String} user the guid representation of the user
    * @apiParam {String} user_friend the guid representation of the user they dont want to be friends with
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-       {
-          "status":"removed"
-       }
-   *
+   * @apiUse removeFriendSuccessExample
    *  @apiUse MissingUser
    *  @apiUse MissingFriend
    *  @apiUse ServerError
@@ -608,15 +510,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Adds a new friend request.
    * @apiParam {String} user_friend the guid of the user to become friends with
    * @apiParam {String} message the message to leave
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-       {
-          "friend_request": "28104896-2e8d-4ba1-9e13-14dd0f096277",
-          "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-          "user_friend": "379554e7-72b0-4009-b558-aa2804877595",
-          "message": "Please be my friend!",
-          "timestamp": 1421650920521
-       }
+   * @apiUse addFriendRequestSuccessExample
    *
    *  @apiUse MissingUser
    *  @apiUse MissingFriend
@@ -642,15 +536,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiVersion 1.0.0
    *
    * @apiDescription Retrieves active friend Requests for logged in user (inbound and outbound)
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { incoming: [],
-          outgoing:
-           [ { friend_request: '648909bf-9039-4e25-8c3d-1d80e9fe3b35',
-               user: '17b4794d-0ec9-4005-a299-13e40dedf670',
-               user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',
-               message: 'Hello world!',
-               since: '2015-01-26T17:15:21.705Z' } ] }
+   * @apiUse getFriendRequestsSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -674,13 +560,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Accepts a friend request.
    * @apiParam {String} friend_request the guid of the user to become friends with
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    { friend: '2334694d-21a6-42b1-809e-79175654dcd9',
-          reciprocal: '90068d45-efc1-4e86-807d-a9ba1c8d794a',
-          user: '17b4794d-0ec9-4005-a299-13e40dedf670',
-          user_friend: 'cba56b9b-de75-4ed5-8a1b-1a152c016ed7',
-          timestamp: 1422292521727 }
+   * @apiUse acceptFriendRequestSuccessExample
 
    *  @apiUse MissingUser
    *  @apiUse MissingFriend
@@ -713,14 +593,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiParam {Guid} user_follower the guid of the user who will be the follower
    * @apiParam {Boolean} private is the follow private, e.g. only for friends
    * @apiParam {Boolean} private is the follow personal, e.g. only for you
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-        {
-            "follow": "b90d442f-8473-4d50-84f2-d8bf0a25f514",
-            "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-            "user_follower": "cbeab41d-2372-4017-ac50-d8d63802d452",
-            "timestamp": 1421663431703
-        }
+   * @apiUse followUserSuccessExample
    *
    *  @apiUse MissingUsername
    *  @apiUse MissingFollow
@@ -762,25 +635,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves a set of feed items for a specific user
    * @apiParam {String} username the username of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-   *    [
-            {
-                "user_follower": {
-                    "user": "379554e7-72b0-4009-b558-aa2804877595",
-                    "username": "Mabel.Sporer"
-                },
-                "since": "1993-11-19T00:58:16.000Z"
-            },
-            {
-                "user_follower": {
-                    "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                    "username": "cliftonc"
-                },
-                "since": "2015-01-18T20:37:09.383Z"
-            }
-        ]
-   *
+   * @apiUse getFollowersSuccessExample
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -803,22 +658,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves details of a specific follow
    * @apiParam {Guid} follow the guid of a specific follow
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-            {
-                "user_follower": {
-                    "user": "379554e7-72b0-4009-b558-aa2804877595",
-                    "username": "Mabel.Sporer"
-                },
-                "since": "1993-11-19T00:58:16.000Z"
-            },
-            {
-                "user_follower": {
-                    "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                    "username": "cliftonc"
-                },
-                "since": "2015-01-18T20:37:09.383Z"
-            }
+   * @apiUse getFollowSuccessExample
    *
    *  @apiUse ServerError
    *
@@ -839,12 +679,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Removes a follow
    * @apiParam {String} user the user guid who is currently being followed
    * @apiParam {String} user_follower the user who will stop following the first user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-       {
-          "status":"removed"
-       }
-   *
+   * @apiUse unFollowUserSuccessExample
    *  @apiUse MissingUser
    *  @apiUse MissingFollow
    *  @apiUse ServerError
@@ -889,48 +724,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves a set of feed items for a specific user
    * @apiParam {String} user the guid of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-        [
-          {
-              "post": "247455fe-0e8e-4e3f-af4d-458ac13508b8",
-              "content": "HELLO WORLD!",
-              "user": {
-                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                  "username": "cliftonc"
-              },
-              "posted": "2015-01-18T20:37:32.626Z",
-              "type": "post",
-              "timeuuid": "d4065671-9f51-11e4-889d-9f08914a01c0",
-              "date": "2015-01-18T20:37:32.631Z",
-              "fromNow": "a few seconds ago",
-              "fromFollow": false,
-              "isLike": false,
-              "isPost": true,
-              "isFollow": false,
-              "isFriend": false
-          },
-          {
-            "friend": "7b3891d8-cc27-4284-8fb4-d3b455186f99",
-            "user": {
-                "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                "username": "cliftonc"
-            },
-            "user_friend": "cbeab41d-2372-4017-ac50-d8d63802d452",
-            "since": "2015-01-18T20:36:38.632Z",
-            "username_friend": "cliftonc",
-            "type": "friend",
-            "timeuuid": "b3d781d0-9f51-11e4-889d-9f08914a01c0",
-            "date": "2015-01-18T20:36:38.637Z",
-            "fromNow": "5 minutes ago",
-            "fromFollow": false,
-            "isLike": false,
-            "isPost": false,
-            "isFollow": false,
-            "isFriend": true
-        }
-        ]
-   *
+   * @apiUse getFeedSuccessExample
    *  @apiUse UserNotFound
    *  @apiUse ServerError
    *
@@ -954,47 +748,7 @@ function bootstrapServer(config, keyspace, next) {
    *
    * @apiDescription Retrieves a set of feed items for a specific user that are directly posted to their feed, so not including items that come via follows or mentions.
    * @apiParam {String} user the guid of the user
-   * @apiSuccessExample
-   *    HTTP/1.1 200 OK
-        [
-          {
-              "post": "247455fe-0e8e-4e3f-af4d-458ac13508b8",
-              "content": "HELLO WORLD!",
-              "user": {
-                  "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                  "username": "cliftonc"
-              },
-              "posted": "2015-01-18T20:37:32.626Z",
-              "type": "post",
-              "timeuuid": "d4065671-9f51-11e4-889d-9f08914a01c0",
-              "date": "2015-01-18T20:37:32.631Z",
-              "fromNow": "a few seconds ago",
-              "fromFollow": false,
-              "isLike": false,
-              "isPost": true,
-              "isFollow": false,
-              "isFriend": false
-          },
-          {
-            "friend": "7b3891d8-cc27-4284-8fb4-d3b455186f99",
-            "user": {
-                "user": "cbeab41d-2372-4017-ac50-d8d63802d452",
-                "username": "cliftonc"
-            },
-            "user_friend": "cbeab41d-2372-4017-ac50-d8d63802d452",
-            "since": "2015-01-18T20:36:38.632Z",
-            "username_friend": "cliftonc",
-            "type": "friend",
-            "timeuuid": "b3d781d0-9f51-11e4-889d-9f08914a01c0",
-            "date": "2015-01-18T20:36:38.637Z",
-            "fromNow": "5 minutes ago",
-            "fromFollow": false,
-            "isLike": false,
-            "isPost": false,
-            "isFollow": false,
-            "isFriend": true
-        }
-        ]
+   * @apiUse getUserFeedSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError
@@ -1126,4 +880,515 @@ if(require.main === module) {
  *       "code": "NotFoundError",
  *       "message": "Something specific about the server error"
  *     }
+ */
+
+// MARKER: Samples
+/**
+ * @apiDefine addUserSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserByNameSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine getUserByAltIdSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "username": "cliftonc",
+  "altid": "1",
+  "userdata": {
+    "avatar": "test.jpg"
+  }
+}
+ */
+/**
+ * @apiDefine addFriendRequestSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "friend_request": "383f18d2-aaa9-4f3f-998b-bb4ae3173c34",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "message": "Please be my friend",
+  "timestamp": 1432372714807
+}
+ */
+/**
+ * @apiDefine getFriendRequestsSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "incoming": [],
+  "outgoing": [
+    {
+      "friend_request": "383f18d2-aaa9-4f3f-998b-bb4ae3173c34",
+      "user": {
+        "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+        "username": "cliftonc",
+        "altid": "1",
+        "userdata": {
+          "avatar": "test.jpg"
+        }
+      },
+      "user_friend": {
+        "user": "be9cf377-035e-4268-8548-fb314b85a202",
+        "username": "phteven",
+        "altid": "2",
+        "userdata": {
+          "avatar": "test.jpg"
+        }
+      },
+      "message": "Please be my friend",
+      "since": "2015-05-23T09:18:34.807Z"
+    }
+  ]
+}
+ */
+/**
+ * @apiDefine acceptFriendRequestSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+  "reciprocal": "abd8ad08-9812-4dc1-880a-4d45f71ac178",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "timestamp": 1432372714894
+}
+ */
+/**
+ * @apiDefine getFriendSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+  "since": "2015-05-23T09:18:34.894Z",
+  "username_friend": "phteven"
+}
+ */
+/**
+ * @apiDefine getFriendsSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+[
+  {
+    "user_friend": "be9cf377-035e-4268-8548-fb314b85a202",
+    "since": "2015-05-23T09:18:34.894Z"
+  }
+]
+ */
+/**
+ * @apiDefine removeFriendSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine followUserSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+  "isprivate": false,
+  "ispersonal": false,
+  "timestamp": 1432372715140
+}
+ */
+/**
+ * @apiDefine getFollowSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+  "since": "2015-05-23T09:18:35.140Z",
+  "isprivate": false,
+  "ispersonal": false,
+  "username_follower": "phteven"
+}
+ */
+/**
+ * @apiDefine getFollowersSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+[
+  {
+    "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+    "user_follower": "2be14c27-9f42-4169-ad87-0f3cd64d9407",
+    "since": "2015-05-23T09:18:35.162Z",
+    "isprivate": false,
+    "ispersonal": false
+  },
+  {
+    "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+    "user_follower": "be9cf377-035e-4268-8548-fb314b85a202",
+    "since": "2015-05-23T09:18:35.140Z",
+    "isprivate": false,
+    "ispersonal": false
+  }
+]
+ */
+/**
+ * @apiDefine unFollowUserSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine addPostSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "content": "Hello, this is a post",
+  "timestamp": 1432372715316,
+  "isprivate": false,
+  "ispersonal": false
+}
+ */
+/**
+ * @apiDefine getPostSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+  "content": "Hello, this is a post",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "posted": "2015-05-23T09:18:35.316Z",
+  "isprivate": false,
+  "ispersonal": false
+}
+ */
+/**
+ * @apiDefine removePostSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine addLikeSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "item": "http%3A%2F%2Fgithub.com",
+  "timestamp": 1432372715614
+}
+ */
+/**
+ * @apiDefine getLikeSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "item": "http%3A%2F%2Fgithub.com",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "since": "2015-05-23T09:18:35.614Z"
+}
+ */
+/**
+ * @apiDefine checkLikeSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "like": "cf902b18-02c2-437e-887e-31003049d634",
+  "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+  "since": "2015-05-23T09:18:35.614Z"
+}
+ */
+/**
+ * @apiDefine removeLikeSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "status": "removed"
+}
+ */
+/**
+ * @apiDefine getFeedSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+[
+  {
+    "like": "cf902b18-02c2-437e-887e-31003049d634",
+    "item": "http%3A%2F%2Fgithub.com",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.614Z",
+    "type": "like",
+    "timeuuid": "b0823420-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.618Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": false,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": true,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "post": "5cd2c131-e83c-49d0-9b67-f7576e975121",
+    "content": "Hello, this is a private post",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "posted": "2015-05-23T09:18:35.404Z",
+    "isprivate": true,
+    "ispersonal": false,
+    "type": "post",
+    "timeuuid": "b0631360-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.414Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": true,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "post": "89a3245a-29fa-496b-b64a-cc31fc1b44bc",
+    "content": "Hello, this is a post",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "posted": "2015-05-23T09:18:35.316Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "type": "post",
+    "timeuuid": "b057a1b0-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.339Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": true,
+    "isFollow": false,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "follow": "9808174e-a14a-4f36-a1a3-63347590f98f",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_follower": {
+      "user": "2be14c27-9f42-4169-ad87-0f3cd64d9407",
+      "username": "ted",
+      "altid": "3",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.162Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "username_follower": "ted",
+    "type": "follow",
+    "timeuuid": "b03cedc0-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.164Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": true,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "follow": "b3745bd8-5149-447c-be4a-8495255d2ec8",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_follower": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:35.140Z",
+    "isprivate": false,
+    "ispersonal": false,
+    "username_follower": "phteven",
+    "type": "follow",
+    "timeuuid": "b03a0790-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:35.145Z",
+    "fromNow": "a few seconds ago",
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": true,
+    "isFriend": false,
+    "isUsersItem": true
+  },
+  {
+    "friend": "3c4856e9-0b3a-45cd-b1e2-0cd8c355f838",
+    "user": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_friend": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:34.894Z",
+    "username_friend": "phteven",
+    "type": "friend",
+    "timeuuid": "b0154180-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:34.904Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": true,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": true,
+    "isUsersItem": true
+  }
+]
+ */
+/**
+ * @apiDefine getUserFeedSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+[
+  {
+    "friend": "abd8ad08-9812-4dc1-880a-4d45f71ac178",
+    "user": {
+      "user": "be9cf377-035e-4268-8548-fb314b85a202",
+      "username": "phteven",
+      "altid": "2",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "user_friend": {
+      "user": "a6dc3f5a-5e70-489b-96a3-23579a365587",
+      "username": "cliftonc",
+      "altid": "1",
+      "userdata": {
+        "avatar": "test.jpg"
+      }
+    },
+    "since": "2015-05-23T09:18:34.894Z",
+    "username_friend": "cliftonc",
+    "type": "friend",
+    "timeuuid": "b018eb01-012c-11e5-bf6d-6dcf90794fa1",
+    "date": "2015-05-23T09:18:34.928Z",
+    "fromNow": "a few seconds ago",
+    "isprivate": true,
+    "ispersonal": false,
+    "fromFollower": true,
+    "isLike": false,
+    "isPost": false,
+    "isFollow": false,
+    "isFriend": true,
+    "isUsersItem": false
+  }
+]
+ */
+/**
+ * @apiDefine getUserRelationshipSuccessExample
+ * @apiSuccessExample
+HTTP1.1 200 Success
+{
+  "isFriend": true,
+  "isFriendSince": "2015-05-23T09:18:34.894Z",
+  "isFriendRequestPending": false,
+  "isFriendRequestSince": null,
+  "youFollow": false,
+  "youFollowSince": null,
+  "youFollowPrivate": null,
+  "youFollowPersonal": null,
+  "theyFollow": true,
+  "theyFollowSince": "2015-05-23T09:18:35.140Z",
+  "theyFollowPrivate": false,
+  "theyFollowPersonal": false,
+  "inCommon": []
+}
  */
