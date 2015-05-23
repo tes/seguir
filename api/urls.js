@@ -28,8 +28,8 @@ var urls = {
   getLike:                    '/like/:like',
   checkLike:                  '/user/:user/like/:item',
   removeLike:                 '/user/:user/like/:item',
-  getFeed:                    '/feed/:user?:query',
-  getUserFeed:                '/feed/:user/direct?:query'
+  getFeed:                    '/feed/:user',
+  getUserFeed:                '/feed/:user/direct'
 }
 
 module.exports = function(url, data) {
@@ -39,6 +39,9 @@ module.exports = function(url, data) {
       _.keys(data).forEach(function(key) {
           pattern = pattern.replace(':' + key, data[key] ? data[key] : null);
       });
+      if(data.query) {
+        pattern += '?' + data.query;
+      }
       return pattern;
     } else {
       return urls[url];
