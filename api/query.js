@@ -361,11 +361,17 @@ module.exports = function(client, redis) {
 
     if(!next) { next = raw; raw = false; }
 
-    var data = [user], timeClause = '';
+    var data = [user], timeClause = '', hasMoreResults = false;
 
     if(from) {
       timeClause = 'AND time < ' + from;
     }
+
+    // Cassandra Hackeroo:
+    // We always increase the limit by one so that
+    // we can figure out if we need to display a 'Show more results link'.
+    // This is removed in the results to keep it consistent with expected results.
+    limit = limit + 1;
 
     var query = q(keyspace, 'selectTimeline', {timeClause: timeClause, privateClause: null, limit: limit, TIMELINE: timeline});
     client.execute(query, data, {prepare:true}, function(err, data) {
@@ -373,6 +379,13 @@ module.exports = function(client, redis) {
       if(err) { return next(err); }
 
       if(data.rows && data.rows.length > 0) {
+
+         // This is where we check if we have more results or
+         // not.
+         if(data.rows.length === limit) {
+          hasMoreResults = true;
+          data.rows.pop();
+         }
 
          if(raw) { return next(null, data.rows); }
 
@@ -454,7 +467,7 @@ module.exports = function(client, redis) {
             // Now, go and get user details for all the non own posts
             _mapGetUser(keyspace, feed, ['user','user_follower','user_friend'], user, function(err, mappedFeed) {
                 if(err) { return next(err); }
-                next(null, mappedFeed, maxTime);
+                next(null, mappedFeed, hasMoreResults ? maxTime : null);
             });
 
          });
