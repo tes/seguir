@@ -73,6 +73,9 @@ function bootstrapServer(config, keyspace, next) {
    * @apiExample {curl} Example usage:
    *     curl --data "username=cliftonc" http://localhost:3000/user
    *
+   *  @apiUse MissingUsername
+   *  @apiUse ServerError
+   *
    * @apiSuccessExample
    *    HTTP/1.1 200 OK
    *    {
@@ -82,10 +85,6 @@ function bootstrapServer(config, keyspace, next) {
    *        "avatar":"/img/123.jpg"
    *      }
    *    }
-   *
-   *  @apiUse MissingUsername
-   *  @apiUse ServerError
-   *
    */
   server.post(u('addUser'), function (req, res, next) {
     if(!req.params.username) {

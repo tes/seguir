@@ -100,7 +100,7 @@ Seguir.prototype.getHeaders = function(liu) {
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
- * @apiDescription Get a user details
+ * @apiDescription Retrieve a users details by seguir ID
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of the user
  * @apiParam {Function} next callback
@@ -116,7 +116,7 @@ Seguir.prototype.getUser = function(liu, user, next) {
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
- * @apiDescription Get a user details
+ * @apiDescription Retrieve a users details by username
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} username the username of the user
  * @apiParam {Function} next callback
@@ -132,7 +132,7 @@ Seguir.prototype.getUserByName = function(liu, username, next) {
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
- * @apiDescription Get a user details
+ * @apiDescription Retrieve a user details by alternate id
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} altid the altid of the user
  * @apiParam {Function} next callback
@@ -154,6 +154,7 @@ Seguir.prototype.getUserByAltId = function(liu, altid, next) {
  * @apiParam {String} altid the local / alternate id
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
  * @apiParam {Function} next callback
+ *
  */
 Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
   var self = this;
@@ -166,7 +167,7 @@ Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
- * @apiDescription Get a user details
+ * @apiDescription Get details of a relationship between two users
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user the id of the user
  * @apiParam {Function} next callback
@@ -247,9 +248,14 @@ Seguir.prototype.removeFriend = function(liu, user_friend, next) {
 }
 
 /**
+ * @apiDefine FriendRequests FriendRequests
+ * This is a collection of methods that allow you to manage the friend request process.
+ */
+
+/**
  * @api {function} addFriendRequest(liu,user_friend,message,timestamp,next) addFriendRequest
  * @apiName addFriendRequest
- * @apiGroup Friends
+ * @apiGroup FriendRequests
  * @apiVersion 1.0.0
  *
  * @apiDescription Create a friend request with message
@@ -267,7 +273,7 @@ Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestam
 /**
  * @api {function} getFriendRequests(liu,next) getFriendRequests
  * @apiName getFriendRequests
- * @apiGroup Friends
+ * @apiGroup FriendRequests
  * @apiVersion 1.0.0
  *
  * @apiDescription Retrieve pending friend requests for the current logged in user
@@ -282,7 +288,7 @@ Seguir.prototype.getFriendRequests = function(liu, next) {
 /**
  * @api {function} acceptFriendRequest(liu,friend_request,next) acceptFriendRequest
  * @apiName acceptFriendRequest
- * @apiGroup Friends
+ * @apiGroup FriendRequests
  * @apiVersion 1.0.0
  *
  * @apiDescription Create a friend request with message
@@ -336,72 +342,215 @@ Seguir.prototype.unFollowUser = function(liu, user_following, next) {
   self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
 }
 
+/**
+ * @api {function} removeFollower(liu,user_follower,next) removeFollower
+ * @apiName removeFollower
+ * @apiGroup Following
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Stop following a user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user_follower the id of user to remove as a follower
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.removeFollower = function(liu, user_follower, next) {
   var self = this;
   self.del(liu, u('removeFollower', {user: liu, user_follower: user_follower}), next);
 }
 
+/**
+ * @api {function} getFollowers(liu,user,next) getFollowers
+ * @apiName getFollowers
+ * @apiGroup Following
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve a list of followers for a user
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the id of user to retrieve followers for
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getFollowers = function(liu, user, next) {
   var self = this;
   self.get(liu, u('getFollowers', {user: user}), next);
 }
 
+/**
+ * @api {function} getFollow(liu,follow,next) getFollow
+ * @apiName getFollow
+ * @apiGroup Following
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve details of a specific follow relationship
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} follow the id of the follow relationship
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getFollow = function(liu, follow, next) {
   var self = this;
   self.get(liu, u('getFollow', {follow: follow}), next);
 }
 
 /**
- * Post Wrapper
+ * @apiDefine Posts Posts
+ * This is a collection of methods that allow you to create posts on the logged in users feed.
+ */
+
+/**
+ * @api {function} addPost(liu,content,timestamp,isprivate,ispersonal,next) addPost
+ * @apiName addPost
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Create a new post on a users news feed
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} content the id of the user to follow
+ * @apiParam {Timestamp} timestamp time to leave the request
+ * @apiParam {Boolean} isprivate is this visible only to friends
+ * @apiParam {Boolean} ispersonal is this visible only to the user
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, ispersonal, next) {
   var self = this;
   self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate:isprivate, ispersonal: ispersonal}, next);
 }
 
+/**
+ * @api {function} getPost(liu,post,next) getPost
+ * @apiName getPost
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve details of a specific post
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} post the id of the post to retrieve
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getPost = function(liu, post, next) {
   var self = this;
   self.get(liu, u('getPost', {post: post}), next);
 }
 
+/**
+ * @api {function} removePost(liu,post,next) removePost
+ * @apiName removePost
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Remove a specific post from your newsfeed
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} post the id of the post to remove
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.removePost = function(liu, post, next) {
   var self = this;
   self.del(liu, u('removePost', {post: post}), next);
 }
 
 /**
- * Like Wrapper
+ * @apiDefine Likes Likes
+ * This is a collection of methods that allow you to signal that you like a specific URL.
+ */
+
+/**
+ * @api {function} addLike(liu,item,next) addLike
+ * @apiName addLike
+ * @apiGroup Likes
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Signal that you like a specific URL
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} item the url of the page to like
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.addLike = function(liu, item, next) {
   var self = this;
   self.post(liu, u('addLike'), {user: liu, item: encodeURIComponent(item) }, next);
 }
 
+/**
+ * @api {function} getLike(liu,like,next) getLike
+ * @apiName getLike
+ * @apiGroup Likes
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve details of a specific like item by id
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} like the id of the like that you want to retrieve details for
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.getLike = function(liu, like, next) {
   var self = this;
   self.get(liu, u('getLike', {like: like}), next);
 }
 
+/**
+ * @api {function} checkLike(liu,item,next) checkLike
+ * @apiName checkLike
+ * @apiGroup Likes
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Check if the user likes a specific URL
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} item the url to check if the user likes
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.checkLike = function(liu, item, next) {
   var self = this;
   self.get(liu, u('checkLike', {user: liu, item: encodeURIComponent(item) }), next);
 }
 
+/**
+ * @api {function} removeLike(liu,item,next) removeLike
+ * @apiName removeLike
+ * @apiGroup Likes
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Check if the user likes a specific URL
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} item the url to remove the like for
+ * @apiParam {Function} next callback
+ */
 Seguir.prototype.removeLike = function(liu, item, next) {
   var self = this;
   self.del(liu, u('removeLike', {user: liu, item: encodeURIComponent(item)}), next);
 }
 
 /**
- * Feed Wrapper
+ * @apiDefine Feeds Feeds
+ * This is a collection of methods that allow you to retrieve the newsfeed for a specific user.
+ */
+
+/**
+ * @api {function} getFeedForUser(liu,user,start,limit,next) getFeedForUser
+ * @apiName getFeedForUser
+ * @apiGroup Feeds
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve the aggregated newsfeed for a specific user.
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the user to retrieve the feed for
+ * @apiParam {Number} start pagination - item to start at
+ * @apiParam {Number} limit pagination - number of items to show
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.getFeedForUser = function(liu, user, start, limit, next) {
   var self = this;
   self.get(liu, u('getFeed', {user: user}), next);
 }
 
+
 /**
- * Feed Wrapper
+ * @api {function} getUserFeedForUser(liu,user,start,limit,next) getUserFeedForUser
+ * @apiName getUserFeedForUser
+ * @apiGroup Feeds
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve the direct newsfeed for a specific user, can be shown on their profile.
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} user the user to retrieve the feed for
+ * @apiParam {Number} start pagination - item to start at
+ * @apiParam {Number} limit pagination - number of items to show
+ * @apiParam {Function} next callback
  */
 Seguir.prototype.getUserFeedForUser = function(liu, user, start, limit, next) {
   var self = this;
