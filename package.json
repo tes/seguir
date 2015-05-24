@@ -8,7 +8,7 @@
     "worker": "node server/worker",
     "seguir": "node ./bin/seguir",
     "lint":"semistandard",
-    "test": "istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
+    "test": "semistandard && istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
     "docs": "apidoc -i . -e node_modules\\|client -o doc/server; apidoc -i client -o doc/client;"
   },
   "keywords": [

@@ -80,7 +80,7 @@ function client (config) {
   redisConfig = _.defaults(config && config.redis || {}, { host: 'localhost', port: 6379, options: { } });
   redisConfig.options.retry_max_delay = redisConfig.options.retry_max_delay || 10000;
 
-  var redisClient = redis.createredisClient(redisConfig.port, redisConfig.host, redisConfig.options);
+  var redisClient = redis.createClient(redisConfig.port, redisConfig.host, redisConfig.options);
 
   redisClient.on('error', function (err) {
     console.error('Error connecting to redis [%s:%s] - %s', redisConfig.host, redisConfig.port, err.message);
