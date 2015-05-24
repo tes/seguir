@@ -185,7 +185,7 @@ describe('Social API', function() {
           manage.removeFriend(keyspace, users[0].user, users[4].user, function(err, result) {
             expect(err).to.be(null);
             expect(result.status).to.be('removed');
-            query.getRawFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
+            query.getRawFeed(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);
               done();
             });
@@ -302,7 +302,7 @@ describe('Social API', function() {
           expect(err).to.be(null);
           manage.removeFollower(keyspace, users[3].user, users[4].user, function(err, result) {
             expect(result.status).to.be('removed');
-            query.getRawFeedForUser(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
+            query.getRawFeed(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(follow.follow);
               done();
             });
@@ -382,7 +382,7 @@ describe('Social API', function() {
         manage.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', Date.now(), false, false, function(err, post) {
           manage.removePost(keyspace, users[5].user, post.post, function(err, result) {
             expect(err).to.be(null);
-            query.getRawFeedForUser(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
+            query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(post.post);
               done();
             });
@@ -392,7 +392,7 @@ describe('Social API', function() {
 
       it('you can add a completely personal post that only appears in the users feed', function(done) {
         manage.addPost(keyspace, users[5].user, 'Shh - this is only for me.', Date.now(), false, true, function(err, post) {
-          query.getFeedForUser(keyspace, users[4].user, users[5].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[4].user, users[5].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(post.post);
               done();
           });
@@ -431,7 +431,7 @@ describe('Social API', function() {
         manage.addLike(keyspace, users[5].user, 'http://seguir.calip.so', Date.now(), function(err, like) {
           manage.removeLike(keyspace, users[5].user, 'http://seguir.calip.so', function(err, result) {
             expect(err).to.be(null);
-            query.getRawFeedForUser(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
+            query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function(err, feed) {
               expect(_.pluck(feed, 'item')).to.not.contain(like.like);
               done();
             });
@@ -446,7 +446,7 @@ describe('Social API', function() {
         this.timeout(10000);
 
         it('logged in - can get a feed for yourself that is in the correct order', function(done) {
-          query.getFeedForUser(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[0].user, users[0].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(privatePostId);
@@ -459,7 +459,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a feed for a friend that is in the correct order', function(done) {
-          query.getFeedForUser(keyspace, users[1].user, users[0].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[1].user, users[0].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(privatePostId); //
@@ -472,7 +472,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
-          query.getFeedForUser(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(privatePostId);
@@ -484,7 +484,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
-          query.getFeedForUser(keyspace, users[0].user, users[2].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[0].user, users[2].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(postId);
@@ -494,7 +494,7 @@ describe('Social API', function() {
         });
 
         it('anonymous - can get a feed that is in correct order', function(done) {
-          query.getFeedForUser(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(postId);
@@ -504,7 +504,7 @@ describe('Social API', function() {
         });
 
         it('can see private follows as the user', function(done) {
-          query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[2].follow).to.be(privateFollowId);
             done();
@@ -512,7 +512,7 @@ describe('Social API', function() {
         });
 
         it('can see personal follows as the user', function(done) {
-          query.getFeedForUser(keyspace, users[6].user, users[6].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[6].user, users[6].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].follow).to.be(personalFollowId);
             done();
@@ -520,7 +520,7 @@ describe('Social API', function() {
         });
 
         it('anonymous - cant see personal follows as the anonymous user', function(done) {
-          query.getFeedForUser(keyspace, '_anonymous_', users[6].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, '_anonymous_', users[6].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed.length).to.be(0);
             done();
@@ -528,7 +528,7 @@ describe('Social API', function() {
         });
 
         it('anonymous - cant see private follows as anonymous user', function(done) {
-          query.getFeedForUser(keyspace, '_anonymous_', users[4].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, '_anonymous_', users[4].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed.length).to.be(2);
             done();
@@ -536,7 +536,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a feed for yourself contains mentions', function(done) {
-          query.getFeedForUser(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
+          query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].post).to.be(mentionPostId);
             done();
@@ -544,7 +544,7 @@ describe('Social API', function() {
         });
 
         it('cant see follows or mentions on a users personal feed, only direct items', function(done) {
-          query.getUserFeedForUser(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
+          query.getUserFeed(keyspace, '_anonymous_', users[0].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].like).to.be(likeId);
             expect(feed[1].post).to.be(postId);
@@ -554,7 +554,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a users personal feed as the user and see direct actions', function(done) {
-          query.getUserFeedForUser(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
+          query.getUserFeed(keyspace, users[3].user, users[3].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].post).to.be(mentionPostId);
             done();
@@ -562,7 +562,7 @@ describe('Social API', function() {
         });
 
         it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
-          query.getUserFeedForUser(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
+          query.getUserFeed(keyspace, users[0].user, users[1].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed[0].friend).to.be(reciprocalFriendId);
             done();
@@ -570,7 +570,7 @@ describe('Social API', function() {
         });
 
         it('anonymus - can get a users personal feed anonymously and only see direct, public items', function(done) {
-          query.getUserFeedForUser(keyspace, '_anonymous_', users[1].user, null, 100, function(err, feed) {
+          query.getUserFeed(keyspace, '_anonymous_', users[1].user, null, 100, function(err, feed) {
             expect(err).to.be(null);
             expect(feed.length).to.be(0);
             done();

@@ -50,15 +50,15 @@ module.exports = function(client, redis) {
     _get(keyspace, 'selectUserByAltId', [altid], 'one', next);
   }
 
-  function getUserFeedForUser(keyspace, liu, user, from, limit, next) {
+  function getUserFeed(keyspace, liu, user, from, limit, next) {
     _getFeed(keyspace, liu, 'user_timeline', user, from, limit, next);
   }
 
-  function getFeedForUser(keyspace, liu, user, from, limit, next) {
+  function getFeed(keyspace, liu, user, from, limit, next) {
     _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, next);
   }
 
-  function getRawFeedForUser(keyspace, liu, user, from, limit, next) {
+  function getRawFeed(keyspace, liu, user, from, limit, next) {
     var raw = true;
     _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, raw, next);
   }
@@ -500,9 +500,9 @@ module.exports = function(client, redis) {
     getFriendsByName: getFriendsByName,
     getUserByName: getUserByName,
     getUserByAltId: getUserByAltId,
-    getFeedForUser: getFeedForUser,
-    getUserFeedForUser: getUserFeedForUser,
-    getRawFeedForUser: getRawFeedForUser,
+    getFeed: getFeed,
+    getUserFeed: getUserFeed,
+    getRawFeed: getRawFeed,
     checkLike: checkLike
   }
 

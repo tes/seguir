@@ -429,7 +429,7 @@ describe('Seguir Social Server / Client API', function() {
     describe('feeds', function () {
 
       it('logged in - can get a feed for yourself that is in the correct order', function(done) {
-        client.getFeedForUser(users[0].user, users[0].user, null, 100, function(err, result) {
+        client.getFeed(users[0].user, users[0].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
@@ -445,7 +445,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('logged in - can get a feed for yourself that is in the correct order - if LIU is username', function(done) {
-        client.getFeedForUser(users[0].username, users[0].user, null, 100, function(err, result) {
+        client.getFeed(users[0].username, users[0].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
@@ -461,7 +461,7 @@ describe('Seguir Social Server / Client API', function() {
 
 
       it('logged in - can get a feed for yourself that is in the correct order - if LIU is altid', function(done) {
-        client.getFeedForUser(users[0].altid, users[0].user, null, 100, function(err, result) {
+        client.getFeed(users[0].altid, users[0].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
@@ -476,7 +476,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('logged in - can get a feed for a friend that is in the correct order', function(done) {
-        client.getFeedForUser(users[1].user, users[0].user, null, 100, function(err, result) {
+        client.getFeed(users[1].user, users[0].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
@@ -490,7 +490,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('logged in - can get a feed for a friend and follower that is in the correct order', function(done) {
-        client.getFeedForUser(users[0].user, users[1].user, null, 100, function(err, result) {
+        client.getFeed(users[0].user, users[1].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
@@ -503,7 +503,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('logged in - can get a feed for a follower that is not a friend in the correct order', function(done) {
-        client.getFeedForUser(users[0].user, users[2].user, null, 100, function(err, result) {
+        client.getFeed(users[0].user, users[2].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
@@ -515,7 +515,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('anonymous - can get a feed that is in correct order', function(done) {
-        client.getFeedForUser(null, users[0].user, null, 100, function(err, result) {
+        client.getFeed(null, users[0].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
@@ -526,7 +526,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('logged in - can get a users personal feed as a friend and see direct items private or public', function(done) {
-        client.getUserFeedForUser(users[0].user, users[1].user, null, 100, function(err, result) {
+        client.getUserFeed(users[0].user, users[1].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].friend).to.be(reciprocalFriendId);
@@ -537,7 +537,7 @@ describe('Seguir Social Server / Client API', function() {
 
 
       it('logged in - can get a users personal feed as a friend and see direct items private or public by altids', function(done) {
-        client.getUserFeedForUser(users[0].altid, users[1].altid, null, 100, function(err, result) {
+        client.getUserFeed(users[0].altid, users[1].altid, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].friend).to.be(reciprocalFriendId);
@@ -546,7 +546,7 @@ describe('Seguir Social Server / Client API', function() {
       });
 
       it('anonymous - can get a users personal feed anonymously and only see direct, public items', function(done) {
-        client.getUserFeedForUser(null, users[1].user, null, 100, function(err, result) {
+        client.getUserFeed(null, users[1].user, null, 100, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed.length).to.be(0);
@@ -555,21 +555,21 @@ describe('Seguir Social Server / Client API', function() {
       });
 
        it('logged in - paginate through a feed', function(done) {
-        client.getFeedForUser(users[0].user, users[0].user, null, 2, function(err, result) {
+        client.getFeed(users[0].user, users[0].user, null, 2, function(err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(privatePostId);
           var nextFrom = result.more;
-          client.getFeedForUser(users[0].user, users[0].user, nextFrom, 2, function(err, result2) {
+          client.getFeed(users[0].user, users[0].user, nextFrom, 2, function(err, result2) {
             var feed2 = result2.feed;
             expect(err).to.be(null);
             expect(feed2).to.not.be(undefined);
             expect(feed2[0].post).to.be(postId);
             expect(feed2[1].follow).to.be(notFriendFollowId);
             nextFrom = result2.more;
-            client.getFeedForUser(users[0].user, users[0].user, nextFrom, 2, function(err, result3) {
+            client.getFeed(users[0].user, users[0].user, nextFrom, 2, function(err, result3) {
               var feed3 = result3.feed;
               expect(err).to.be(null);
               expect(feed3).to.not.be(undefined);
