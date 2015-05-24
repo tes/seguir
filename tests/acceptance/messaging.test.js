@@ -29,11 +29,13 @@ describe('Messaging primitives', function () {
 
       messaging.listen('q1', function (data, jobDone) {
         counter++;
+        console.log('Received on q1');
         jobDone();
       });
 
       messaging.listen('q2', function (data, jobDone) {
         counter++;
+        console.log('Received on q2');
         jobDone();
       });
 

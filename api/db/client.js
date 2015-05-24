@@ -4,5 +4,6 @@ var defaultConfiguration = {contactPoints: ['127.0.0.1']};
 
 module.exports = function (config) {
   var cassandraConfig = config && config.cassandra ? config.cassandra : defaultConfiguration;
-  return new cassandra.Client(cassandraConfig);
+  var client = new cassandra.Client(cassandraConfig);
+  return client;
 };
