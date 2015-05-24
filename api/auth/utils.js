@@ -2,35 +2,35 @@
  * Auth utils
  */
 var bcrypt = require('bcrypt');
-var crypto = require("crypto");
+var crypto = require('crypto');
 
-function generateAuthorization(appid, appsecret, type) {
+function generateAuthorization (appid, appsecret, type) {
   var d = new Date().toUTCString();
-  var signature = generateHmac(d, appsecret);
   type = type || 'SeguirApp';
   return {
-    'date':d,
+    'date': d,
     'authorization': type + ' ' + appid + ':' + generateHmac(d, appsecret)
-  }
+  };
 }
 
-function validateAuthorization(headers, appid, appsecret) {
+function validateAuthorization (headers, appid, appsecret) {
   var d = headers.date;
-  var hmac = headers.authorization.split(":")[1];
+  var hmac = headers.authorization.split(':')[1];
   return hmac === generateHmac(d, appsecret);
 }
 
-function generateSecret(appid, next) {
+function generateSecret (appid, next) {
   return crypto.createHash('sha256').update(appid).update('salt').digest('hex');
 }
 
-function hashPassword(password, next) {
-  bcrypt.genSalt(10, function(err, salt) {
-      bcrypt.hash(password, salt, next);
+function hashPassword (password, next) {
+  bcrypt.genSalt(10, function (err, salt) {
+    if (err) { return next(err); }
+    bcrypt.hash(password, salt, next);
   });
 }
 
-function checkPassword(password, hash, next) {
+function checkPassword (password, hash, next) {
   bcrypt.compare(password, hash, next);
 }
 
@@ -40,11 +40,11 @@ module.exports = {
   checkPassword: checkPassword,
   generateAuthorization: generateAuthorization,
   validateAuthorization: validateAuthorization
-}
+};
 
 function generateHmac (data, secret, algorithm, encoding) {
-  encoding = encoding || "base64";
-  algorithm = algorithm || "sha256";
+  encoding = encoding || 'base64';
+  algorithm = algorithm || 'sha256';
   return crypto.createHmac(algorithm, secret).update(data).digest(encoding);
 }
 

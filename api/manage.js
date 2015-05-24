@@ -1,8 +1,7 @@
 var cassandra = require('cassandra-driver');
 var async = require('async');
-var moment = require('moment');
 var _ = require('lodash');
-var mention = new RegExp('@[a-zA-Z0-9]+','g');
+var mention = new RegExp('@[a-zA-Z0-9]+', 'g');
 var sanitizeHtml = require('sanitize-html');
 var FEEDS = ['feed_timeline', 'user_timeline'];
 
