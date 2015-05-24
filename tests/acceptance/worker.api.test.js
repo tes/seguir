@@ -20,6 +20,9 @@ describe('Worker Processing', function () {
   var manage = api.manage;
   var query = api.query;
 
+  this.timeout(5000);
+  this.slow(2000);
+
   before(function (done) {
     this.timeout(20000);
     setupKeyspace(client, keyspace, function () {
@@ -83,8 +86,6 @@ describe('Worker Processing', function () {
   });
 
   describe('feeds', function () {
-
-    this.timeout(5000);
 
     it('logged in - can get a feed for yourself that is in the correct order', function (done) {
 
