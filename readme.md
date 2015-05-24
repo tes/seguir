@@ -99,7 +99,7 @@ app.get('/user/:username/feed', function(req, res, next) {
     var userId = profile.seguirId;
 
     // Now, get the first 50 items
-    seguir.getFeedForUser(loggedInUserId, userId, null, 50, function(err, feed) {
+    seguir.getFeed(loggedInUserId, userId, null, 50, function(err, feed) {
 
       // Render it
       res.render('newsfeed', feed);
@@ -140,6 +140,7 @@ This will push any documentation changes to gh-pages.
 
 * Private messaging between friends ?
 * Circles vs Friends / tighter privacy controls
+* Apply eslint
 
 ## Requires
 

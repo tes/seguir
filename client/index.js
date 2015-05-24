@@ -529,7 +529,7 @@ Seguir.prototype.removeLike = function(liu, item, next) {
  */
 
 /**
- * @api {function} getFeedForUser(liu,user,start,limit,next) getFeedForUser
+ * @api {function} getFeed(liu,user,start,limit,next) getFeed
  * @apiName getFeedForUser
  * @apiGroup Feeds
  * @apiVersion 1.0.0
@@ -550,7 +550,7 @@ Seguir.prototype.getFeed = function(liu, user, start, limit, next) {
 
 
 /**
- * @api {function} getUserFeedForUser(liu,user,start,limit,next) getUserFeedForUser
+ * @api {function} getUserFeed(liu,user,start,limit,next) getUserFeed
  * @apiName getUserFeedForUser
  * @apiGroup Feeds
  * @apiVersion 1.0.0
