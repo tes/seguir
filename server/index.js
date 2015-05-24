@@ -133,7 +133,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get(u('getUser'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode: 404,message: 'User not found'})); }
+      if (!user) { return next(_error({statusCode: 404, message: 'User not found'})); }
       api.query.getUser(req.keyspace, user, function (err, user) {
         if (err) { return next(_error(err)); }
         res.send(user);
@@ -732,7 +732,7 @@ function bootstrapServer (config, keyspace, next) {
     var limit = +req.query.limit || 50;
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode: 404,message: 'User ' + req.params.user + ' not found!'})); }
+      if (!user) { return next(_error({statusCode: 404, message: 'User ' + req.params.user + ' not found!'})); }
       api.query.getFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
         if (err) { return next(_error(err)); }
         res.send({feed: feed, more: more});
@@ -759,7 +759,7 @@ function bootstrapServer (config, keyspace, next) {
     var limit = +req.query.limit || 50;
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode: 404,message: 'User ' + req.params.user + ' not found!'})); }
+      if (!user) { return next(_error({statusCode: 404, message: 'User ' + req.params.user + ' not found!'})); }
       api.query.getUserFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
         if (err) { return next(_error(err)); }
         res.send({feed: feed, more: more});
