@@ -3,9 +3,9 @@
  */
 var async = require('async');
 
-function setup(client, keyspace, next) {
+function setup (client, keyspace, next) {
 
-  var tables =[
+  var tables = [
     'CREATE TABLE ' + keyspace + '.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))',
     'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',
     'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, appsecret text, account uuid, enabled boolean, PRIMARY KEY (appid))',
@@ -30,9 +30,9 @@ function setup(client, keyspace, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes
-  ], function(err, data) {
+  ], function (err, data) {
     /* istanbul ignore if */
-    if(err) console.dir(err);
+    if (err) console.dir(err);
     next();
   });
 }

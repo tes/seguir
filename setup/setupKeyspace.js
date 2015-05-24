@@ -1,11 +1,10 @@
-  var async = require('async');
-var _ = require('lodash');
+var async = require('async');
 
-function defineTablesAndIndexes(KEYSPACE) {
+function defineTablesAndIndexes (KEYSPACE) {
 
   var tables = [], indexes = [];
 
-  if(!KEYSPACE) {
+  if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
     return;
   }
@@ -131,18 +130,18 @@ function defineTablesAndIndexes(KEYSPACE) {
    */
   var feedTables = ['feed_timeline', 'user_timeline'];
 
-  feedTables.forEach(function(table) {
+  feedTables.forEach(function (table) {
     tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
   });
 
   return {
-    tables:tables,
-    indexes:indexes
-  }
+    tables: tables,
+    indexes: indexes
+  };
 }
 
-function setup(client, keyspace, next) {
+function setup (client, keyspace, next) {
 
   var options = defineTablesAndIndexes(keyspace);
   options.KEYSPACE = keyspace;
@@ -154,9 +153,9 @@ function setup(client, keyspace, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes
-  ], function(err, data) {
+  ], function (err, data) {
     /* istanbul ignore if */
-    if(err) console.dir(err);
+    if (err) console.dir(err);
     next();
   });
 }

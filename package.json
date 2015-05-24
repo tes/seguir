@@ -59,8 +59,7 @@
   "semistandard": {
     "ignore": [
       "doc/**",
-      "coverage/**",
-      "setup/**"
+      "coverage/**"
     ]
   }
 }
