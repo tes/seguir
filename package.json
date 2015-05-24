@@ -60,8 +60,7 @@
     "ignore": [
       "doc/**",
       "coverage/**",
-      "setup/**",
-      "bin/**"
+      "setup/**"
     ]
   }
 }

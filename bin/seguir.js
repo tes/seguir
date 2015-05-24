@@ -5,11 +5,8 @@
  */
 var inquirer = require('inquirer');
 var setupSeguir = require('../setup/setupSeguir');
-var setupKeyspace = require('../setup/setupKeyspace');
 var program = require('commander');
-var cassandra = require('cassandra-driver');
 var _ = require('lodash');
-var async = require('async');
 var path = require('path');
 
 program
@@ -35,47 +32,58 @@ var configFile = program.config ? path.resolve('.', program.config) : '../server
 var configFn;
 
 try {
-   configFn = require(configFile);
+  configFn = require(configFile);
 } catch(ex) {
   console.log('Cant open config: ' + ex.message);
   process.exit(1);
 }
 
-if(typeof configFn !== 'function') {
+if (typeof configFn !== 'function') {
   var originalConfig = configFn;
-  configFn = function(next) {
+  configFn = function (next) {
     next(null, originalConfig);
   };
 }
 
+function error (err) {
+  console.log('Error: ' + err.message);
+  process.exit(1);
+}
+
 // Async load config
-configFn(function(err, config) {
+configFn(function (err, config) {
+
+  if (err) return error(err);
 
   var client = require('../api/db/client')(config);
   var api = require('../index')(client, config.keyspace);
 
   var setupFile = program.setup;
 
-  if(setupFile) {
+  if (setupFile) {
 
-    var setup, setupFile = path.resolve('.', setupFile);
+    var setup;
+
+    setupFile = path.resolve('.', setupFile);
 
     try {
-       setup = require(setupFile);
+      setup = require(setupFile);
     } catch(ex) {
       console.log('Cant open setup file: ' + ex.message);
       process.exit(1);
     }
 
     console.log('Setting up seguir based on: ' + setupFile);
-    setupSeguir(client, setup.keyspace, function() {
-        setupAccount(setup.account, function(err, account) {
-          setupApplicationUser(account.account, setup.account, setup.user, setup.password, setup.admin, function(err, user) {
-            setupApplication(account.account, setup.application, setup.appid, setup.appsecret, function() {
-              process.exit(0);
-            });
+    setupSeguir(client, setup.keyspace, function () {
+      setupAccount(setup.account, function (err, account) {
+        if (err) return error(err);
+        setupApplicationUser(account.account, setup.account, setup.user, setup.password, setup.admin, function (err, user) {
+          if (err) return error(err);
+          setupApplication(account.account, setup.application, setup.appid, setup.appsecret, function () {
+            process.exit(0);
           });
         });
+      });
     });
 
   } else {
@@ -87,35 +95,35 @@ configFn(function(err, config) {
         name: 'task',
         choices: tasks
       }
-    ], function( answer ) {
-      if(answer.task == tasks[0]) {
+    ], function (answer) {
+      if (answer.task === tasks[0]) {
         checkSetup();
       }
-      if(answer.task == tasks[1]) {
+      if (answer.task === tasks[1]) {
         coreSetup();
       }
-      if(answer.task == tasks[2]) {
+      if (answer.task === tasks[2]) {
         promptAccount();
       }
-      if(answer.task == tasks[3]) {
+      if (answer.task === tasks[3]) {
         listUsers();
       }
-      if(answer.task == tasks[4]) {
+      if (answer.task === tasks[4]) {
         addUser();
       }
-      if(answer.task == tasks[5]) {
+      if (answer.task === tasks[5]) {
         listApplications();
       }
-      if(answer.task == tasks[6]) {
+      if (answer.task === tasks[6]) {
         addApplication();
       }
-      if(answer.task == tasks[7]) {
+      if (answer.task === tasks[7]) {
         resetApplication();
       }
-      if(answer.task == tasks[8]) {
+      if (answer.task === tasks[8]) {
         addToken();
       }
-      if(answer.task == tasks[9]) {
+      if (answer.task === tasks[9]) {
         listTokens();
       }
 
@@ -123,32 +131,34 @@ configFn(function(err, config) {
 
   }
 
-  function checkSetup() {
+  function checkSetup () {
     // Check that the DB exists
     console.log('Checking Cassandra: ' + JSON.stringify(config.cassandra));
-    api.auth.getAccounts(function(err, accounts) {
-      if(err) {
+    api.auth.getAccounts(function (err, accounts) {
+      if (err) {
         console.log('An error was encountered: ' + err.message);
-        if(err.message == 'Keyspace seguir does not exist') {
+        if (err.message === 'Keyspace seguir does not exist') {
           console.log('It looks like you need to initialise this cassandra instance, please re-run this command and select that option.');
         }
       } else {
-        if(accounts.length == 0) {
-         console.log('It looks like you need to create your first account, please re-run this command and select that option.');
+        if (accounts.length === 0) {
+          console.log('It looks like you need to create your first account, please re-run this command and select that option.');
         } else {
           console.log('Configuration looks OK on the surface, ' + accounts.length + ' accounts were found.');
         }
       }
       process.exit();
-    })
+    });
   }
 
-  function listUsers() {
-    selectAccount(function(err, account, name) {
+  function listUsers () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
       console.log(name + ' users:');
-      api.auth.getAccountUsers(account, function(err, users) {
-        if(users) {
-          users.forEach(function(user) {
+      api.auth.getAccountUsers(account, function (err, users) {
+        if (err) return error(err);
+        if (users) {
+          users.forEach(function (user) {
             console.log(' - ' + user.username);
           });
         } else {
@@ -159,12 +169,14 @@ configFn(function(err, config) {
     });
   }
 
-  function listApplications() {
-    selectAccount(function(err, account, name) {
+  function listApplications () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
       console.log(name + ' applications:');
-      api.auth.getApplications(account, function(err, apps) {
-        if(apps) {
-          apps.forEach(function(app) {
+      api.auth.getApplications(account, function (err, apps) {
+        if (err) return error(err);
+        if (apps) {
+          apps.forEach(function (app) {
             console.log(' - [' + app.name + '] appid: ' + app.appid + ' / appsecret: ' + app.appsecret);
           });
         } else {
@@ -175,11 +187,14 @@ configFn(function(err, config) {
     });
   }
 
-  function addToken() {
-    selectAccount(function(err, account, name) {
-      selectApplication(account, function(err, application, name, appkeyspace) {
-        api.auth.addApplicationToken(application, appkeyspace, null, null, function(err, token) {
-          if(token) {
+  function addToken () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
+      selectApplication(account, function (err, application, name, appkeyspace) {
+        if (err) return error(err);
+        api.auth.addApplicationToken(application, appkeyspace, null, null, function (err, token) {
+          if (err) return error(err);
+          if (token) {
             console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
           }
           process.exit();
@@ -188,13 +203,16 @@ configFn(function(err, config) {
     });
   }
 
-  function listTokens() {
-    selectAccount(function(err, account, name) {
-      selectApplication(account, function(err, application, name) {
+  function listTokens () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
+      selectApplication(account, function (err, application, name) {
+        if (err) return error(err);
         console.log(name + ' applications:');
-        api.auth.getApplicationTokens(application, function(err, tokens) {
-          if(tokens) {
-            tokens.forEach(function(token) {
+        api.auth.getApplicationTokens(application, function (err, tokens) {
+          if (err) return error(err);
+          if (tokens) {
+            tokens.forEach(function (token) {
               console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
             });
           } else {
@@ -206,17 +224,20 @@ configFn(function(err, config) {
     });
   }
 
-  function resetApplication() {
-    selectAccount(function(err, account) {
-      selectApplication(account, function(err, application) {
-          confirmReset(application);
+  function resetApplication () {
+    selectAccount(function (err, account) {
+      if (err) return error(err);
+      selectApplication(account, function (err, application) {
+        if (err) return error(err);
+        confirmReset(application);
       });
     });
   }
 
-  function selectAccount(next) {
-     api.auth.getAccounts(function(err, accounts) {
-      var accs = _.pluck(accounts,'name');
+  function selectAccount (next) {
+    api.auth.getAccounts(function (err, accounts) {
+      if (err) return error(err);
+      var accs = _.pluck(accounts, 'name');
       inquirer.prompt([
         {
           type: 'list',
@@ -224,15 +245,16 @@ configFn(function(err, config) {
           name: 'name',
           choices: accs
         }
-      ], function( answer ) {
+      ], function (answer) {
         next(null, _.result(_.find(accounts, { 'name': answer.name }), 'account'), answer.name);
       });
     });
   }
 
-  function selectApplication(account, next) {
-     api.auth.getApplications(account, function(err, applications) {
-      var apps = _.pluck(applications,'name');
+  function selectApplication (account, next) {
+    api.auth.getApplications(account, function (err, applications) {
+      if (err) return error(err);
+      var apps = _.pluck(applications, 'name');
       inquirer.prompt([
         {
           type: 'list',
@@ -240,109 +262,99 @@ configFn(function(err, config) {
           name: 'name',
           choices: apps
         }
-      ], function( answer ) {
+      ], function (answer) {
         var application = _.find(applications, { 'name': answer.name });
         next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
       });
     });
   }
 
-  function selectAccountUser(account, next) {
-     api.auth.getAccountUsers(account, function(err, users) {
-      var usrs = _.pluck(applications,'username');
-      inquirer.prompt([
-        {
-          type: 'list',
-          message: 'Select a user:',
-          name: 'name',
-          choices: usrs
-        }
-      ], function( answer ) {
-        next(null, answer.name);
-      });
-    });
-  }
-
-  function confirmReset(appid) {
+  function confirmReset (appid) {
     inquirer.prompt([
       {
         type: 'confirrm',
         message: 'This will modify the appsecret so that the application can no longer access seguir?',
         name: 'confirm'
       }
-    ], function( confirm ) {
-      if(confirm.confirm == 'y' || confirm.confirm == 'Y') {
-          var appToken = cassandra.types.uuid();
-          api.auth.updateApplicationSecret(appid, function(err, application) {
-            if(!err) {
-              console.log('Token updated, update the client application if you still want it to have access!');
-              console.log('appid:     ' + application.appid);
-              console.log('appsecret: ' + application.appsecret);
-            } else {
-              console.log('ERROR: ' + err.message);
-            }
-            process.exit();
-          });
+    ], function (confirm) {
+      if (confirm.confirm === 'y' || confirm.confirm === 'Y') {
+        api.auth.updateApplicationSecret(appid, function (err, application) {
+          if (!err) {
+            console.log('Token updated, update the client application if you still want it to have access!');
+            console.log('appid:     ' + application.appid);
+            console.log('appsecret: ' + application.appsecret);
+          } else {
+            console.log('ERROR: ' + err.message);
+          }
+          process.exit();
+        });
       } else {
         process.exit();
       }
     });
   }
 
-  function coreSetup() {
+  function coreSetup () {
     inquirer.prompt([
       {
         type: 'confirrm',
         message: 'This will DROP the existing keyspace if it already exists, are you sure you want to proceed?',
         name: 'confirm'
       }
-    ], function( confirm ) {
-      if(confirm.confirm == 'y' || confirm.confirm == 'Y') {
-        setupSeguir(client, config.keyspace, function() {
-          console.log("Completed basic setup, you now need to create your first account and application.");
+    ], function (confirm) {
+      if (confirm.confirm === 'y' || confirm.confirm === 'Y') {
+        setupSeguir(client, config.keyspace, function () {
+          console.log('Completed basic setup, you now need to create your first account and application.');
           promptAccount();
         });
       }
     });
   }
 
-  function addUser() {
-    selectAccount(function(err, account, name) {
-      promptAccountUser(account, name, function(err) {
+  function addUser () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
+      promptAccountUser(account, name, function (err) {
+        if (err) return error(err);
         process.exit(0);
-      })
+      });
     });
   }
 
-  function addApplication() {
-    selectAccount(function(err, account, name) {
-      promptApplication(account, name, function(err) {
+  function addApplication () {
+    selectAccount(function (err, account, name) {
+      if (err) return error(err);
+      promptApplication(account, name, function (err) {
+        if (err) return error(err);
         process.exit(0);
-      })
+      });
     });
   }
 
-  function promptAccount() {
-   inquirer.prompt([
+  function promptAccount () {
+    inquirer.prompt([
       {
         type: 'input',
         message: 'Enter an account name:',
         name: 'name'
       }
-    ], function( acc ) {
-      setupAccount(acc.name, function(err, account) {
-        promptAccountUser(account.account, account.name, function(err) {
-            promptApplication(account.account, account.name, function(err) {
-              process.exit(0);
-            });
+    ], function (acc) {
+      setupAccount(acc.name, function (err, account) {
+        if (err) return error(err);
+        promptAccountUser(account.account, account.name, function (err) {
+          if (err) return error(err);
+          promptApplication(account.account, account.name, function (err) {
+            if (err) return error(err);
+            process.exit(0);
+          });
         });
-      })
+      });
     });
   }
 
-  function setupAccount(accName, next) {
-    api.auth.addAccount(accName, true, true, function(err, account) {
-      if(err) {
+  function setupAccount (accName, next) {
+    api.auth.addAccount(accName, true, true, function (err, account) {
+      if (err) {
         console.log(err.message);
         process.exit(0);
       }
@@ -350,8 +362,8 @@ configFn(function(err, config) {
     });
   }
 
-  function promptAccountUser(account, name, next) {
-   inquirer.prompt([
+  function promptAccountUser (account, name, next) {
+    inquirer.prompt([
       {
         type: 'input',
         message: 'Enter name of user to add to account ' + name + ':',
@@ -367,43 +379,43 @@ configFn(function(err, config) {
         message: 'Are they an administrator of the account (y/n)?',
         name: 'isadmin'
       }
-    ], function( user ) {
-      setupApplicationUser(account, name, user.username, user.password, user.isadmin === 'y' ? true : false, next);
+    ], function (user) {
+      setupApplicationUser(account, name, user.username, user.password, user.isadmin === 'y', next);
     });
   }
 
-  function setupApplicationUser(account, name, username, password, isadmin, next) {
-    api.auth.addAccountUser(account, username, password, isadmin, function(err, user) {
-      if(err) {
-          console.log(err.message);
-          process.exit(0);
+  function setupApplicationUser (account, name, username, password, isadmin, next) {
+    api.auth.addAccountUser(account, username, password, isadmin, function (err, user) {
+      if (err) {
+        console.log(err.message);
+        process.exit(0);
       }
       next();
     });
   }
 
-  function promptApplication(account, name, next) {
-   inquirer.prompt([
+  function promptApplication (account, name, next) {
+    inquirer.prompt([
       {
         type: 'input',
         message: 'Enter application name (e.g. app-name) to add to account ' + name + ':',
         name: 'name'
       }
-    ], function( application ) {
-      setupApplication(account, application.name, null, null, next)
+    ], function (application) {
+      setupApplication(account, application.name, null, null, next);
     });
   }
 
-  function setupApplication(account, name, appid, appsecret, next) {
-    api.auth.addApplication(account, name, appid, appsecret, function(err, application) {
-        if(err) {
-          console.log(err.message);
-          process.exit(0);
-        }
-       console.log("Application details are:");
-       console.log("appid: " + application.appid);
-       console.log("appsecret: " + application.appsecret);
-       next();
+  function setupApplication (account, name, appid, appsecret, next) {
+    api.auth.addApplication(account, name, appid, appsecret, function (err, application) {
+      if (err) {
+        console.log(err.message);
+        process.exit(0);
+      }
+      console.log('Application details are:');
+      console.log('appid: ' + application.appid);
+      console.log('appsecret: ' + application.appsecret);
+      next();
     });
   }
 
