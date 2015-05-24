@@ -562,7 +562,7 @@ Seguir.prototype.getFeed = function (liu, user, start, limit, next) {
  */
 Seguir.prototype.getUserFeed = function (liu, user, start, limit, next) {
   var self = this;
-  var query = [start ? 'start=' + start : null, limit ? 'limit=' + limit : null ].join("&");
+  var query = [start ? 'start=' + start : null, limit ? 'limit=' + limit : null ].join('&');
   self.get(liu, u('getUserFeed', {user: user, query: query}), next);
 };
 
