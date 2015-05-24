@@ -19,7 +19,7 @@ module.exports = function (config) {
     rsmq.listQueues(function (err, queues) {
       if (err) { return next(err); }
       if (_.contains(queues, name)) { return next(); }
-      rsmq.createQueue({qname: name}, function (err, response) {
+      rsmq.createQueue({qname: name}, function (err) {
         next(err);
       });
     });
@@ -30,7 +30,7 @@ module.exports = function (config) {
    */
   function submit (name, data, next) {
     createOrSelectQueue(name, function (err) {
-      if (err) { return next && next(err); }
+      if (err && err.name !== 'queueExists') { return next && next(err); }
       rsmq.sendMessage({qname: name, message: JSON.stringify(data)}, function (err, response) {
         if (err) { return next && next(err); }
         return next && next(null, response);
