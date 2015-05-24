@@ -33,7 +33,7 @@ module.exports = function (config) {
       if (err) { return next && next(err); }
       rsmq.sendMessage({qname: name, message: JSON.stringify(data)}, function (err, response) {
         if (err) { return next && next(err); }
-        return next && next();
+        return next && next(null, response);
       });
     });
   }

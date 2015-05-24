@@ -27,25 +27,27 @@ describe('Messaging primitives', function () {
 
       var counter = 0;
 
+      messaging.submit('q1', {hello: 'world'}, function (err, response) {
+        console.dir(err);
+        console.dir(response);
+      });
+
+      messaging.submit('q2', {hello: 'world'});
+
       messaging.listen('q1', function (data, jobDone) {
         counter++;
-        console.log('Received on q1');
         jobDone();
       });
 
       messaging.listen('q2', function (data, jobDone) {
         counter++;
-        console.log('Received on q2');
         jobDone();
       });
-
-      messaging.submit('q1', {hello: 'world'});
-      messaging.submit('q2', {hello: 'world'});
 
       setTimeout(function () {
         expect(counter).to.be(2);
         done();
-      }, 2000);
+      }, 1000);
 
     });
 
