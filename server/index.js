@@ -6,15 +6,15 @@ var logger = bunyan.createLogger({
     serializers: restify.bunyan.serializers
 });
 
-function bootstrapServer(config, keyspace, next) {
+function bootstrapServer (config, keyspace, next) {
 
   var client = require('../api/db/client')(config);
   var messaging = require('../api/db/messaging')(config);
   var api = require('../index')(client, messaging, keyspace);
 
   var server = restify.createServer({
-    name:'seguir',
-    version:'0.1.0',
+    name: 'seguir',
+    version: '0.1.0',
     log: logger
   });
 
@@ -133,7 +133,7 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getUser'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode:404,message:'User not found'})); }
+      if (!user) { return next(_error({statusCode: 404,message: 'User not found'})); }
       api.query.getUser(req.keyspace, user, function (err, user) {
         if (err) { return next(_error(err)); }
         res.send(user);
@@ -161,8 +161,8 @@ function bootstrapServer(config, keyspace, next) {
    */
   server.get(u('getUserByAltId'), function (req, res, next) {
     api.query.getUserByAltId(req.keyspace, req.params.altid, function (err, user) {
-        if (err) { return next(_error(err)); }
-        res.send(user);
+      if (err) { return next(_error(err)); }
+      res.send(user);
     });
   });
 
@@ -194,8 +194,8 @@ function bootstrapServer(config, keyspace, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
       api.query.getUserRelationship(req.keyspace, req.liu.user, user, function (err, relationship) {
-          if (err) { return next(_error(err)); }
-          res.send(relationship);
+        if (err) { return next(_error(err)); }
+        res.send(relationship);
       });
     });
   });
@@ -360,8 +360,8 @@ function bootstrapServer(config, keyspace, next) {
     if (!req.params.content) {
       return next(new restify.InvalidArgumentError('You must provide content for the post.'));
     }
-    var isprivate = req.params.isprivate ? true : false,
-        ispersonal = req.params.ispersonal ? true : false;
+    var isprivate = !!req.params.isprivate,
+        ispersonal = !!req.params.ispersonal;
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
@@ -386,8 +386,8 @@ function bootstrapServer(config, keyspace, next) {
    */
   server.get(u('getPost'), function (req, res, next) {
     api.query.getPost(req.keyspace, req.liu.user, req.params.post, function (err, post) {
-        if (err) { return next(_error(err)); }
-        res.send(post);
+      if (err) { return next(_error(err)); }
+      res.send(post);
     });
   });
 
@@ -606,8 +606,8 @@ function bootstrapServer(config, keyspace, next) {
       return next(new restify.InvalidArgumentError('You must provide a user_follower.'));
     }
 
-    var isprivate = req.params.isprivate ? true : false,
-        ispersonal = req.params.ispersonal ? true : false;
+    var isprivate = !!req.params.isprivate,
+        ispersonal = !!req.params.ispersonal;
 
     coerce(req.keyspace, [req.params.user, req.params.user_follower], function (err, users) {
       if (err) { return next(_error(err)); }
@@ -624,7 +624,6 @@ function bootstrapServer(config, keyspace, next) {
     });
 
   });
-
 
   /**
    * @api {get} /user/:user/followers Get followers for a user
@@ -733,10 +732,10 @@ function bootstrapServer(config, keyspace, next) {
     var limit = +req.query.limit || 50;
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
+      if (!user) { return next(_error({statusCode: 404,message: 'User ' + req.params.user + ' not found!'})); }
       api.query.getFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
-          if (err) { return next(_error(err)); }
-          res.send({feed:feed, more:more});
+        if (err) { return next(_error(err)); }
+        res.send({feed: feed, more: more});
       });
     });
   });
@@ -760,10 +759,10 @@ function bootstrapServer(config, keyspace, next) {
     var limit = +req.query.limit || 50;
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      if (!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
+      if (!user) { return next(_error({statusCode: 404,message: 'User ' + req.params.user + ' not found!'})); }
       api.query.getUserFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
-          if (err) { return next(_error(err)); }
-          res.send({feed:feed, more:more});
+        if (err) { return next(_error(err)); }
+        res.send({feed: feed, more: more});
       });
     });
   });
@@ -776,6 +775,10 @@ function bootstrapServer(config, keyspace, next) {
 if (require.main === module) {
   var config = require('./config');
   bootstrapServer(config, config.keyspace, function (err, server, client) {
+    if (err) {
+      console.log('Unable to bootstrap server: ' + err.message);
+      return;
+    }
     server.listen(config.port || 3000, function () {
       console.log('Server %s listening at %s', server.name, server.url);
     });
