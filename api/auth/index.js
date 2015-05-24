@@ -49,7 +49,7 @@ function Auth (client, redis, keyspace, options) {
     });
   }
 
-  function updateAccount(account, name, isadmin, enabled, next) {
+  function updateAccount (account, name, isadmin, enabled, next) {
     var accountData = [name, isadmin, enabled, account];
     client.execute(q(keyspace, 'updateAccount'), accountData, function (err, result) {
       if (err) { return next(err); }

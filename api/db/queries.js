@@ -1,4 +1,4 @@
-var st = require("string-template");
+var st = require('string-template');
 var queries = {};
 
 /**
@@ -150,8 +150,8 @@ queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, i
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
 
-module.exports = function(keyspace, name, data) {
-    data = data || {};
-    data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
-    return st(queries[name], data);
-}
+module.exports = function (keyspace, name, data) {
+  data = data || {};
+  data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
+  return st(queries[name], data);
+};
