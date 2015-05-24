@@ -172,9 +172,10 @@ module.exports = function (client, redis) {
   }
 
   function isFriend (keyspace, user, user_friend, next) {
-    if (user === user_friend) { return next(null, true, null); }
+    if (user === user_friend) { return next(null, true, null, null); }
     _get(keyspace, 'isFriend', [user, user_friend], 'one', function (err, friend) {
-      var isFriend = err && err.statusCode !== 404;
+      if (err) { return next(null, false, null, null); }
+      var isFriend = !!(friend && !!friend.friend);
       var isFriendSince = isFriend ? friend.since : null;
       return next(null, isFriend, isFriendSince, friend ? friend : null);
     });
@@ -183,7 +184,8 @@ module.exports = function (client, redis) {
   function isFollower (keyspace, user, user_follower, next) {
     if (user === user_follower) { return next(null, true, null, {isprivate: false, ispersonal: false}); }
     _get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
-      var isFollower = err && err.statusCode !== 404;
+      if (err) { return next(null, false, null, {isprivate: false, ispersonal: false}); }
+      var isFollower = !!(follow && follow.follow);
       var isFollowerSince = isFollower ? follow.since : null;
       return next(null, isFollower, isFollowerSince, follow ? follow : null);
     });
