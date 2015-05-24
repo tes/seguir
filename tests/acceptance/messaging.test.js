@@ -28,6 +28,7 @@ describe('Messaging primitives', function() {
       it('can create multiple queues and consume messages', function(done) {
 
         var counter = 0;
+
         messaging.listen('q1', function(data, jobDone) {
           counter++;
           jobDone();
@@ -44,7 +45,7 @@ describe('Messaging primitives', function() {
         setTimeout(function() {
           expect(counter).to.be(2);
           done();
-        }, 500)
+        }, 2000)
 
       });
 
