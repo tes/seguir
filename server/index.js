@@ -30,10 +30,10 @@ function bootstrapServer(config, keyspace, next) {
     default: 'index.html'
   }));
 
-  server.get('/status', function(req, res) {
-    api.auth.getAccounts(function(err, accounts) {
-      if(err) { return _error(err); }
-      res.send({status:'OK', config: config, accounts: accounts});
+  server.get('/status', function (req, res) {
+    api.auth.getAccounts(function (err, accounts) {
+      if (err) { return _error(err); }
+      res.send({status: 'OK', config: config, accounts: accounts});
     });
   });
 
@@ -41,16 +41,16 @@ function bootstrapServer(config, keyspace, next) {
   server.pre(restify.pre.sanitizePath());
   server.pre(restify.pre.userAgentConnection());
   server.pre(function (request, response, next) {
-      if(config.logging) {
-        request.log.info({ req: request }, 'REQUEST');
-      }
-      next();
+    if (config.logging) {
+      request.log.info({ req: request }, 'REQUEST');
+    }
+    next();
   });
   server.pre(api.auth.checkRequest);
 
   var coerce = api.auth.coerceUserToUuid;
 
-  function _error(err) {
+  function _error (err) {
     return new restify.HttpError(err);
   }
 
@@ -71,22 +71,21 @@ function bootstrapServer(config, keyspace, next) {
    * @apiParam {Object} userdata arbitrary user data
    *
    * @apiExample {curl} Example usage:
-   *     curl --data "username=cliftonc" http://localhost:3000/user
+   *     curl --data 'username=cliftonc' http://localhost:3000/user
    *
    *  @apiUse MissingUsername
    *  @apiUse ServerError
    *  @apiUse addUserSuccessExample
    */
   server.post(u('addUser'), function (req, res, next) {
-    if(!req.params.username) {
-      return next(new restify.InvalidArgumentError("You must provide a username."));
+    if (!req.params.username) {
+      return next(new restify.InvalidArgumentError('You must provide a username.'));
     }
-    api.manage.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, function(err, user) {
-      if(err) { return next(_error(err)); }
+    api.manage.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, function (err, user) {
+      if (err) { return next(_error(err)); }
       res.send(user);
     });
   });
-
 
   /**
    * @api {get} /username/:username Get a specific user
@@ -107,9 +106,9 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserByName'), function (req, res, next) {
-    api.query.getUserByName(req.keyspace, req.params.username, function(err, user) {
-        if(err) { return next(_error(err)); }
-        res.send(user);
+    api.query.getUserByName(req.keyspace, req.params.username, function (err, user) {
+      if (err) { return next(_error(err)); }
+      res.send(user);
     });
   });
 
@@ -132,11 +131,11 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUser'), function (req, res, next) {
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      if(!user) { return next(_error({statusCode:404,message:'User not found'})); }
-      api.query.getUser(req.keyspace, user, function(err, user) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      if (!user) { return next(_error({statusCode:404,message:'User not found'})); }
+      api.query.getUser(req.keyspace, user, function (err, user) {
+        if (err) { return next(_error(err)); }
         res.send(user);
       });
     });
@@ -161,8 +160,8 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserByAltId'), function (req, res, next) {
-    api.query.getUserByAltId(req.keyspace, req.params.altid, function(err, user) {
-        if(err) { return next(_error(err)); }
+    api.query.getUserByAltId(req.keyspace, req.params.altid, function (err, user) {
+        if (err) { return next(_error(err)); }
         res.send(user);
     });
   });
@@ -189,13 +188,13 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getUserRelationship'), function (req, res, next) {
-    if(!req.liu.user) {
+    if (!req.liu.user) {
       return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
     }
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.query.getUserRelationship(req.keyspace, req.liu.user, user, function(err, relationship) {
-          if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.query.getUserRelationship(req.keyspace, req.liu.user, user, function (err, relationship) {
+          if (err) { return next(_error(err)); }
           res.send(relationship);
       });
     });
@@ -216,7 +215,7 @@ function bootstrapServer(config, keyspace, next) {
    * @apiDescription Creates a new like of an item
    *
    * @apiExample {curl} Example usage:
-   *     curl --data "user=405d7e5e-c028-449c-abad-9c11d8569b8f&item=github.com" http://localhost:3000/like
+   *     curl --data 'user=405d7e5e-c028-449c-abad-9c11d8569b8f&item=github.com' http://localhost:3000/like
    *
    * @apiParam {Guid} user the guid representation of the user
    * @apiParam {String} item a canonical url to the item liked
@@ -228,16 +227,16 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.post(u('addLike'), function (req, res, next) {
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user.'));
     }
-    if(!req.params.item) {
-      return next(new restify.InvalidArgumentError("You must provide an item."));
+    if (!req.params.item) {
+      return next(new restify.InvalidArgumentError('You must provide an item.'));
     }
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.manage.addLike(req.keyspace, user, req.params.item, Date.now(), function(err, like) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.manage.addLike(req.keyspace, user, req.params.item, Date.now(), function (err, like) {
+        if (err) { return next(_error(err)); }
         res.send(like);
       });
     });
@@ -261,8 +260,8 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getLike'), function (req, res, next) {
-    api.query.getLike(req.keyspace, req.params.like, function(err, like) {
-      if(err) { return next(_error(err)); }
+    api.query.getLike(req.keyspace, req.params.like, function (err, like) {
+      if (err) { return next(_error(err)); }
       res.send(like);
     });
   });
@@ -287,10 +286,10 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('checkLike'), function (req, res, next) {
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.query.checkLike(req.keyspace, user, encodeURIComponent(req.params.item), function(err, like) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.query.checkLike(req.keyspace, user, encodeURIComponent(req.params.item), function (err, like) {
+        if (err) { return next(_error(err)); }
         res.send(like);
       });
     });
@@ -311,19 +310,19 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.del(u('removeLike'), function (req, res, next) {
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user.'));
     }
-    if(!req.params.item) {
-      return next(new restify.InvalidArgumentError("You must provide an item."));
+    if (!req.params.item) {
+      return next(new restify.InvalidArgumentError('You must provide an item.'));
     }
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      if(req.liu.user !== user) {
-        return next(new restify.ForbiddenError("You can't delete someone elses like."));
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      if (req.liu.user !== user) {
+        return next(new restify.ForbiddenError('You cant delete someone elses like.'));
       }
-      api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function(err, result) {
-        if(err) { return next(_error(err)); }
+      api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function (err, result) {
+        if (err) { return next(_error(err)); }
         res.send(result);
       });
     });
@@ -355,19 +354,19 @@ function bootstrapServer(config, keyspace, next) {
    */
   server.post(u('addPost'), function (req, res, next) {
 
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user.'));
     }
-    if(!req.params.content) {
-      return next(new restify.InvalidArgumentError("You must provide content for the post."));
+    if (!req.params.content) {
+      return next(new restify.InvalidArgumentError('You must provide content for the post.'));
     }
     var isprivate = req.params.isprivate ? true : false,
         ispersonal = req.params.ispersonal ? true : false;
 
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.manage.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, function(err, post) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.manage.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, function (err, post) {
+        if (err) { return next(_error(err)); }
         res.send(post);
       });
     });
@@ -386,8 +385,8 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.get(u('getPost'), function (req, res, next) {
-    api.query.getPost(req.keyspace, req.liu.user, req.params.post, function(err, post) {
-        if(err) { return next(_error(err)); }
+    api.query.getPost(req.keyspace, req.liu.user, req.params.post, function (err, post) {
+        if (err) { return next(_error(err)); }
         res.send(post);
     });
   });
@@ -406,11 +405,11 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.del(u('removePost'), function (req, res, next) {
-    if(!req.params.post) {
-      return next(new restify.InvalidArgumentError("You must provide a post guid."));
+    if (!req.params.post) {
+      return next(new restify.InvalidArgumentError('You must provide a post guid.'));
     }
-    api.manage.removePost(req.keyspace, req.liu.user, req.params.post, function(err, result) {
-      if(err) { return next(_error(err)); }
+    api.manage.removePost(req.keyspace, req.liu.user, req.params.post, function (err, result) {
+      if (err) { return next(_error(err)); }
       res.send(result);
     });
   });
@@ -430,10 +429,10 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriend'), function (req, res, next) {
-    coerce(req.keyspace, req.params.friend, function(err, friend) {
-      if(err) { return next(_error(err)); }
-      api.query.getFriend(req.keyspace, req.liu.user, friend, function(err, friend) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.friend, function (err, friend) {
+      if (err) { return next(_error(err)); }
+      api.query.getFriend(req.keyspace, req.liu.user, friend, function (err, friend) {
+        if (err) { return next(_error(err)); }
         res.send(friend);
       });
     });
@@ -453,10 +452,10 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriends'), function (req, res, next) {
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.query.getFriends(req.keyspace, req.liu.user, user, function(err, friends) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.query.getFriends(req.keyspace, req.liu.user, user, function (err, friends) {
+        if (err) { return next(_error(err)); }
         res.send(friends);
       });
     });
@@ -477,20 +476,20 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.del(u('removeFriend'), function (req, res, next) {
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user guid."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user guid.'));
     }
-    if(!req.params.user_friend) {
-      return next(new restify.InvalidArgumentError("You must provide a user_friend guid."));
+    if (!req.params.user_friend) {
+      return next(new restify.InvalidArgumentError('You must provide a user_friend guid.'));
     }
-    coerce(req.keyspace, [req.params.user, req.params.user_friend], function(err, users) {
-      if(err) { return next(_error(err)); }
+    coerce(req.keyspace, [req.params.user, req.params.user_friend], function (err, users) {
+      if (err) { return next(_error(err)); }
       var user = users[0], user_friend = users[1];
-      if(user !== req.liu.user) {
-        return next(new restify.ForbiddenError("You can only remove your own friendships."));
+      if (user !== req.liu.user) {
+        return next(new restify.ForbiddenError('You can only remove your own friendships.'));
       }
-      api.manage.removeFriend(req.keyspace, user, user_friend, function(err, result) {
-        if(err) { return next(_error(err)); }
+      api.manage.removeFriend(req.keyspace, user, user_friend, function (err, result) {
+        if (err) { return next(_error(err)); }
         res.send(result);
       });
     });
@@ -517,13 +516,13 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.post(u('addFriendRequest'), function (req, res, next) {
-    if(!req.params.user_friend) {
-      return next(new restify.InvalidArgumentError("You must provide a user_friend id."));
+    if (!req.params.user_friend) {
+      return next(new restify.InvalidArgumentError('You must provide a user_friend id.'));
     }
-    coerce(req.keyspace, req.params.user_friend, function(err, user_friend) {
-      if(err) { return next(_error(err)); }
-      api.manage.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), function(err, friend_request) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user_friend, function (err, user_friend) {
+      if (err) { return next(_error(err)); }
+      api.manage.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), function (err, friend_request) {
+        if (err) { return next(_error(err)); }
         res.send(friend_request);
       });
     });
@@ -543,11 +542,11 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFriendRequests'), function (req, res, next) {
-    if(!req.liu.user) {
+    if (!req.liu.user) {
       return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
     }
-    api.query.getFriendRequests(req.keyspace, req.liu.user, function(err, friend_requests) {
-      if(err) { return next(_error(err)); }
+    api.query.getFriendRequests(req.keyspace, req.liu.user, function (err, friend_requests) {
+      if (err) { return next(_error(err)); }
       res.send(friend_requests);
     });
   });
@@ -567,11 +566,11 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.post(u('acceptFriendRequest'), function (req, res, next) {
-    if(!req.params.friend_request) {
-      return next(new restify.InvalidArgumentError("You must provide a friend_request guid."));
+    if (!req.params.friend_request) {
+      return next(new restify.InvalidArgumentError('You must provide a friend_request guid.'));
     }
-    api.manage.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, function(err, friend) {
-      if(err) { return next(_error(err)); }
+    api.manage.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, function (err, friend) {
+      if (err) { return next(_error(err)); }
       res.send(friend);
     });
   });
@@ -600,26 +599,26 @@ function bootstrapServer(config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.post(u('addFollower'), function (req, res, next) {
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user.'));
     }
-    if(!req.params.user_follower) {
-      return next(new restify.InvalidArgumentError("You must provide a user_follower."));
+    if (!req.params.user_follower) {
+      return next(new restify.InvalidArgumentError('You must provide a user_follower.'));
     }
 
     var isprivate = req.params.isprivate ? true : false,
         ispersonal = req.params.ispersonal ? true : false;
 
-    coerce(req.keyspace, [req.params.user, req.params.user_follower], function(err, users) {
-      if(err) { return next(_error(err)); }
+    coerce(req.keyspace, [req.params.user, req.params.user_follower], function (err, users) {
+      if (err) { return next(_error(err)); }
       var user = users[0], user_follower = users[1];
 
-      if(user_follower !== req.liu.user) {
-        return next(new restify.ForbiddenError("You can only add your own follow relationships."));
+      if (user_follower !== req.liu.user) {
+        return next(new restify.ForbiddenError('You can only add your own follow relationships.'));
       }
 
-      api.manage.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, function(err, follow) {
-        if(err) { return next(_error(err)); }
+      api.manage.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, function (err, follow) {
+        if (err) { return next(_error(err)); }
         res.send(follow);
       });
     });
@@ -641,10 +640,10 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollowers'), function (req, res, next) {
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      api.query.getFollowers(req.keyspace, req.liu.user, user, function(err, followers) {
-        if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      api.query.getFollowers(req.keyspace, req.liu.user, user, function (err, followers) {
+        if (err) { return next(_error(err)); }
         res.send(followers);
       });
     });
@@ -664,8 +663,8 @@ function bootstrapServer(config, keyspace, next) {
    *
    */
   server.get(u('getFollow'), function (req, res, next) {
-    api.query.getFollow(req.keyspace, req.liu.user, req.params.follow, function(err, follow) {
-      if(err) { return next(_error(err)); }
+    api.query.getFollow(req.keyspace, req.liu.user, req.params.follow, function (err, follow) {
+      if (err) { return next(_error(err)); }
       res.send(follow);
     });
   });
@@ -686,23 +685,23 @@ function bootstrapServer(config, keyspace, next) {
    */
   server.del(u('removeFollower'), function (req, res, next) {
 
-    if(!req.params.user) {
-      return next(new restify.InvalidArgumentError("You must provide a user id."));
+    if (!req.params.user) {
+      return next(new restify.InvalidArgumentError('You must provide a user id.'));
     }
-    if(!req.params.user_follower) {
-      return next(new restify.InvalidArgumentError("You must provide a user_follower id."));
+    if (!req.params.user_follower) {
+      return next(new restify.InvalidArgumentError('You must provide a user_follower id.'));
     }
 
-    coerce(req.keyspace, [req.params.user, req.params.user_follower], function(err, users) {
+    coerce(req.keyspace, [req.params.user, req.params.user_follower], function (err, users) {
 
-      if(err) { return next(_error(err)); }
+      if (err) { return next(_error(err)); }
       var user = users[0], user_follower = users[1];
 
-      if(user_follower !== req.liu.user) {
-        return next(new restify.ForbiddenError("You can only remove your own follow relationships."));
+      if (user_follower !== req.liu.user) {
+        return next(new restify.ForbiddenError('You can only remove your own follow relationships.'));
       }
-      api.manage.removeFollower(req.keyspace, user, user_follower, function(err, result) {
-        if(err) { return next(_error(err)); }
+      api.manage.removeFollower(req.keyspace, user, user_follower, function (err, result) {
+        if (err) { return next(_error(err)); }
         res.send(result);
       });
 
@@ -732,11 +731,11 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getFeed'), function (req, res, next) {
     var start = req.query.start || null;
     var limit = +req.query.limit || 50;
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      if(!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
-      api.query.getFeed(req.keyspace, req.liu.user, user, start, limit, function(err, feed, more) {
-          if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      if (!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
+      api.query.getFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
+          if (err) { return next(_error(err)); }
           res.send({feed:feed, more:more});
       });
     });
@@ -759,11 +758,11 @@ function bootstrapServer(config, keyspace, next) {
   server.get(u('getUserFeed'), function (req, res, next) {
     var start = req.query.start || null;
     var limit = +req.query.limit || 50;
-    coerce(req.keyspace, req.params.user, function(err, user) {
-      if(err) { return next(_error(err)); }
-      if(!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
-      api.query.getUserFeed(req.keyspace, req.liu.user, user, start, limit, function(err, feed, more) {
-          if(err) { return next(_error(err)); }
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      if (!user) { return next(_error({statusCode:404,message:'User ' + req.params.user + ' not found!'})); }
+      api.query.getUserFeed(req.keyspace, req.liu.user, user, start, limit, function (err, feed, more) {
+          if (err) { return next(_error(err)); }
           res.send({feed:feed, more:more});
       });
     });
@@ -774,10 +773,10 @@ function bootstrapServer(config, keyspace, next) {
 }
 
 /* istanbul ignore if */
-if(require.main === module) {
+if (require.main === module) {
   var config = require('./config');
-  bootstrapServer(config, config.keyspace, function(err, server, client) {
-    server.listen(config.port || 3000, function() {
+  bootstrapServer(config, config.keyspace, function (err, server, client) {
+    server.listen(config.port || 3000, function () {
       console.log('Server %s listening at %s', server.name, server.url);
     });
   });
@@ -793,8 +792,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide a user guid."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide a user guid.'
  *     }
  */
 
@@ -804,8 +803,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide a username."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide a username.'
  *     }
  */
 
@@ -815,8 +814,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide a post guid."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide a post guid.'
  *     }
  */
 
@@ -826,8 +825,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide a friend guid."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide a friend guid.'
  *     }
  */
 
@@ -837,8 +836,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide a follow guid."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide a follow guid.'
  *     }
  */
 
@@ -848,8 +847,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide an item."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide an item.'
  *     }
  */
 
@@ -859,8 +858,8 @@ if(require.main === module) {
  * @apiErrorExample Bad-Request:
  *     HTTP/1.1 400 Bad Request
  *     {
- *       "code": "BadRequestError",
- *       "message": "You must provide content for the post."
+ *       'code': 'BadRequestError',
+ *       'message': 'You must provide content for the post.'
  *     }
  */
 
@@ -870,8 +869,8 @@ if(require.main === module) {
  * @apiErrorExample Not-Found:
  *     HTTP/1.1 404 Not Found
  *     {
- *       "code": "NotFoundError",
- *       "message": "Could not find that user."
+ *       'code': 'NotFoundError',
+ *       'message': 'Could not find that user.'
  *     }
  */
 
@@ -881,8 +880,8 @@ if(require.main === module) {
  * @apiErrorExample Server-Error:
  *     HTTP/1.1 500 Server Error
  *     {
- *       "code": "NotFoundError",
- *       "message": "Something specific about the server error"
+ *       'code': 'NotFoundError',
+ *       'message': 'Something specific about the server error'
  *     }
  */
 
@@ -892,11 +891,11 @@ if(require.main === module) {
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'username': 'cliftonc',
+  'altid': '1',
+  'userdata': {
+    'avatar': 'test.jpg'
   }
 }
  */
@@ -905,11 +904,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'username': 'cliftonc',
+  'altid': '1',
+  'userdata': {
+    'avatar': 'test.jpg'
   }
 }
  */
@@ -918,11 +917,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'username': 'cliftonc',
+  'altid': '1',
+  'userdata': {
+    'avatar': 'test.jpg'
   }
 }
  */
@@ -931,11 +930,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'username': 'cliftonc',
+  'altid': '1',
+  'userdata': {
+    'avatar': 'test.jpg'
   }
 }
  */
@@ -944,11 +943,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend_request": "fde50c69-48e7-4b95-8d8b-c144f24d62a1",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "user_friend": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-  "message": "Please be my friend",
-  "timestamp": 1432449424498
+  'friend_request': 'fde50c69-48e7-4b95-8d8b-c144f24d62a1',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'user_friend': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+  'message': 'Please be my friend',
+  'timestamp': 1432449424498
 }
  */
 /**
@@ -956,28 +955,28 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "incoming": [],
-  "outgoing": [
+  'incoming': [],
+  'outgoing': [
     {
-      "friend_request": "fde50c69-48e7-4b95-8d8b-c144f24d62a1",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'friend_request': 'fde50c69-48e7-4b95-8d8b-c144f24d62a1',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "user_friend": {
-        "user": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
+      'user_friend': {
+        'user': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+        'username': 'phteven',
+        'altid': '2',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "message": "Please be my friend",
-      "since": "2015-05-24T06:37:04.498Z"
+      'message': 'Please be my friend',
+      'since': '2015-05-24T06:37:04.498Z'
     }
   ]
 }
@@ -987,11 +986,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend": "3538353e-f144-4be8-a020-e59891e6bb72",
-  "reciprocal": "1d1ba1a5-56f2-48fb-9c6f-b969d6e52ee2",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "user_friend": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-  "timestamp": 1432449424568
+  'friend': '3538353e-f144-4be8-a020-e59891e6bb72',
+  'reciprocal': '1d1ba1a5-56f2-48fb-9c6f-b969d6e52ee2',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'user_friend': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+  'timestamp': 1432449424568
 }
  */
 /**
@@ -999,11 +998,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend": "3538353e-f144-4be8-a020-e59891e6bb72",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "user_friend": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-  "since": "2015-05-24T06:37:04.568Z",
-  "username_friend": "phteven"
+  'friend': '3538353e-f144-4be8-a020-e59891e6bb72',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'user_friend': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+  'since': '2015-05-24T06:37:04.568Z',
+  'username_friend': 'phteven'
 }
  */
 /**
@@ -1012,8 +1011,8 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "user_friend": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-    "since": "2015-05-24T06:37:04.568Z"
+    'user_friend': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+    'since': '2015-05-24T06:37:04.568Z'
   }
 ]
  */
@@ -1022,7 +1021,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "status": "removed"
+  'status': 'removed'
 }
  */
 /**
@@ -1030,12 +1029,12 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "follow": "8e85e2a8-b4a4-4280-bd14-7e47123c6848",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "user_follower": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-  "isprivate": false,
-  "ispersonal": false,
-  "timestamp": 1432449424793
+  'follow': '8e85e2a8-b4a4-4280-bd14-7e47123c6848',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'user_follower': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+  'isprivate': false,
+  'ispersonal': false,
+  'timestamp': 1432449424793
 }
  */
 /**
@@ -1043,13 +1042,13 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "follow": "8e85e2a8-b4a4-4280-bd14-7e47123c6848",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "user_follower": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-  "since": "2015-05-24T06:37:04.793Z",
-  "isprivate": false,
-  "ispersonal": false,
-  "username_follower": "phteven"
+  'follow': '8e85e2a8-b4a4-4280-bd14-7e47123c6848',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'user_follower': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+  'since': '2015-05-24T06:37:04.793Z',
+  'isprivate': false,
+  'ispersonal': false,
+  'username_follower': 'phteven'
 }
  */
 /**
@@ -1058,18 +1057,18 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-    "user_follower": "7cf50783-2a7f-482c-9eb5-2cb6fb549228",
-    "since": "2015-05-24T06:37:04.825Z",
-    "isprivate": false,
-    "ispersonal": false
+    'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+    'user_follower': '7cf50783-2a7f-482c-9eb5-2cb6fb549228',
+    'since': '2015-05-24T06:37:04.825Z',
+    'isprivate': false,
+    'ispersonal': false
   },
   {
-    "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-    "user_follower": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-    "since": "2015-05-24T06:37:04.793Z",
-    "isprivate": false,
-    "ispersonal": false
+    'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+    'user_follower': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+    'since': '2015-05-24T06:37:04.793Z',
+    'isprivate': false,
+    'ispersonal': false
   }
 ]
  */
@@ -1078,7 +1077,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "status": "removed"
+  'status': 'removed'
 }
  */
 /**
@@ -1086,12 +1085,12 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "post": "a7442881-7603-43e3-a8c8-4e329e7a5088",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "content": "Hello, this is a post",
-  "timestamp": 1432449425014,
-  "isprivate": false,
-  "ispersonal": false
+  'post': 'a7442881-7603-43e3-a8c8-4e329e7a5088',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'content': 'Hello, this is a post',
+  'timestamp': 1432449425014,
+  'isprivate': false,
+  'ispersonal': false
 }
  */
 /**
@@ -1099,12 +1098,12 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "post": "a7442881-7603-43e3-a8c8-4e329e7a5088",
-  "content": "Hello, this is a post",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "posted": "2015-05-24T06:37:05.014Z",
-  "isprivate": false,
-  "ispersonal": false
+  'post': 'a7442881-7603-43e3-a8c8-4e329e7a5088',
+  'content': 'Hello, this is a post',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'posted': '2015-05-24T06:37:05.014Z',
+  'isprivate': false,
+  'ispersonal': false
 }
  */
 /**
@@ -1112,7 +1111,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "status": "removed"
+  'status': 'removed'
 }
  */
 /**
@@ -1120,10 +1119,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "098fba18-5f29-4f2b-a4a8-3d384799219f",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "item": "http%3A%2F%2Fgithub.com",
-  "timestamp": 1432449425173
+  'like': '098fba18-5f29-4f2b-a4a8-3d384799219f',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'item': 'http%3A%2F%2Fgithub.com',
+  'timestamp': 1432449425173
 }
  */
 /**
@@ -1131,10 +1130,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "098fba18-5f29-4f2b-a4a8-3d384799219f",
-  "item": "http%3A%2F%2Fgithub.com",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "since": "2015-05-24T06:37:05.173Z"
+  'like': '098fba18-5f29-4f2b-a4a8-3d384799219f',
+  'item': 'http%3A%2F%2Fgithub.com',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'since': '2015-05-24T06:37:05.173Z'
 }
  */
 /**
@@ -1142,9 +1141,9 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "098fba18-5f29-4f2b-a4a8-3d384799219f",
-  "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-  "since": "2015-05-24T06:37:05.173Z"
+  'like': '098fba18-5f29-4f2b-a4a8-3d384799219f',
+  'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+  'since': '2015-05-24T06:37:05.173Z'
 }
  */
 /**
@@ -1152,7 +1151,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "status": "removed"
+  'status': 'removed'
 }
  */
 /**
@@ -1160,183 +1159,183 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "feed": [
+  'feed': [
     {
-      "like": "098fba18-5f29-4f2b-a4a8-3d384799219f",
-      "item": "http%3A%2F%2Fgithub.com",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'like': '098fba18-5f29-4f2b-a4a8-3d384799219f',
+      'item': 'http%3A%2F%2Fgithub.com',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "since": "2015-05-24T06:37:05.173Z",
-      "type": "like",
-      "timeuuid": "4af84eb0-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:05.179Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": false,
-      "fromFollower": true,
-      "isLike": true,
-      "isPost": false,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true
+      'since': '2015-05-24T06:37:05.173Z',
+      'type': 'like',
+      'timeuuid': '4af84eb0-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:05.179Z',
+      'fromNow': 'a few seconds ago',
+      'isprivate': false,
+      'ispersonal': false,
+      'fromFollower': true,
+      'isLike': true,
+      'isPost': false,
+      'isFollow': false,
+      'isFriend': false,
+      'isUsersItem': true
     },
     {
-      "post": "a6aac75b-b196-4696-a85a-a647db2f4ca9",
-      "content": "Hello, this is a private post",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'post': 'a6aac75b-b196-4696-a85a-a647db2f4ca9',
+      'content': 'Hello, this is a private post',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "posted": "2015-05-24T06:37:05.041Z",
-      "isprivate": true,
-      "ispersonal": false,
-      "type": "post",
-      "timeuuid": "4ae38e30-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:05.043Z",
-      "fromNow": "a few seconds ago",
-      "fromFollower": true,
-      "isLike": false,
-      "isPost": true,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true
+      'posted': '2015-05-24T06:37:05.041Z',
+      'isprivate': true,
+      'ispersonal': false,
+      'type': 'post',
+      'timeuuid': '4ae38e30-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:05.043Z',
+      'fromNow': 'a few seconds ago',
+      'fromFollower': true,
+      'isLike': false,
+      'isPost': true,
+      'isFollow': false,
+      'isFriend': false,
+      'isUsersItem': true
     },
     {
-      "post": "a7442881-7603-43e3-a8c8-4e329e7a5088",
-      "content": "Hello, this is a post",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'post': 'a7442881-7603-43e3-a8c8-4e329e7a5088',
+      'content': 'Hello, this is a post',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "posted": "2015-05-24T06:37:05.014Z",
-      "isprivate": false,
-      "ispersonal": false,
-      "type": "post",
-      "timeuuid": "4adfbda0-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:05.018Z",
-      "fromNow": "a few seconds ago",
-      "fromFollower": true,
-      "isLike": false,
-      "isPost": true,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true
+      'posted': '2015-05-24T06:37:05.014Z',
+      'isprivate': false,
+      'ispersonal': false,
+      'type': 'post',
+      'timeuuid': '4adfbda0-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:05.018Z',
+      'fromNow': 'a few seconds ago',
+      'fromFollower': true,
+      'isLike': false,
+      'isPost': true,
+      'isFollow': false,
+      'isFriend': false,
+      'isUsersItem': true
     },
     {
-      "follow": "04650d16-90fb-423a-a808-c23c2e05e399",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'follow': '04650d16-90fb-423a-a808-c23c2e05e399',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "user_follower": {
-        "user": "7cf50783-2a7f-482c-9eb5-2cb6fb549228",
-        "username": "ted",
-        "altid": "3",
-        "userdata": {
-          "avatar": "test.jpg"
+      'user_follower': {
+        'user': '7cf50783-2a7f-482c-9eb5-2cb6fb549228',
+        'username': 'ted',
+        'altid': '3',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "since": "2015-05-24T06:37:04.825Z",
-      "isprivate": false,
-      "ispersonal": false,
-      "username_follower": "ted",
-      "type": "follow",
-      "timeuuid": "4ac2bfc0-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:04.828Z",
-      "fromNow": "a few seconds ago",
-      "fromFollower": true,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": true,
-      "isFriend": false,
-      "isUsersItem": true
+      'since': '2015-05-24T06:37:04.825Z',
+      'isprivate': false,
+      'ispersonal': false,
+      'username_follower': 'ted',
+      'type': 'follow',
+      'timeuuid': '4ac2bfc0-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:04.828Z',
+      'fromNow': 'a few seconds ago',
+      'fromFollower': true,
+      'isLike': false,
+      'isPost': false,
+      'isFollow': true,
+      'isFriend': false,
+      'isUsersItem': true
     },
     {
-      "follow": "8e85e2a8-b4a4-4280-bd14-7e47123c6848",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'follow': '8e85e2a8-b4a4-4280-bd14-7e47123c6848',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "user_follower": {
-        "user": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
+      'user_follower': {
+        'user': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+        'username': 'phteven',
+        'altid': '2',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "since": "2015-05-24T06:37:04.793Z",
-      "isprivate": false,
-      "ispersonal": false,
-      "username_follower": "phteven",
-      "type": "follow",
-      "timeuuid": "4abe52f0-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:04.799Z",
-      "fromNow": "a few seconds ago",
-      "fromFollower": true,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": true,
-      "isFriend": false,
-      "isUsersItem": true
+      'since': '2015-05-24T06:37:04.793Z',
+      'isprivate': false,
+      'ispersonal': false,
+      'username_follower': 'phteven',
+      'type': 'follow',
+      'timeuuid': '4abe52f0-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:04.799Z',
+      'fromNow': 'a few seconds ago',
+      'fromFollower': true,
+      'isLike': false,
+      'isPost': false,
+      'isFollow': true,
+      'isFriend': false,
+      'isUsersItem': true
     },
     {
-      "friend": "3538353e-f144-4be8-a020-e59891e6bb72",
-      "user": {
-        "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
+      'friend': '3538353e-f144-4be8-a020-e59891e6bb72',
+      'user': {
+        'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+        'username': 'cliftonc',
+        'altid': '1',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "user_friend": {
-        "user": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
+      'user_friend': {
+        'user': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+        'username': 'phteven',
+        'altid': '2',
+        'userdata': {
+          'avatar': 'test.jpg'
         }
       },
-      "since": "2015-05-24T06:37:04.568Z",
-      "username_friend": "phteven",
-      "type": "friend",
-      "timeuuid": "4a9bfde0-01df-11e5-a7a8-110a72727ab0",
-      "date": "2015-05-24T06:37:04.574Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": true,
-      "ispersonal": false,
-      "fromFollower": true,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": false,
-      "isFriend": true,
-      "isUsersItem": true
+      'since': '2015-05-24T06:37:04.568Z',
+      'username_friend': 'phteven',
+      'type': 'friend',
+      'timeuuid': '4a9bfde0-01df-11e5-a7a8-110a72727ab0',
+      'date': '2015-05-24T06:37:04.574Z',
+      'fromNow': 'a few seconds ago',
+      'isprivate': true,
+      'ispersonal': false,
+      'fromFollower': true,
+      'isLike': false,
+      'isPost': false,
+      'isFollow': false,
+      'isFriend': true,
+      'isUsersItem': true
     }
   ],
-  "more": null
+  'more': null
 }
  */
 /**
@@ -1345,37 +1344,37 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "friend": "1d1ba1a5-56f2-48fb-9c6f-b969d6e52ee2",
-    "user": {
-      "user": "b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1",
-      "username": "phteven",
-      "altid": "2",
-      "userdata": {
-        "avatar": "test.jpg"
+    'friend': '1d1ba1a5-56f2-48fb-9c6f-b969d6e52ee2',
+    'user': {
+      'user': 'b3bddb05-0d97-4ff2-980b-6cf2ea33b6d1',
+      'username': 'phteven',
+      'altid': '2',
+      'userdata': {
+        'avatar': 'test.jpg'
       }
     },
-    "user_friend": {
-      "user": "006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc",
-      "username": "cliftonc",
-      "altid": "1",
-      "userdata": {
-        "avatar": "test.jpg"
+    'user_friend': {
+      'user': '006fc0fb-4fbd-4d2a-b582-ea86fa62bbfc',
+      'username': 'cliftonc',
+      'altid': '1',
+      'userdata': {
+        'avatar': 'test.jpg'
       }
     },
-    "since": "2015-05-24T06:37:04.568Z",
-    "username_friend": "cliftonc",
-    "type": "friend",
-    "timeuuid": "4a9f3231-01df-11e5-a7a8-110a72727ab0",
-    "date": "2015-05-24T06:37:04.595Z",
-    "fromNow": "a few seconds ago",
-    "isprivate": true,
-    "ispersonal": false,
-    "fromFollower": true,
-    "isLike": false,
-    "isPost": false,
-    "isFollow": false,
-    "isFriend": true,
-    "isUsersItem": false
+    'since': '2015-05-24T06:37:04.568Z',
+    'username_friend': 'cliftonc',
+    'type': 'friend',
+    'timeuuid': '4a9f3231-01df-11e5-a7a8-110a72727ab0',
+    'date': '2015-05-24T06:37:04.595Z',
+    'fromNow': 'a few seconds ago',
+    'isprivate': true,
+    'ispersonal': false,
+    'fromFollower': true,
+    'isLike': false,
+    'isPost': false,
+    'isFollow': false,
+    'isFriend': true,
+    'isUsersItem': false
   }
 ]
  */
@@ -1384,18 +1383,18 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "isFriend": true,
-  "isFriendSince": "2015-05-24T06:37:04.568Z",
-  "isFriendRequestPending": false,
-  "isFriendRequestSince": null,
-  "youFollow": false,
-  "youFollowSince": null,
-  "youFollowPrivate": null,
-  "youFollowPersonal": null,
-  "theyFollow": true,
-  "theyFollowSince": "2015-05-24T06:37:04.793Z",
-  "theyFollowPrivate": false,
-  "theyFollowPersonal": false,
-  "inCommon": []
+  'isFriend': true,
+  'isFriendSince': '2015-05-24T06:37:04.568Z',
+  'isFriendRequestPending': false,
+  'isFriendRequestSince': null,
+  'youFollow': false,
+  'youFollowSince': null,
+  'youFollowPrivate': null,
+  'youFollowPersonal': null,
+  'theyFollow': true,
+  'theyFollowSince': '2015-05-24T06:37:04.793Z',
+  'theyFollowPrivate': false,
+  'theyFollowPersonal': false,
+  'inCommon': []
 }
  */

@@ -89,7 +89,7 @@ module.exports = function (client, redis) {
   function getFriends (keyspace, liu, user, next) {
     isFriend(keyspace, user, liu, function (err, ok) {
       if (err) { return next(err); }
-      if (!ok) { return next({statusCode: 403, message:'You are not allowed to see this item.'}); }
+      if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
       _get(keyspace, 'selectFriends', [user], 'many', function (err, friends) {
         if (err) { return next(err); }
         next(null, friends);
@@ -301,10 +301,6 @@ module.exports = function (client, redis) {
         _mapGetUser(keyspace, followers, ['user_follower'], user, next);
       });
     });
-  }
-
-  function getFollowersInCommon (keyspace, user, other_user, next) {
-    next();
   }
 
   function getUserRelationship (keyspace, user, other_user, next) {

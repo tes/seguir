@@ -1,7 +1,6 @@
 /**
  * Seguir client
  */
-var _ = require('lodash');
 var restify = require('restify');
 var headerNames = require('../api/auth').headerNames;
 var authUtils = require('../api/auth/utils');
@@ -31,14 +30,14 @@ var u = require('../api/urls');
       }
  */
 var defaults = {
-  host:'http://localhost:3000'
-}
+  host: 'http://localhost:3000'
+};
 
-function Seguir(options) {
+function Seguir (options) {
 
   var self = this;
 
-  if(!options || !options.appsecret || !options.appid) {
+  if (!options || !options.appsecret || !options.appid) {
     console.log('You must provide an application secret and application id to initiate a seguir client!');
     return;
   }
@@ -60,35 +59,35 @@ function Seguir(options) {
 /**
  * Helper functions
  */
-Seguir.prototype.get = function(liu, apiPath, next) {
+Seguir.prototype.get = function (liu, apiPath, next) {
   var self = this;
-  self.client.get({path: apiPath, headers: self.getHeaders(liu)}, function(err, req, res, obj) {
-    next(err, obj)
+  self.client.get({path: apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
+    next(err, obj);
   });
-}
+};
 
-Seguir.prototype.post = function(liu, apiPath, data, next) {
+Seguir.prototype.post = function (liu, apiPath, data, next) {
   var self = this;
-  self.client.post({path: apiPath, headers: self.getHeaders(liu)}, data, function(err, req, res, obj) {
-    next(err, obj)
+  self.client.post({path: apiPath, headers: self.getHeaders(liu)}, data, function (err, req, res, obj) {
+    next(err, obj);
   });
-}
+};
 
-Seguir.prototype.del = function(liu, apiPath, next) {
+Seguir.prototype.del = function (liu, apiPath, next) {
   var self = this;
-  self.client.del({path: apiPath, headers: self.getHeaders(liu)}, function(err, req, res, obj) {
-    next(err, obj)
+  self.client.del({path: apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
+    next(err, obj);
   });
-}
+};
 
-Seguir.prototype.getHeaders = function(liu) {
+Seguir.prototype.getHeaders = function (liu) {
   var self = this;
   var headers = authUtils.generateAuthorization(self.appid, self.appsecret);
-  if(liu) {
+  if (liu) {
     headers[headerNames.userHeader] = liu;
   }
   return headers;
-}
+};
 
 /**
  * @apiDefine Users Users
@@ -108,10 +107,10 @@ Seguir.prototype.getHeaders = function(liu) {
  *
  * @apiUse getUserSuccessExample
  */
-Seguir.prototype.getUser = function(liu, user, next) {
+Seguir.prototype.getUser = function (liu, user, next) {
   var self = this;
   self.get(liu, u('getUser', {user: '' + user}), next);
-}
+};
 
 /**
  * @api {function} getUserByName(liu,username,next) getUserByName
@@ -125,10 +124,10 @@ Seguir.prototype.getUser = function(liu, user, next) {
  * @apiParam {Function} next callback
  * @apiUse getUserByNameSuccessExample
  */
-Seguir.prototype.getUserByName = function(liu, username, next) {
+Seguir.prototype.getUserByName = function (liu, username, next) {
   var self = this;
-  self.get(liu, u('getUserByName', {username:username}), next);
-}
+  self.get(liu, u('getUserByName', {username: username}), next);
+};
 
 /**
  * @api {function} getUserByAltId(liu,altid,next) getUserByAltId
@@ -142,10 +141,10 @@ Seguir.prototype.getUserByName = function(liu, username, next) {
  * @apiParam {Function} next callback
  * @apiUse getUserByAltIdSuccessExample
  */
-Seguir.prototype.getUserByAltId = function(liu, altid, next) {
+Seguir.prototype.getUserByAltId = function (liu, altid, next) {
   var self = this;
   self.get(liu, u('getUserByAltId', {altid: altid}), next);
-}
+};
 
 /**
  * @api {function} addUser(liu,username,altid,userdata,next) addUser
@@ -162,10 +161,10 @@ Seguir.prototype.getUserByAltId = function(liu, altid, next) {
  *
  * @apiUse addUserSuccessExample
  */
-Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
+Seguir.prototype.addUser = function (liu, username, altid, userdata, next) {
   var self = this;
   self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata}, next);
-}
+};
 
 /**
  * @api {function} getUserRelationship(liu,user,next) getUserRelationship
@@ -179,10 +178,10 @@ Seguir.prototype.addUser = function(liu, username, altid, userdata, next) {
  * @apiParam {Function} next callback
  * @apiUse getUserRelationshipSuccessExample
  */
-Seguir.prototype.getUserRelationship = function(liu, user, next) {
+Seguir.prototype.getUserRelationship = function (liu, user, next) {
   var self = this;
   self.get(liu, u('getUserRelationship', {user: user}), next);
-}
+};
 
 /**
  * @apiDefine Friends Friends
@@ -201,10 +200,10 @@ Seguir.prototype.getUserRelationship = function(liu, user, next) {
  * @apiParam {Function} next callback
  * @apiUse getFriendsSuccessExample
  */
-Seguir.prototype.getFriends = function(liu, user, next) {
+Seguir.prototype.getFriends = function (liu, user, next) {
   var self = this;
   self.get(liu, u('getFriends', {user: user}), next);
-}
+};
 
 /**
  * @api {function} getFriend(liu,friend,next) getFriend
@@ -218,10 +217,10 @@ Seguir.prototype.getFriends = function(liu, user, next) {
  * @apiParam {Function} next callback
  * @apiUse getFriendSuccessExample
  */
-Seguir.prototype.getFriend = function(liu, friend, next) {
+Seguir.prototype.getFriend = function (liu, friend, next) {
   var self = this;
   self.get(liu, u('getFriend', {friend: friend}), next);
-}
+};
 
 /**
  * @api {function} removeFriend(liu,user_friend,next) removeFriend
@@ -235,10 +234,10 @@ Seguir.prototype.getFriend = function(liu, friend, next) {
  * @apiParam {Function} next callback
  * @apiUse removeFriendSuccessExample
  */
-Seguir.prototype.removeFriend = function(liu, user_friend, next) {
+Seguir.prototype.removeFriend = function (liu, user_friend, next) {
   var self = this;
   self.del(liu, u('removeFriend', {user: liu, user_friend: user_friend}), next);
-}
+};
 
 /**
  * @apiDefine FriendRequests FriendRequests
@@ -259,10 +258,10 @@ Seguir.prototype.removeFriend = function(liu, user_friend, next) {
  * @apiParam {Function} next callback
  * @apiUse addFriendRequestSuccessExample
  */
-Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestamp, next) {
+Seguir.prototype.addFriendRequest = function (liu, user_friend, message, timestamp, next) {
   var self = this;
   self.post(liu, u('addFriendRequest'), {user_friend: user_friend, message: message, timestamp: timestamp}, next);
-}
+};
 
 /**
  * @api {function} getFriendRequests(liu,next) getFriendRequests
@@ -275,10 +274,10 @@ Seguir.prototype.addFriendRequest = function(liu, user_friend, message, timestam
  * @apiParam {Function} next callback
  * @apiUse getFriendRequestsSuccessExample
  */
-Seguir.prototype.getFriendRequests = function(liu, next) {
+Seguir.prototype.getFriendRequests = function (liu, next) {
   var self = this;
   self.get(liu, u('getFriendRequests'), next);
-}
+};
 
 /**
  * @api {function} acceptFriendRequest(liu,friend_request,next) acceptFriendRequest
@@ -292,11 +291,10 @@ Seguir.prototype.getFriendRequests = function(liu, next) {
  * @apiParam {Function} next callback
  * @apiUse acceptFriendRequestSuccessExample
  */
-Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
+Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
   var self = this;
   self.post(liu, u('acceptFriendRequest'), {friend_request: friend_request}, next);
-}
-
+};
 
 /**
  * @apiDefine Following Following
@@ -318,10 +316,10 @@ Seguir.prototype.acceptFriendRequest = function(liu, friend_request, next) {
  * @apiParam {Function} next callback
  * @apiUse followUserSuccessExample
  */
-Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, isprivate, ispersonal,  next) {
+Seguir.prototype.followUser = function (liu, user_to_follow, timestamp, isprivate, ispersonal, next) {
   var self = this;
   self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, isprivate: isprivate, ispersonal: ispersonal}, next);
-}
+};
 
 /**
  * @api {function} unFollowUser(liu,user_following,timestamp,next) unFollowUser
@@ -335,10 +333,10 @@ Seguir.prototype.followUser = function(liu, user_to_follow, timestamp, isprivate
  * @apiParam {Function} next callback
  * @apiUse unFollowUserSuccessExample
  */
-Seguir.prototype.unFollowUser = function(liu, user_following, next) {
+Seguir.prototype.unFollowUser = function (liu, user_following, next) {
   var self = this;
   self.del(liu, u('removeFollower', {user: user_following, user_follower: liu}), next);
-}
+};
 
 /**
  * @api {function} removeFollower(liu,user_follower,next) removeFollower
@@ -352,10 +350,10 @@ Seguir.prototype.unFollowUser = function(liu, user_following, next) {
  * @apiParam {Function} next callback
  * @apiUse unFollowUserSuccessExample
  */
-Seguir.prototype.removeFollower = function(liu, user_follower, next) {
+Seguir.prototype.removeFollower = function (liu, user_follower, next) {
   var self = this;
   self.del(liu, u('removeFollower', {user: liu, user_follower: user_follower}), next);
-}
+};
 
 /**
  * @api {function} getFollowers(liu,user,next) getFollowers
@@ -369,10 +367,10 @@ Seguir.prototype.removeFollower = function(liu, user_follower, next) {
  * @apiParam {Function} next callback
  * @apiUse getFollowersSuccessExample
  */
-Seguir.prototype.getFollowers = function(liu, user, next) {
+Seguir.prototype.getFollowers = function (liu, user, next) {
   var self = this;
   self.get(liu, u('getFollowers', {user: user}), next);
-}
+};
 
 /**
  * @api {function} getFollow(liu,follow,next) getFollow
@@ -386,10 +384,10 @@ Seguir.prototype.getFollowers = function(liu, user, next) {
  * @apiParam {Function} next callback
  * @apiUse getFollowSuccessExample
  */
-Seguir.prototype.getFollow = function(liu, follow, next) {
+Seguir.prototype.getFollow = function (liu, follow, next) {
   var self = this;
   self.get(liu, u('getFollow', {follow: follow}), next);
-}
+};
 
 /**
  * @apiDefine Posts Posts
@@ -411,10 +409,10 @@ Seguir.prototype.getFollow = function(liu, follow, next) {
  * @apiParam {Function} next callback
  * @apiUse addPostSuccessExample
  */
-Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, ispersonal, next) {
+Seguir.prototype.addPost = function (liu, content, timestamp, isprivate, ispersonal, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate:isprivate, ispersonal: ispersonal}, next);
-}
+  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal}, next);
+};
 
 /**
  * @api {function} getPost(liu,post,next) getPost
@@ -428,10 +426,10 @@ Seguir.prototype.addPost = function(liu, content, timestamp, isprivate, isperson
  * @apiParam {Function} next callback
  * @apiUse getPostSuccessExample
  */
-Seguir.prototype.getPost = function(liu, post, next) {
+Seguir.prototype.getPost = function (liu, post, next) {
   var self = this;
   self.get(liu, u('getPost', {post: post}), next);
-}
+};
 
 /**
  * @api {function} removePost(liu,post,next) removePost
@@ -445,10 +443,10 @@ Seguir.prototype.getPost = function(liu, post, next) {
  * @apiParam {Function} next callback
  * @apiUse removePostSuccessExample
  */
-Seguir.prototype.removePost = function(liu, post, next) {
+Seguir.prototype.removePost = function (liu, post, next) {
   var self = this;
   self.del(liu, u('removePost', {post: post}), next);
-}
+};
 
 /**
  * @apiDefine Likes Likes
@@ -467,10 +465,10 @@ Seguir.prototype.removePost = function(liu, post, next) {
  * @apiParam {Function} next callback
  * @apiUse addLikeSuccessExample
  */
-Seguir.prototype.addLike = function(liu, item, next) {
+Seguir.prototype.addLike = function (liu, item, next) {
   var self = this;
   self.post(liu, u('addLike'), {user: liu, item: encodeURIComponent(item) }, next);
-}
+};
 
 /**
  * @api {function} getLike(liu,like,next) getLike
@@ -484,10 +482,10 @@ Seguir.prototype.addLike = function(liu, item, next) {
  * @apiParam {Function} next callback
  * @apiUse getLikeSuccessExample
  */
-Seguir.prototype.getLike = function(liu, like, next) {
+Seguir.prototype.getLike = function (liu, like, next) {
   var self = this;
   self.get(liu, u('getLike', {like: like}), next);
-}
+};
 
 /**
  * @api {function} checkLike(liu,item,next) checkLike
@@ -501,10 +499,10 @@ Seguir.prototype.getLike = function(liu, like, next) {
  * @apiParam {Function} next callback
  * @apiUse checkLikeSuccessExample
  */
-Seguir.prototype.checkLike = function(liu, item, next) {
+Seguir.prototype.checkLike = function (liu, item, next) {
   var self = this;
   self.get(liu, u('checkLike', {user: liu, item: encodeURIComponent(item) }), next);
-}
+};
 
 /**
  * @api {function} removeLike(liu,item,next) removeLike
@@ -518,10 +516,10 @@ Seguir.prototype.checkLike = function(liu, item, next) {
  * @apiParam {Function} next callback
  * @apiUse removeLikeSuccessExample
  */
-Seguir.prototype.removeLike = function(liu, item, next) {
+Seguir.prototype.removeLike = function (liu, item, next) {
   var self = this;
   self.del(liu, u('removeLike', {user: liu, item: encodeURIComponent(item)}), next);
-}
+};
 
 /**
  * @apiDefine Feeds Feeds
@@ -542,12 +540,11 @@ Seguir.prototype.removeLike = function(liu, item, next) {
  * @apiParam {Function} next callback
  * @apiUse getFeedSuccessExample
  */
-Seguir.prototype.getFeed = function(liu, user, start, limit, next) {
+Seguir.prototype.getFeed = function (liu, user, start, limit, next) {
   var self = this;
-  var query = [start ? 'start=' + start : null, limit ? 'limit=' + limit : null ].join("&");
+  var query = [start ? 'start=' + start : null, limit ? 'limit=' + limit : null ].join('&');
   self.get(liu, u('getFeed', {user: user, query: query}), next);
-}
-
+};
 
 /**
  * @api {function} getUserFeed(liu,user,start,limit,next) getUserFeed
@@ -563,11 +560,11 @@ Seguir.prototype.getFeed = function(liu, user, start, limit, next) {
  * @apiParam {Function} next callback
  * @apiUse getUserFeedSuccessExample
  */
-Seguir.prototype.getUserFeed = function(liu, user, start, limit, next) {
+Seguir.prototype.getUserFeed = function (liu, user, start, limit, next) {
   var self = this;
   var query = [start ? 'start=' + start : null, limit ? 'limit=' + limit : null ].join("&");
   self.get(liu, u('getUserFeed', {user: user, query: query}), next);
-}
+};
 
 module.exports = Seguir;
 
