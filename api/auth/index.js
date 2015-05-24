@@ -187,7 +187,7 @@ function Auth (client, redis, keyspace, options) {
 
     // TODO: Cleaner way of excluding some paths from the auth check
     if (req.url === '/status') {
-      return next();
+      return next(null);
     }
 
     var appAuthorization = req.headers.authorization,
@@ -212,7 +212,7 @@ function Auth (client, redis, keyspace, options) {
           checkUser(req.keyspace, user, function (err, user) {
             if (err) { return res.send(err); }
             req.liu = user;
-            next();
+            next(null);
           });
         } else {
           return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.'));
@@ -232,7 +232,7 @@ function Auth (client, redis, keyspace, options) {
           checkUser(req.keyspace, user, function (err, user) {
             if (err) { return res.send(err); }
             req.liu = user;
-            next();
+            next(null);
           });
         } else {
           return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.'));
