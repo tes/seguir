@@ -21,7 +21,7 @@ There are a few basic ground-rules for contributors:
 1. For significant changes wait a full 24 hours before merging so that active
    contributors who are distributed throughout the world have a chance to weigh
    in.
-1. Contributors should attempt to adhere to the prevailing code-style.
+1. Contributors should attempt to adhere to the prevailing code-style, enforced by semistandard.
 1. Run `npm test` locally before submitting your PR, to catch any easy to miss
    style & testing issues.  To diagnose test failures, there are two ways to
    run a single test file:
