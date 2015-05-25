@@ -15,19 +15,6 @@ program
   .option('-c, --config [file]', 'Use config file')
   .parse(process.argv);
 
-var tasks = [
-  'Check current setup',
-  'Initialise a new cassandra instance',
-  'Add a new account, user and application',
-  'List users for account',
-  'Add a new user to an account',
-  'List applications for account',
-  'Add a new application to an account',
-  'Reset application token',
-  'Add a new application token',
-  'List application tokens for an application'
-];
-
 var configFile = program.config ? path.resolve('.', program.config) : '../server/config';
 var configFn;
 
@@ -88,45 +75,28 @@ configFn(function (err, config) {
 
   } else {
 
+    var tasks = {
+      'Check current setup': checkSetup,
+      'Initialise a new cassandra instance': coreSetup,
+      'Add a new account, user and application': promptAccount,
+      'List users for account': listUsers,
+      'Add a new user to an account': addUser,
+      'List applications for account': listApplications,
+      'Add a new application to an account': addApplication,
+      'Reset application token': resetApplication,
+      'Add a new application token': addToken,
+      'List application tokens for an application': listTokens
+    };
+
     inquirer.prompt([
       {
         type: 'list',
         message: 'What would you like to do:',
         name: 'task',
-        choices: tasks
+        choices: _.keys(tasks)
       }
     ], function (answer) {
-      if (answer.task === tasks[0]) {
-        checkSetup();
-      }
-      if (answer.task === tasks[1]) {
-        coreSetup();
-      }
-      if (answer.task === tasks[2]) {
-        promptAccount();
-      }
-      if (answer.task === tasks[3]) {
-        listUsers();
-      }
-      if (answer.task === tasks[4]) {
-        addUser();
-      }
-      if (answer.task === tasks[5]) {
-        listApplications();
-      }
-      if (answer.task === tasks[6]) {
-        addApplication();
-      }
-      if (answer.task === tasks[7]) {
-        resetApplication();
-      }
-      if (answer.task === tasks[8]) {
-        addToken();
-      }
-      if (answer.task === tasks[9]) {
-        listTokens();
-      }
-
+      tasks[answer.task]();
     });
 
   }
