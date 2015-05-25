@@ -4,7 +4,7 @@
 
 /*eslint-env node, mocha */
 
-var keyspace = 'test_seguir_app';
+var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
 var client = require('../../api/db/client')();
 var messaging = {enabled: false};

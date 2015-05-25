@@ -4,7 +4,7 @@
 
 /*eslint-env node, mocha */
 
-var keyspace = 'test_seguir_app';
+var keyspace = 'test_seguir_app_worker';
 var expect = require('expect.js');
 var config = require('../../server/config');
 var client = require('../../api/db/client')();

@@ -4,7 +4,7 @@
 
 /*eslint-env node, mocha */
 
-var keyspace = 'test_client_seguir';
+var keyspace = 'test_client_seguir_server';
 var dbClient = require('../../api/db/client')();
 var messaging = {enabled: false};
 var api = require('../../index')(dbClient, messaging, keyspace);
