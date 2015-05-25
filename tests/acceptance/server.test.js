@@ -74,6 +74,16 @@ describe('Seguir Social Server / Client API', function () {
     updateSamples();
   });
 
+  describe('Status', function () {
+    it('can retrieve server status', function (done) {
+      client.status(function (err, status) {
+        expect(err).to.be(null);
+        expect(status.status).to.be('OK');
+        done();
+      });
+    });
+  });
+
   describe('Users', function () {
 
     it('can create users', function (done) {

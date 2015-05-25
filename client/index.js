@@ -89,6 +89,11 @@ Seguir.prototype.getHeaders = function (liu) {
   return headers;
 };
 
+Seguir.prototype.status = function (next) {
+  var self = this;
+  self.get(null, '/status', next);
+};
+
 /**
  * @apiDefine Users Users
  * This is a collection of methods that allow you to create and retrieve users.

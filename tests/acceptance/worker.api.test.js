@@ -6,7 +6,7 @@
 
 var keyspace = 'test_seguir_app_worker';
 var expect = require('expect.js');
-var config = require('../../server/config');
+var config = require('../../server/config')();
 var client = require('../../api/db/client')();
 var messaging = require('../../api/db/messaging')();
 var worker = require('../../server/worker');

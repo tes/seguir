@@ -714,7 +714,7 @@ function bootstrapServer (config, keyspace, next) {
 
 /* istanbul ignore if */
 if (require.main === module) {
-  var config = require('./config');
+  var config = require('./config')();
   bootstrapServer(config, config.keyspace, function (err, server, client) {
     if (err) {
       console.log('Unable to bootstrap server: ' + err.message);
@@ -724,7 +724,6 @@ if (require.main === module) {
       console.log('Server %s listening at %s', server.name, server.url);
     });
   });
-
 } else {
   // Used for testing
   module.exports = bootstrapServer;

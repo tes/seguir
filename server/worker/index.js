@@ -33,7 +33,7 @@ function bootstrapWorker (config, next) {
 
 /* istanbul ignore if */
 if (require.main === module) {
-  var config = require('../config');
+  var config = require('../config')();
   bootstrapWorker(config);
 } else {
   // Used for testing
