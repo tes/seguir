@@ -5,6 +5,8 @@ var userHeader = 'x-seguir-user-token';
 var authUtils = require('./utils');
 var setupKeyspace = require('../../setup/setupKeyspace');
 var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'};
+var Uuid = cassandra.types.Uuid;
+var debug = require('debug')('seguir:auth');
 
 function Auth (client, redis, keyspace, options) {
 
@@ -18,7 +20,7 @@ function Auth (client, redis, keyspace, options) {
       if (err) { return next(err); }
       if (checkAccount) { return next(new Error('An account with that name already exists!')); }
 
-      var account = cassandra.types.uuid();
+      var account = Uuid.random();
       var accountData = [account, name, isadmin, enabled];
       client.execute(q(keyspace, 'upsertAccount'), accountData, function (err, result) {
         if (err) { return next(err); }
@@ -132,7 +134,7 @@ function Auth (client, redis, keyspace, options) {
   }
 
   function addApplication (account, name, appid, appsecret, next) {
-    appid = appid || cassandra.types.uuid();
+    appid = appid || Uuid.random();
     appsecret = appsecret || authUtils.generateSecret(cassandra.types.uuid());
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
@@ -156,7 +158,7 @@ function Auth (client, redis, keyspace, options) {
    *  Application Token API
    */
   function addApplicationToken (appid, appkeyspace, tokenid, tokensecret, next) {
-    tokenid = tokenid || cassandra.types.uuid();
+    tokenid = tokenid || Uuid.random();
     tokensecret = tokensecret || authUtils.generateSecret(cassandra.types.uuid());
     var enabled = true;
     var token = [appid, appkeyspace, tokenid, tokensecret, enabled];
@@ -271,7 +273,11 @@ function Auth (client, redis, keyspace, options) {
   }
 
   function isUuid (value) {
-    return (typeof value === 'string' && value.length === 36);
+    return value instanceof Uuid;
+  }
+
+  function isStringUuid (value) {
+    return (typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4);
   }
 
   function getUserBySeguirId (user_keyspace, user, next) {
@@ -300,25 +306,37 @@ function Auth (client, redis, keyspace, options) {
 
   function coerceUserToUuid (user_keyspace, ids, next) {
 
+    debug('Coercing %s to uuid', ids);
+
     if (!ids) {
       return next();
     }
 
+    if (isUuid(ids)) {
+      debug('Id %s IS uuid', ids);
+      return next(null, ids);
+    }
+
     var coerce = function (id, cb) {
 
-      id = '' + id; // Ensure ID is a string
-
-      if (isUuid(id)) {
+      if (isStringUuid(id)) {
         // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
-        return cb(null, id);
+        debug('Id is string Uuid, converting', ids);
+        return cb(null, Uuid.fromString(id));
       } else {
         // Assume altid first, then try name
+        id = '' + id; // Ensure it is a string
+        debug('Trying %s as altid', id);
         getUserByAltId(user_keyspace, id, function (err, user) {
           if (err) {
+            debug('Trying %s as username', ids);
             return getUserByName(user_keyspace, id, function (err, user) {
+              if (err) { return next(err); }
+              debug('%s is username, uuid is %s', id, user && user.user);
               return cb(err, user && user.user);
             });
           }
+          debug('%s is altid, uuid is %s', id, user && user.user);
           return cb(err, user && user.user);
         });
       }
@@ -338,11 +356,19 @@ function Auth (client, redis, keyspace, options) {
 
   function checkUser (user_keyspace, id, next) {
 
+    debug('Checking user %s', id);
+
     if (!id) {
       return next(null, anonyomousUser);
     }
 
+    if (isStringUuid(id)) {
+      debug('Converting string %s to uuid', id);
+      id = Uuid.fromString(id);
+    }
+
     if (isUuid(id)) {
+      debug('User %s is uuid', id);
       // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
       getUserBySeguirId(user_keyspace, id, function (err, user) {
         if (err) {
@@ -353,9 +379,11 @@ function Auth (client, redis, keyspace, options) {
         return next(null, user);
       });
     } else {
+      debug('User %s is NOT uuid, trying altid', id);
       // Assume altid first, then try name
       getUserByAltId(user_keyspace, id, function (err, user) {
         if (err) {
+          debug('User %s is NOT altid, trying username', id);
           return getUserByName(user_keyspace, id, next);
         }
         return next(null, user);

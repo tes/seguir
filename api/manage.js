@@ -4,6 +4,8 @@ var _ = require('lodash');
 var mention = new RegExp('@[a-zA-Z0-9]+', 'g');
 var sanitizeHtml = require('sanitize-html');
 var FEEDS = ['feed_timeline', 'user_timeline'];
+var Uuid = cassandra.types.Uuid;
+var TimeUuid = cassandra.types.TimeUuid;
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -29,7 +31,7 @@ module.exports = function (client, messaging) {
 
   function addUser (keyspace, username, altid, userdata, next) {
     userdata = _.mapValues(userdata, function (value) { return value.toString(); }); // Always ensure our userdata is <text,text>
-    var userid = cassandra.types.uuid();
+    var userid = Uuid.random();
     var user = [userid, username, '' + altid, userdata];
     client.execute(q(keyspace, 'upsertUser'), user, {prepare: true, hints: [null, null, 'map']}, function (err, result) {
       if (err) { return next(err); }
@@ -38,7 +40,7 @@ module.exports = function (client, messaging) {
   }
 
   function addPost (keyspace, user, content, timestamp, isprivate, ispersonal, next) {
-    var post = cassandra.types.uuid();
+    var post = Uuid.random();
     var data = [post, user, clean(content), timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
@@ -72,7 +74,7 @@ module.exports = function (client, messaging) {
   }
 
   function addLike (keyspace, user, item, timestamp, next) {
-    var like = cassandra.types.uuid();
+    var like = Uuid.random();
     var data = [like, user, clean(item), timestamp];
     client.execute(q(keyspace, 'upsertLike'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
@@ -106,10 +108,10 @@ module.exports = function (client, messaging) {
   }
 
   function addFriend (keyspace, user, user_friend, timestamp, next) {
-    var friend = cassandra.types.uuid();
+    var friend = Uuid.random();
     addFriendOneWay(keyspace, friend, user, user_friend, timestamp, function (err) {
       if (err) { return next(err); }
-      var reciprocalFriend = cassandra.types.uuid();
+      var reciprocalFriend = Uuid.random();
       addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, function (err) {
         if (err) { return next(err); }
         next(null, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
@@ -127,7 +129,7 @@ module.exports = function (client, messaging) {
   }
 
   function addFriendRequest (keyspace, user, user_friend, message, timestamp, next) {
-    var friend_request = cassandra.types.uuid();
+    var friend_request = Uuid.random();
     var data = [friend_request, user, user_friend, clean(message), timestamp];
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
@@ -177,7 +179,7 @@ module.exports = function (client, messaging) {
   }
 
   function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, next) {
-    var follow = cassandra.types.uuid();
+    var follow = Uuid.random();
     var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
@@ -223,7 +225,7 @@ module.exports = function (client, messaging) {
         query.isFriend(item.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!item.isprivate || (item.isprivate && isFriend)) {
-            var data = [row.user_follower, item.item, item.type, cassandra.types.timeuuid(), followIsPrivate, followIsPersonal];
+            var data = [row.user_follower, item.item, item.type, TimeUuid.now(), followIsPrivate, followIsPersonal];
             client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE: 'feed_timeline'}), data, {prepare: true}, cb2);
           } else {
             cb2();
@@ -268,9 +270,9 @@ module.exports = function (client, messaging) {
       if (!cb) { return mentioned(); } // no mentioned users
       client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
         if (err) { return cb(err); }
-        var followers = _.pluck(data.rows || [], 'user_follower');
+        var followers = _.map(_.pluck(data.rows || [], 'user_follower'), function (item) { return item.toString(); });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
-          return !(_.contains(followers, mentionedUser.user) || mentionedUser.user === item.user);
+          return !(_.contains(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === item.user.toString());
         });
         cb(null, mentionedNotFollowers);
       });
@@ -280,7 +282,7 @@ module.exports = function (client, messaging) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
         if (!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
-          var data = [mentionedUser.user, item.item, item.type, cassandra.types.timeuuid(), item.isprivate, item.ispersonal];
+          var data = [mentionedUser.user, item.item, item.type, TimeUuid.now(), item.isprivate, item.ispersonal];
           client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE: 'feed_timeline'}), data, {prepare: true}, cb2);
         } else {
           cb2();
@@ -327,7 +329,7 @@ module.exports = function (client, messaging) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        var data = [user, item, type, cassandra.types.timeuuid(), isprivate, ispersonal];
+        var data = [user, item, type, TimeUuid.now(), isprivate, ispersonal];
         client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, cb2);
       }, cb);
     };

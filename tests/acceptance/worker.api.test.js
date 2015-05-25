@@ -53,8 +53,8 @@ describe('Worker Processing', function () {
     it('can follow a user who is not a friend', function (done) {
       manage.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user).to.eql(users[0].user);
+        expect(follow.user_follower).to.eql(users[1].user);
         followId = follow.follow;
         done();
       });
@@ -68,7 +68,7 @@ describe('Worker Processing', function () {
       manage.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0].user);
         postId = post.post;
         done();
       });
@@ -92,9 +92,9 @@ describe('Worker Processing', function () {
       setTimeout(function () {
         query.getFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
-          expect(feed[2].follow).to.be(followId);
-          expect(feed[1].post).to.be(postId);
-          expect(feed[0].post).to.be(mentionPostId);
+          expect(feed[2].follow).to.eql(followId);
+          expect(feed[1].post).to.eql(postId);
+          expect(feed[0].post).to.eql(mentionPostId);
           done();
         });
       }, 4000);

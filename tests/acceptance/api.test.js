@@ -26,11 +26,7 @@ describe('Social API', function () {
     this.timeout(20000);
     console.log('Setting up keyspace ...');
     setupKeyspace(client, keyspace, function () {
-      // We introduce a small delay here, not ideal,
-      // but it appears that there can be some asynchronous
-      // element of creating the indexes in cassandra
-      console.log('Pausing briefly to ensure cassandra keeps up ...');
-      setTimeout(done, 2000);
+      done();
     });
   });
 
@@ -58,7 +54,7 @@ describe('Social API', function () {
     it('can retrieve a user by id', function (done) {
       query.getUser(keyspace, users[0].user, function (err, user) {
         expect(err).to.be(null);
-        expect(user.user).to.be(users[0].user);
+        expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be('cliftonc');
         done();
       });
@@ -67,7 +63,7 @@ describe('Social API', function () {
     it('can retrieve a user by name', function (done) {
       query.getUserByName(keyspace, users[0].username, function (err, user) {
         expect(err).to.be(null);
-        expect(user.user).to.be(users[0].user);
+        expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be(users[0].username);
         done();
       });
@@ -76,7 +72,7 @@ describe('Social API', function () {
     it('can retrieve a user by alternate id', function (done) {
       query.getUserByAltId(keyspace, users[0].altid, function (err, user) {
         expect(err).to.be(null);
-        expect(user.user).to.be(users[0].user);
+        expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be(users[0].username);
         done();
       });
@@ -89,8 +85,8 @@ describe('Social API', function () {
     it('can create a friend request', function (done) {
       manage.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', Date.now(), function (err, friend_request) {
         expect(err).to.be(null);
-        expect(friend_request.user).to.be(users[0].user);
-        expect(friend_request.user_friend).to.be(users[1].user);
+        expect(friend_request.user).to.eql(users[0].user);
+        expect(friend_request.user_friend).to.eql(users[1].user);
         friendRequestId = friend_request.friend_request;
         done();
       });
@@ -99,8 +95,8 @@ describe('Social API', function () {
     it('can see status of outbound friend requests', function (done) {
       query.getOutgoingFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
         expect(err).to.be(null);
-        expect(friend_requests[0].user.user).to.be(users[0].user);
-        expect(friend_requests[0].user_friend.user).to.be(users[1].user);
+        expect(friend_requests[0].user.user).to.eql(users[0].user);
+        expect(friend_requests[0].user_friend.user).to.eql(users[1].user);
         done();
       });
     });
@@ -108,8 +104,8 @@ describe('Social API', function () {
     it('can see status of incoming friend requests', function (done) {
       query.getIncomingFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
         expect(err).to.be(null);
-        expect(friend_requests[0].user.user).to.be(users[0].user);
-        expect(friend_requests[0].user_friend.user).to.be(users[1].user);
+        expect(friend_requests[0].user.user).to.eql(users[0].user);
+        expect(friend_requests[0].user_friend.user).to.eql(users[1].user);
         done();
       });
     });
@@ -117,8 +113,8 @@ describe('Social API', function () {
     it('can see status of all friend requests for incoming', function (done) {
       query.getFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
         expect(err).to.be(null);
-        expect(friend_requests.incoming[0].user.user).to.be(users[0].user);
-        expect(friend_requests.incoming[0].user_friend.user).to.be(users[1].user);
+        expect(friend_requests.incoming[0].user.user).to.eql(users[0].user);
+        expect(friend_requests.incoming[0].user_friend.user).to.eql(users[1].user);
         done();
       });
     });
@@ -126,8 +122,8 @@ describe('Social API', function () {
     it('can see status of all friend requests for outgoing', function (done) {
       query.getFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
         expect(err).to.be(null);
-        expect(friend_requests.outgoing[0].user.user).to.be(users[0].user);
-        expect(friend_requests.outgoing[0].user_friend.user).to.be(users[1].user);
+        expect(friend_requests.outgoing[0].user.user).to.eql(users[0].user);
+        expect(friend_requests.outgoing[0].user_friend.user).to.eql(users[1].user);
         done();
       });
     });
@@ -135,8 +131,8 @@ describe('Social API', function () {
     it('can accept a friend request and create a reciprocal friendship', function (done) {
       manage.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.be(users[0].user);
-        expect(friend.user_friend).to.be(users[1].user);
+        expect(friend.user).to.eql(users[0].user);
+        expect(friend.user_friend).to.eql(users[1].user);
         friendId = friend.friend;
         reciprocalFriendId = friend.reciprocal;
         done();
@@ -146,7 +142,7 @@ describe('Social API', function () {
     it('it deletes the friend request after it is accepted', function (done) {
       query.getFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend_request) {
         expect(err).to.not.be(null);
-        expect(friend_request).to.be(undefined);
+        expect(friend_request).to.eql(undefined);
         done();
       });
     });
@@ -158,8 +154,8 @@ describe('Social API', function () {
     it('can friend another user', function (done) {
       manage.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.be(users[2].user);
-        expect(friend.user_friend).to.be(users[3].user);
+        expect(friend.user).to.eql(users[2].user);
+        expect(friend.user_friend).to.eql(users[3].user);
         otherFriendId = friend.friend;
         done();
       });
@@ -168,8 +164,8 @@ describe('Social API', function () {
     it('can retrieve a friend by id', function (done) {
       query.getFriend(keyspace, liu, friendId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.be(users[0].user);
-        expect(friend.user_friend).to.be(users[1].user);
+        expect(friend.user).to.eql(users[0].user);
+        expect(friend.user_friend).to.eql(users[1].user);
         done();
       });
     });
@@ -184,7 +180,7 @@ describe('Social API', function () {
     it('can retrieve a list of friends for a user', function (done) {
       query.getFriends(keyspace, liu, users[0].user, function (err, friends) {
         expect(err).to.be(null);
-        expect(friends[0].user_friend).to.be(users[1].user);
+        expect(friends[0].user_friend).to.eql(users[1].user);
         done();
       });
     });
@@ -219,7 +215,7 @@ describe('Social API', function () {
       manage.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user_follower).to.eql(users[1].user);
         followId = follow.follow;
         done();
       });
@@ -228,8 +224,8 @@ describe('Social API', function () {
     it('can follow a user who is not a friend', function (done) {
       manage.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[2].user);
+        expect(follow.user).to.eql(users[0].user);
+        expect(follow.user_follower).to.eql(users[2].user);
         notFriendFollowId = follow.follow;
         done();
       });
@@ -238,8 +234,8 @@ describe('Social API', function () {
     it('can follow a user privately so only your friends can see', function (done) {
       manage.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[4].user);
-        expect(follow.user_follower).to.be(users[5].user);
+        expect(follow.user).to.eql(users[4].user);
+        expect(follow.user_follower).to.eql(users[5].user);
         expect(follow.isprivate).to.be(true);
         privateFollowId = follow.follow;
         done();
@@ -249,8 +245,8 @@ describe('Social API', function () {
     it('can follow a user personally so only you can see', function (done) {
       manage.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[6].user);
-        expect(follow.user_follower).to.be(users[5].user);
+        expect(follow.user).to.eql(users[6].user);
+        expect(follow.user_follower).to.eql(users[5].user);
         expect(follow.ispersonal).to.be(true);
         personalFollowId = follow.follow;
         done();
@@ -260,8 +256,8 @@ describe('Social API', function () {
     it('can retrieve a follow by id', function (done) {
       query.getFollow(keyspace, users[0].user, followId, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user).to.eql(users[0].user);
+        expect(follow.user_follower).to.eql(users[1].user);
         done();
       });
     });
@@ -283,9 +279,9 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user', function (done) {
       query.getFollowers(keyspace, users[0].user, users[0].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
-        expect(followerIds).to.contain(users[1].user);
-        expect(followerIds).to.contain(users[2].user);
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        expect(followerIds).to.contain(users[1].user.toString());
+        expect(followerIds).to.contain(users[2].user.toString());
         done();
       });
     });
@@ -309,8 +305,8 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user but will show personal if one of the two users', function (done) {
       query.getFollowers(keyspace, users[6].user, users[6].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
-        expect(followerIds).to.contain(users[5].user);
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        expect(followerIds).to.contain(users[5].user.toString());
         done();
       });
     });
@@ -318,8 +314,8 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user but will show private if one of the two users', function (done) {
       query.getFollowers(keyspace, users[4].user, users[4].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
-        expect(followerIds).to.contain(users[5].user);
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        expect(followerIds).to.contain(users[5].user.toString());
         done();
       });
     });
@@ -332,7 +328,8 @@ describe('Social API', function () {
           expect(result.status).to.be('removed');
           query.getRawFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
-            expect(_.pluck(feed, 'item')).to.not.contain(follow.follow);
+            var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            expect(followerIds).to.not.contain(follow.follow.toString());
             done();
           });
         });
@@ -367,7 +364,7 @@ describe('Social API', function () {
       query.getPost(keyspace, users[2].user, postId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0].user);
         done();
       });
     });
@@ -383,7 +380,7 @@ describe('Social API', function () {
       query.getPost(keyspace, users[1].user, privatePostId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0].user);
         done();
       });
     });
@@ -409,7 +406,7 @@ describe('Social API', function () {
       manage.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Evil hack ');
-        expect(post.user).to.be(users[5].user);
+        expect(post.user).to.eql(users[5].user);
         done();
       });
     });
@@ -421,7 +418,8 @@ describe('Social API', function () {
           expect(err).to.be(null);
           query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
-            expect(_.pluck(feed, 'item')).to.not.contain(post.post);
+            var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            expect(ids).to.not.contain(post.post.toString());
             done();
           });
         });
@@ -433,7 +431,8 @@ describe('Social API', function () {
         expect(err).to.be(null);
         query.getFeed(keyspace, users[4].user, users[5].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
-          expect(_.pluck(feed, 'item')).to.not.contain(post.post);
+          var ids = _.map(_.pluck(feed, 'post'), function (item) { return item.toString(); });
+          expect(ids).to.not.contain(post.post.toString());
           done();
         });
       });
@@ -456,7 +455,7 @@ describe('Social API', function () {
       query.getLike(keyspace, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be('http://github.com');
-        expect(like.user).to.be(users[0].user);
+        expect(like.user).to.eql(users[0].user);
         done();
       });
     });
@@ -464,8 +463,8 @@ describe('Social API', function () {
     it('can check if a user likes an item', function (done) {
       query.checkLike(keyspace, users[0].user, 'http://github.com', function (err, like) {
         expect(err).to.be(null);
-        expect(like.like).to.be(likeId);
-        expect(like.user).to.be(users[0].user);
+        expect(like.like).to.eql(likeId);
+        expect(like.user).to.eql(users[0].user);
         done();
       });
     });
@@ -477,7 +476,8 @@ describe('Social API', function () {
           expect(err).to.be(null);
           query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
-            expect(_.pluck(feed, 'item')).to.not.contain(like.like);
+            var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            expect(ids).to.not.contain(like.like.toString());
             done();
           });
         });
@@ -493,12 +493,12 @@ describe('Social API', function () {
     it('logged in - can get a feed for yourself that is in the correct order', function (done) {
       query.getFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(privatePostId);
-        expect(feed[2].post).to.be(postId);
-        expect(feed[3].follow).to.be(notFriendFollowId);
-        expect(feed[4].follow).to.be(followId);
-        expect(feed[5].friend).to.be(friendId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(privatePostId);
+        expect(feed[2].post).to.eql(postId);
+        expect(feed[3].follow).to.eql(notFriendFollowId);
+        expect(feed[4].follow).to.eql(followId);
+        expect(feed[5].friend).to.eql(friendId);
         done();
       });
     });
@@ -506,12 +506,12 @@ describe('Social API', function () {
     it('logged in - can get a feed for a friend that is in the correct order', function (done) {
       query.getFeed(keyspace, users[1].user, users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(privatePostId); //
-        expect(feed[2].post).to.be(postId);
-        expect(feed[3].follow).to.be(notFriendFollowId);
-        expect(feed[4].follow).to.be(followId);
-        expect(feed[5].friend).to.be(friendId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(privatePostId); //
+        expect(feed[2].post).to.eql(postId);
+        expect(feed[3].follow).to.eql(notFriendFollowId);
+        expect(feed[4].follow).to.eql(followId);
+        expect(feed[5].friend).to.eql(friendId);
         done();
       });
     });
@@ -519,11 +519,11 @@ describe('Social API', function () {
     it('logged in - can get a feed for a friend and follower that is in the correct order', function (done) {
       query.getFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(privatePostId);
-        expect(feed[2].post).to.be(postId);
-        expect(feed[3].follow).to.be(notFriendFollowId);
-        expect(feed[4].follow).to.be(followId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(privatePostId);
+        expect(feed[2].post).to.eql(postId);
+        expect(feed[3].follow).to.eql(notFriendFollowId);
+        expect(feed[4].follow).to.eql(followId);
         done();
       });
     });
@@ -531,9 +531,9 @@ describe('Social API', function () {
     it('logged in - can get a feed for a follower that is not a friend in the correct order', function (done) {
       query.getFeed(keyspace, users[0].user, users[2].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(postId);
-        expect(feed[2].follow).to.be(notFriendFollowId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(postId);
+        expect(feed[2].follow).to.eql(notFriendFollowId);
         done();
       });
     });
@@ -541,9 +541,9 @@ describe('Social API', function () {
     it('anonymous - can get a feed that is in correct order', function (done) {
       query.getFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(postId);
-        expect(feed[2].follow).to.be(notFriendFollowId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(postId);
+        expect(feed[2].follow).to.eql(notFriendFollowId);
         done();
       });
     });
@@ -551,7 +551,7 @@ describe('Social API', function () {
     it('can see private follows as the user', function (done) {
       query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[2].follow).to.be(privateFollowId);
+        expect(feed[2].follow).to.eql(privateFollowId);
         done();
       });
     });
@@ -559,7 +559,7 @@ describe('Social API', function () {
     it('can see personal follows as the user', function (done) {
       query.getFeed(keyspace, users[6].user, users[6].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].follow).to.be(personalFollowId);
+        expect(feed[0].follow).to.eql(personalFollowId);
         done();
       });
     });
@@ -583,7 +583,7 @@ describe('Social API', function () {
     it('logged in - can get a feed for yourself contains mentions', function (done) {
       query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].post).to.be(mentionPostId);
+        expect(feed[0].post).to.eql(mentionPostId);
         done();
       });
     });
@@ -591,9 +591,9 @@ describe('Social API', function () {
     it('cant see follows or mentions on a users personal feed, only direct items', function (done) {
       query.getUserFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].like).to.be(likeId);
-        expect(feed[1].post).to.be(postId);
-        expect(feed[2].follow).to.be(notFriendFollowId);
+        expect(feed[0].like).to.eql(likeId);
+        expect(feed[1].post).to.eql(postId);
+        expect(feed[2].follow).to.eql(notFriendFollowId);
         done();
       });
     });
@@ -601,7 +601,7 @@ describe('Social API', function () {
     it('logged in - can get a users personal feed as the user and see direct actions', function (done) {
       query.getUserFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].post).to.be(mentionPostId);
+        expect(feed[0].post).to.eql(mentionPostId);
         done();
       });
     });
@@ -609,7 +609,7 @@ describe('Social API', function () {
     it('logged in - can get a users personal feed as a friend and see direct items private or public', function (done) {
       query.getUserFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
-        expect(feed[0].friend).to.be(reciprocalFriendId);
+        expect(feed[0].friend).to.eql(reciprocalFriendId);
         done();
       });
     });

@@ -71,7 +71,7 @@ module.exports = function (client, redis) {
     _get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
       if (post.ispersonal) {
-        if (liu !== post.user) { return next(_error(403, 'You are not allowed to see this item.')); }
+        if (liu.toString() !== post.user.toString()) { return next(_error(403, 'You are not allowed to see this item.')); }
         return next(null, post);
       }
       if (post.isprivate) {
@@ -172,7 +172,7 @@ module.exports = function (client, redis) {
   }
 
   function isFriend (keyspace, user, user_friend, next) {
-    if (user === user_friend) { return next(null, true, null, null); }
+    if (user.toString() === user_friend.toString()) { return next(null, true, null, null); }
     _get(keyspace, 'isFriend', [user, user_friend], 'one', function (err, friend) {
       if (err) { return next(null, false, null, null); }
       var isFriend = !!(friend && !!friend.friend);
@@ -182,7 +182,7 @@ module.exports = function (client, redis) {
   }
 
   function isFollower (keyspace, user, user_follower, next) {
-    if (user === user_follower) { return next(null, true, null, {isprivate: false, ispersonal: false}); }
+    if (user.toString() === user_follower.toString()) { return next(null, true, null, {isprivate: false, ispersonal: false}); }
     _get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
       if (err) { return next(null, false, null, {isprivate: false, ispersonal: false}); }
       var isFollower = !!(follow && follow.follow);
@@ -192,12 +192,12 @@ module.exports = function (client, redis) {
   }
 
   function isFriendRequestPending (keyspace, user, user_friend, next) {
-    if (user === user_friend) { return next(null, false, null); }
+    if (user.toString() === user_friend.toString()) { return next(null, false, null); }
     _get(keyspace, 'selectOutgoingFriendRequests', [user], 'many', function (err, friendRequests) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       var friendRequest = _.filter(friendRequests, function (row) {
-        if (row.user_friend.toString() === user_friend) {
+        if (row.user_friend.toString() === user_friend.toString()) {
           return row;
         }
       });
@@ -245,7 +245,7 @@ module.exports = function (client, redis) {
        /* istanbul ignore if */
       if (err) { return next(err); }
 
-      var userIsInFollow = liu === follower.user || liu === follower.user_follower;
+      var userIsInFollow = liu.toString() === follower.user.toString() || liu.toString() === follower.user_follower.toString();
 
       var returnUser = function () {
         getUser(keyspace, follower.user_follower, function (err, user) {
@@ -280,7 +280,7 @@ module.exports = function (client, redis) {
   }
 
   function getFollowers (keyspace, liu, user, next) {
-    var isUser = liu === user;
+    var isUser = liu.toString() === user.toString();
     isFriend(keyspace, liu, user, function (err, isFriend) {
       if (err) { return next(err); }
       _get(keyspace, 'selectFollowers', [user], 'many', function (err, followers) {
@@ -344,7 +344,7 @@ module.exports = function (client, redis) {
     async.map(items, function (item, mapCb) {
       async.each(fields, function (field, eachCb) {
         if (!item[field]) { return eachCb(null); }
-        if (item[field] === currentUser.user) {
+        if (item[field].toString() === currentUser.user && currentUser.user.toString()) {
           item[field] = currentUser;
           eachCb(null);
         } else {
@@ -456,7 +456,7 @@ module.exports = function (client, redis) {
               currentResult.isPost = currentResult.type === 'post';
               currentResult.isFollow = currentResult.type === 'follow';
               currentResult.isFriend = currentResult.type === 'friend';
-              currentResult.isUsersItem = currentResult.user === liu;
+              currentResult.isUsersItem = currentResult.user.toString() === liu.toString();
 
               // To page 'more'
               maxTime = currentResult.timeuuid;

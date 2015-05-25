@@ -39,7 +39,7 @@ describe('Account and Application Management', function () {
     it('can retrieve accounts', function (done) {
       auth.getAccounts(function (err, accounts) {
         expect(err).to.be(null);
-        expect(accounts[0].account).to.be(accountId);
+        expect(accounts[0].account).to.eql(accountId);
         done();
       });
     });
@@ -140,7 +140,7 @@ describe('Account and Application Management', function () {
     it('can list account applications', function (done) {
       auth.getApplications(accountId, function (err, applications) {
         expect(err).to.be(null);
-        expect(applications[0].appid).to.be(appId);
+        expect(applications[0].appid).to.eql(appId);
         done();
       });
     });
@@ -216,7 +216,7 @@ describe('Account and Application Management', function () {
     it('can check if a provided app id is valid', function (done) {
       auth.checkApplication(application.appid, function (err, checkedApplication) {
         expect(err).to.be(null);
-        expect(application.appid).to.be(checkedApplication.appid);
+        expect(application.appid).to.eql(checkedApplication.appid);
         done();
       });
     });
@@ -224,7 +224,7 @@ describe('Account and Application Management', function () {
     it('can check if a provided app token id is valid', function (done) {
       auth.checkApplicationToken(token.tokenid, function (err, checkedToken) {
         expect(err).to.be(null);
-        expect(token.tokenid).to.be(checkedToken.tokenid);
+        expect(token.tokenid).to.eql(checkedToken.tokenid);
         done();
       });
     });
@@ -235,7 +235,7 @@ describe('Account and Application Management', function () {
         userId = user.user;
         auth.checkUser(keyspace + '_' + application.appkeyspace, user.user, function (err, checkedUser) {
           expect(err).to.be(null);
-          expect(checkedUser.user).to.be(user.user);
+          expect(checkedUser.user).to.eql(user.user);
           done();
         });
       });
@@ -246,7 +246,7 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.checkUser(keyspace + '_' + application.appkeyspace, '2', function (err, checkedUser) {
           expect(err).to.be(null);
-          expect(checkedUser.user).to.be(user.user);
+          expect(checkedUser.user).to.eql(user.user);
           done();
         });
       });
@@ -257,7 +257,7 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.checkUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', function (err, checkedUser) {
           expect(err).to.be(null);
-          expect(checkedUser.user).to.be(user.user);
+          expect(checkedUser.user).to.eql(user.user);
           done();
         });
       });
@@ -268,7 +268,7 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, 'cliftonc4', function (err, id) {
           expect(err).to.be(null);
-          expect(id).to.be(user.user);
+          expect(id).to.eql(user.user);
           done();
         });
       });
@@ -279,7 +279,7 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, '5', function (err, id) {
           expect(err).to.be(null);
-          expect(id).to.be(user.user);
+          expect(id).to.eql(user.user);
           done();
         });
       });
@@ -290,7 +290,18 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user, function (err, id) {
           expect(err).to.be(null);
-          expect(id).to.be(user.user);
+          expect(id).to.eql(user.user);
+          done();
+        });
+      });
+    });
+
+    it('can coerce a string uuid to a uuid', function (done) {
+      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function (err, user) {
+        expect(err).to.be(null);
+        auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user.toString(), function (err, id) {
+          expect(err).to.be(null);
+          expect(id).to.eql(user.user);
           done();
         });
       });
@@ -301,7 +312,7 @@ describe('Account and Application Management', function () {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, ['7'], function (err, ids) {
           expect(err).to.be(null);
-          expect(ids[0]).to.be(user.user);
+          expect(ids[0]).to.eql(user.user);
           done();
         });
       });
@@ -320,7 +331,7 @@ describe('Account and Application Management', function () {
       auth.checkRequest(request, response, function (err) {
         expect(err).to.be(null);
         expect(request.keyspace).to.be('test_seguir_auth_another_application');
-        expect(request.liu.user).to.be(userId);
+        expect(request.liu.user).to.eql(userId);
         done();
       });
     });
@@ -373,7 +384,7 @@ describe('Account and Application Management', function () {
       auth.checkRequest(request, response, function (err) {
         expect(err).to.be(null);
         expect(request.keyspace).to.be('test_seguir_auth_another_application');
-        expect(request.liu.user).to.be(userId);
+        expect(request.liu.user).to.eql(userId);
         done();
       });
     });
