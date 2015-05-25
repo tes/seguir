@@ -140,7 +140,7 @@ This will push any documentation changes to gh-pages.
 
 * Private messaging between friends ?
 * Circles vs Friends / tighter privacy controls
-* Apply eslint
+* Notification framework (e.g. push and email) - separate application
 
 ## Requires
 
