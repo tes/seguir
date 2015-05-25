@@ -54,6 +54,13 @@ function bootstrapServer (config, keyspace, next) {
     return new restify.HttpError(err);
   }
 
+  function _response (res, next) {
+    return function (err, result) {
+      if (err) { return next(_error(err)); }
+      res.send(result);
+    };
+  }
+
   /**
    * @apiDefine ApiUsers Users
    * This is a collection of methods that allow you to create and retrieve users.
@@ -81,10 +88,7 @@ function bootstrapServer (config, keyspace, next) {
     if (!req.params.username) {
       return next(new restify.InvalidArgumentError('You must provide a username.'));
     }
-    api.manage.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, function (err, user) {
-      if (err) { return next(_error(err)); }
-      res.send(user);
-    });
+    api.manage.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, _response(res, next));
   });
 
   /**
@@ -106,10 +110,7 @@ function bootstrapServer (config, keyspace, next) {
    *
    */
   server.get(u('getUserByName'), function (req, res, next) {
-    api.query.getUserByName(req.keyspace, req.params.username, function (err, user) {
-      if (err) { return next(_error(err)); }
-      res.send(user);
-    });
+    api.query.getUserByName(req.keyspace, req.params.username, _response(res, next));
   });
 
   /**
@@ -134,10 +135,7 @@ function bootstrapServer (config, keyspace, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
       if (!user) { return next(_error({statusCode: 404, message: 'User not found'})); }
-      api.query.getUser(req.keyspace, user, function (err, user) {
-        if (err) { return next(_error(err)); }
-        res.send(user);
-      });
+      api.query.getUser(req.keyspace, user, _response(res, next));
     });
   });
 
@@ -160,10 +158,7 @@ function bootstrapServer (config, keyspace, next) {
    *
    */
   server.get(u('getUserByAltId'), function (req, res, next) {
-    api.query.getUserByAltId(req.keyspace, req.params.altid, function (err, user) {
-      if (err) { return next(_error(err)); }
-      res.send(user);
-    });
+    api.query.getUserByAltId(req.keyspace, req.params.altid, _response(res, next));
   });
 
   /**
@@ -193,10 +188,7 @@ function bootstrapServer (config, keyspace, next) {
     }
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.query.getUserRelationship(req.keyspace, req.liu.user, user, function (err, relationship) {
-        if (err) { return next(_error(err)); }
-        res.send(relationship);
-      });
+      api.query.getUserRelationship(req.keyspace, req.liu.user, user, _response(res, next));
     });
   });
 
@@ -235,10 +227,7 @@ function bootstrapServer (config, keyspace, next) {
     }
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.manage.addLike(req.keyspace, user, req.params.item, Date.now(), function (err, like) {
-        if (err) { return next(_error(err)); }
-        res.send(like);
-      });
+      api.manage.addLike(req.keyspace, user, req.params.item, Date.now(), _response(res, next));
     });
   });
 
@@ -260,10 +249,7 @@ function bootstrapServer (config, keyspace, next) {
    *
    */
   server.get(u('getLike'), function (req, res, next) {
-    api.query.getLike(req.keyspace, req.params.like, function (err, like) {
-      if (err) { return next(_error(err)); }
-      res.send(like);
-    });
+    api.query.getLike(req.keyspace, req.params.like, _response(res, next));
   });
 
   /**
@@ -288,10 +274,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get(u('checkLike'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.query.checkLike(req.keyspace, user, encodeURIComponent(req.params.item), function (err, like) {
-        if (err) { return next(_error(err)); }
-        res.send(like);
-      });
+      api.query.checkLike(req.keyspace, user, encodeURIComponent(req.params.item), _response(res, next));
     });
   });
 
@@ -321,10 +304,7 @@ function bootstrapServer (config, keyspace, next) {
       if (req.liu.user.toString() !== user.toString()) {
         return next(new restify.ForbiddenError('You cant delete someone elses like.'));
       }
-      api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), function (err, result) {
-        if (err) { return next(_error(err)); }
-        res.send(result);
-      });
+      api.manage.removeLike(req.keyspace, req.liu.user, encodeURIComponent(req.params.item), _response(res, next));
     });
   });
 
@@ -365,10 +345,7 @@ function bootstrapServer (config, keyspace, next) {
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.manage.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, function (err, post) {
-        if (err) { return next(_error(err)); }
-        res.send(post);
-      });
+      api.manage.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, _response(res, next));
     });
   });
 
@@ -385,10 +362,7 @@ function bootstrapServer (config, keyspace, next) {
    *  @apiUse ServerError
    */
   server.get(u('getPost'), function (req, res, next) {
-    api.query.getPost(req.keyspace, req.liu.user, req.params.post, function (err, post) {
-      if (err) { return next(_error(err)); }
-      res.send(post);
-    });
+    api.query.getPost(req.keyspace, req.liu.user, req.params.post, _response(res, next));
   });
 
   /**
@@ -408,10 +382,7 @@ function bootstrapServer (config, keyspace, next) {
     if (!req.params.post) {
       return next(new restify.InvalidArgumentError('You must provide a post guid.'));
     }
-    api.manage.removePost(req.keyspace, req.liu.user, req.params.post, function (err, result) {
-      if (err) { return next(_error(err)); }
-      res.send(result);
-    });
+    api.manage.removePost(req.keyspace, req.liu.user, req.params.post, _response(res, next));
   });
 
  /**
@@ -431,10 +402,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get(u('getFriend'), function (req, res, next) {
     coerce(req.keyspace, req.params.friend, function (err, friend) {
       if (err) { return next(_error(err)); }
-      api.query.getFriend(req.keyspace, req.liu.user, friend, function (err, friend) {
-        if (err) { return next(_error(err)); }
-        res.send(friend);
-      });
+      api.query.getFriend(req.keyspace, req.liu.user, friend, _response(res, next));
     });
   });
 
@@ -454,10 +422,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get(u('getFriends'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.query.getFriends(req.keyspace, req.liu.user, user, function (err, friends) {
-        if (err) { return next(_error(err)); }
-        res.send(friends);
-      });
+      api.query.getFriends(req.keyspace, req.liu.user, user, _response(res, next));
     });
   });
 
@@ -488,10 +453,7 @@ function bootstrapServer (config, keyspace, next) {
       if (user.toString() !== req.liu.user.toString()) {
         return next(new restify.ForbiddenError('You can only remove your own friendships.'));
       }
-      api.manage.removeFriend(req.keyspace, user, user_friend, function (err, result) {
-        if (err) { return next(_error(err)); }
-        res.send(result);
-      });
+      api.manage.removeFriend(req.keyspace, user, user_friend, _response(res, next));
     });
   });
 
@@ -521,10 +483,7 @@ function bootstrapServer (config, keyspace, next) {
     }
     coerce(req.keyspace, req.params.user_friend, function (err, user_friend) {
       if (err) { return next(_error(err)); }
-      api.manage.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), function (err, friend_request) {
-        if (err) { return next(_error(err)); }
-        res.send(friend_request);
-      });
+      api.manage.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), _response(res, next));
     });
   });
 
@@ -545,10 +504,7 @@ function bootstrapServer (config, keyspace, next) {
     if (!req.liu.user) {
       return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
     }
-    api.query.getFriendRequests(req.keyspace, req.liu.user, function (err, friend_requests) {
-      if (err) { return next(_error(err)); }
-      res.send(friend_requests);
-    });
+    api.query.getFriendRequests(req.keyspace, req.liu.user, _response(res, next));
   });
 
   /**
@@ -569,10 +525,7 @@ function bootstrapServer (config, keyspace, next) {
     if (!req.params.friend_request) {
       return next(new restify.InvalidArgumentError('You must provide a friend_request guid.'));
     }
-    api.manage.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, function (err, friend) {
-      if (err) { return next(_error(err)); }
-      res.send(friend);
-    });
+    api.manage.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, _response(res, next));
   });
 
    /**
@@ -617,10 +570,7 @@ function bootstrapServer (config, keyspace, next) {
         return next(new restify.ForbiddenError('You can only add your own follow relationships.'));
       }
 
-      api.manage.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, function (err, follow) {
-        if (err) { return next(_error(err)); }
-        res.send(follow);
-      });
+      api.manage.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, _response(res, next));
     });
 
   });
@@ -641,10 +591,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get(u('getFollowers'), function (req, res, next) {
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.query.getFollowers(req.keyspace, req.liu.user, user, function (err, followers) {
-        if (err) { return next(_error(err)); }
-        res.send(followers);
-      });
+      api.query.getFollowers(req.keyspace, req.liu.user, user, _response(res, next));
     });
   });
 
@@ -662,10 +609,7 @@ function bootstrapServer (config, keyspace, next) {
    *
    */
   server.get(u('getFollow'), function (req, res, next) {
-    api.query.getFollow(req.keyspace, req.liu.user, req.params.follow, function (err, follow) {
-      if (err) { return next(_error(err)); }
-      res.send(follow);
-    });
+    api.query.getFollow(req.keyspace, req.liu.user, req.params.follow, _response(res, next));
   });
 
   /**
@@ -699,10 +643,7 @@ function bootstrapServer (config, keyspace, next) {
       if (user_follower.toString() !== req.liu.user.toString()) {
         return next(new restify.ForbiddenError('You can only remove your own follow relationships.'));
       }
-      api.manage.removeFollower(req.keyspace, user, user_follower, function (err, result) {
-        if (err) { return next(_error(err)); }
-        res.send(result);
-      });
+      api.manage.removeFollower(req.keyspace, user, user_follower, _response(res, next));
 
     });
 
@@ -894,7 +835,7 @@ if (require.main === module) {
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -907,7 +848,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -920,7 +861,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -933,7 +874,7 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -946,11 +887,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend_request": "a4e455cc-5035-48e7-b162-c6c7543ccacd",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "user_friend": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+  "friend_request": "5254ac68-d0a7-4af1-976d-15033006caf1",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "user_friend": "7a672adb-6bb8-4bca-b99c-16545ea30665",
   "message": "Please be my friend",
-  "timestamp": 1432531923105
+  "timestamp": 1432532707973
 }
  */
 /**
@@ -961,9 +902,9 @@ HTTP1.1 200 Success
   "incoming": [],
   "outgoing": [
     {
-      "friend_request": "a4e455cc-5035-48e7-b162-c6c7543ccacd",
+      "friend_request": "5254ac68-d0a7-4af1-976d-15033006caf1",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -971,7 +912,7 @@ HTTP1.1 200 Success
         }
       },
       "user_friend": {
-        "user": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+        "user": "7a672adb-6bb8-4bca-b99c-16545ea30665",
         "username": "phteven",
         "altid": "2",
         "userdata": {
@@ -979,7 +920,7 @@ HTTP1.1 200 Success
         }
       },
       "message": "Please be my friend",
-      "since": "2015-05-25T05:32:03.105Z"
+      "since": "2015-05-25T05:45:07.973Z"
     }
   ]
 }
@@ -989,11 +930,11 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend": "68a81b64-8ba5-4c6d-8a46-1a3b059dd105",
-  "reciprocal": "c12f5fa2-efd6-40e8-884b-daad9181ac30",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "user_friend": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
-  "timestamp": 1432531923213
+  "friend": "b40ed0fd-db74-4b79-8e8d-a87e3608b87d",
+  "reciprocal": "8d3d3128-8baf-4498-b665-692823884b58",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "user_friend": "7a672adb-6bb8-4bca-b99c-16545ea30665",
+  "timestamp": 1432532708061
 }
  */
 /**
@@ -1001,10 +942,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "friend": "68a81b64-8ba5-4c6d-8a46-1a3b059dd105",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "user_friend": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
-  "since": "2015-05-25T05:32:03.213Z",
+  "friend": "b40ed0fd-db74-4b79-8e8d-a87e3608b87d",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "user_friend": "7a672adb-6bb8-4bca-b99c-16545ea30665",
+  "since": "2015-05-25T05:45:08.061Z",
   "username_friend": "phteven"
 }
  */
@@ -1014,8 +955,8 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "user_friend": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
-    "since": "2015-05-25T05:32:03.213Z"
+    "user_friend": "7a672adb-6bb8-4bca-b99c-16545ea30665",
+    "since": "2015-05-25T05:45:08.061Z"
   }
 ]
  */
@@ -1032,12 +973,12 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "follow": "6385af1f-7fa4-4c65-9be7-920e9c4a65c5",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "user_follower": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+  "follow": "2c217d59-00d3-46cf-907e-3e5f641e28d0",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "user_follower": "7a672adb-6bb8-4bca-b99c-16545ea30665",
   "isprivate": false,
   "ispersonal": false,
-  "timestamp": 1432531923676
+  "timestamp": 1432532708537
 }
  */
 /**
@@ -1045,10 +986,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "follow": "6385af1f-7fa4-4c65-9be7-920e9c4a65c5",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "user_follower": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
-  "since": "2015-05-25T05:32:03.676Z",
+  "follow": "2c217d59-00d3-46cf-907e-3e5f641e28d0",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "user_follower": "7a672adb-6bb8-4bca-b99c-16545ea30665",
+  "since": "2015-05-25T05:45:08.537Z",
   "isprivate": false,
   "ispersonal": false,
   "username_follower": "phteven"
@@ -1060,16 +1001,16 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-    "user_follower": "83f8be11-5e90-46de-a38f-fef53152d183",
-    "since": "2015-05-25T05:32:03.732Z",
+    "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+    "user_follower": "16443763-0a8b-4605-b2cc-ed23f6fba753",
+    "since": "2015-05-25T05:45:08.583Z",
     "isprivate": false,
     "ispersonal": false
   },
   {
-    "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-    "user_follower": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
-    "since": "2015-05-25T05:32:03.676Z",
+    "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+    "user_follower": "7a672adb-6bb8-4bca-b99c-16545ea30665",
+    "since": "2015-05-25T05:45:08.537Z",
     "isprivate": false,
     "ispersonal": false
   }
@@ -1088,10 +1029,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "post": "c4fb78ce-7805-4b0d-acc9-c3f9d658d466",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "post": "3e1a6a43-fba8-454b-b5cc-06a2613db822",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "content": "Hello, this is a post",
-  "timestamp": 1432531924071,
+  "timestamp": 1432532708938,
   "isprivate": false,
   "ispersonal": false
 }
@@ -1101,10 +1042,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "post": "c4fb78ce-7805-4b0d-acc9-c3f9d658d466",
+  "post": "3e1a6a43-fba8-454b-b5cc-06a2613db822",
   "content": "Hello, this is a post",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "posted": "2015-05-25T05:32:04.071Z",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "posted": "2015-05-25T05:45:08.938Z",
   "isprivate": false,
   "ispersonal": false
 }
@@ -1122,10 +1063,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "1c7d2889-f013-4353-9c72-aa3d455e212b",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+  "like": "4a7c844a-fc38-4fd6-b6e1-c473fe152f8b",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
   "item": "http%3A%2F%2Fgithub.com",
-  "timestamp": 1432531924439
+  "timestamp": 1432532709332
 }
  */
 /**
@@ -1133,10 +1074,10 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "1c7d2889-f013-4353-9c72-aa3d455e212b",
+  "like": "4a7c844a-fc38-4fd6-b6e1-c473fe152f8b",
   "item": "http%3A%2F%2Fgithub.com",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "since": "2015-05-25T05:32:04.439Z"
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "since": "2015-05-25T05:45:09.332Z"
 }
  */
 /**
@@ -1144,9 +1085,9 @@ HTTP1.1 200 Success
  * @apiSuccessExample
 HTTP1.1 200 Success
 {
-  "like": "1c7d2889-f013-4353-9c72-aa3d455e212b",
-  "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
-  "since": "2015-05-25T05:32:04.439Z"
+  "like": "4a7c844a-fc38-4fd6-b6e1-c473fe152f8b",
+  "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
+  "since": "2015-05-25T05:45:09.332Z"
 }
  */
 /**
@@ -1164,20 +1105,20 @@ HTTP1.1 200 Success
 {
   "feed": [
     {
-      "like": "1c7d2889-f013-4353-9c72-aa3d455e212b",
+      "like": "4a7c844a-fc38-4fd6-b6e1-c473fe152f8b",
       "item": "http%3A%2F%2Fgithub.com",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-05-25T05:32:04.439Z",
+      "since": "2015-05-25T05:45:09.332Z",
       "type": "like",
-      "timeuuid": "605f44f5-029f-11e5-b15c-b56fc286fe8f",
-      "date": "2015-05-25T05:32:04.458Z",
+      "timeuuid": "3432e925-02a1-11e5-b305-7a0c4094c0d2",
+      "date": "2015-05-25T05:45:09.341Z",
       "fromNow": "a few seconds ago",
       "isprivate": false,
       "ispersonal": false,
@@ -1189,22 +1130,22 @@ HTTP1.1 200 Success
       "isUsersItem": true
     },
     {
-      "post": "45c997c0-d0ce-4949-b850-d589e66589ea",
+      "post": "9bfb68c8-49c9-4212-9ce6-b0a2416894d5",
       "content": "Hello, this is a private post",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "posted": "2015-05-25T05:32:04.131Z",
+      "posted": "2015-05-25T05:45:09.030Z",
       "isprivate": true,
       "ispersonal": false,
       "type": "post",
-      "timeuuid": "602ebf0d-029f-11e5-9a73-0b9a6cd092ad",
-      "date": "2015-05-25T05:32:04.140Z",
+      "timeuuid": "3403e9dd-02a1-11e5-bf29-b7f0bf833ccf",
+      "date": "2015-05-25T05:45:09.033Z",
       "fromNow": "a few seconds ago",
       "fromFollower": true,
       "isLike": false,
@@ -1214,22 +1155,22 @@ HTTP1.1 200 Success
       "isUsersItem": true
     },
     {
-      "post": "c4fb78ce-7805-4b0d-acc9-c3f9d658d466",
+      "post": "3e1a6a43-fba8-454b-b5cc-06a2613db822",
       "content": "Hello, this is a post",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "posted": "2015-05-25T05:32:04.071Z",
+      "posted": "2015-05-25T05:45:08.938Z",
       "isprivate": false,
       "ispersonal": false,
       "type": "post",
-      "timeuuid": "60263389-029f-11e5-b59e-3f0882339160",
-      "date": "2015-05-25T05:32:04.084Z",
+      "timeuuid": "33f89f39-02a1-11e5-8432-9233fb536e61",
+      "date": "2015-05-25T05:45:08.959Z",
       "fromNow": "a few seconds ago",
       "fromFollower": true,
       "isLike": false,
@@ -1239,9 +1180,9 @@ HTTP1.1 200 Success
       "isUsersItem": true
     },
     {
-      "follow": "468b2e9d-9dd5-4993-a1a3-2ec644210d28",
+      "follow": "eae09099-7e6e-4feb-b05c-06845c5ea51c",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1249,20 +1190,20 @@ HTTP1.1 200 Success
         }
       },
       "user_follower": {
-        "user": "83f8be11-5e90-46de-a38f-fef53152d183",
+        "user": "16443763-0a8b-4605-b2cc-ed23f6fba753",
         "username": "ted",
         "altid": "3",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-05-25T05:32:03.732Z",
+      "since": "2015-05-25T05:45:08.583Z",
       "isprivate": false,
       "ispersonal": false,
       "username_follower": "ted",
       "type": "follow",
-      "timeuuid": "5ff0cb9f-029f-11e5-bcbf-cceac5703102",
-      "date": "2015-05-25T05:32:03.734Z",
+      "timeuuid": "33c002ff-02a1-11e5-85af-6d2de7851455",
+      "date": "2015-05-25T05:45:08.588Z",
       "fromNow": "a few seconds ago",
       "fromFollower": true,
       "isLike": false,
@@ -1272,9 +1213,9 @@ HTTP1.1 200 Success
       "isUsersItem": true
     },
     {
-      "follow": "6385af1f-7fa4-4c65-9be7-920e9c4a65c5",
+      "follow": "2c217d59-00d3-46cf-907e-3e5f641e28d0",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1282,20 +1223,20 @@ HTTP1.1 200 Success
         }
       },
       "user_follower": {
-        "user": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+        "user": "7a672adb-6bb8-4bca-b99c-16545ea30665",
         "username": "phteven",
         "altid": "2",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-05-25T05:32:03.676Z",
+      "since": "2015-05-25T05:45:08.537Z",
       "isprivate": false,
       "ispersonal": false,
       "username_follower": "phteven",
       "type": "follow",
-      "timeuuid": "5fe9edcc-029f-11e5-9d1e-6ab3f69ffdc8",
-      "date": "2015-05-25T05:32:03.689Z",
+      "timeuuid": "33b8fe1c-02a1-11e5-86a8-5cbadaa75e4f",
+      "date": "2015-05-25T05:45:08.542Z",
       "fromNow": "a few seconds ago",
       "fromFollower": true,
       "isLike": false,
@@ -1305,9 +1246,9 @@ HTTP1.1 200 Success
       "isUsersItem": true
     },
     {
-      "friend": "68a81b64-8ba5-4c6d-8a46-1a3b059dd105",
+      "friend": "b40ed0fd-db74-4b79-8e8d-a87e3608b87d",
       "user": {
-        "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+        "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1315,18 +1256,18 @@ HTTP1.1 200 Success
         }
       },
       "user_friend": {
-        "user": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+        "user": "7a672adb-6bb8-4bca-b99c-16545ea30665",
         "username": "phteven",
         "altid": "2",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-05-25T05:32:03.213Z",
+      "since": "2015-05-25T05:45:08.061Z",
       "username_friend": "phteven",
       "type": "friend",
-      "timeuuid": "5fa320c4-029f-11e5-bf0c-c118c0f2c686",
-      "date": "2015-05-25T05:32:03.225Z",
+      "timeuuid": "337194d4-02a1-11e5-9ab3-aefe33455327",
+      "date": "2015-05-25T05:45:08.074Z",
       "fromNow": "a few seconds ago",
       "isprivate": true,
       "ispersonal": false,
@@ -1347,9 +1288,9 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 [
   {
-    "friend": "c12f5fa2-efd6-40e8-884b-daad9181ac30",
+    "friend": "8d3d3128-8baf-4498-b665-692823884b58",
     "user": {
-      "user": "9d6d8e75-e66f-42c4-8bfb-8bc493c3123f",
+      "user": "7a672adb-6bb8-4bca-b99c-16545ea30665",
       "username": "phteven",
       "altid": "2",
       "userdata": {
@@ -1357,18 +1298,18 @@ HTTP1.1 200 Success
       }
     },
     "user_friend": {
-      "user": "5616ae57-3b92-4b10-9a9f-ff4a3ea2b341",
+      "user": "ead918ab-e13d-456f-9ee0-ba64c5437f30",
       "username": "cliftonc",
       "altid": "1",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-05-25T05:32:03.213Z",
+    "since": "2015-05-25T05:45:08.061Z",
     "username_friend": "cliftonc",
     "type": "friend",
-    "timeuuid": "5fa98967-029f-11e5-8921-7c1ba7bd06cc",
-    "date": "2015-05-25T05:32:03.267Z",
+    "timeuuid": "337a4767-02a1-11e5-8681-d689010fda31",
+    "date": "2015-05-25T05:45:08.131Z",
     "fromNow": "a few seconds ago",
     "isprivate": true,
     "ispersonal": false,
@@ -1387,7 +1328,7 @@ HTTP1.1 200 Success
 HTTP1.1 200 Success
 {
   "isFriend": true,
-  "isFriendSince": "2015-05-25T05:32:03.213Z",
+  "isFriendSince": "2015-05-25T05:45:08.061Z",
   "isFriendRequestPending": false,
   "isFriendRequestSince": null,
   "youFollow": false,
@@ -1395,7 +1336,7 @@ HTTP1.1 200 Success
   "youFollowPrivate": false,
   "youFollowPersonal": false,
   "theyFollow": true,
-  "theyFollowSince": "2015-05-25T05:32:03.676Z",
+  "theyFollowSince": "2015-05-25T05:45:08.537Z",
   "theyFollowPrivate": false,
   "theyFollowPersonal": false,
   "inCommon": []
