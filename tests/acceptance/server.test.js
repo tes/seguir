@@ -40,8 +40,11 @@ describe('Seguir Social Server / Client API', function () {
   }
 
   function updateSamples () {
-    writeJsFile('client');
-    writeJsFile('server');
+    if (_.contains(process.argv, '--write-samples')) {
+      console.log('Writing updated samples into javascript source files ...');
+      writeJsFile('client');
+      writeJsFile('server');
+    }
   }
 
   before(function (done) {
