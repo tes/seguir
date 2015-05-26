@@ -6,6 +6,8 @@ function Api (client, messaging, keyspace) {
     return new Api(client, messaging, keyspace);
   }
 
+  keyspace = keyspace || 'seguir';
+
   // TODO: Refactor out into iteration over array of modules
 
   var auth = require('./auth');

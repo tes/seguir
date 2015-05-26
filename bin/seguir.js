@@ -15,18 +15,19 @@ program
   .option('-c, --config [file]', 'Use config file')
   .parse(process.argv);
 
-var configFile = program.config ? path.resolve('.', program.config) : '../server/config';
+var defaultConfig = '../server/config';
 var configFn;
 
-try {
-  configFn = require(configFile);
-} catch(ex) {
-  console.log('Cant open config: ' + ex.message);
-  process.exit(1);
-}
-
-if (typeof configFn !== 'function') {
-  var originalConfig = configFn;
+if (program.config) {
+  var configFile = path.resolve('.', program.config);
+  try {
+    configFn = require(configFile);
+  } catch(ex) {
+    console.log('Cant open config: ' + ex.message);
+    process.exit(1);
+  }
+} else {
+  var originalConfig = require(defaultConfig)();
   configFn = function (next) {
     next(null, originalConfig);
   };
@@ -43,7 +44,7 @@ configFn(function (err, config) {
   if (err) return error(err);
 
   var client = require('../api/db/client')(config);
-  var api = require('../index')(client, config.keyspace);
+  var api = require('../api')(client, {enabled: false}, config.keyspace);
 
   var setupFile = program.setup;
 
