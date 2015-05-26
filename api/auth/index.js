@@ -8,7 +8,7 @@ var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'};
 var Uuid = cassandra.types.Uuid;
 var debug = require('debug')('seguir:auth');
 
-function Auth (client, redis, keyspace, options) {
+function Auth (client, messaging, keyspace, api) {
 
   var q = require('../db/queries');
 

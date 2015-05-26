@@ -7,7 +7,7 @@
 var keyspace = 'test_client_seguir_server';
 var dbClient = require('../../api/db/client')();
 var messaging = {enabled: false};
-var api = require('../../index')(dbClient, messaging, keyspace);
+var api = require('../../api')(dbClient, messaging, keyspace);
 var expect = require('expect.js');
 var Seguir = require('../../client');
 var setupSeguir = require('../../setup/setupSeguir');

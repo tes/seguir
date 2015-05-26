@@ -8,7 +8,7 @@ var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
 var client = require('../../api/db/client')();
 var messaging = {enabled: false};
-var api = require('../../index')(client, messaging, keyspace);
+var api = require('../../api')(client, messaging, keyspace);
 var setupKeyspace = require('../../setup/setupKeyspace');
 var async = require('async');
 var _ = require('lodash');
@@ -19,8 +19,6 @@ describe('Social API', function () {
   this.slow(2000);
 
   var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, reciprocalFriendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
-  var manage = api.manage;
-  var query = api.query;
 
   before(function (done) {
     this.timeout(20000);
@@ -42,7 +40,7 @@ describe('Social API', function () {
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'}
         ], function (user, cb) {
-          manage.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
+          api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
         }, function (err, results) {
           expect(err).to.be(undefined);
           users = results;
@@ -52,7 +50,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a user by id', function (done) {
-      query.getUser(keyspace, users[0].user, function (err, user) {
+      api.user.getUser(keyspace, users[0].user, function (err, user) {
         expect(err).to.be(null);
         expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be('cliftonc');
@@ -61,7 +59,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a user by name', function (done) {
-      query.getUserByName(keyspace, users[0].username, function (err, user) {
+      api.user.getUserByName(keyspace, users[0].username, function (err, user) {
         expect(err).to.be(null);
         expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be(users[0].username);
@@ -70,7 +68,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a user by alternate id', function (done) {
-      query.getUserByAltId(keyspace, users[0].altid, function (err, user) {
+      api.user.getUserByAltId(keyspace, users[0].altid, function (err, user) {
         expect(err).to.be(null);
         expect(user.user).to.eql(users[0].user);
         expect(user.username).to.be(users[0].username);
@@ -83,7 +81,7 @@ describe('Social API', function () {
   describe('friend requests', function () {
 
     it('can create a friend request', function (done) {
-      manage.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', Date.now(), function (err, friend_request) {
+      api.friend.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', Date.now(), function (err, friend_request) {
         expect(err).to.be(null);
         expect(friend_request.user).to.eql(users[0].user);
         expect(friend_request.user_friend).to.eql(users[1].user);
@@ -93,7 +91,7 @@ describe('Social API', function () {
     });
 
     it('can see status of outbound friend requests', function (done) {
-      query.getOutgoingFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
+      api.friend.getOutgoingFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
         expect(err).to.be(null);
         expect(friend_requests[0].user.user).to.eql(users[0].user);
         expect(friend_requests[0].user_friend.user).to.eql(users[1].user);
@@ -102,7 +100,7 @@ describe('Social API', function () {
     });
 
     it('can see status of incoming friend requests', function (done) {
-      query.getIncomingFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
+      api.friend.getIncomingFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
         expect(err).to.be(null);
         expect(friend_requests[0].user.user).to.eql(users[0].user);
         expect(friend_requests[0].user_friend.user).to.eql(users[1].user);
@@ -111,7 +109,7 @@ describe('Social API', function () {
     });
 
     it('can see status of all friend requests for incoming', function (done) {
-      query.getFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
+      api.friend.getFriendRequests(keyspace, users[1].user, function (err, friend_requests) {
         expect(err).to.be(null);
         expect(friend_requests.incoming[0].user.user).to.eql(users[0].user);
         expect(friend_requests.incoming[0].user_friend.user).to.eql(users[1].user);
@@ -120,7 +118,7 @@ describe('Social API', function () {
     });
 
     it('can see status of all friend requests for outgoing', function (done) {
-      query.getFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
+      api.friend.getFriendRequests(keyspace, users[0].user, function (err, friend_requests) {
         expect(err).to.be(null);
         expect(friend_requests.outgoing[0].user.user).to.eql(users[0].user);
         expect(friend_requests.outgoing[0].user_friend.user).to.eql(users[1].user);
@@ -129,7 +127,7 @@ describe('Social API', function () {
     });
 
     it('can accept a friend request and create a reciprocal friendship', function (done) {
-      manage.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend) {
+      api.friend.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend) {
         expect(err).to.be(null);
         expect(friend.user).to.eql(users[0].user);
         expect(friend.user_friend).to.eql(users[1].user);
@@ -140,7 +138,7 @@ describe('Social API', function () {
     });
 
     it('it deletes the friend request after it is accepted', function (done) {
-      query.getFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend_request) {
+      api.friend.getFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend_request) {
         expect(err).to.not.be(null);
         expect(friend_request).to.eql(undefined);
         done();
@@ -152,7 +150,7 @@ describe('Social API', function () {
   describe('friends', function () {
 
     it('can friend another user', function (done) {
-      manage.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function (err, friend) {
+      api.friend.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function (err, friend) {
         expect(err).to.be(null);
         expect(friend.user).to.eql(users[2].user);
         expect(friend.user_friend).to.eql(users[3].user);
@@ -162,7 +160,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a friend by id', function (done) {
-      query.getFriend(keyspace, liu, friendId, function (err, friend) {
+      api.friend.getFriend(keyspace, liu, friendId, function (err, friend) {
         expect(err).to.be(null);
         expect(friend.user).to.eql(users[0].user);
         expect(friend.user_friend).to.eql(users[1].user);
@@ -171,14 +169,14 @@ describe('Social API', function () {
     });
 
     it('can not retrieve details of a friendship for someone that you are not friends with', function (done) {
-      query.getFriend(keyspace, users[0].user, otherFriendId, function (err, friend) {
+      api.friend.getFriend(keyspace, users[0].user, otherFriendId, function (err, friend) {
         expect(err.message).to.be('You are not allowed to see this item.');
         done();
       });
     });
 
     it('can retrieve a list of friends for a user', function (done) {
-      query.getFriends(keyspace, liu, users[0].user, function (err, friends) {
+      api.friend.getFriends(keyspace, liu, users[0].user, function (err, friends) {
         expect(err).to.be(null);
         expect(friends[0].user_friend).to.eql(users[1].user);
         done();
@@ -186,19 +184,19 @@ describe('Social API', function () {
     });
 
     it('can not retrieve a list of friends for someone that you are not friends with', function (done) {
-      query.getFriends(keyspace, users[0].user, users[2].user, function (err, friend) {
+      api.friend.getFriends(keyspace, users[0].user, users[2].user, function (err, friend) {
         expect(err.message).to.be('You are not allowed to see this item.');
         done();
       });
     });
 
     it('can add and remove a friend', function (done) {
-      manage.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function (err, friend) {
+      api.friend.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function (err, friend) {
         expect(err).to.be(null);
-        manage.removeFriend(keyspace, users[0].user, users[4].user, function (err, result) {
+        api.friend.removeFriend(keyspace, users[0].user, users[4].user, function (err, result) {
           expect(err).to.be(null);
           expect(result.status).to.be('removed');
-          query.getRawFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
             expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);
             done();
@@ -212,7 +210,7 @@ describe('Social API', function () {
   describe('follows', function () {
 
     it('can follow a user who is a friend', function (done) {
-      manage.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
+      api.follow.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.be(users[0].user);
         expect(follow.user_follower).to.eql(users[1].user);
@@ -222,7 +220,7 @@ describe('Social API', function () {
     });
 
     it('can follow a user who is not a friend', function (done) {
-      manage.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function (err, follow) {
+      api.follow.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.eql(users[0].user);
         expect(follow.user_follower).to.eql(users[2].user);
@@ -232,7 +230,7 @@ describe('Social API', function () {
     });
 
     it('can follow a user privately so only your friends can see', function (done) {
-      manage.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function (err, follow) {
+      api.follow.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.eql(users[4].user);
         expect(follow.user_follower).to.eql(users[5].user);
@@ -243,7 +241,7 @@ describe('Social API', function () {
     });
 
     it('can follow a user personally so only you can see', function (done) {
-      manage.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function (err, follow) {
+      api.follow.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.eql(users[6].user);
         expect(follow.user_follower).to.eql(users[5].user);
@@ -254,7 +252,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a follow by id', function (done) {
-      query.getFollow(keyspace, users[0].user, followId, function (err, follow) {
+      api.follow.getFollow(keyspace, users[0].user, followId, function (err, follow) {
         expect(err).to.be(null);
         expect(follow.user).to.eql(users[0].user);
         expect(follow.user_follower).to.eql(users[1].user);
@@ -263,21 +261,21 @@ describe('Social API', function () {
     });
 
     it('can not see a private follow if not a friend ', function (done) {
-      query.getFollow(keyspace, users[0].user, privateFollowId, function (err, follow) {
+      api.follow.getFollow(keyspace, users[0].user, privateFollowId, function (err, follow) {
         expect(err.statusCode).to.be(403);
         done();
       });
     });
 
     it('can not see a personal follow if not the user', function (done) {
-      query.getFollow(keyspace, users[0].user, personalFollowId, function (err, follow) {
+      api.follow.getFollow(keyspace, users[0].user, personalFollowId, function (err, follow) {
         expect(err.statusCode).to.be(403);
         done();
       });
     });
 
     it('can retrieve a list of followers for a user', function (done) {
-      query.getFollowers(keyspace, users[0].user, users[0].user, function (err, followers) {
+      api.follow.getFollowers(keyspace, users[0].user, users[0].user, function (err, followers) {
         expect(err).to.be(null);
         var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
         expect(followerIds).to.contain(users[1].user.toString());
@@ -287,7 +285,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a list of followers for a user but will not show private if not a friend', function (done) {
-      query.getFollowers(keyspace, users[0].user, users[4].user, function (err, followers) {
+      api.follow.getFollowers(keyspace, users[0].user, users[4].user, function (err, followers) {
         expect(err).to.be(null);
         expect(followers.length).to.be(0);
         done();
@@ -295,7 +293,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a list of followers for a user but will not show personal if not the user', function (done) {
-      query.getFollowers(keyspace, users[0].user, users[6].user, function (err, followers) {
+      api.follow.getFollowers(keyspace, users[0].user, users[6].user, function (err, followers) {
         expect(err).to.be(null);
         expect(followers.length).to.be(0);
         done();
@@ -303,7 +301,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a list of followers for a user but will show personal if one of the two users', function (done) {
-      query.getFollowers(keyspace, users[6].user, users[6].user, function (err, followers) {
+      api.follow.getFollowers(keyspace, users[6].user, users[6].user, function (err, followers) {
         expect(err).to.be(null);
         var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
         expect(followerIds).to.contain(users[5].user.toString());
@@ -312,7 +310,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a list of followers for a user but will show private if one of the two users', function (done) {
-      query.getFollowers(keyspace, users[4].user, users[4].user, function (err, followers) {
+      api.follow.getFollowers(keyspace, users[4].user, users[4].user, function (err, followers) {
         expect(err).to.be(null);
         var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
         expect(followerIds).to.contain(users[5].user.toString());
@@ -321,12 +319,12 @@ describe('Social API', function () {
     });
 
     it('can remove a follow', function (done) {
-      manage.addFollower(keyspace, users[3].user, users[4].user, Date.now(), false, false, function (err, follow) {
+      api.follow.addFollower(keyspace, users[3].user, users[4].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        manage.removeFollower(keyspace, users[3].user, users[4].user, function (err, result) {
+        api.follow.removeFollower(keyspace, users[3].user, users[4].user, function (err, result) {
           expect(err).to.be(null);
           expect(result.status).to.be('removed');
-          query.getRawFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
             var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
             expect(followerIds).to.not.contain(follow.follow.toString());
@@ -341,7 +339,7 @@ describe('Social API', function () {
   describe('posts', function () {
 
     it('can post a message from a user', function (done) {
-      manage.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.be(users[0].user);
@@ -351,7 +349,7 @@ describe('Social API', function () {
     });
 
     it('can post a private message from a user', function (done) {
-      manage.addPost(keyspace, users[0].user, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
+      api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
         expect(post.user).to.be(users[0].user);
@@ -361,7 +359,7 @@ describe('Social API', function () {
     });
 
     it('anyone can retrieve a public post by id', function (done) {
-      query.getPost(keyspace, users[2].user, postId, function (err, post) {
+      api.post.getPost(keyspace, users[2].user, postId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.eql(users[0].user);
@@ -370,14 +368,14 @@ describe('Social API', function () {
     });
 
     it('anyone not a friend cant retrieve a private post by id', function (done) {
-      query.getPost(keyspace, users[2].user, privatePostId, function (err, post) {
+      api.post.getPost(keyspace, users[2].user, privatePostId, function (err, post) {
         expect(err.statusCode).to.be(403);
         done();
       });
     });
 
     it('anyone who is a friend can retrieve a private post by id', function (done) {
-      query.getPost(keyspace, users[1].user, privatePostId, function (err, post) {
+      api.post.getPost(keyspace, users[1].user, privatePostId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
         expect(post.user).to.eql(users[0].user);
@@ -386,7 +384,7 @@ describe('Social API', function () {
     });
 
     it('you can mention yourself in a post', function (done) {
-      manage.addPost(keyspace, users[4].user, 'Who am I? @harold', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[4].user, 'Who am I? @harold', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Who am I? @harold');
         done();
@@ -394,7 +392,7 @@ describe('Social API', function () {
     });
 
     it('you can mention someone in a post', function (done) {
-      manage.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post mentioning @harold');
         mentionPostId = post.post;
@@ -403,7 +401,7 @@ describe('Social API', function () {
     });
 
     it('sanitizes any input by default', function (done) {
-      manage.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Evil hack ');
         expect(post.user).to.eql(users[5].user);
@@ -412,11 +410,11 @@ describe('Social API', function () {
     });
 
     it('can add and remove a post', function (done) {
-      manage.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
-        manage.removePost(keyspace, users[5].user, post.post, function (err, result) {
+        api.post.removePost(keyspace, users[5].user, post.post, function (err, result) {
           expect(err).to.be(null);
-          query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
             var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
             expect(ids).to.not.contain(post.post.toString());
@@ -427,9 +425,9 @@ describe('Social API', function () {
     });
 
     it('you can add a completely personal post that only appears in the users feed', function (done) {
-      manage.addPost(keyspace, users[5].user, 'Shh - this is only for me.', Date.now(), false, true, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'Shh - this is only for me.', Date.now(), false, true, function (err, post) {
         expect(err).to.be(null);
-        query.getFeed(keyspace, users[4].user, users[5].user, null, 100, function (err, feed) {
+        api.feed.getFeed(keyspace, users[4].user, users[5].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var ids = _.map(_.pluck(feed, 'post'), function (item) { return item.toString(); });
           expect(ids).to.not.contain(post.post.toString());
@@ -443,7 +441,7 @@ describe('Social API', function () {
   describe('likes', function () {
 
     it('can like an item from a user', function (done) {
-      manage.addLike(keyspace, users[0].user, 'http://github.com', Date.now(), function (err, like) {
+      api.like.addLike(keyspace, users[0].user, 'http://github.com', Date.now(), function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be('http://github.com');
         likeId = like.like;
@@ -452,7 +450,7 @@ describe('Social API', function () {
     });
 
     it('can retrieve a like by id', function (done) {
-      query.getLike(keyspace, likeId, function (err, like) {
+      api.like.getLike(keyspace, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be('http://github.com');
         expect(like.user).to.eql(users[0].user);
@@ -461,7 +459,7 @@ describe('Social API', function () {
     });
 
     it('can check if a user likes an item', function (done) {
-      query.checkLike(keyspace, users[0].user, 'http://github.com', function (err, like) {
+      api.like.checkLike(keyspace, users[0].user, 'http://github.com', function (err, like) {
         expect(err).to.be(null);
         expect(like.like).to.eql(likeId);
         expect(like.user).to.eql(users[0].user);
@@ -470,11 +468,11 @@ describe('Social API', function () {
     });
 
     it('can add and remove a like', function (done) {
-      manage.addLike(keyspace, users[5].user, 'http://seguir.calip.so', Date.now(), function (err, like) {
+      api.like.addLike(keyspace, users[5].user, 'http://seguir.calip.so', Date.now(), function (err, like) {
         expect(err).to.be(null);
-        manage.removeLike(keyspace, users[5].user, 'http://seguir.calip.so', function (err, result) {
+        api.like.removeLike(keyspace, users[5].user, 'http://seguir.calip.so', function (err, result) {
           expect(err).to.be(null);
-          query.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
             var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
             expect(ids).to.not.contain(like.like.toString());
@@ -491,7 +489,7 @@ describe('Social API', function () {
     this.timeout(10000);
 
     it('logged in - can get a feed for yourself that is in the correct order', function (done) {
-      query.getFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(privatePostId);
@@ -504,7 +502,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a feed for a friend that is in the correct order', function (done) {
-      query.getFeed(keyspace, users[1].user, users[0].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[1].user, users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(privatePostId); //
@@ -517,7 +515,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a feed for a friend and follower that is in the correct order', function (done) {
-      query.getFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(privatePostId);
@@ -529,7 +527,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a feed for a follower that is not a friend in the correct order', function (done) {
-      query.getFeed(keyspace, users[0].user, users[2].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[0].user, users[2].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(postId);
@@ -539,7 +537,7 @@ describe('Social API', function () {
     });
 
     it('anonymous - can get a feed that is in correct order', function (done) {
-      query.getFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(postId);
@@ -549,7 +547,7 @@ describe('Social API', function () {
     });
 
     it('can see private follows as the user', function (done) {
-      query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[2].follow).to.eql(privateFollowId);
         done();
@@ -557,7 +555,7 @@ describe('Social API', function () {
     });
 
     it('can see personal follows as the user', function (done) {
-      query.getFeed(keyspace, users[6].user, users[6].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[6].user, users[6].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].follow).to.eql(personalFollowId);
         done();
@@ -565,7 +563,7 @@ describe('Social API', function () {
     });
 
     it('anonymous - cant see personal follows as the anonymous user', function (done) {
-      query.getFeed(keyspace, '_anonymous_', users[6].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, '_anonymous_', users[6].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed.length).to.be(0);
         done();
@@ -573,7 +571,7 @@ describe('Social API', function () {
     });
 
     it('anonymous - cant see private follows as anonymous user', function (done) {
-      query.getFeed(keyspace, '_anonymous_', users[4].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, '_anonymous_', users[4].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed.length).to.be(2);
         done();
@@ -581,7 +579,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a feed for yourself contains mentions', function (done) {
-      query.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
+      api.feed.getFeed(keyspace, users[4].user, users[4].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].post).to.eql(mentionPostId);
         done();
@@ -589,7 +587,7 @@ describe('Social API', function () {
     });
 
     it('cant see follows or mentions on a users personal feed, only direct items', function (done) {
-      query.getUserFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
+      api.feed.getUserFeed(keyspace, '_anonymous_', users[0].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].like).to.eql(likeId);
         expect(feed[1].post).to.eql(postId);
@@ -599,7 +597,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a users personal feed as the user and see direct actions', function (done) {
-      query.getUserFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
+      api.feed.getUserFeed(keyspace, users[3].user, users[3].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].post).to.eql(mentionPostId);
         done();
@@ -607,7 +605,7 @@ describe('Social API', function () {
     });
 
     it('logged in - can get a users personal feed as a friend and see direct items private or public', function (done) {
-      query.getUserFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
+      api.feed.getUserFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed[0].friend).to.eql(reciprocalFriendId);
         done();
@@ -615,7 +613,7 @@ describe('Social API', function () {
     });
 
     it('anonymus - can get a users personal feed anonymously and only see direct, public items', function (done) {
-      query.getUserFeed(keyspace, '_anonymous_', users[1].user, null, 100, function (err, feed) {
+      api.feed.getUserFeed(keyspace, '_anonymous_', users[1].user, null, 100, function (err, feed) {
         expect(err).to.be(null);
         expect(feed.length).to.be(0);
         done();
@@ -627,7 +625,7 @@ describe('Social API', function () {
   describe('relationships', function () {
 
     it('can query a relationship between a user and themselves', function (done) {
-      query.getUserRelationship(keyspace, users[0].user, users[0].user, function (err, relationship) {
+      api.user.getUserRelationship(keyspace, users[0].user, users[0].user, function (err, relationship) {
         expect(err).to.be(null);
         expect(relationship.isFriend).to.be(true);
         expect(relationship.youFollow).to.be(true);
@@ -637,7 +635,7 @@ describe('Social API', function () {
     });
 
     it('can query a relationship between a user and another user', function (done) {
-      query.getUserRelationship(keyspace, users[0].user, users[1].user, function (err, relationship) {
+      api.user.getUserRelationship(keyspace, users[0].user, users[1].user, function (err, relationship) {
         expect(err).to.be(null);
         expect(relationship.isFriend).to.be(true);
         expect(relationship.youFollow).to.be(false);
@@ -647,7 +645,7 @@ describe('Social API', function () {
     });
 
     it('can query the inverse relationship between a user and another user', function (done) {
-      query.getUserRelationship(keyspace, users[1].user, users[0].user, function (err, relationship) {
+      api.user.getUserRelationship(keyspace, users[1].user, users[0].user, function (err, relationship) {
         expect(err).to.be(null);
         expect(relationship.isFriend).to.be(true);
         expect(relationship.youFollow).to.be(true);
@@ -657,7 +655,7 @@ describe('Social API', function () {
     });
 
     it('can query the relationship between users who have no relationship', function (done) {
-      query.getUserRelationship(keyspace, users[0].user, users[3].user, function (err, relationship) {
+      api.user.getUserRelationship(keyspace, users[0].user, users[3].user, function (err, relationship) {
         expect(err).to.be(null);
         expect(relationship.isFriend).to.be(false);
         expect(relationship.youFollow).to.be(false);

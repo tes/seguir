@@ -8,13 +8,13 @@ var keyspace = 'test_seguir_auth';
 var expect = require('expect.js');
 var client = require('../../api/db/client')();
 var messaging = {enabled: false};
-var api = require('../../index')(client, messaging, keyspace);
+var api = require('../../api')(client, messaging, keyspace);
 var setupSeguir = require('../../setup/setupSeguir');
 var _ = require('lodash');
 
 describe('Account and Application Management', function () {
 
-  var auth = api.auth, manage = api.manage, accountId, userId, appId, tokenId;
+  var auth = api.auth, accountId, userId, appId, tokenId;
 
   this.timeout(10000);
   this.slow(2000);
@@ -230,7 +230,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can check if a provided user id is valid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc1', '1', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc1', '1', {}, function (err, user) {
         expect(err).to.be(null);
         userId = user.user;
         auth.checkUser(keyspace + '_' + application.appkeyspace, user.user, function (err, checkedUser) {
@@ -242,7 +242,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can check if a provided user id is valid - if passed an altid instead of a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc2', '2', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc2', '2', {}, function (err, user) {
         expect(err).to.be(null);
         auth.checkUser(keyspace + '_' + application.appkeyspace, '2', function (err, checkedUser) {
           expect(err).to.be(null);
@@ -253,7 +253,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can check if a provided user id is valid - if passed a username instead of a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', '3', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', '3', {}, function (err, user) {
         expect(err).to.be(null);
         auth.checkUser(keyspace + '_' + application.appkeyspace, 'cliftonc3', function (err, checkedUser) {
           expect(err).to.be(null);
@@ -264,7 +264,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can coerce a display name to a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc4', '4', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc4', '4', {}, function (err, user) {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, 'cliftonc4', function (err, id) {
           expect(err).to.be(null);
@@ -275,7 +275,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can coerce an altid name to a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc5', '5', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc5', '5', {}, function (err, user) {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, '5', function (err, id) {
           expect(err).to.be(null);
@@ -286,7 +286,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can coerce a uuid to a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function (err, user) {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user, function (err, id) {
           expect(err).to.be(null);
@@ -297,7 +297,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can coerce a string uuid to a uuid', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, function (err, user) {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, user.user.toString(), function (err, id) {
           expect(err).to.be(null);
@@ -308,7 +308,7 @@ describe('Account and Application Management', function () {
     });
 
     it('can coerce an array of altids to uuids', function (done) {
-      manage.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, function (err, user) {
+      api.user.addUser(keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, function (err, user) {
         expect(err).to.be(null);
         auth.coerceUserToUuid(keyspace + '_' + application.appkeyspace, ['7'], function (err, ids) {
           expect(err).to.be(null);

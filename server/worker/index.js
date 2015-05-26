@@ -7,17 +7,17 @@ function bootstrapWorker (config, next) {
 
   var client = require('../../api/db/client')(config);
   var messaging = require('../../api/db/messaging')(config);
-  var api = require('../../index')(client, messaging, config.keyspace);
+  var api = require('../../api')(client, messaging, config.keyspace);
 
   var follower = function (cb) {
     messaging.listen('seguir-publish-to-followers', function (data, next) {
-      api.manage.insertFollowersTimeline(data, next);
+      api.feed.insertFollowersTimeline(data, next);
     }, cb);
   };
 
   var mentions = function (cb) {
     messaging.listen('seguir-publish-mentioned', function (data, cb) {
-      api.manage.insertMentionedTimeline(data, cb);
+      api.feed.insertMentionedTimeline(data, cb);
     }, cb);
   };
 
