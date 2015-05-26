@@ -45,12 +45,12 @@
     "rsmq": "^0.3.15",
     "rsmq-worker": "^0.3.5",
     "sanitize-html": "^1.5.3",
-    "string-template": "^0.2.0"
+    "string-template": "^0.2.0",
+    "debug": "^2.2.0"
   },
   "devDependencies": {
     "apidoc": "^0.13.0",
     "casual": "^1.4.7",
-    "debug": "^2.2.0",
     "expect.js": "^0.3.1",
     "husky": "^0.8.1",
     "istanbul": "^0.3.14",
