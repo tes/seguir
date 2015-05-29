@@ -212,8 +212,8 @@ describe('Social API', function () {
     it('can follow a user who is a friend', function (done) {
       api.follow.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.eql(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         followId = follow.follow;
         done();
       });
@@ -222,8 +222,8 @@ describe('Social API', function () {
     it('can follow a user who is not a friend', function (done) {
       api.follow.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[0].user);
-        expect(follow.user_follower).to.eql(users[2].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[2]);
         notFriendFollowId = follow.follow;
         done();
       });
@@ -232,8 +232,8 @@ describe('Social API', function () {
     it('can follow a user privately so only your friends can see', function (done) {
       api.follow.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[4].user);
-        expect(follow.user_follower).to.eql(users[5].user);
+        expect(follow.user).to.eql(users[4]);
+        expect(follow.user_follower).to.eql(users[5]);
         expect(follow.isprivate).to.be(true);
         privateFollowId = follow.follow;
         done();
@@ -243,8 +243,8 @@ describe('Social API', function () {
     it('can follow a user personally so only you can see', function (done) {
       api.follow.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[6].user);
-        expect(follow.user_follower).to.eql(users[5].user);
+        expect(follow.user).to.eql(users[6]);
+        expect(follow.user_follower).to.eql(users[5]);
         expect(follow.ispersonal).to.be(true);
         personalFollowId = follow.follow;
         done();

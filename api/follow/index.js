@@ -25,13 +25,19 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, follow, 'follow', isprivate, ispersonal, function (err, result) {
         if (err) { return next(err); }
-        next(null, {
+        var follower = {
           follow: follow,
           user: user,
           user_follower: user_follower,
           isprivate: isprivate,
           ispersonal: ispersonal,
           timestamp: timestamp
+        };
+
+        // Now, go and get user details for all the non own posts
+        api.user.mapGetUser(keyspace, [follower], ['user', 'user_follower', 'user_friend'], user, function (err, mappedFollower) {
+          if (err) { return next(err); }
+          next(null, mappedFollower[0]);
         });
       });
     });

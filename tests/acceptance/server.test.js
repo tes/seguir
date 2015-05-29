@@ -241,8 +241,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can add a follower who is a friend', function (done) {
       client.followUser(users[1].user, liu, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         followId = follow.follow;
         addSample('followUser', follow);
         done();
@@ -252,8 +252,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can add a follower who is not a friend', function (done) {
       client.followUser(users[2].user, liu, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[2].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[2]);
         notFriendFollowId = follow.follow;
         done();
       });
@@ -262,8 +262,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can follow a user who is not a friend', function (done) {
       client.followUser(users[3].user, users[2].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[2].user);
-        expect(follow.user_follower).to.be(users[3].user);
+        expect(follow.user).to.eql(users[2]);
+        expect(follow.user_follower).to.eql(users[3]);
         followUserId = follow.follow;
         done();
       });

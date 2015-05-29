@@ -51,8 +51,8 @@ describe('Worker Processing', function () {
     it('can follow a user who is not a friend', function (done) {
       api.follow.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[0].user);
-        expect(follow.user_follower).to.eql(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         followId = follow.follow;
         done();
       });
