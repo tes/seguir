@@ -129,8 +129,8 @@ describe('Social API', function () {
     it('can accept a friend request and create a reciprocal friendship', function (done) {
       api.friend.acceptFriendRequest(keyspace, users[1].user, friendRequestId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.eql(users[0].user);
-        expect(friend.user_friend).to.eql(users[1].user);
+        expect(friend.user).to.eql(users[0]);
+        expect(friend.user_friend).to.eql(users[1]);
         friendId = friend.friend;
         reciprocalFriendId = friend.reciprocal;
         done();
@@ -152,8 +152,8 @@ describe('Social API', function () {
     it('can friend another user', function (done) {
       api.friend.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.eql(users[2].user);
-        expect(friend.user_friend).to.eql(users[3].user);
+        expect(friend.user).to.eql(users[2]);
+        expect(friend.user_friend).to.eql(users[3]);
         otherFriendId = friend.friend;
         done();
       });
@@ -162,8 +162,8 @@ describe('Social API', function () {
     it('can retrieve a friend by id', function (done) {
       api.friend.getFriend(keyspace, liu, friendId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.eql(users[0].user);
-        expect(friend.user_friend).to.eql(users[1].user);
+        expect(friend.user).to.eql(users[0]);
+        expect(friend.user_friend).to.eql(users[1]);
         done();
       });
     });
@@ -178,7 +178,7 @@ describe('Social API', function () {
     it('can retrieve a list of friends for a user', function (done) {
       api.friend.getFriends(keyspace, liu, users[0].user, function (err, friends) {
         expect(err).to.be(null);
-        expect(friends[0].user_friend).to.eql(users[1].user);
+        expect(friends[0].user_friend).to.eql(users[1]);
         done();
       });
     });
@@ -254,8 +254,8 @@ describe('Social API', function () {
     it('can retrieve a follow by id', function (done) {
       api.follow.getFollow(keyspace, users[0].user, followId, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[0].user);
-        expect(follow.user_follower).to.eql(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         done();
       });
     });
@@ -342,7 +342,7 @@ describe('Social API', function () {
       api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         postId = post.post;
         done();
       });
@@ -352,7 +352,7 @@ describe('Social API', function () {
       api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         privatePostId = post.post;
         done();
       });
@@ -362,7 +362,7 @@ describe('Social API', function () {
       api.post.getPost(keyspace, users[2].user, postId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.eql(users[0].user);
+        expect(post.user).to.eql(users[0]);
         done();
       });
     });
@@ -378,7 +378,7 @@ describe('Social API', function () {
       api.post.getPost(keyspace, users[1].user, privatePostId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
-        expect(post.user).to.eql(users[0].user);
+        expect(post.user).to.eql(users[0]);
         done();
       });
     });
@@ -404,7 +404,7 @@ describe('Social API', function () {
       api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Evil hack ');
-        expect(post.user).to.eql(users[5].user);
+        expect(post.user).to.eql(users[5]);
         done();
       });
     });

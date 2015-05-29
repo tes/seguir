@@ -66,7 +66,7 @@ describe('Worker Processing', function () {
       api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.eql(users[0].user);
+        expect(post.user).to.eql(users[0]);
         postId = post.post;
         done();
       });

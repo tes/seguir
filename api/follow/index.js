@@ -90,7 +90,7 @@ module.exports = function (client, messaging, keyspace, api) {
         api.user.getUser(keyspace, follower.user_follower, function (err, user) {
           if (err) { return next(err); }
           follower.username_follower = user.username;
-          next(null, follower);
+          api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
         });
       };
 

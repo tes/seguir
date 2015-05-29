@@ -24,7 +24,14 @@ module.exports = function (client, messaging, keyspace, api) {
       var reciprocalFriend = Uuid.random();
       addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, function (err) {
         if (err) { return next(err); }
-        next(null, {friend: friend, reciprocal: reciprocalFriend, user: user, user_friend: user_friend, timestamp: timestamp});
+        var tempFriend = {
+          friend: friend,
+          reciprocal: reciprocalFriend,
+          user: user,
+          user_friend: user_friend,
+          timestamp: timestamp
+        };
+        api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], user, next);
       });
     });
   }
@@ -99,7 +106,7 @@ module.exports = function (client, messaging, keyspace, api) {
         api.user.getUser(keyspace, friendship.user_friend, function (err, user) {
           if (err) { return next(err); }
           friendship.username_friend = user.username;
-          next(null, friendship);
+          api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], user, next);
         });
       });
     });
@@ -116,7 +123,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
       api.common.get(keyspace, 'selectFriends', [user], 'many', function (err, friends) {
         if (err) { return next(err); }
-        next(null, friends);
+        api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], user, next);
       });
     });
   }
