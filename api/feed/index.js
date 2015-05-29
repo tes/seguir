@@ -295,7 +295,7 @@ module.exports = function (client, messaging, keyspace, api) {
           });
 
           // Now, go and get user details for all the non own posts
-          api.user.mapGetUser(keyspace, feed, ['user', 'user_follower', 'user_friend'], user, function (err, mappedFeed) {
+          api.user.mapUserIdToUser(keyspace, feed, ['user', 'user_follower', 'user_friend'], user, function (err, mappedFeed) {
             if (err) { return next(err); }
             next(null, mappedFeed, hasMoreResults ? maxTime : null);
           });

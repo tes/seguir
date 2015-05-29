@@ -156,10 +156,7 @@ module.exports = function (client, messaging, keyspace, api) {
     api.common.get(keyspace, 'selectIncomingFriendRequests', [liu], 'many', function (err, friendRequests) {
       if (err) { return next(err); }
       // Now, go and get user details for all the non own posts
-      api.user.mapGetUser(keyspace, friendRequests, ['user', 'user_friend'], liu, function (err, mappedFriendRequests) {
-        if (err) { return next(err); }
-        next(null, mappedFriendRequests);
-      });
+      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], liu, next);
     });
   }
 
@@ -167,10 +164,7 @@ module.exports = function (client, messaging, keyspace, api) {
     api.common.get(keyspace, 'selectOutgoingFriendRequests', [liu], 'many', function (err, friendRequests) {
       if (err) { return next(err); }
       // Now, go and get user details for all the non own posts
-      api.user.mapGetUser(keyspace, friendRequests, ['user', 'user_friend'], liu, function (err, mappedFriendRequests) {
-        if (err) { return next(err); }
-        next(null, mappedFriendRequests);
-      });
+      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], liu, next);
     });
   }
 
@@ -189,7 +183,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err || !user) { return next(err); }
       getFriends(keyspace, liu, user.user, function (err, friends) {
         if (err || !friends) { return next(err); }
-        api.user.mapGetUser(keyspace, friends, ['user_friend'], user, next);
+        api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], user, next);
       });
     });
   }

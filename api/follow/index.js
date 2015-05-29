@@ -33,12 +33,7 @@ module.exports = function (client, messaging, keyspace, api) {
           ispersonal: ispersonal,
           timestamp: timestamp
         };
-
-        // Now, go and get user details for all the non own posts
-        api.user.mapGetUser(keyspace, [follower], ['user', 'user_follower', 'user_friend'], user, function (err, mappedFollower) {
-          if (err) { return next(err); }
-          next(null, mappedFollower[0]);
-        });
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
       });
     });
   }
@@ -144,7 +139,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err || !user) { return next(err); }
       getFollowers(keyspace, liu, user.user, function (err, followers) {
         if (err) { return next(err); }
-        api.user.mapGetUser(keyspace, followers, ['user_follower'], user, next);
+        api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
       });
     });
   }
