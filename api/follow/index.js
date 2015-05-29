@@ -129,7 +129,7 @@ module.exports = function (client, messaging, keyspace, api) {
           if (item.isprivate && !isFriend) { return false; }
           return true;
         });
-        next(null, filteredFollowers);
+        api.user.mapUserIdToUser(keyspace, filteredFollowers, ['user_follower'], user, next);
       });
     });
   }
@@ -139,7 +139,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err || !user) { return next(err); }
       getFollowers(keyspace, liu, user.user, function (err, followers) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
+        next(null, followers);
       });
     });
   }

@@ -277,7 +277,7 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user', function (done) {
       api.follow.getFollowers(keyspace, users[0].user, users[0].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
         expect(followerIds).to.contain(users[1].user.toString());
         expect(followerIds).to.contain(users[2].user.toString());
         done();
@@ -303,7 +303,7 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user but will show personal if one of the two users', function (done) {
       api.follow.getFollowers(keyspace, users[6].user, users[6].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
         expect(followerIds).to.contain(users[5].user.toString());
         done();
       });
@@ -312,7 +312,7 @@ describe('Social API', function () {
     it('can retrieve a list of followers for a user but will show private if one of the two users', function (done) {
       api.follow.getFollowers(keyspace, users[4].user, users[4].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.toString(); });
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
         expect(followerIds).to.contain(users[5].user.toString());
         done();
       });

@@ -190,7 +190,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err || !user) { return next(err); }
       getFriends(keyspace, liu, user.user, function (err, friends) {
         if (err || !friends) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], user, next);
+        next(null, friends);
       });
     });
   }

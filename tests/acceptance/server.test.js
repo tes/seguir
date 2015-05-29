@@ -88,14 +88,14 @@ describe('Seguir Social Server / Client API', function () {
 
     it('can create users', function (done) {
       async.map([
-          {username: 'cliftonc', altid: '1'},
-          {username: 'phteven', altid: '2'},
-          {username: 'ted', altid: '3'},
-          {username: 'bill', altid: '4'},
-          {username: 'harold', altid: '5'},
-          {username: 'jenny', altid: '6'},
-          {username: 'alfred', altid: '7'}
-        ], function (user, cb) {
+        {username: 'cliftonc', altid: '1'},
+        {username: 'phteven', altid: '2'},
+        {username: 'ted', altid: '3'},
+        {username: 'bill', altid: '4'},
+        {username: 'harold', altid: '5'},
+        {username: 'jenny', altid: '6'},
+        {username: 'alfred', altid: '7'}
+      ], function (user, cb) {
         client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
       }, function (err, results) {
         expect(err).to.be(undefined);
@@ -282,7 +282,9 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of followers for a user', function (done) {
       client.getFollowers(liu, users[0].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
+          return item.user.toString();
+        });
         expect(followerIds).to.contain(users[1].user);
         expect(followerIds).to.contain(users[2].user);
         addSample('getFollowers', followers);
@@ -293,7 +295,9 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of followers for a user by altids', function (done) {
       client.getFollowers(liuAltId, users[0].altid, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
+          return item.user.toString();
+        });
         expect(followerIds).to.contain(users[1].user);
         expect(followerIds).to.contain(users[2].user);
         done();
@@ -305,7 +309,9 @@ describe('Seguir Social Server / Client API', function () {
         expect(err).to.be(null);
         client.getFollowers(users[4].user, users[4].user, function (err, followers1) {
           expect(err).to.be(null);
-          expect(_.pluck(followers1, 'user_follower')).to.contain(users[3].user);
+          expect(_.map(_.pluck(followers1, 'user_follower'), function (item) {
+            return item.user.toString();
+          })).to.contain(users[3].user);
           client.unFollowUser(users[3].user, users[4].user, function (err, result) {
             expect(err).to.be(null);
             addSample('unFollowUser', result);
