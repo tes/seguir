@@ -53,7 +53,9 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return content(); } // no mentioned users
       var users = content.match(mention);
       if (users && users.length > 0) {
-        users = users.map(function (user) { return user.replace('@', ''); });
+        users = users.map(function (user) {
+          return user.replace('@', '');
+        });
         async.map(users, function (username, cb2) {
           api.user.getUserByName(item.keyspace, username, function (err, mentionedUser) {
             if (err || !mentionedUser) {
@@ -75,7 +77,9 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return mentioned(); } // no mentioned users
       client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
         if (err) { return cb(err); }
-        var followers = _.map(_.pluck(data.rows || [], 'user_follower'), function (item) { return item.toString(); });
+        var followers = _.map(_.pluck(data.rows || [], 'user_follower'), function (item) {
+          return item.toString();
+        });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
           return !(_.contains(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === item.user.toString());
         });
@@ -189,7 +193,10 @@ module.exports = function (client, messaging, keyspace, api) {
 
   function _getFeed (keyspace, liu, timeline, user, from, limit, raw, next) {
 
-    if (!next) { next = raw; raw = false; }
+    if (!next) {
+      next = raw;
+      raw = false;
+    }
 
     var data = [user], timeClause = '', hasMoreResults = false;
 
@@ -203,15 +210,20 @@ module.exports = function (client, messaging, keyspace, api) {
     // This is removed in the results to keep it consistent with expected results.
     limit = limit + 1;
 
-    var query = q(keyspace, 'selectTimeline', {timeClause: timeClause, privateClause: null, limit: limit, TIMELINE: timeline});
+    var query = q(keyspace, 'selectTimeline', {
+      timeClause: timeClause,
+      privateClause: null,
+      limit: limit,
+      TIMELINE: timeline
+    });
     client.execute(query, data, {prepare: true}, function (err, data) {
 
       if (err) { return next(err); }
 
       if (data.rows && data.rows.length > 0) {
 
-         // This is where we check if we have more results or
-         // not.
+        // This is where we check if we have more results or
+        // not.
         if (data.rows.length === limit) {
           hasMoreResults = true;
           data.rows.pop();
@@ -294,11 +306,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
           });
 
-          // Now, go and get user details for all the non own posts
-          api.user.mapGetUser(keyspace, feed, ['user', 'user_follower', 'user_friend'], user, function (err, mappedFeed) {
-            if (err) { return next(err); }
-            next(null, mappedFeed, hasMoreResults ? maxTime : null);
-          });
+          next(null, feed, hasMoreResults ? maxTime : null);
 
         });
 

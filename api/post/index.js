@@ -23,7 +23,15 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, function (err, result) {
         if (err) { return next(err); }
-        next(null, {post: post, user: user, content: api.common.clean(content), timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal});
+        var tempPost = {
+          post: post,
+          user: user,
+          content: api.common.clean(content),
+          timestamp: timestamp,
+          isprivate: isprivate,
+          ispersonal: ispersonal
+        };
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user', 'user_follower'], user, next);
       });
     });
   }
@@ -50,20 +58,24 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   function getPost (keyspace, liu, post, next) {
+    var mapUserField = function (post) {
+      api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], post.user, next);
+    };
+
     api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
       if (post.ispersonal) {
         if (liu.toString() !== post.user.toString()) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-        return next(null, post);
+        return mapUserField(post);
       }
       if (post.isprivate) {
         api.friend.canSeePrivate(keyspace, liu, post.user, function (err, canSee) {
           if (err) { return next(err); }
           if (!canSee) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-          return next(null, post);
+          return mapUserField(post);
         });
       } else {
-        next(null, post);
+        mapUserField(post);
       }
     });
   }

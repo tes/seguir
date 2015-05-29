@@ -18,10 +18,15 @@ module.exports = function (client, messaging, keyspace, api) {
   var q = require('../db/queries');
 
   function addUser (keyspace, username, altid, userdata, next) {
-    userdata = _.mapValues(userdata, function (value) { return value.toString(); }); // Always ensure our userdata is <text,text>
+    userdata = _.mapValues(userdata, function (value) {
+      return value.toString();
+    }); // Always ensure our userdata is <text,text>
     var userid = Uuid.random();
     var user = [userid, username, '' + altid, userdata];
-    client.execute(q(keyspace, 'upsertUser'), user, {prepare: true, hints: [null, null, 'map']}, function (err, result) {
+    client.execute(q(keyspace, 'upsertUser'), user, {
+      prepare: true,
+      hints: [null, null, 'map']
+    }, function (err, result) {
       if (err) { return next(err); }
       next(null, {user: userid, username: username, altid: altid, userdata: userdata});
     });
@@ -39,8 +44,9 @@ module.exports = function (client, messaging, keyspace, api) {
     api.common.get(keyspace, 'selectUserByAltId', [altid], 'one', next);
   }
 
-  function mapGetUser (keyspace, items, fields, currentUser, next) {
-    async.map(items, function (item, mapCb) {
+  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {
+
+    var getUsersForFields = function (item, cb) {
       async.each(fields, function (field, eachCb) {
         if (!item[field]) { return eachCb(null); }
         if (item[field].toString() === currentUser.user && currentUser.user.toString()) {
@@ -53,9 +59,24 @@ module.exports = function (client, messaging, keyspace, api) {
           });
         }
       }, function (err) {
-        mapCb(err, item);
+        if (err) {
+          return cb(err);
+        }
+        cb(null, item);
       });
-    }, next);
+    };
+
+    if (Array.isArray(itemOrItems)) {
+      async.map(itemOrItems, getUsersForFields, function (err, result) {
+        if (err) {
+          return next(err);
+        }
+        next(null, result);
+      });
+    } else {
+      getUsersForFields(itemOrItems, next);
+    }
+
   }
 
   function getUserRelationship (keyspace, user, other_user, next) {
@@ -97,7 +118,7 @@ module.exports = function (client, messaging, keyspace, api) {
     getUser: getUser,
     getUserByName: getUserByName,
     getUserByAltId: getUserByAltId,
-    mapGetUser: mapGetUser,
+    mapUserIdToUser: mapUserIdToUser,
     getUserRelationship: getUserRelationship
   };
 

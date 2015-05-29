@@ -25,7 +25,15 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, follow, 'follow', isprivate, ispersonal, function (err, result) {
         if (err) { return next(err); }
-        next(null, {follow: follow, user: user, user_follower: user_follower, isprivate: isprivate, ispersonal: ispersonal, timestamp: timestamp});
+        var follower = {
+          follow: follow,
+          user: user,
+          user_follower: user_follower,
+          isprivate: isprivate,
+          ispersonal: ispersonal,
+          timestamp: timestamp
+        };
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
       });
     });
   }
@@ -55,7 +63,12 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   function isFollower (keyspace, user, user_follower, next) {
-    if (user.toString() === user_follower.toString()) { return next(null, true, null, {isprivate: false, ispersonal: false}); }
+    if (user.toString() === user_follower.toString()) {
+      return next(null, true, null, {
+        isprivate: false,
+        ispersonal: false
+      });
+    }
     api.common.get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
       if (err) { return next(null, false, null, {isprivate: false, ispersonal: false}); }
       var isFollower = !!(follow && follow.follow);
@@ -68,7 +81,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     api.common.get(keyspace, 'selectFollow', [follow], 'one', function (err, follower) {
 
-       /* istanbul ignore if */
+      /* istanbul ignore if */
       if (err) { return next(err); }
 
       var userIsInFollow = liu.toString() === follower.user.toString() || liu.toString() === follower.user_follower.toString();
@@ -77,16 +90,16 @@ module.exports = function (client, messaging, keyspace, api) {
         api.user.getUser(keyspace, follower.user_follower, function (err, user) {
           if (err) { return next(err); }
           follower.username_follower = user.username;
-          next(null, follower);
+          api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
         });
       };
 
-       // If the relationship is personal, the user must be one of the two parties.
+      // If the relationship is personal, the user must be one of the two parties.
       if (follower.ispersonal && !userIsInFollow) {
         return next({statusCode: 403, message: 'You are not allowed to see this item.'});
       }
 
-       // If the relationship is private, the user must be friends with one of the two parties.
+      // If the relationship is private, the user must be friends with one of the two parties.
       if (follower.isprivate) {
         async.parallel({
           user: async.apply(api.friend.isFriend, keyspace, liu, follower.user),
@@ -116,7 +129,7 @@ module.exports = function (client, messaging, keyspace, api) {
           if (item.isprivate && !isFriend) { return false; }
           return true;
         });
-        next(null, filteredFollowers);
+        api.user.mapUserIdToUser(keyspace, filteredFollowers, ['user_follower'], user, next);
       });
     });
   }
@@ -126,7 +139,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err || !user) { return next(err); }
       getFollowers(keyspace, liu, user.user, function (err, followers) {
         if (err) { return next(err); }
-        api.user.mapGetUser(keyspace, followers, ['user_follower'], user, next);
+        next(null, followers);
       });
     });
   }

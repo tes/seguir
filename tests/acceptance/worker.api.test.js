@@ -51,8 +51,8 @@ describe('Worker Processing', function () {
     it('can follow a user who is not a friend', function (done) {
       api.follow.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.eql(users[0].user);
-        expect(follow.user_follower).to.eql(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         followId = follow.follow;
         done();
       });
@@ -66,7 +66,7 @@ describe('Worker Processing', function () {
       api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.eql(users[0].user);
+        expect(post.user).to.eql(users[0]);
         postId = post.post;
         done();
       });

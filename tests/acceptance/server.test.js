@@ -88,14 +88,14 @@ describe('Seguir Social Server / Client API', function () {
 
     it('can create users', function (done) {
       async.map([
-          {username: 'cliftonc', altid: '1'},
-          {username: 'phteven', altid: '2'},
-          {username: 'ted', altid: '3'},
-          {username: 'bill', altid: '4'},
-          {username: 'harold', altid: '5'},
-          {username: 'jenny', altid: '6'},
-          {username: 'alfred', altid: '7'}
-        ], function (user, cb) {
+        {username: 'cliftonc', altid: '1'},
+        {username: 'phteven', altid: '2'},
+        {username: 'ted', altid: '3'},
+        {username: 'bill', altid: '4'},
+        {username: 'harold', altid: '5'},
+        {username: 'jenny', altid: '6'},
+        {username: 'alfred', altid: '7'}
+      ], function (user, cb) {
         client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
       }, function (err, results) {
         expect(err).to.be(undefined);
@@ -174,8 +174,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can accept a friend request and create a reciprocal friendship', function (done) {
       client.acceptFriendRequest(users[1].user, friendRequestId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.be(users[0].user);
-        expect(friend.user_friend).to.be(users[1].user);
+        expect(friend.user).to.eql(users[0]);
+        expect(friend.user_friend).to.eql(users[1]);
         friendId = friend.friend;
         reciprocalFriendId = friend.reciprocal;
         addSample('acceptFriendRequest', friend);
@@ -190,8 +190,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a friend by id', function (done) {
       client.getFriend(liu, friendId, function (err, friend) {
         expect(err).to.be(null);
-        expect(friend.user).to.be(users[0].user);
-        expect(friend.user_friend).to.be(users[1].user);
+        expect(friend.user).to.eql(users[0]);
+        expect(friend.user_friend).to.eql(users[1]);
         addSample('getFriend', friend);
         done();
       });
@@ -200,7 +200,7 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of friends for a user', function (done) {
       client.getFriends(liu, users[0].user, function (err, friends) {
         expect(err).to.be(null);
-        expect(friends[0].user_friend).to.be(users[1].user);
+        expect(friends[0].user_friend).to.eql(users[1]);
         addSample('getFriends', friends);
         done();
       });
@@ -209,7 +209,7 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of friends for a user by altids', function (done) {
       client.getFriends(liuAltId, users[0].altid, function (err, friends) {
         expect(err).to.be(null);
-        expect(friends[0].user_friend).to.be(users[1].user);
+        expect(friends[0].user_friend).to.eql(users[1]);
         done();
       });
     });
@@ -241,8 +241,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can add a follower who is a friend', function (done) {
       client.followUser(users[1].user, liu, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         followId = follow.follow;
         addSample('followUser', follow);
         done();
@@ -252,8 +252,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can add a follower who is not a friend', function (done) {
       client.followUser(users[2].user, liu, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[2].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[2]);
         notFriendFollowId = follow.follow;
         done();
       });
@@ -262,8 +262,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can follow a user who is not a friend', function (done) {
       client.followUser(users[3].user, users[2].user, Date.now(), false, false, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[2].user);
-        expect(follow.user_follower).to.be(users[3].user);
+        expect(follow.user).to.eql(users[2]);
+        expect(follow.user_follower).to.eql(users[3]);
         followUserId = follow.follow;
         done();
       });
@@ -272,8 +272,8 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a follow by id', function (done) {
       client.getFollow(liu, followId, function (err, follow) {
         expect(err).to.be(null);
-        expect(follow.user).to.be(users[0].user);
-        expect(follow.user_follower).to.be(users[1].user);
+        expect(follow.user).to.eql(users[0]);
+        expect(follow.user_follower).to.eql(users[1]);
         addSample('getFollow', follow);
         done();
       });
@@ -282,7 +282,9 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of followers for a user', function (done) {
       client.getFollowers(liu, users[0].user, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
+          return item.user.toString();
+        });
         expect(followerIds).to.contain(users[1].user);
         expect(followerIds).to.contain(users[2].user);
         addSample('getFollowers', followers);
@@ -293,7 +295,9 @@ describe('Seguir Social Server / Client API', function () {
     it('can retrieve a list of followers for a user by altids', function (done) {
       client.getFollowers(liuAltId, users[0].altid, function (err, followers) {
         expect(err).to.be(null);
-        var followerIds = _.pluck(followers, 'user_follower');
+        var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
+          return item.user.toString();
+        });
         expect(followerIds).to.contain(users[1].user);
         expect(followerIds).to.contain(users[2].user);
         done();
@@ -305,7 +309,9 @@ describe('Seguir Social Server / Client API', function () {
         expect(err).to.be(null);
         client.getFollowers(users[4].user, users[4].user, function (err, followers1) {
           expect(err).to.be(null);
-          expect(_.pluck(followers1, 'user_follower')).to.contain(users[3].user);
+          expect(_.map(_.pluck(followers1, 'user_follower'), function (item) {
+            return item.user.toString();
+          })).to.contain(users[3].user);
           client.unFollowUser(users[3].user, users[4].user, function (err, result) {
             expect(err).to.be(null);
             addSample('unFollowUser', result);
@@ -328,7 +334,7 @@ describe('Seguir Social Server / Client API', function () {
       client.addPost(liu, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         postId = post.post;
         addSample('addPost', post);
         done();
@@ -339,7 +345,7 @@ describe('Seguir Social Server / Client API', function () {
       client.addPost(liuAltId, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         privatePostId = post.post;
         done();
       });
@@ -349,7 +355,7 @@ describe('Seguir Social Server / Client API', function () {
       client.getPost(users[2].user, postId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         addSample('getPost', post);
         done();
       });
@@ -366,7 +372,7 @@ describe('Seguir Social Server / Client API', function () {
       client.getPost(users[1].user, privatePostId, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
-        expect(post.user).to.be(users[0].user);
+        expect(post.user).to.eql(users[0]);
         done();
       });
     });
