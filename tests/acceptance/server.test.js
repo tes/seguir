@@ -98,7 +98,7 @@ describe('Seguir Social Server / Client API', function () {
       ], function (user, cb) {
         client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
       }, function (err, results) {
-        expect(err).to.be(undefined);
+        expect(err).to.be(null);
         users = results;
         liu = users[0].user; // clifton is logged in
         liuAltId = users[0].altid;
@@ -422,7 +422,7 @@ describe('Seguir Social Server / Client API', function () {
       client.getLike(liu, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be(encodeURIComponent('http://github.com'));
-        expect(like.user).to.be(users[0].user);
+        expect(like.user).to.eql(users[0]);
         addSample('getLike', like);
         done();
       });

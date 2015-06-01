@@ -38,7 +38,7 @@ describe('Worker Processing', function () {
         ], function (user, cb) {
           api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
         }, function (err, results) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           users = results;
           done(err);
         });

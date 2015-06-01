@@ -42,7 +42,7 @@ describe('Social API', function () {
         ], function (user, cb) {
           api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
         }, function (err, results) {
-          expect(err).to.be(undefined);
+          expect(err).to.be(null);
           users = results;
           liu = users[1].user; // phteven is logged in
           done(err);
@@ -453,7 +453,7 @@ describe('Social API', function () {
       api.like.getLike(keyspace, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be('http://github.com');
-        expect(like.user).to.eql(users[0].user);
+        expect(like.user).to.eql(users[0]);
         done();
       });
     });
