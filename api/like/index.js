@@ -23,7 +23,8 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, like, 'like', false, false, function (err, result) {
         if (err) { return next(err); }
-        next(null, {like: like, user: user, item: item, timestamp: timestamp});
+        var tempLike = {like: like, user: user, item: item, timestamp: timestamp};
+        api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);
       });
     });
   }
@@ -59,7 +60,7 @@ module.exports = function (client, messaging, keyspace, api) {
   function checkLike (keyspace, user, item, next) {
     api.common.get(keyspace, 'checkLike', [user, item], 'one', function (err, like) {
       if (err) { return next(err); }
-      next(null, like);
+      api.user.mapUserIdToUser(keyspace, like, ['user'], user, next);
     });
   }
 

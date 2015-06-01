@@ -462,7 +462,7 @@ describe('Social API', function () {
       api.like.checkLike(keyspace, users[0].user, 'http://github.com', function (err, like) {
         expect(err).to.be(null);
         expect(like.like).to.eql(likeId);
-        expect(like.user).to.eql(users[0].user);
+        expect(like.user).to.eql(users[0]);
         done();
       });
     });
