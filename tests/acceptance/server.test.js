@@ -98,7 +98,7 @@ describe('Seguir Social Server / Client API', function () {
       ], function (user, cb) {
         client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
       }, function (err, results) {
-        expect(err).to.be(undefined);
+        expect(err).to.be(null);
         users = results;
         liu = users[0].user; // clifton is logged in
         liuAltId = users[0].altid;
