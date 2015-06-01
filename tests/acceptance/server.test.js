@@ -422,7 +422,7 @@ describe('Seguir Social Server / Client API', function () {
       client.getLike(liu, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be(encodeURIComponent('http://github.com'));
-        expect(like.user).to.be(users[0].user);
+        expect(like.user).to.eql(users[0]);
         addSample('getLike', like);
         done();
       });

@@ -53,7 +53,7 @@ module.exports = function (client, messaging, keyspace, api) {
   function getLike (keyspace, like, next) {
     api.common.get(keyspace, 'selectLike', [like], 'one', function (err, result) {
       if (err) { return next(err); }
-      next(null, result);
+      api.user.mapUserIdToUser(keyspace, result, ['user'], undefined, next);
     });
   }
 

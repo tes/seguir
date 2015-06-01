@@ -49,7 +49,7 @@ module.exports = function (client, messaging, keyspace, api) {
     var getUsersForFields = function (item, cb) {
       async.each(fields, function (field, eachCb) {
         if (!item[field]) { return eachCb(null); }
-        if (item[field].toString() === currentUser.user && currentUser.user.toString()) {
+        if (currentUser && item[field].toString() === currentUser.user && currentUser.user.toString()) {
           item[field] = currentUser;
           eachCb(null);
         } else {

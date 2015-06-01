@@ -453,7 +453,7 @@ describe('Social API', function () {
       api.like.getLike(keyspace, likeId, function (err, like) {
         expect(err).to.be(null);
         expect(like.item).to.be('http://github.com');
-        expect(like.user).to.eql(users[0].user);
+        expect(like.user).to.eql(users[0]);
         done();
       });
     });
