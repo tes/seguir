@@ -337,7 +337,6 @@ describe('Seguir Social Server / Client API', function () {
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.eql(users[0]);
         postId = post.post;
-        addSample('addPost', post);
         done();
       });
     });
@@ -409,6 +408,7 @@ describe('Seguir Social Server / Client API', function () {
       client.addPost(users[7].user, {hello: 'world'}, 'application/json', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content.hello).to.be('world');
+        addSample('addPost', post);
         client.getPost(users[7].user, post.post, function (err, getPost) {
           expect(err).to.be(null);
           expect(getPost.content.hello).to.be('world');
