@@ -2,7 +2,7 @@ var async = require('async');
 
 function defineTablesAndIndexes (KEYSPACE) {
 
-  var tables = [], indexes = [];
+  var tables = [], indexes = [], tableIndexes = {};
 
   if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
@@ -28,6 +28,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, altid text, userdata map<text,text>)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(altid)');
+  tableIndexes.users = ['altid', 'username'];
 
   /**
    * @api {table} Posts Posts
@@ -46,6 +47,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, isprivate boolean, ispersonal boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
+  tableIndexes.posts = ['user'];
 
   /**
    * @api {table} Friends Friends
@@ -61,6 +63,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend uuid, user uuid, user_friend uuid, since timestamp, PRIMARY KEY (user, user_friend))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friends(friend)');
+  tableIndexes.friends = ['friend'];
 
   /**
    * @api {table} FriendRequests Friend Requests
@@ -78,6 +81,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, PRIMARY KEY (friend_request))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
+  tableIndexes.friend_request = ['user', 'user_friend'];
 
   /**
    * @api {table} Likes Likes
@@ -96,6 +100,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like uuid, user uuid, item text, since timestamp, PRIMARY KEY (user, item))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.likes(like)');
+  tableIndexes.likes = ['like'];
 
   /**
    * @api {table} Follower Follower
@@ -113,6 +118,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow uuid, user uuid, user_follower uuid, isprivate boolean, ispersonal boolean, since timestamp, PRIMARY KEY (user, user_follower))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers(follow)');
+  tableIndexes.followers = ['follow'];
 
   /**
    * @api {table} Userline Newsfeed
@@ -133,11 +139,13 @@ function defineTablesAndIndexes (KEYSPACE) {
   feedTables.forEach(function (table) {
     tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
+    tableIndexes[table] = ['item'];
   });
 
   return {
     tables: tables,
-    indexes: indexes
+    indexes: indexes,
+    tableIndexes: tableIndexes
   };
 }
 
@@ -152,10 +160,11 @@ function setup (client, keyspace, next) {
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
-    helpers.createSecondaryIndexes
+    helpers.createSecondaryIndexes,
+    async.retry(5, helpers.assertIndexes.bind(helpers.assertIndexes))
   ], function (err, data) {
     /* istanbul ignore if */
-    if (err) console.dir(err);
+    if (err) return next(err);
     next();
   });
 }
