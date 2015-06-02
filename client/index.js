@@ -414,9 +414,9 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  * @apiParam {Function} next callback
  * @apiUse addPostSuccessExample
  */
-Seguir.prototype.addPost = function (liu, content, timestamp, isprivate, ispersonal, next) {
+Seguir.prototype.addPost = function (liu, content, content_type, timestamp, isprivate, ispersonal, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal}, next);
+  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal}, next);
 };
 
 /**

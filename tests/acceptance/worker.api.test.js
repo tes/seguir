@@ -63,7 +63,7 @@ describe('Worker Processing', function () {
   describe('posts', function () {
 
     it('can post a message from a user', function (done) {
-      api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.eql(users[0]);
@@ -73,7 +73,7 @@ describe('Worker Processing', function () {
     });
 
     it('you can mention someone in a post', function (done) {
-      api.post.addPost(keyspace, users[2].user, 'Hello, this is a post mentioning @cliftonc, not from a follower', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[2].user, 'Hello, this is a post mentioning @cliftonc, not from a follower', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post mentioning @cliftonc, not from a follower');
         mentionPostId = post.post;

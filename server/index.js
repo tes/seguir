@@ -341,11 +341,12 @@ function bootstrapServer (config, keyspace, next) {
       return next(new restify.InvalidArgumentError('You must provide content for the post.'));
     }
     var isprivate = !!req.params.isprivate,
-        ispersonal = !!req.params.ispersonal;
+        ispersonal = !!req.params.ispersonal,
+        content_type = req.params.content_type || 'text/html';
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.post.addPost(req.keyspace, user, req.params.content, Date.now(), isprivate, ispersonal, _response(res, next));
+      api.post.addPost(req.keyspace, user, req.params.content, content_type, Date.now(), isprivate, ispersonal, _response(res, next));
     });
   });
 

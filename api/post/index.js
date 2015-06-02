@@ -15,9 +15,9 @@ module.exports = function (client, messaging, keyspace, api) {
 
   var q = require('../db/queries');
 
-  function addPost (keyspace, user, content, timestamp, isprivate, ispersonal, next) {
+  function addPost (keyspace, user, content, content_type, timestamp, isprivate, ispersonal, next) {
     var post = Uuid.random();
-    var data = [post, user, api.common.clean(content), timestamp, isprivate, ispersonal];
+    var data = [post, user, api.common.clean(content), content_type, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
@@ -27,6 +27,7 @@ module.exports = function (client, messaging, keyspace, api) {
           post: post,
           user: user,
           content: api.common.clean(content),
+          content_type: content_type,
           timestamp: timestamp,
           isprivate: isprivate,
           ispersonal: ispersonal
@@ -36,10 +37,10 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
-  function addPostByName (keyspace, username, content, timestamp, isprivate, ispersonal, next) {
+  function addPostByName (keyspace, username, content, content_type, timestamp, isprivate, ispersonal, next) {
     api.user.getUserByName(keyspace, username, function (err, user) {
       if (err || !user) { return next(err); }
-      addPost(keyspace, user.user, content, timestamp, isprivate, ispersonal, next);
+      addPost(keyspace, user.user, content, content_type, timestamp, isprivate, ispersonal, next);
     });
   }
 

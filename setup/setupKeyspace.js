@@ -44,7 +44,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, isprivate boolean, ispersonal boolean, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, isprivate boolean, ispersonal boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
 
   /**

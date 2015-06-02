@@ -331,7 +331,7 @@ describe('Seguir Social Server / Client API', function () {
   describe('posts', function () {
 
     it('can post a message from a user', function (done) {
-      client.addPost(liu, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
+      client.addPost(liu, 'Hello, this is a post', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.eql(users[0]);
@@ -342,7 +342,7 @@ describe('Seguir Social Server / Client API', function () {
     });
 
     it('can post a private message from a user using their altid', function (done) {
-      client.addPost(liuAltId, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
+      client.addPost(liuAltId, 'Hello, this is a private post', 'text/html', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
         expect(post.user).to.eql(users[0]);
@@ -378,7 +378,7 @@ describe('Seguir Social Server / Client API', function () {
     });
 
     it('can remove a post', function (done) {
-      client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', Date.now(), true, false, function (err, post) {
+      client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', 'text/html', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         client.removePost(liu, post.post, function (err, result) {
           expect(err).to.be(null);
@@ -392,7 +392,7 @@ describe('Seguir Social Server / Client API', function () {
     });
 
     it('can add a personal post', function (done) {
-      client.addPost(users[5].user, 'Only you may see me', Date.now(), false, true, function (err, post) {
+      client.addPost(users[5].user, 'Only you may see me', 'text/html', Date.now(), false, true, function (err, post) {
         expect(err).to.be(null);
         client.getPost(users[5].user, post.post, function (err, post) {
           expect(err).to.be(null);

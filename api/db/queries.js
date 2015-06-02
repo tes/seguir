@@ -71,8 +71,8 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, posted, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
+queries.selectPost = 'SELECT post, content, content_type, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = ?';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 
 /**

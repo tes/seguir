@@ -339,7 +339,7 @@ describe('Social API', function () {
   describe('posts', function () {
 
     it('can post a message from a user', function (done) {
-      api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post');
         expect(post.user).to.eql(users[0]);
@@ -349,7 +349,7 @@ describe('Social API', function () {
     });
 
     it('can post a private message from a user', function (done) {
-      api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', Date.now(), true, false, function (err, post) {
+      api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', 'text/html', Date.now(), true, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a private post');
         expect(post.user).to.eql(users[0]);
@@ -384,7 +384,7 @@ describe('Social API', function () {
     });
 
     it('you can mention yourself in a post', function (done) {
-      api.post.addPost(keyspace, users[4].user, 'Who am I? @harold', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[4].user, 'Who am I? @harold', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Who am I? @harold');
         done();
@@ -392,7 +392,7 @@ describe('Social API', function () {
     });
 
     it('you can mention someone in a post', function (done) {
-      api.post.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Hello, this is a post mentioning @harold');
         mentionPostId = post.post;
@@ -401,7 +401,7 @@ describe('Social API', function () {
     });
 
     it('sanitizes any input by default', function (done) {
-      api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         expect(post.content).to.be('Evil hack ');
         expect(post.user).to.eql(users[5]);
@@ -410,7 +410,7 @@ describe('Social API', function () {
     });
 
     it('can add and remove a post', function (done) {
-      api.post.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', Date.now(), false, false, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', 'text/html', Date.now(), false, false, function (err, post) {
         expect(err).to.be(null);
         api.post.removePost(keyspace, users[5].user, post.post, function (err, result) {
           expect(err).to.be(null);
@@ -425,7 +425,7 @@ describe('Social API', function () {
     });
 
     it('you can add a completely personal post that only appears in the users feed', function (done) {
-      api.post.addPost(keyspace, users[5].user, 'Shh - this is only for me.', Date.now(), false, true, function (err, post) {
+      api.post.addPost(keyspace, users[5].user, 'Shh - this is only for me.', 'text/html', Date.now(), false, true, function (err, post) {
         expect(err).to.be(null);
         api.feed.getFeed(keyspace, users[4].user, users[5].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
