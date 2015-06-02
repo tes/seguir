@@ -38,7 +38,8 @@ describe('Social API', function () {
           {username: 'bill', altid: '4'},
           {username: 'harold', altid: '5'},
           {username: 'jenny', altid: '6'},
-          {username: 'alfred', altid: '7'}
+          {username: 'alfred', altid: '7'},
+          {username: 'json', altid: '8'}
         ], function (user, cb) {
           api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
         }, function (err, results) {
@@ -433,6 +434,29 @@ describe('Social API', function () {
           expect(ids).to.not.contain(post.post.toString());
           done();
         });
+      });
+    });
+
+    it('can post a message that contains an object with type application/json and it returns the object in the post and feed', function (done) {
+      api.post.addPost(keyspace, users[7].user, {hello: 'world'}, 'application/json', Date.now(), false, false, function (err, post) {
+        expect(err).to.be(null);
+        expect(post.content.hello).to.be('world');
+        api.post.getPost(keyspace, users[7].user, post.post, function (err, getPost) {
+          expect(err).to.be(null);
+          expect(getPost.content.hello).to.be('world');
+          api.feed.getFeed(keyspace, users[7].user, users[7].user, null, 100, function (err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].content.hello).to.be('world');
+            done();
+          });
+        });
+      });
+    });
+
+    it('cant post an invalid message that contains an object with type application/json', function (done) {
+      api.post.addPost(keyspace, users[7].user, '{"hello":bob}', 'application/json', Date.now(), false, false, function (err, post) {
+        expect(err.message).to.be('Unable to parse input content, post not saved.');
+        done();
       });
     });
 

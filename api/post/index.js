@@ -17,16 +17,24 @@ module.exports = function (client, messaging, keyspace, api) {
 
   function addPost (keyspace, user, content, content_type, timestamp, isprivate, ispersonal, next) {
     var post = Uuid.random();
-    var data = [post, user, api.common.clean(content), content_type, timestamp, isprivate, ispersonal];
+
+    // Parse and re-parse the input content, this catches any errors and ensures we don't
+    // persist broken data that will subsequently break the feed
+    var cassandraContent = api.common.convertContentToCassandra(content, content_type);
+    var originalContent = api.common.convertContentFromCassandra(cassandraContent, content_type);
+    if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
+
+    var data = [post, user, cassandraContent, content_type, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
+
       api.feed.addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, function (err, result) {
         if (err) { return next(err); }
         var tempPost = {
           post: post,
           user: user,
-          content: api.common.clean(content),
+          content: originalContent,
           content_type: content_type,
           timestamp: timestamp,
           isprivate: isprivate,
@@ -65,6 +73,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
+      post.content = api.common.convertContentFromCassandra(post.content, post.content_type);
       if (post.ispersonal) {
         if (liu.toString() !== post.user.toString()) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
         return mapUserField(post);

@@ -94,7 +94,8 @@ describe('Seguir Social Server / Client API', function () {
         {username: 'bill', altid: '4'},
         {username: 'harold', altid: '5'},
         {username: 'jenny', altid: '6'},
-        {username: 'alfred', altid: '7'}
+        {username: 'alfred', altid: '7'},
+        {username: 'json', altid: '8'}
       ], function (user, cb) {
         client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
       }, function (err, results) {
@@ -398,6 +399,22 @@ describe('Seguir Social Server / Client API', function () {
           expect(err).to.be(null);
           client.getPost(users[1].user, post.post, function (err, post) {
             expect(err.statusCode).to.be(403);
+            done();
+          });
+        });
+      });
+    });
+
+    it('can post a message that contains an object with type application/json and it returns the object in the post and feed', function (done) {
+      client.addPost(users[7].user, {hello: 'world'}, 'application/json', Date.now(), false, false, function (err, post) {
+        expect(err).to.be(null);
+        expect(post.content.hello).to.be('world');
+        client.getPost(users[7].user, post.post, function (err, getPost) {
+          expect(err).to.be(null);
+          expect(getPost.content.hello).to.be('world');
+          client.getFeed(users[7].user, users[7].user, null, 100, function (err, feed) {
+            expect(err).to.be(null);
+            expect(feed.feed[0].content.hello).to.be('world');
             done();
           });
         });

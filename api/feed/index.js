@@ -44,7 +44,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     var getPost = function (cb) {
       api.post.getPost(item.keyspace, item.user, item.item, function (err, post) {
-        if (err || !post) return cb();
+        if (err || !post || post.content_type !== 'text/html') return cb();
         cb(null, post.content);
       });
     };
