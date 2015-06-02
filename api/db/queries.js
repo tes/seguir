@@ -62,7 +62,7 @@ queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, altid, userd
 queries.selectUser = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE user = ?';
 queries.selectUserByUsername = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE username = ?';
 queries.selectUserByAltId = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE altid = ?';
-queries.updateUser = 'UPDATE {KEYSPACE}.users SET {setValues} WHERE user = ?;';
+queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = ?, altid = ?, userdata = ? WHERE user = ?';
 
 /**
  * @apiDefine ExampleCqlPosts

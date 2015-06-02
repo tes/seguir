@@ -6,6 +6,7 @@ var _ = require('lodash');
 var urls = {
   addUser: '/user',
   getUser: '/user/:user',
+  updateUser: '/user/:user',
   getUserByName: '/username/:username',
   getUserByAltId: '/useraltid/:altid',
   getUserRelationship: '/user/:user/relationship',

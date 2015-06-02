@@ -172,6 +172,26 @@ Seguir.prototype.addUser = function (liu, username, altid, userdata, next) {
 };
 
 /**
+ * @api {function} addUser(liu,username,altid,userdata,next) addUser
+ * @apiName addUser
+ * @apiGroup Users
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Creates a new user.
+ * @apiParam {String} liu the id of the current logged in user [not used]
+ * @apiParam {String} username the username
+ * @apiParam {String} altid the local / alternate id
+ * @apiParam {Object} userdata arbitrary user data (one level of key values only)
+ * @apiParam {Function} next callback
+ *
+ * @apiUse addUserSuccessExample
+ */
+Seguir.prototype.updateUser = function (liu, user, username, altid, userdata, next) {
+  var self = this;
+  self.post(liu, u('updateUser', {user: user}), {username: username, altid: altid, userdata: userdata}, next);
+};
+
+/**
  * @api {function} getUserRelationship(liu,user,next) getUserRelationship
  * @apiName getUserRelationship
  * @apiGroup Users

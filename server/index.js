@@ -67,28 +67,29 @@ function bootstrapServer (config, keyspace, next) {
    */
 
   /**
-   * @api {post} /user Add a user
+   * @api {post} /user/:user Update a user
    * @apiName Users
    * @apiGroup ApiUsers
    * @apiVersion 1.0.0
    *
-   * @apiDescription Creates a new user.
+   * @apiDescription Updates a user.
+   * @apiParam {String} user the guid or altid of the user
    * @apiParam {String} username the name of the user
    * @apiParam {String} altid the alternate ID of the user
    * @apiParam {Object} userdata arbitrary user data
    *
-   * @apiExample {curl} Example usage:
-   *     curl --data 'username=cliftonc' http://localhost:3000/user
-   *
    *  @apiUse MissingUsername
    *  @apiUse ServerError
-   *  @apiUse addUserSuccessExample
+   *  @apiUse updateUserSuccessExample
    */
-  server.post(u('addUser'), function (req, res, next) {
-    if (!req.params.username) {
-      return next(new restify.InvalidArgumentError('You must provide a username.'));
-    }
-    api.user.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, _response(res, next));
+  server.post(u('updateUser'), function (req, res, next) {
+    coerce(req.keyspace, req.params.user, function (err, user) {
+      if (err) { return next(_error(err)); }
+      if (!req.params.username) {
+        return next(new restify.InvalidArgumentError('You must provide a username.'));
+      }
+      api.user.updateUser(req.keyspace, user, req.params.username, req.params.altid, req.params.userdata, _response(res, next));
+    });
   });
 
   /**
@@ -111,6 +112,31 @@ function bootstrapServer (config, keyspace, next) {
    */
   server.get(u('getUserByName'), function (req, res, next) {
     api.user.getUserByName(req.keyspace, req.params.username, _response(res, next));
+  });
+
+  /**
+   * @api {post} /user Add a user
+   * @apiName Users
+   * @apiGroup ApiUsers
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Creates a new user.
+   * @apiParam {String} username the name of the user
+   * @apiParam {String} altid the alternate ID of the user
+   * @apiParam {Object} userdata arbitrary user data
+   *
+   * @apiExample {curl} Example usage:
+   *     curl --data 'username=cliftonc' http://localhost:3000/user
+   *
+   *  @apiUse MissingUsername
+   *  @apiUse ServerError
+   *  @apiUse addUserSuccessExample
+   */
+  server.post(u('addUser'), function (req, res, next) {
+    if (!req.params.username) {
+      return next(new restify.InvalidArgumentError('You must provide a username.'));
+    }
+    api.user.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, _response(res, next));
   });
 
   /**

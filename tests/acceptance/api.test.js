@@ -77,6 +77,20 @@ describe('Social API', function () {
       });
     });
 
+    it('can update a users data', function (done) {
+      api.user.updateUser(keyspace, users[7].user, 'new_name', 'new_altid', {hello: 'world'}, function (err, user) {
+        expect(err).to.be(null);
+        api.user.getUser(keyspace, users[7].user, function (err, user) {
+          expect(err).to.be(null);
+          expect(user.user).to.eql(users[7].user);
+          expect(user.username).to.be('new_name');
+          expect(user.altid).to.be('new_altid');
+          expect(user.userdata.hello).to.be('world');
+          done();
+        });
+      });
+    });
+
   });
 
   describe('friend requests', function () {

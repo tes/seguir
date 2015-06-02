@@ -147,6 +147,20 @@ describe('Seguir Social Server / Client API', function () {
       });
     });
 
+    it('can update a users data', function (done) {
+      client.updateUser(null, users[7].user, 'new_name', 'new_altid', {hello: 'world'}, function (err, user) {
+        expect(err).to.be(null);
+        client.getUser(null, users[7].user, function (err, user) {
+          expect(err).to.be(null);
+          expect(user.user).to.eql(users[7].user);
+          expect(user.username).to.be('new_name');
+          expect(user.altid).to.be('new_altid');
+          expect(user.userdata.hello).to.be('world');
+          done();
+        });
+      });
+    });
+
   });
 
   describe('friend requests', function () {

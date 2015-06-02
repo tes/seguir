@@ -32,6 +32,20 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
+  function updateUser (keyspace, userid, username, altid, userdata, next) {
+    userdata = _.mapValues(userdata, function (value) {
+      return value.toString();
+    }); // Always ensure our userdata is <text,text>
+    var user = [username, '' + altid, userdata, userid];
+    client.execute(q(keyspace, 'updateUser'), user, {
+      prepare: true,
+      hints: [null, null, 'map']
+    }, function (err, result) {
+      if (err) { return next(err); }
+      next(null, {user: userid, username: username, altid: altid, userdata: userdata});
+    });
+  }
+
   function getUser (keyspace, user, next) {
     api.common.get(keyspace, 'selectUser', [user], 'one', next);
   }
@@ -115,6 +129,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
   return {
     addUser: addUser,
+    updateUser: updateUser,
     getUser: getUser,
     getUserByName: getUserByName,
     getUserByAltId: getUserByAltId,
