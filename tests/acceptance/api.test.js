@@ -704,5 +704,31 @@ describe('Social API', function () {
 
   });
 
+  describe('initialising users', function () {
+
+    it('can optionally initialise a user with a follow relationship and automatically populate their feed', function (done) {
+
+      var initialise = {
+        follow: {
+          users: [users[0].username, users[1].username],
+          backfill: '1d',
+          isprivate: false,
+          ispersonal: true
+        }
+      };
+
+      api.user.addUser(keyspace, 'shaun', 'baah', {type: 'sheep'}, initialise, function (err, user) {
+        expect(err).to.be(null);
+        api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+          expect(err).to.be(null);
+          expect(feed[0].post).to.eql(postId);
+          done();
+        });
+      });
+
+    });
+
+  });
+
 });
 

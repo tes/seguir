@@ -41,7 +41,7 @@ module.exports = function (client, messaging, keyspace, api) {
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, friend, 'friend', true, false, next);
+      api.feed.addFeedItem(keyspace, user, friend, 'friend', true, false, timestamp, next);
     });
   }
 

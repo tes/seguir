@@ -29,7 +29,7 @@ module.exports = function (client, messaging, keyspace, api) {
       /* istanbul ignore if */
       if (err) { return next(err); }
 
-      api.feed.addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, function (err, result) {
+      api.feed.addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, timestamp, function (err, result) {
         if (err) { return next(err); }
         var tempPost = {
           post: post,

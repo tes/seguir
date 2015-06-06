@@ -23,7 +23,7 @@ module.exports = function (client, messaging, keyspace, api) {
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, follow, 'follow', isprivate, ispersonal, function (err, result) {
+      api.feed.addFeedItem(keyspace, user, follow, 'follow', isprivate, ispersonal, timestamp, function (err, result) {
         if (err) { return next(err); }
         var follower = {
           follow: follow,

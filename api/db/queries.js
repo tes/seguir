@@ -146,7 +146,7 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
 queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause} LIMIT {limit}';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
 

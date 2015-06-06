@@ -3,8 +3,12 @@ var moment = require('moment');
 var TimeUuid = cassandra.types.TimeUuid;
 var async = require('async');
 var _ = require('lodash');
-var mention = new RegExp('@[a-zA-Z0-9]+', 'g');
+
+var debug = require('debug')('seguir:feed');
+
+var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
 var FEEDS = ['feed_timeline', 'user_timeline'];
+var DEFAULT_LIMIT = 50;
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -30,8 +34,7 @@ module.exports = function (client, messaging, keyspace, api) {
         api.friend.isFriend(item.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!item.isprivate || (item.isprivate && isFriend)) {
-            var data = [row.user_follower, item.item, item.type, TimeUuid.now(), followIsPrivate, followIsPersonal];
-            client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE: 'feed_timeline'}), data, {prepare: true}, cb2);
+            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, TimeUuid.fromDate(item.timestamp), followIsPrivate, followIsPersonal, cb2);
           } else {
             cb2();
           }
@@ -51,7 +54,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     var getMentionedUsers = function (content, cb) {
       if (!cb) { return content(); } // no mentioned users
-      var users = content.match(mention);
+      var users = content.match(MENTION);
       if (users && users.length > 0) {
         users = users.map(function (user) {
           return user.replace('@', '');
@@ -91,8 +94,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
         if (!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
-          var data = [mentionedUser.user, item.item, item.type, TimeUuid.now(), item.isprivate, item.ispersonal];
-          client.execute(q(item.keyspace, 'upsertUserTimeline', {TIMELINE: 'feed_timeline'}), data, {prepare: true}, cb2);
+          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, TimeUuid.fromDate(item.timestamp), item.isprivate, item.ispersonal, cb2);
         } else {
           cb2();
         }
@@ -108,7 +110,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
   }
 
-  function addFeedItem (keyspace, user, item, type, isprivate, ispersonal, next) {
+  function addFeedItem (keyspace, user, item, type, isprivate, ispersonal, timestamp, next) {
 
     var jobData = {
       keyspace: keyspace,
@@ -116,8 +118,11 @@ module.exports = function (client, messaging, keyspace, api) {
       item: item,
       type: type,
       isprivate: isprivate,
-      ispersonal: ispersonal
+      ispersonal: ispersonal,
+      timestamp: timestamp
     };
+
+    debug('Adding feed item', user, item, type, isprivate, ispersonal, timestamp);
 
     var _insertFollowersTimeline = function (cb) {
       if (messaging.enabled) {
@@ -138,8 +143,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        var data = [user, item, type, TimeUuid.now(), isprivate, ispersonal];
-        client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, cb2);
+        upsertTimeline(keyspace, timeline, user, item, type, TimeUuid.fromDate(timestamp), isprivate, ispersonal, cb2);
       }, cb);
     };
 
@@ -149,6 +153,12 @@ module.exports = function (client, messaging, keyspace, api) {
       _insertMentionedTimeline
     ], next);
 
+  }
+
+  function upsertTimeline (keyspace, timeline, user, item, type, time, isprivate, ispersonal, next) {
+    var data = [user, item, type, time, isprivate, ispersonal];
+    debug('Upsert into timeline: ', timeline, user, item, type, time);
+    client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
   }
 
   function removeFeedsForItem (keyspace, item, next) {
@@ -187,35 +197,42 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   function getRawFeed (keyspace, liu, user, from, limit, next) {
-    var raw = true;
-    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, raw, next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, 'raw', next);
+  }
+
+  function getReversedUserFeed (keyspace, liu, user, from, limit, next) {
+    _getFeed(keyspace, liu, 'user_timeline', user, from, limit, 'raw-reverse', next);
   }
 
   function _getFeed (keyspace, liu, timeline, user, from, limit, raw, next) {
 
     if (!next) {
       next = raw;
-      raw = false;
+      raw = null;
     }
 
-    var data = [user], timeClause = '', hasMoreResults = false;
+    var data = [user], timeClause = '', hasMoreResults = false, limitClause = '';
 
     if (from) {
-      timeClause = 'AND time < ' + from;
+      var direction = raw === 'raw-reverse' ? '>' : '<';
+      timeClause = ' AND time ' + direction + ' ' + from;
     }
 
-    // Cassandra Hackeroo:
     // We always increase the limit by one so that
     // we can figure out if we need to display a 'Show more results link'.
     // This is removed in the results to keep it consistent with expected results.
+    if (!limit) limit = DEFAULT_LIMIT;
     limit = limit + 1;
+    limitClause = ' LIMIT ' + limit;
 
     var query = q(keyspace, 'selectTimeline', {
       timeClause: timeClause,
-      privateClause: null,
-      limit: limit,
+      limitClause: limitClause,
       TIMELINE: timeline
     });
+
+    debug(query);
+
     client.execute(query, data, {prepare: true}, function (err, data) {
 
       if (err) { return next(err); }
@@ -319,6 +336,24 @@ module.exports = function (client, messaging, keyspace, api) {
 
   }
 
+  function seedFeed (keyspace, user, userFollowing, backfill, next) {
+
+    var backfillMatch = /(\d+)(.*)/.exec(backfill);
+    var duration = backfillMatch[1] || '1';
+    var period = backfillMatch[2] || 'd';
+    var start = moment().subtract(+duration, period);
+    var from = TimeUuid.fromDate(start.toDate());
+
+    getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
+      if (err) { return next(err); }
+      async.map(feed, function (item, cb) {
+        if (item.type !== 'post' || item.ispersonal || item.isprivate) return cb();
+        upsertTimeline(keyspace, 'feed_timeline', user.user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
+      }, next);
+    });
+
+  }
+
   return {
     addFeedItem: addFeedItem,
     removeFeedsForItem: removeFeedsForItem,
@@ -326,7 +361,8 @@ module.exports = function (client, messaging, keyspace, api) {
     insertMentionedTimeline: insertMentionedTimeline,
     getFeed: getFeed,
     getUserFeed: getUserFeed,
-    getRawFeed: getRawFeed
+    getRawFeed: getRawFeed,
+    seedFeed: seedFeed
   };
 
 };

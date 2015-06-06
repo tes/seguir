@@ -2,6 +2,7 @@ var cassandra = require('cassandra-driver');
 var Uuid = cassandra.types.Uuid;
 var _ = require('lodash');
 var async = require('async');
+var debug = require('debug')('seguir:user');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -17,7 +18,8 @@ module.exports = function (client, messaging, keyspace, api) {
 
   var q = require('../db/queries');
 
-  function addUser (keyspace, username, altid, userdata, next) {
+  function addUser (keyspace, username, altid, userdata, initialise, next) {
+    if (!next) { next = initialise; initialise = null; }
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
@@ -28,7 +30,43 @@ module.exports = function (client, messaging, keyspace, api) {
       hints: [null, null, 'map']
     }, function (err, result) {
       if (err) { return next(err); }
-      next(null, {user: userid, username: username, altid: altid, userdata: userdata});
+      var tempUser = {user: userid, username: username, altid: altid, userdata: userdata};
+      if (initialise) {
+        initialiseUserWith(keyspace, tempUser, initialise, next);
+      } else {
+        next(null, tempUser);
+      }
+    });
+  }
+
+  function initialiseUserWith (keyspace, user, initialise, next) {
+    async.map(_.keys(initialise), function (type, cb) {
+      if (type === 'follow') {
+        initialiseUserWithFollowers(keyspace, user, initialise[type], cb);
+      }
+    }, function (err) {
+      if (err) { return next(err); }
+      next(null, user);
+    });
+
+  }
+
+  function initialiseUserWithFollowers (keyspace, user, follow, next) {
+    var backfill = follow.backfill || '1d';
+    var isprivate = !!follow.isprivate;
+    var ispersonal = !!follow.ispersonal;
+    api.auth.coerceUserToUuid(keyspace, follow.users, function (err, usersToFollow) {
+      if (err) { return next(err); }
+      async.map(usersToFollow, function (userToFollow, cb) {
+        debug(user.user + ' >> FOLLOW >> ' + userToFollow);
+        api.follow.addFollower(keyspace, userToFollow, user.user, Date.now(), isprivate, ispersonal, function (err) {
+          if (err) { return cb(err); }
+          api.feed.seedFeed(keyspace, user, userToFollow, backfill, cb);
+        });
+      }, function (err) {
+        if (err) { return next(err); }
+        next();
+      });
     });
   }
 

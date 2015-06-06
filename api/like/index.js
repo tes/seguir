@@ -21,7 +21,7 @@ module.exports = function (client, messaging, keyspace, api) {
     client.execute(q(keyspace, 'upsertLike'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, like, 'like', false, false, function (err, result) {
+      api.feed.addFeedItem(keyspace, user, like, 'like', false, false, timestamp, function (err, result) {
         if (err) { return next(err); }
         var tempLike = {like: like, user: user, item: item, timestamp: timestamp};
         api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);
