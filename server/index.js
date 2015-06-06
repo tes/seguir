@@ -136,7 +136,7 @@ function bootstrapServer (config, keyspace, next) {
     if (!req.params.username) {
       return next(new restify.InvalidArgumentError('You must provide a username.'));
     }
-    api.user.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, _response(res, next));
+    api.user.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, req.params.initialise, _response(res, next));
   });
 
   /**

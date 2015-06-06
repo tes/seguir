@@ -166,9 +166,10 @@ Seguir.prototype.getUserByAltId = function (liu, altid, next) {
  *
  * @apiUse addUserSuccessExample
  */
-Seguir.prototype.addUser = function (liu, username, altid, userdata, next) {
+Seguir.prototype.addUser = function (liu, username, altid, userdata, initialise, next) {
   var self = this;
-  self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata}, next);
+  if (!next) { next = initialise; initialise = null; }
+  self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata, initialise: initialise}, next);
 };
 
 /**
@@ -182,6 +183,7 @@ Seguir.prototype.addUser = function (liu, username, altid, userdata, next) {
  * @apiParam {String} username the username
  * @apiParam {String} altid the local / alternate id
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
+ * @apiParam {Object} initialise configuration that allows you to initialise a users feed
  * @apiParam {Function} next callback
  *
  * @apiUse addUserSuccessExample
