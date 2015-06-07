@@ -97,7 +97,7 @@ describe('Worker Processing', function () {
           expect(feed[0].post).to.eql(mentionPostId);
           done();
         });
-      }, 4000);
+      }, 500);
     });
 
   });
