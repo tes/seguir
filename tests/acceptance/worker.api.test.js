@@ -6,25 +6,27 @@
 
 var keyspace = 'test_seguir_app_worker';
 var expect = require('expect.js');
+var Api = require('../../api');
 var config = require('../../server/config')();
-var client = require('../../api/db/client')();
-var messaging = require('../../api/db/messaging')();
+config.keyspace = keyspace;
 var worker = require('../../server/worker');
-var api = require('../../api')(client, messaging, keyspace);
-var setupKeyspace = require('../../setup/setupKeyspace');
 var async = require('async');
 
 describe('Worker Processing', function () {
 
-  var users = [], postId, mentionPostId, followId;
+  var api, users = [], postId, mentionPostId, followId;
 
   this.timeout(5000);
   this.slow(2000);
 
   before(function (done) {
     this.timeout(20000);
-    setupKeyspace(client, keyspace, function () {
-      worker(config, done);
+    Api(config, function (err, seguirApi) {
+      expect(err).to.be(null);
+      api = seguirApi;
+      api.client.setup.setupTenant(api.client, keyspace, function () {
+        worker(api, done);
+      });
     });
   });
 

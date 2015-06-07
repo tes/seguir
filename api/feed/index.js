@@ -1,9 +1,6 @@
-var cassandra = require('cassandra-driver');
 var moment = require('moment');
-var TimeUuid = cassandra.types.TimeUuid;
 var async = require('async');
 var _ = require('lodash');
-
 var debug = require('debug')('seguir:feed');
 
 var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
@@ -22,19 +19,19 @@ var DEFAULT_LIMIT = 50;
  */
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function insertFollowersTimeline (item, next) {
     if (item.ispersonal) { return next(); }
     client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
-      if (err || data.rows.length === 0) { return next(err); }
-      async.map(data.rows, function (row, cb2) {
+      if (err || data.length === 0) { return next(err); }
+      async.map(data, function (row, cb2) {
         var followIsPrivate = item.isprivate, followIsPersonal = item.ispersonal;
         api.friend.isFriend(item.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!item.isprivate || (item.isprivate && isFriend)) {
-            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, TimeUuid.fromDate(item.timestamp), followIsPrivate, followIsPersonal, cb2);
+            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, client.generateTimeId(item.timestamp), followIsPrivate, followIsPersonal, cb2);
           } else {
             cb2();
           }
@@ -80,7 +77,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return mentioned(); } // no mentioned users
       client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
         if (err) { return cb(err); }
-        var followers = _.map(_.pluck(data.rows || [], 'user_follower'), function (item) {
+        var followers = _.map(_.pluck(data || [], 'user_follower'), function (item) {
           return item.toString();
         });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
@@ -94,7 +91,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
         if (!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
-          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, TimeUuid.fromDate(item.timestamp), item.isprivate, item.ispersonal, cb2);
+          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, client.generateTimeId(item.timestamp), item.isprivate, item.ispersonal, cb2);
         } else {
           cb2();
         }
@@ -143,7 +140,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        upsertTimeline(keyspace, timeline, user, item, type, TimeUuid.fromDate(timestamp), isprivate, ispersonal, cb2);
+        upsertTimeline(keyspace, timeline, user, item, type, client.generateTimeId(timestamp), isprivate, ispersonal, cb2);
       }, cb);
     };
 
@@ -171,8 +168,8 @@ module.exports = function (client, messaging, keyspace, api) {
     var queryData = [item];
     client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {prepare: true}, function (err, data) {
       /* istanbul ignore if */
-      if (err || data.rows.length === 0) { return next(err); }
-      async.map(data.rows, function (row, cb) {
+      if (err || data.length === 0) { return next(err); }
+      async.map(data, function (row, cb) {
         _removeFeedItemFromTimeline(keyspace, timeline, row.user, row.time, cb);
       }, function (err, rows) {
         next(err);
@@ -237,18 +234,18 @@ module.exports = function (client, messaging, keyspace, api) {
 
       if (err) { return next(err); }
 
-      if (data.rows && data.rows.length > 0) {
+      if (data && data.length > 0) {
 
         // This is where we check if we have more results or
         // not.
-        if (data.rows.length === limit) {
+        if (data.length === limit) {
           hasMoreResults = true;
-          data.rows.pop();
+          data.pop();
         }
 
-        if (raw) { return next(null, data.rows); }
+        if (raw) { return next(null, data); }
 
-        var timeline = data.rows;
+        var timeline = data;
 
         async.map(timeline, function (item, cb) {
 
@@ -342,7 +339,7 @@ module.exports = function (client, messaging, keyspace, api) {
     var duration = backfillMatch[1] || '1';
     var period = backfillMatch[2] || 'd';
     var start = moment().subtract(+duration, period);
-    var from = TimeUuid.fromDate(start.toDate());
+    var from = client.generateTimeId(start.toDate());
 
     getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
       if (err) { return next(err); }

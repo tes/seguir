@@ -5,7 +5,7 @@
 /*eslint-env node, mocha */
 
 var expect = require('expect.js');
-var messaging = require('../../api/db/messaging')({redis: {}});
+var messaging = require('../../db/messaging')({redis: {}});
 
 describe('Messaging primitives', function () {
 

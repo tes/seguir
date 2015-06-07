@@ -6,25 +6,28 @@
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
-var client = require('../../api/db/client')();
-var messaging = {enabled: false};
-var api = require('../../api')(client, messaging, keyspace);
-var setupKeyspace = require('../../setup/setupKeyspace');
-var async = require('async');
+var Api = require('../../api');
 var _ = require('lodash');
+var config = _.clone(require('../fixtures/config.json'));
+config.keyspace = keyspace;
+var async = require('async');
 
 describe('Social API', function () {
 
   this.timeout(10000);
   this.slow(2000);
 
-  var users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, reciprocalFriendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
+  var api, users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, reciprocalFriendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
 
   before(function (done) {
     this.timeout(20000);
-    console.log('Setting up keyspace ...');
-    setupKeyspace(client, keyspace, function () {
-      done();
+    Api(config, function (err, seguirApi) {
+      expect(err).to.be(null);
+      api = seguirApi;
+      console.log('Setting up keyspace in ' + api.client.type + '...');
+      api.client.setup.setupTenant(api.client, keyspace, function () {
+        done();
+      });
     });
   });
 

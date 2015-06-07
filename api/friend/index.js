@@ -1,5 +1,3 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
 var _ = require('lodash');
 var async = require('async');
 
@@ -15,13 +13,13 @@ var async = require('async');
  */
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function addFriend (keyspace, user, user_friend, timestamp, next) {
-    var friend = Uuid.random();
+    var friend = client.generateId();
     addFriendOneWay(keyspace, friend, user, user_friend, timestamp, function (err) {
       if (err) { return next(err); }
-      var reciprocalFriend = Uuid.random();
+      var reciprocalFriend = client.generateId();
       addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, function (err) {
         if (err) { return next(err); }
         var tempFriend = {
@@ -46,7 +44,7 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   function addFriendRequest (keyspace, user, user_friend, message, timestamp, next) {
-    var friend_request = Uuid.random();
+    var friend_request = client.generateId();
     var cleanMessage = api.common.clean(message);
     var data = [friend_request, user, user_friend, cleanMessage, timestamp];
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare: true}, function (err) {

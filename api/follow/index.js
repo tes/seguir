@@ -1,5 +1,3 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
 var _ = require('lodash');
 var async = require('async');
 
@@ -15,10 +13,10 @@ var async = require('async');
  */
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, next) {
-    var follow = Uuid.random();
+    var follow = client.generateId();
     var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */

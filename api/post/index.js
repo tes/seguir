@@ -1,6 +1,3 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
-
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -13,10 +10,10 @@ var Uuid = cassandra.types.Uuid;
  */
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function addPost (keyspace, user, content, content_type, timestamp, isprivate, ispersonal, next) {
-    var post = Uuid.random();
+    var post = client.generateId();
 
     // Parse and re-parse the input content, this catches any errors and ensures we don't
     // persist broken data that will subsequently break the feed

@@ -5,17 +5,15 @@
 /*eslint-env node, mocha */
 
 var keyspace = 'test_client_seguir_server';
-var dbClient = require('../../api/db/client')();
-var messaging = {enabled: false};
-var api = require('../../api')(dbClient, messaging, keyspace);
+var Api = require('../../api');
+var _ = require('lodash');
+var config = _.clone(require('../fixtures/config.json'));
+config.keyspace = keyspace;
 var expect = require('expect.js');
 var Seguir = require('../../client');
-var setupSeguir = require('../../setup/setupSeguir');
 var async = require('async');
-var _ = require('lodash');
 var fs = require('fs');
 var hbs = require('handlebars');
-var auth = api.auth;
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001'};
 
@@ -24,7 +22,7 @@ describe('Seguir Social Server / Client API', function () {
   this.timeout(10000);
   this.slow(2000);
 
-  var users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client, samples = [];
+  var api, auth, users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client, samples = [];
 
   function addSample (name, sample) {
     samples.push({name: name, sample: JSON.stringify(sample, null, 2)});
@@ -48,20 +46,25 @@ describe('Seguir Social Server / Client API', function () {
   }
 
   before(function (done) {
-    this.timeout(20000);
-    setupSeguir(dbClient, keyspace, function () {
-      auth.addAccount('test account', false, false, function (err, account) {
-        expect(err).to.be(null);
-        auth.addApplication(account.account, 'test application', null, null, function (err, application) {
+    this.timeout(5000);
+    Api(config, function (err, seguirApi) {
+      expect(err).to.be(null);
+      api = seguirApi;
+      auth = api.auth;
+      api.client.setup.setupSeguir(api.client, keyspace, function () {
+        auth.addAccount('test account', false, false, function (err, account) {
           expect(err).to.be(null);
-          startServer({logging: false}, keyspace, function (err, server) {
+          auth.addApplication(account.account, 'test application', null, null, function (err, application) {
             expect(err).to.be(null);
-            seguirServer = server;
-            server.listen(3001, function () {
-              credentials.appid = application.appid;
-              credentials.appsecret = application.appsecret;
-              client = new Seguir(credentials);
-              done();
+            startServer(api, function (err, server) {
+              expect(err).to.be(null);
+              seguirServer = server;
+              server.listen(3001, function () {
+                credentials.appid = application.appid;
+                credentials.appsecret = application.appsecret;
+                client = new Seguir(credentials);
+                done();
+              });
             });
           });
         });

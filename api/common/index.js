@@ -2,7 +2,7 @@ var sanitizeHtml = require('sanitize-html');
 
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function error (code, message) {
     var err = new Error(message);
@@ -18,10 +18,10 @@ module.exports = function (client, messaging, keyspace, api) {
     return function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      if (!result.rows || (many !== 'many' && result.rows.length !== 1)) {
+      if (!result || (many !== 'many' && result.length !== 1)) {
         return next(error(404, 'Item not found: "' + query + '"" for "' + data.join(', ') + '"'));
       }
-      next(null, many === 'many' ? result.rows : result.rows[0]);
+      next(null, many === 'many' ? result : result[0]);
     };
   }
 

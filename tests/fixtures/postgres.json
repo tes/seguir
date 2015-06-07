@@ -1,0 +1,11 @@
+{
+  "logging": false,
+  "port":3000,
+  "keyspace":"seguir",
+  "postgres": {
+    "user": "seguir",
+    "password": "seguir",
+    "database": "seguir",
+    "host": "127.0.0.1"
+  }
+}

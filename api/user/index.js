@@ -16,7 +16,7 @@ var debug = require('debug')('seguir:user');
  */
 module.exports = function (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function addUser (keyspace, username, altid, userdata, initialise, next) {
     if (!next) { next = initialise; initialise = null; }

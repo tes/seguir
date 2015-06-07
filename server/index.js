@@ -6,11 +6,7 @@ var logger = bunyan.createLogger({
     serializers: restify.bunyan.serializers
 });
 
-function bootstrapServer (config, keyspace, next) {
-
-  var client = require('../api/db/client')(config);
-  var messaging = require('../api/db/messaging')(config);
-  var api = require('../api')(client, messaging, keyspace);
+function bootstrapServer (api, next) {
 
   var server = restify.createServer({
     name: 'seguir',
@@ -33,7 +29,7 @@ function bootstrapServer (config, keyspace, next) {
   server.get('/status', function (req, res) {
     api.auth.getAccounts(function (err, accounts) {
       if (err) { return _error(err); }
-      res.send({status: 'OK', config: config, accounts: accounts});
+      res.send({status: 'OK', config: api.config, accounts: accounts});
     });
   });
 
@@ -41,7 +37,7 @@ function bootstrapServer (config, keyspace, next) {
   server.pre(restify.pre.sanitizePath());
   server.pre(restify.pre.userAgentConnection());
   server.pre(function (request, response, next) {
-    if (config.logging) {
+    if (api.config.logging) {
       request.log.info({ req: request }, 'REQUEST');
     }
     next();
@@ -735,22 +731,27 @@ function bootstrapServer (config, keyspace, next) {
     });
   });
 
-  next(null, server, client);
+  next(null, server);
 
 }
 
 /* istanbul ignore if */
 if (require.main === module) {
+
   var config = require('./config')();
-  bootstrapServer(config, config.keyspace, function (err, server, client) {
-    if (err) {
-      console.log('Unable to bootstrap server: ' + err.message);
-      return;
-    }
-    server.listen(config.port || 3000, function () {
-      console.log('Server %s listening at %s', server.name, server.url);
+  require('../api')(config, function (err, api) {
+    if (err) { return process.exit(0); }
+    bootstrapServer(api, function (err, server) {
+      if (err) {
+        console.log('Unable to bootstrap server: ' + err.message);
+        return;
+      }
+      server.listen(config.port || 3000, function () {
+        console.log('Server %s listening at %s', server.name, server.url);
+      });
     });
   });
+
 } else {
   // Used for testing
   module.exports = bootstrapServer;
