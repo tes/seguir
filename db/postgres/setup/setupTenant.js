@@ -25,7 +25,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {String} username The name of the user.
    * @apiUse ExampleCqlUsers
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, altid text, userdata map<text,text>)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user varchar(36) PRIMARY KEY, username varchar(500), altid varchar(500), userdata varchar(5000))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(altid)');
   tableIndexes.users = ['altid', 'username'];
@@ -38,14 +38,14 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiDescription Stores posts that a user (or application) make to a users timeline.
    * @apiParam {Guid} post The unique guid for the post.
    * @apiParam {Guid} user The unique guid for the user.
-   * @apiParam {String} type Optional sub-type for the post, defaults to 'text'.
+   * @apiParam {String} type Optional sub-type for the post, defaults to 'varchar(500)'.
    * @apiParam {String} content The content of the post.
    * @apiParam {Boolean} isprivate Is the post only for friends.
    * @apiParam {Boolean} ispersonal Is the post only for the user.
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, isprivate boolean, ispersonal boolean, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post varchar(36) PRIMARY KEY, user varchar(36), type varchar(500), content varchar(500), content_type varchar(500), isprivate boolean, ispersonal boolean, posted timestamp)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
   tableIndexes.posts = ['user'];
 
@@ -61,7 +61,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the relationship began.
    * @apiUse ExampleCqlFriends
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend uuid, user uuid, user_friend uuid, since timestamp, PRIMARY KEY (user, user_friend))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend varchar(36), user varchar(36), user_friend varchar(36), since timestamp, PRIMARY KEY (user, user_friend))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friends(friend)');
   tableIndexes.friends = ['friend'];
 
@@ -78,7 +78,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} time The date the request was made.
    * @apiUse ExampleCqlFriendRequests
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, PRIMARY KEY (friend_request))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request varchar(36), user varchar(36), user_friend varchar(36), message varchar(500), since timestamp, PRIMARY KEY (friend_request))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
   tableIndexes.friend_request = ['user', 'user_friend'];
@@ -98,7 +98,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the like was made.
    * @apiUse ExampleCqlLikes
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like uuid, user uuid, item text, since timestamp, PRIMARY KEY (user, item))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like varchar(36), user varchar(36), item varchar(500), since timestamp, PRIMARY KEY (user, item))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.likes(like)');
   tableIndexes.likes = ['like'];
 
@@ -116,7 +116,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow uuid, user uuid, user_follower uuid, isprivate boolean, ispersonal boolean, since timestamp, PRIMARY KEY (user, user_follower))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow varchar(36), user varchar(36), user_follower varchar(36), isprivate boolean, ispersonal boolean, since timestamp, PRIMARY KEY (user, user_follower))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers(follow)');
   tableIndexes.followers = ['follow'];
 
@@ -127,7 +127,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiVersion 1.0.0
    * @apiDescription Contains the newsfeed for each user, updated by performing any of the Add actions, not interacted with directly.
    * @apiParam {Guid} user The unique guid for the user.
-   * @apiParam {Guid} time The unique timeuuid for the event, this is how the feed is sorted.
+   * @apiParam {Guid} time The unique timevarchar(36) for the event, this is how the feed is sorted.
    * @apiParam {Guid} item The unique guid for the item in the feed - this can be a post, follow, friend or like event.
    * @apiParam {String} type The string short name for the type of event, valid values are: 'post','follow','friend','like'.
    * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
@@ -137,7 +137,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   var feedTables = ['feed_timeline', 'user_timeline'];
 
   feedTables.forEach(function (table) {
-    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user uuid, time timeuuid, item uuid, type text, isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user varchar(36), time varchar(36), item varchar(36), type varchar(500), isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
     tableIndexes[table] = ['item'];
   });

@@ -58,22 +58,22 @@ queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHER
  * @apiExample {cql} Select User by Name
  *    SELECT user, username FROM seguir.users WHERE username = ?
  */
-queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, altid, userdata) VALUES(?, ?, ?, ?);';
-queries.selectUser = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE user = ?';
-queries.selectUserByUsername = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE username = ?';
-queries.selectUserByAltId = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE altid = ?';
-queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = ?, altid = ?, userdata = ? WHERE user = ?';
+queries.upsertUser = 'INSERT INTO {KEYSPACE}.users (user, username, altid, userdata) VALUES($1, $2, $3, $4);';
+queries.selectUser = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE user = $1';
+queries.selectUserByUsername = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE username = $1';
+queries.selectUserByAltId = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE altid = $1';
+queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, userdata = $3 WHERE user = $4';
 
 /**
  * @apiDefine ExampleCqlPosts
  * @apiExample {cql} Insert Post
- *    INSERT INTO seguir.posts (post, user, content, posted) VALUES(?, ?, ?, ?)
+ *    INSERT INTO seguir.posts (post, user, content, posted) VALUES($1, $2, $3, $4)
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?, ?);';
-queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
+queries.selectPost = 'SELECT post, content, content_type, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = $1';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6, $7);';
+queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
 
 /**
  * @apiDefine ExampleCqlFriends
@@ -86,22 +86,22 @@ queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
  * @apiExample {cql} Remove Friend
  *    DELETE FROM {KEYSPACE}.friends WHERE friend = ?
  */
-queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since) VALUES(?, ?, ?, ?)';
-queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = ?';
-queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = ?';
-queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE user = ? AND user_friend=?';
-queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
+queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since) VALUES($1, $2, $3, $4)';
+queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = $1';
+queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = $1';
+queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE user = $1 AND user_friend=$2';
+queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = $1 AND user_friend = $2';
 
 /**
  * @apiDefine ExampleCqlFriendRequests
  * @apiExample {cql} Insert Friend Request
  *    INSERT INTO seguir.friend_request (friend_request, user, user_friend, message, time) VALUES(?, ?, ?, ?)
  */
-queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, user, user_friend, message, since) VALUES(?, ?, ?, ?, ?)';
-queries.selectFriendRequest = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
-queries.selectIncomingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user_friend = ?';
-queries.selectOutgoingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user = ?';
-queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
+queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, user, user_friend, message, since) VALUES($1, $2, $3, $4, $5)';
+queries.selectFriendRequest = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE friend_request = $1';
+queries.selectIncomingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user_friend = $1';
+queries.selectOutgoingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user = $1';
+queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = $1';
 
 /**
  * @apiDefine ExampleCqlFollows
@@ -114,11 +114,11 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  * @apiExample {cql} Remove Follow
  *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
-queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectFollow = 'SELECT follow, user, user_follower, since, isprivate, ispersonal FROM {KEYSPACE}.followers WHERE follow = ?';
-queries.selectFollowers = 'SELECT user, user_follower, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = ?';
-queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
-queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
+queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6);';
+queries.selectFollow = 'SELECT follow, user, user_follower, since, isprivate, ispersonal FROM {KEYSPACE}.followers WHERE follow = $1';
+queries.selectFollowers = 'SELECT user, user_follower, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = $1';
+queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = $1 AND user_follower = $2';
+queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = $1 AND user_follower = $2';
 
 /**
  * @apiDefine ExampleCqlLikes
@@ -131,10 +131,10 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
  * @apiExample {cql} Remove Like
  *    DELETE FROM {KEYSPACE}.likes WHERE like = ?
  */
-queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
-queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
-queries.checkLike = 'SELECT like, user, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
-queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES($1, $2, $3, $4);';
+queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = $1';
+queries.checkLike = 'SELECT like, user, since FROM {KEYSPACE}.likes WHERE user = $1 AND item = $2';
+queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = $1 AND item = $2';
 
 /**
  * @apiDefine ExampleCqlFeed
@@ -145,10 +145,10 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6);';
 queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
-queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
-queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
+queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = $1 AND time = $2';
+queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = $1';
 
 module.exports = function (keyspace, name, data) {
   data = data || {};
