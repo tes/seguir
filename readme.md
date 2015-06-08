@@ -32,12 +32,18 @@ If you allow anonymous access, then you simply pass null in as the first paramet
 
 ## Running the Server
 
-You need Cassandra to be installed for the server to work, then do the following:
+You need Cassandra or Postgres to be installed for the server to work, then do the following:
 
 ```bash
 git clone git@github.com:cliftonc/seguir.git
 cd seguir
 npm install
+```
+
+To have cassandra and postgres run for you, you can use docker-compose:
+
+```
+docker-compose up
 ```
 
 You now need to initialise cassandra, to do this, use the command line tool (from the installation folder):
