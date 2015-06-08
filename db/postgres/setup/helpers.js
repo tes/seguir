@@ -1,8 +1,10 @@
 var async = require('async');
-var verbose = process.env.SEGUIR_DEBUG;
+var debug = require('debug')('seguir:postgres');
 
 /**
  *  Setup code follows below
+ *  We continue to use the term KEYSPACE for Schema in postgres land to keep the code feeling consistent
+ *  may make sense to refactor this out at some point if postgres takes over.
  */
 module.exports = function (client, options) {
 
@@ -12,51 +14,38 @@ module.exports = function (client, options) {
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
-    if (verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
-    client.execute('DROP KEYSPACE ' + KEYSPACE, function (err) {
-      if (err && err.code === 8960) { return next(); }
+    debug('Dropping keyspace: ' + KEYSPACE + '...');
+    client.execute('DROP SCHEMA IF EXISTS ' + KEYSPACE + ' CASCADE', function (err) {
       return next(err);
     });
   }
 
   /* istanbul ignore next */
   function createKeyspace (next) {
-    if (verbose) console.log('Creating keyspace: ' + KEYSPACE + '...');
-    client.execute('CREATE KEYSPACE IF NOT EXISTS ' + KEYSPACE + ' WITH replication ' +
-                  '= {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};', next);
+    debug('Creating keyspace: ' + KEYSPACE + '...');
+    client.execute('CREATE SCHEMA ' + KEYSPACE, next);
   }
 
   /* istanbul ignore next */
   function createTables (next) {
-
-    if (verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
-
+    debug('Creating tables in: ' + KEYSPACE + '...');
     async.map(tables, function (cql, cb) {
-      if (verbose) console.log(cql);
+      debug(cql);
       client.execute(cql, function (err) {
-        if (err && (err.code === 9216)) { // Already exists
-          return cb();
-        }
         return cb(err);
       });
     }, next);
-
   }
 
   /* istanbul ignore next */
   function createSecondaryIndexes (next) {
-
-    if (verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
+    debug('Creating secondary indexes in: ' + KEYSPACE + '...');
     async.map(indexes, function (cql, cb) {
-      if (verbose) console.log(cql);
+      debug(cql);
       client.execute(cql, function (err) {
-        if (err && (err.code === 9216 || err.code === 8704)) { // Already exists
-          return cb();
-        }
         return cb(err);
       });
     }, next);
-
   }
 
   return {

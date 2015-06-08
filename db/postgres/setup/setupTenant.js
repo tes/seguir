@@ -160,8 +160,7 @@ function setup (client, keyspace, next) {
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
-    helpers.createSecondaryIndexes,
-    async.retry(5, helpers.assertIndexes.bind(helpers.assertIndexes))
+    helpers.createSecondaryIndexes
   ], function (err, data) {
     /* istanbul ignore if */
     if (err) return next(err);

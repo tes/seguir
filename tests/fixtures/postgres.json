@@ -3,9 +3,9 @@
   "port":3000,
   "keyspace":"seguir",
   "postgres": {
-    "user": "seguir",
+    "user": "postgres",
     "password": "seguir",
-    "database": "seguir",
+    "database": "postgres",
     "host": "127.0.0.1"
   }
 }

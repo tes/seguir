@@ -1,4 +1,6 @@
 var pg = require('pg');
+var uuid = require('node-uuid');
+var debug = require('debug')('seguir:postgres');
 
 function createClient (config, next) {
 
@@ -9,8 +11,11 @@ function createClient (config, next) {
   }
 
   function get (query, data, options, next) {
+    if (!next) { next = options; options = null; }
+    if (!next) { next = data; data = null; }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
+      debug('get', query, data);
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
@@ -20,8 +25,11 @@ function createClient (config, next) {
   }
 
   function execute (query, data, options, next) {
+    if (!next) { next = options; options = null; }
+    if (!next) { next = data; data = null; }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
+      debug('execute', query, data);
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
@@ -30,10 +38,12 @@ function createClient (config, next) {
     });
   }
 
-  function generateId (uuid) {
+  function generateId (suppliedUuid) {
+    return uuid.v4();
   }
 
   function generateTimeId (timestamp) {
+    return uuid.v1();
   }
 
   function isValidId (value) {

@@ -7,7 +7,7 @@
 var keyspace = 'test_client_seguir_server';
 var Api = require('../../api');
 var _ = require('lodash');
-var config = _.clone(require('../fixtures/config.json'));
+var config = _.clone(require('../fixtures/cassandra.json'));
 config.keyspace = keyspace;
 var expect = require('expect.js');
 var Seguir = require('../../client');

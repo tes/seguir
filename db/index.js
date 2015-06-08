@@ -1,4 +1,4 @@
-var debug = require('debug')('seguir:client');
+var debug = require('debug')('seguir:db');
 
 module.exports = function (config, next) {
 

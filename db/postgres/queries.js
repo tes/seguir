@@ -11,21 +11,21 @@ var queries = {};
  * @apiExample {cql} Insert Account
  *    INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)
  */
-queries.upsertAccount = 'INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)';
+queries.upsertAccount = 'INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES ($1, $2, $3, $4)';
 queries.selectAccounts = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts';
-queries.selectAccount = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE account = ?';
-queries.selectAccountByName = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE name = ?';
-queries.updateAccount = 'UPDATE {KEYSPACE}.accounts SET name = ?, isadmin = ?, enabled = ?  WHERE account = ?';
+queries.selectAccount = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE account = $1';
+queries.selectAccountByName = 'SELECT account, name, isadmin, enabled FROM {KEYSPACE}.accounts WHERE name = $1';
+queries.updateAccount = 'UPDATE {KEYSPACE}.accounts SET name = $1, isadmin = $2, enabled = $3 WHERE account = $4';
 
 /**
  * @apiDefine ExampleCqlAccountUsers
  * @apiExample {cql} Insert Account User
  *    INSERT INTO {KEYSPACE}.accounts (account, name, isadmin, enabled) VALUES(?, ?, ?, ?)
  */
-queries.upsertAccountUser = 'INSERT INTO {KEYSPACE}.account_users (account, username, password, enabled) VALUES(?, ?, ?, ?)';
-queries.selectAccountUsers = 'SELECT account, username, enabled FROM {KEYSPACE}.account_users WHERE account = ?';
-queries.selectAccountUserByName = 'SELECT account, username, password, enabled FROM {KEYSPACE}.account_users WHERE username = ?';
-queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = ?, enabled = ?  WHERE account = ? AND username = ?';
+queries.upsertAccountUser = 'INSERT INTO {KEYSPACE}.account_users (account, username, password, enabled) VALUES($1, $2, $3, $4)';
+queries.selectAccountUsers = 'SELECT account, username, enabled FROM {KEYSPACE}.account_users WHERE account = $1';
+queries.selectAccountUserByName = 'SELECT account, username, password, enabled FROM {KEYSPACE}.account_users WHERE username = $1';
+queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = $1, enabled = $2 WHERE account = $3 AND username = $4';
 
 /**
  * @apiDefine ExampleCqlApplications
@@ -34,20 +34,20 @@ queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = ?, e
  * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
-queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, appsecret, enabled) VALUES(?, ?, ?, ?, ?, ?)';
-queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE appid = ?';
-queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = ?';
-queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = ?, enabled = ? WHERE appid = ?';
-queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = ? WHERE appid = ?';
+queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, appsecret, enabled) VALUES($1, $2, $3, $4, $5, $6)';
+queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE appid = $1';
+queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = $1';
+queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = $1, enabled = $2 WHERE appid = $3';
+queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = $1 WHERE appid = $2';
 
 /**
  * @apiDefine ExampleCqlApplicationTokens
  */
-queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, enabled) VALUES(?, ?, ?, ?, ?)';
-queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
-queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE appid = ?';
-queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = ? WHERE tokenid = ?';
-queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid=?';
+queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, enabled) VALUES($1, $2, $3, $4, $5)';
+queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = $1';
+queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE appid = $1';
+queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = $1 WHERE tokenid = $2';
+queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid=$1';
 
 /**
  * @apiDefine ExampleCqlUsers

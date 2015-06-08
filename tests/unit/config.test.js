@@ -18,7 +18,7 @@ describe('Config', function () {
     });
 
     it('can over ride default location with the environment variable', function (done) {
-      process.env.SEGUIR_CONFIG = 'tests/fixtures/config.json';
+      process.env.SEGUIR_CONFIG = 'tests/fixtures/cassandra.json';
       var config = Config();
       expect(config.cassandra.contactPoints[0]).to.be('0.0.0.0');
       done();
