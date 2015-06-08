@@ -16,7 +16,7 @@ databases.forEach(function (db) {
   var config = _.clone(require('../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
-  describe('Social API', function () {
+  describe('Social API - ' + db, function () {
 
     this.timeout(10000);
     this.slow(2000);
@@ -103,7 +103,7 @@ databases.forEach(function (db) {
     describe('friend requests', function () {
 
       it('can create a friend request', function (done) {
-        api.friend.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', Date.now(), function (err, friend_request) {
+        api.friend.addFriendRequest(keyspace, users[0].user, users[1].user, 'Please be my friend', api.client.getTimestamp(), function (err, friend_request) {
           expect(err).to.be(null);
           expect(friend_request.user).to.eql(users[0].user);
           expect(friend_request.user_friend).to.eql(users[1].user);
@@ -172,7 +172,7 @@ databases.forEach(function (db) {
     describe('friends', function () {
 
       it('can friend another user', function (done) {
-        api.friend.addFriend(keyspace, users[2].user, users[3].user, Date.now(), function (err, friend) {
+        api.friend.addFriend(keyspace, users[2].user, users[3].user, api.client.getTimestamp(), function (err, friend) {
           expect(err).to.be(null);
           expect(friend.user).to.eql(users[2]);
           expect(friend.user_friend).to.eql(users[3]);
@@ -213,7 +213,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and remove a friend', function (done) {
-        api.friend.addFriend(keyspace, users[0].user, users[4].user, Date.now(), function (err, friend) {
+        api.friend.addFriend(keyspace, users[0].user, users[4].user, api.client.getTimestamp(), function (err, friend) {
           expect(err).to.be(null);
           api.friend.removeFriend(keyspace, users[0].user, users[4].user, function (err, result) {
             expect(err).to.be(null);
@@ -232,7 +232,7 @@ databases.forEach(function (db) {
     describe('follows', function () {
 
       it('can follow a user who is a friend', function (done) {
-        api.follow.addFollower(keyspace, users[0].user, users[1].user, Date.now(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users[0].user, users[1].user, api.client.getTimestamp(), false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[1]);
@@ -242,7 +242,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user who is not a friend', function (done) {
-        api.follow.addFollower(keyspace, users[0].user, users[2].user, Date.now(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users[0].user, users[2].user, api.client.getTimestamp(), false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[2]);
@@ -252,7 +252,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user privately so only your friends can see', function (done) {
-        api.follow.addFollower(keyspace, users[4].user, users[5].user, Date.now(), true, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users[4].user, users[5].user, api.client.getTimestamp(), true, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[4]);
           expect(follow.user_follower).to.eql(users[5]);
@@ -263,7 +263,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user personally so only you can see', function (done) {
-        api.follow.addFollower(keyspace, users[6].user, users[5].user, Date.now(), false, true, function (err, follow) {
+        api.follow.addFollower(keyspace, users[6].user, users[5].user, api.client.getTimestamp(), false, true, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[6]);
           expect(follow.user_follower).to.eql(users[5]);
@@ -341,7 +341,7 @@ databases.forEach(function (db) {
       });
 
       it('can remove a follow', function (done) {
-        api.follow.addFollower(keyspace, users[3].user, users[4].user, Date.now(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users[3].user, users[4].user, api.client.getTimestamp(), false, false, function (err, follow) {
           expect(err).to.be(null);
           api.follow.removeFollower(keyspace, users[3].user, users[4].user, function (err, result) {
             expect(err).to.be(null);
@@ -361,7 +361,7 @@ databases.forEach(function (db) {
     describe('posts', function () {
 
       it('can post a message from a user', function (done) {
-        api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', 'text/html', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.eql(users[0]);
@@ -371,7 +371,7 @@ databases.forEach(function (db) {
       });
 
       it('can post a private message from a user', function (done) {
-        api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', 'text/html', Date.now(), true, false, function (err, post) {
+        api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', 'text/html', api.client.getTimestamp(), true, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users[0]);
@@ -406,7 +406,7 @@ databases.forEach(function (db) {
       });
 
       it('you can mention yourself in a post', function (done) {
-        api.post.addPost(keyspace, users[4].user, 'Who am I? @harold', 'text/html', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[4].user, 'Who am I? @harold', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Who am I? @harold');
           done();
@@ -414,7 +414,7 @@ databases.forEach(function (db) {
       });
 
       it('you can mention someone in a post', function (done) {
-        api.post.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', 'text/html', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[3].user, 'Hello, this is a post mentioning @harold', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post mentioning @harold');
           mentionPostId = post.post;
@@ -423,7 +423,7 @@ databases.forEach(function (db) {
       });
 
       it('sanitizes any input by default', function (done) {
-        api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', 'text/html', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[5].user, 'Evil hack <IMG SRC=j&#X41vascript:alert(\'test2\')>', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Evil hack ');
           expect(post.user).to.eql(users[5]);
@@ -432,7 +432,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and remove a post', function (done) {
-        api.post.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', 'text/html', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[5].user, 'I am but a fleeting message in the night', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           api.post.removePost(keyspace, users[5].user, post.post, function (err, result) {
             expect(err).to.be(null);
@@ -447,7 +447,7 @@ databases.forEach(function (db) {
       });
 
       it('you can add a completely personal post that only appears in the users feed', function (done) {
-        api.post.addPost(keyspace, users[5].user, 'Shh - this is only for me.', 'text/html', Date.now(), false, true, function (err, post) {
+        api.post.addPost(keyspace, users[5].user, 'Shh - this is only for me.', 'text/html', api.client.getTimestamp(), false, true, function (err, post) {
           expect(err).to.be(null);
           api.feed.getFeed(keyspace, users[4].user, users[5].user, null, 100, function (err, feed) {
             expect(err).to.be(null);
@@ -459,7 +459,7 @@ databases.forEach(function (db) {
       });
 
       it('can post a message that contains an object with type application/json and it returns the object in the post and feed', function (done) {
-        api.post.addPost(keyspace, users[7].user, {hello: 'world'}, 'application/json', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[7].user, {hello: 'world'}, 'application/json', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content.hello).to.be('world');
           api.post.getPost(keyspace, users[7].user, post.post, function (err, getPost) {
@@ -475,7 +475,7 @@ databases.forEach(function (db) {
       });
 
       it('cant post an invalid message that contains an object with type application/json', function (done) {
-        api.post.addPost(keyspace, users[7].user, '{"hello":bob}', 'application/json', Date.now(), false, false, function (err, post) {
+        api.post.addPost(keyspace, users[7].user, '{"hello":bob}', 'application/json', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err.message).to.be('Unable to parse input content, post not saved.');
           done();
         });
@@ -486,7 +486,7 @@ databases.forEach(function (db) {
     describe('likes', function () {
 
       it('can like an item from a user', function (done) {
-        api.like.addLike(keyspace, users[0].user, 'http://github.com', Date.now(), function (err, like) {
+        api.like.addLike(keyspace, users[0].user, 'http://github.com', api.client.getTimestamp(), function (err, like) {
           expect(err).to.be(null);
           expect(like.item).to.be('http://github.com');
           likeId = like.like;
@@ -513,7 +513,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and remove a like', function (done) {
-        api.like.addLike(keyspace, users[5].user, 'http://seguir.calip.so', Date.now(), function (err, like) {
+        api.like.addLike(keyspace, users[5].user, 'http://seguir.calip.so', api.client.getTimestamp(), function (err, like) {
           expect(err).to.be(null);
           api.like.removeLike(keyspace, users[5].user, 'http://seguir.calip.so', function (err, result) {
             expect(err).to.be(null);

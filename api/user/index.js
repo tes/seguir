@@ -1,5 +1,3 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
 var _ = require('lodash');
 var async = require('async');
 var debug = require('debug')('seguir:user');
@@ -23,7 +21,7 @@ module.exports = function (client, messaging, keyspace, api) {
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
-    var userid = Uuid.random();
+    var userid = client.generateId();
     var user = [userid, username, '' + altid, userdata];
     client.execute(q(keyspace, 'upsertUser'), user, {
       prepare: true,
@@ -59,7 +57,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       async.map(usersToFollow, function (userToFollow, cb) {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
-        api.follow.addFollower(keyspace, userToFollow, user.user, Date.now(), isprivate, ispersonal, function (err) {
+        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), isprivate, ispersonal, function (err) {
           if (err) { return cb(err); }
           api.feed.seedFeed(keyspace, user, userToFollow, backfill, cb);
         });

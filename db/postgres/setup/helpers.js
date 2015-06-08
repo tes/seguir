@@ -29,7 +29,7 @@ module.exports = function (client, options) {
   /* istanbul ignore next */
   function createTables (next) {
     debug('Creating tables in: ' + KEYSPACE + '...');
-    async.map(tables, function (cql, cb) {
+    async.mapSeries(tables, function (cql, cb) {
       debug(cql);
       client.execute(cql, function (err) {
         return cb(err);
@@ -40,7 +40,7 @@ module.exports = function (client, options) {
   /* istanbul ignore next */
   function createSecondaryIndexes (next) {
     debug('Creating secondary indexes in: ' + KEYSPACE + '...');
-    async.map(indexes, function (cql, cb) {
+    async.mapSeries(indexes, function (cql, cb) {
       debug(cql);
       client.execute(cql, function (err) {
         return cb(err);

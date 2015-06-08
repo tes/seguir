@@ -61,7 +61,7 @@ module.exports = function (client, messaging, keyspace, api) {
       client.execute(q(keyspace, 'acceptFriendRequest'), data, {prepare: true}, function (err) {
         /* istanbul ignore if */
         if (err) { return next(err); }
-        addFriend(keyspace, friend_request.user, friend_request.user_friend, Date.now(), next);
+        addFriend(keyspace, friend_request.user, friend_request.user_friend, api.client.getTimestamp(), next);
       });
     });
   }

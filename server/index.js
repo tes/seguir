@@ -249,7 +249,7 @@ function bootstrapServer (api, next) {
     }
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.like.addLike(req.keyspace, user, req.params.item, Date.now(), _response(res, next));
+      api.like.addLike(req.keyspace, user, req.params.item, api.client.getTimestamp(), _response(res, next));
     });
   });
 
@@ -368,7 +368,7 @@ function bootstrapServer (api, next) {
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.post.addPost(req.keyspace, user, req.params.content, content_type, Date.now(), isprivate, ispersonal, _response(res, next));
+      api.post.addPost(req.keyspace, user, req.params.content, content_type, api.client.getTimestamp(), isprivate, ispersonal, _response(res, next));
     });
   });
 
@@ -506,7 +506,7 @@ function bootstrapServer (api, next) {
     }
     coerce(req.keyspace, req.params.user_friend, function (err, user_friend) {
       if (err) { return next(_error(err)); }
-      api.friend.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', Date.now(), _response(res, next));
+      api.friend.addFriendRequest(req.keyspace, req.liu.user, user_friend, req.params.message || '', api.client.getTimestamp(), _response(res, next));
     });
   });
 
@@ -593,7 +593,7 @@ function bootstrapServer (api, next) {
         return next(new restify.ForbiddenError('You can only add your own follow relationships.'));
       }
 
-      api.follow.addFollower(req.keyspace, user, user_follower, Date.now(), isprivate, ispersonal, _response(res, next));
+      api.follow.addFollower(req.keyspace, user, user_follower, api.client.getTimestamp(), isprivate, ispersonal, _response(res, next));
     });
 
   });

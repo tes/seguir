@@ -211,8 +211,8 @@ module.exports = function (client, messaging, keyspace, api) {
     var data = [user], timeClause = '', hasMoreResults = false, limitClause = '';
 
     if (from) {
-      var direction = raw === 'raw-reverse' ? '>' : '<';
-      timeClause = ' AND time ' + direction + ' ' + from;
+      timeClause = q(keyspace, raw === 'raw-reverse' ? 'timelineSortReverse' : 'timelineSort');
+      data.push(from);
     }
 
     // We always increase the limit by one so that
@@ -220,7 +220,7 @@ module.exports = function (client, messaging, keyspace, api) {
     // This is removed in the results to keep it consistent with expected results.
     if (!limit) limit = DEFAULT_LIMIT;
     limit = limit + 1;
-    limitClause = ' LIMIT ' + limit;
+    limitClause = q(keyspace, 'timelineLimit', {limit: limit});
 
     var query = q(keyspace, 'selectTimeline', {
       timeClause: timeClause,

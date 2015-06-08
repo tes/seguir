@@ -2,7 +2,7 @@ var async = require('async');
 
 function defineTablesAndIndexes (KEYSPACE) {
 
-  var tables = [], indexes = [], tableIndexes = {};
+  var tables = [], indexes = [];
 
   if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
@@ -25,10 +25,9 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {String} username The name of the user.
    * @apiUse ExampleCqlUsers
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.users (user varchar(36) PRIMARY KEY, username varchar(500), altid varchar(500), userdata varchar(5000))');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(altid)');
-  tableIndexes.users = ['altid', 'username'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.users ("user" varchar(36) NOT NULL PRIMARY KEY, username varchar(500) NOT NULL, altid varchar(500), userdata json)');
+  indexes.push('CREATE INDEX users_username_idx ON ' + KEYSPACE + '.users ("username")');
+  indexes.push('CREATE INDEX users_altid_idx ON ' + KEYSPACE + '.users ("altid")');
 
   /**
    * @api {table} Posts Posts
@@ -45,9 +44,8 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post varchar(36) PRIMARY KEY, user varchar(36), type varchar(500), content varchar(500), content_type varchar(500), isprivate boolean, ispersonal boolean, posted timestamp)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
-  tableIndexes.posts = ['user'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, type varchar(500), content varchar(500), content_type varchar(500), isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false, posted timestamptz(3))');
+  indexes.push('CREATE INDEX posts_user_idx ON ' + KEYSPACE + '.posts ("user")');
 
   /**
    * @api {table} Friends Friends
@@ -61,9 +59,8 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the relationship began.
    * @apiUse ExampleCqlFriends
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend varchar(36), user varchar(36), user_friend varchar(36), since timestamp, PRIMARY KEY (user, user_friend))');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friends(friend)');
-  tableIndexes.friends = ['friend'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, since timestamptz(3))');
+  indexes.push('CREATE INDEX friends_friend_idx ON ' + KEYSPACE + '.friends ("friend")');
 
   /**
    * @api {table} FriendRequests Friend Requests
@@ -78,10 +75,9 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} time The date the request was made.
    * @apiUse ExampleCqlFriendRequests
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request varchar(36), user varchar(36), user_friend varchar(36), message varchar(500), since timestamp, PRIMARY KEY (friend_request))');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
-  tableIndexes.friend_request = ['user', 'user_friend'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, message varchar(500), since timestamptz(3))');
+  indexes.push('CREATE INDEX friendreqs_user_friend_idx ON ' + KEYSPACE + '.friend_request ("user_friend")');
+  indexes.push('CREATE INDEX friendreqs_user_idx ON ' + KEYSPACE + '.friend_request ("user")');
 
   /**
    * @api {table} Likes Likes
@@ -98,9 +94,8 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the like was made.
    * @apiUse ExampleCqlLikes
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like varchar(36), user varchar(36), item varchar(500), since timestamp, PRIMARY KEY (user, item))');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.likes(like)');
-  tableIndexes.likes = ['like'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.likes ("like" varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, item varchar(500) NOT NULL, since timestamptz(3))');
+  indexes.push('CREATE INDEX like_like_idx ON ' + KEYSPACE + '.likes ("like")');
 
   /**
    * @api {table} Follower Follower
@@ -116,9 +111,8 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow varchar(36), user varchar(36), user_follower varchar(36), isprivate boolean, ispersonal boolean, since timestamp, PRIMARY KEY (user, user_follower))');
-  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers(follow)');
-  tableIndexes.followers = ['follow'];
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_follower varchar(36) NOT NULL, isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false, since timestamptz(3))');
+  indexes.push('CREATE INDEX followers_follow_idx ON ' + KEYSPACE + '.followers ("follow")');
 
   /**
    * @api {table} Userline Newsfeed
@@ -137,15 +131,13 @@ function defineTablesAndIndexes (KEYSPACE) {
   var feedTables = ['feed_timeline', 'user_timeline'];
 
   feedTables.forEach(function (table) {
-    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user varchar(36), time varchar(36), item varchar(36), type varchar(500), isprivate boolean, ispersonal boolean, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
-    indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
-    tableIndexes[table] = ['item'];
+    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' ("user" varchar(36) NOT NULL, time timestamptz(3) NOT NULL, item varchar(36) NOT NULL, type varchar(500) NOT NULL, isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false)');
+    indexes.push('CREATE INDEX ' + table + '_item_idx ON ' + KEYSPACE + '.' + table + ' ("item")');
   });
 
   return {
     tables: tables,
-    indexes: indexes,
-    tableIndexes: tableIndexes
+    indexes: indexes
   };
 }
 

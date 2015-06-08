@@ -39,19 +39,25 @@ function createClient (config, next) {
   }
 
   function generateId (suppliedUuid) {
+    if (suppliedUuid) return suppliedUuid;
     return uuid.v4();
   }
 
   function generateTimeId (timestamp) {
-    return uuid.v1();
+    if (timestamp) return timestamp;
+    return new Date();
+  }
+
+  function getTimestamp () {
+    return new Date();
   }
 
   function isValidId (value) {
-
+    return (typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4);
   }
 
   function formatId (value) {
-
+    return value;
   }
 
   next(null, {
@@ -63,6 +69,7 @@ function createClient (config, next) {
     generateTimeId: generateTimeId,
     isValidId: isValidId,
     formatId: formatId,
+    getTimestamp: getTimestamp,
     queries: require('./queries'),
     setup: require('./setup')
   });

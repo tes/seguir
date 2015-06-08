@@ -16,7 +16,7 @@ databases.forEach(function (db) {
   var config = _.clone(require('../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
-  describe('Account and Application Management', function () {
+  describe('Account and Application Management - ' + db, function () {
 
     var api, auth, accountId, userId, appId, tokenId;
 

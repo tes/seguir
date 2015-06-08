@@ -70,6 +70,10 @@ function createClient (config, next) {
     }
   }
 
+  function getTimestamp () {
+    return Date.now();
+  }
+
   client.connect(function () {
     next(null, {
       type: 'cassandra',
@@ -81,6 +85,7 @@ function createClient (config, next) {
       generateTimeId: generateTimeId,
       isValidId: isValidId,
       formatId: formatId,
+      getTimestamp: getTimestamp,
       queries: require('./queries'),
       setup: require('./setup')
     });
