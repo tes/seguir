@@ -157,6 +157,7 @@ function setup (client, keyspace, next) {
   var helpers = require('./helpers')(client, options);
 
   async.series([
+    client._client.connect.bind(client._client),
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,

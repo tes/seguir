@@ -43,7 +43,7 @@ function Auth (client, messaging, keyspace, api) {
   }
 
   function getAccounts (next) {
-    client.execute(q(keyspace, 'selectAccounts'), {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'selectAccounts'), null, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -281,7 +281,7 @@ function Auth (client, messaging, keyspace, api) {
   }
 
   function getUserByAltId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByAltId'), [user], function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);

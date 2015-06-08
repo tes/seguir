@@ -1,5 +1,4 @@
 var async = require('async');
-var _ = require('lodash');
 var verbose = process.env.SEGUIR_DEBUG;
 
 /**
@@ -9,8 +8,7 @@ module.exports = function (client, options) {
 
   var KEYSPACE = options.KEYSPACE,
       tables = options.tables || [],
-      indexes = options.indexes || [],
-      tableIndexes = options.tableIndexes || {};
+      indexes = options.indexes || [];
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
@@ -61,35 +59,11 @@ module.exports = function (client, options) {
 
   }
 
-  function assertIndexes (next) {
-
-    if (verbose) console.log('Asserting all tables and indexes exist in: ' + KEYSPACE + '...');
-
-    async.map(tables, function (cql, cb) {
-      var keyspaceTable = cql.split(' ')[2].split('.');
-      if (verbose) console.log('Checking ' + keyspaceTable[0] + ' ' + keyspaceTable[1] + ' ...');
-      var selectColumns = ['SELECT * FROM system.schema_columns WHERE keyspace_name=\'', keyspaceTable[0], '\' AND columnfamily_name=\'', keyspaceTable[1], '\''].join('');
-      client.execute(selectColumns, function (err, data) {
-        if (err) return cb(err);
-        var indexes = _.map(_.without(_.pluck(data.rows, 'index_name'), null), function (item) {
-          return item.replace(keyspaceTable[1] + '_', '').split('_idx')[0];
-        });
-        if (_.difference(indexes, tableIndexes[keyspaceTable[1]]).length === 0) {
-          cb();
-        } else {
-          cb('Missing indexes');
-        }
-      });
-    }, next);
-
-  }
-
   return {
     dropKeyspace: dropKeyspace,
     createKeyspace: createKeyspace,
     createTables: createTables,
-    createSecondaryIndexes: createSecondaryIndexes,
-    assertIndexes: assertIndexes
+    createSecondaryIndexes: createSecondaryIndexes
   };
 
 };

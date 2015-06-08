@@ -1,12 +1,33 @@
-function createClient (config) {
+var pg = require('pg');
+
+function createClient (config, next) {
 
   var pgConfig = config.postgres;
 
-  function get (query, data, options, next) {
+  function getConnectionString () {
+    return 'postgres://' + pgConfig.user + ':' + (pgConfig.password || '') + '@' + (pgConfig.host || 'localhost') + '/' + pgConfig.database;
+  }
 
+  function get (query, data, options, next) {
+    pg.connect(getConnectionString(), function (err, client, done) {
+      if (err) { return next(err); }
+      client.query(query, data, function (err, result) {
+        if (err) { return next(err); }
+        done();
+        next(null, result.rows[0]);
+      });
+    });
   }
 
   function execute (query, data, options, next) {
+    pg.connect(getConnectionString(), function (err, client, done) {
+      if (err) { return next(err); }
+      client.query(query, data, function (err, result) {
+        if (err) { return next(err); }
+        done();
+        next(null, result.rows);
+      });
+    });
   }
 
   function generateId (uuid) {
@@ -20,9 +41,10 @@ function createClient (config) {
   }
 
   function formatId (value) {
+
   }
 
-  return {
+  next(null, {
     type: 'postgres',
     config: pgConfig,
     get: get,
@@ -33,7 +55,7 @@ function createClient (config) {
     formatId: formatId,
     queries: require('./queries'),
     setup: require('./setup')
-  };
+  });
 
 }
 

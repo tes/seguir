@@ -70,17 +70,20 @@ function createClient (config, next) {
     }
   }
 
-  next(null, {
-    type: 'cassandra',
-    config: cassandraConfig,
-    get: get,
-    execute: execute,
-    generateId: generateId,
-    generateTimeId: generateTimeId,
-    isValidId: isValidId,
-    formatId: formatId,
-    queries: require('./queries'),
-    setup: require('./setup')
+  client.connect(function () {
+    next(null, {
+      type: 'cassandra',
+      config: cassandraConfig,
+      _client: client,
+      get: get,
+      execute: execute,
+      generateId: generateId,
+      generateTimeId: generateTimeId,
+      isValidId: isValidId,
+      formatId: formatId,
+      queries: require('./queries'),
+      setup: require('./setup')
+    });
   });
 
 }

@@ -26,6 +26,7 @@ function setup (client, keyspace, next) {
   });
 
   async.series([
+    client._client.connect.bind(client._client),
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
