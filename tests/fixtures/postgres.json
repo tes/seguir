@@ -4,7 +4,6 @@
   "keyspace":"seguir",
   "postgres": {
     "user": "postgres",
-    "password": "seguir",
     "database": "postgres",
     "host": "127.0.0.1"
   }
