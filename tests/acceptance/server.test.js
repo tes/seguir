@@ -12,7 +12,7 @@ var Seguir = require('../../client');
 var async = require('async');
 var fs = require('fs');
 var hbs = require('handlebars');
-var databases = ['postgres', 'cassandra'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 var startServer = require('../../server');
 var credentials = {host: 'http://localhost:3001'};
 
@@ -157,6 +157,7 @@ databases.forEach(function (db) {
       it('can update a users data', function (done) {
         client.updateUser(null, users[7].user, 'new_name', 'new_altid', {hello: 'world'}, function (err, user) {
           expect(err).to.be(null);
+          addSample('updateUser', user);
           client.getUser(null, users[7].user, function (err, user) {
             expect(err).to.be(null);
             expect(user.user).to.eql(users[7].user);

@@ -157,7 +157,11 @@ function setup (client, keyspace, next) {
   var helpers = require('./helpers')(client, options);
 
   async.series([
-    client._client.connect.bind(client._client),
+    function (cb) {
+      client._client.connect(function () {
+        setTimeout(cb, 500);
+      });
+    },
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
