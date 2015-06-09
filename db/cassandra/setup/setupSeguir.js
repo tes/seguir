@@ -26,11 +26,6 @@ function setup (client, keyspace, next) {
   });
 
   async.series([
-    function (cb) {
-      client._client.connect(function () {
-        setTimeout(cb, 500);
-      });
-    },
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
