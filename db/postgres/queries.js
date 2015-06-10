@@ -71,7 +71,7 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, use
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, "user", posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = $1';
+queries.selectPost = 'SELECT p.post, p.content, p.content_type, p."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, p.posted, p.isprivate, p.ispersonal FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.post = $1';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6, $7);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
 

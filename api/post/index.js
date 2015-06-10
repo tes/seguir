@@ -64,6 +64,7 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   function getPost (keyspace, liu, post, next) {
+
     var mapUserField = function (post) {
       api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], post.user, next);
     };

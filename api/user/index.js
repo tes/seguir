@@ -96,6 +96,27 @@ module.exports = function (client, messaging, keyspace, api) {
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {
 
+    var getUserFromDatabase = function (item, field, cb) {
+      getUser(keyspace, item[field], function (err, user) {
+        item[field] = user;
+        cb(err);
+      });
+    };
+
+    var getUserFromJoinedFields = function (item, field, cb) {
+      var userObject = {
+        user: item[field],
+        altid: item[field + '_altid'],
+        username: item[field + '_username'],
+        userdata: item[field + '_userdata']
+      };
+      item[field] = userObject;
+      delete item[field + '_altid'];
+      delete item[field + '_username'];
+      delete item[field + '_userdata'];
+      cb();
+    };
+
     var getUsersForFields = function (item, cb) {
       async.each(fields, function (field, eachCb) {
         if (!item[field]) { return eachCb(null); }
@@ -103,10 +124,11 @@ module.exports = function (client, messaging, keyspace, api) {
           item[field] = currentUser;
           eachCb(null);
         } else {
-          getUser(keyspace, item[field], function (err, user) {
-            item[field] = user;
-            eachCb(err);
-          });
+          if (item[field + '_altid']) {
+            getUserFromJoinedFields(item, field, eachCb);
+          } else {
+            getUserFromDatabase(item, field, eachCb);
+          }
         }
       }, function (err) {
         if (err) {
