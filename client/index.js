@@ -429,7 +429,8 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  *
  * @apiDescription Create a new post on a users news feed
  * @apiParam {String} liu the id of the current logged in user
- * @apiParam {String} content the id of the user to follow
+ * @apiParam {String} content arbitrary data for the post
+ * @apiParam {String} content_type content type of the post ie: 'application/json' etc...
  * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
