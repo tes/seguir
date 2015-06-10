@@ -115,8 +115,8 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6);';
-queries.selectFollow = 'SELECT follow, "user", user_follower, since, isprivate, ispersonal FROM {KEYSPACE}.followers WHERE follow = $1';
-queries.selectFollowers = 'SELECT "user", user_follower, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE "user" = $1';
+queries.selectFollow = 'SELECT f.follow, f."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, f.user_follower, uf.altid as user_follower_altid, uf.username as user_follower_username, uf.userdata as user_follower_userdata, f.since, f.isprivate, f.ispersonal FROM {KEYSPACE}.followers f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_follower = uf.user AND f.follow = $1';
+queries.selectFollowers = 'SELECT f.follow, f."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, f.user_follower, uf.altid as user_follower_altid, uf.username as user_follower_username, uf.userdata as user_follower_userdata, f.since, f.isprivate, f.ispersonal FROM {KEYSPACE}.followers f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_follower = uf.user AND f."user" = $1';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
 queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
 
