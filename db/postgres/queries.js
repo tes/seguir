@@ -87,7 +87,7 @@ queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
  *    DELETE FROM {KEYSPACE}.friends WHERE friend = ?
  */
 queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, "user", user_friend, since) VALUES($1, $2, $3, $4)';
-queries.selectFriend = 'SELECT friend, "user", user_friend, since FROM {KEYSPACE}.friends WHERE friend = $1';
+queries.selectFriend = 'SELECT f.friend, f."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, f.user_friend, uf.altid as user_friend_altid, uf.username as user_friend_username, uf.userdata as user_friend_userdata, f.since FROM {KEYSPACE}.friends f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_friend = uf.user AND f.friend = $1';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE "user" = $1';
 queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE "user" = $1 AND user_friend=$2';
 queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE "user" = $1 AND user_friend = $2';
@@ -98,9 +98,9 @@ queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE "user" = 
  *    INSERT INTO seguir.friend_request (friend_request, user, user_friend, message, time) VALUES(?, ?, ?, ?)
  */
 queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, "user", user_friend, message, since) VALUES($1, $2, $3, $4, $5)';
-queries.selectFriendRequest = 'SELECT friend_request, "user", user_friend, message, since FROM {KEYSPACE}.friend_request WHERE friend_request = $1';
-queries.selectIncomingFriendRequests = 'SELECT friend_request, "user", user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user_friend = $1';
-queries.selectOutgoingFriendRequests = 'SELECT friend_request, "user", user_friend, message, since FROM {KEYSPACE}.friend_request WHERE "user" = $1';
+queries.selectFriendRequest = 'SELECT fr.friend_request, fr."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, fr.user_friend, uf.altid as user_friend_altid, uf.username as user_friend_username, uf.userdata as user_friend_userdata, fr.message, fr.since FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user AND fr.friend_request = $1';
+queries.selectIncomingFriendRequests = 'SELECT fr.friend_request, fr."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, fr.user_friend, uf.altid as user_friend_altid, uf.username as user_friend_username, uf.userdata as user_friend_userdata, fr.message, fr.since FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user AND fr.user_friend = $1';
+queries.selectOutgoingFriendRequests = 'SELECT fr.friend_request, fr."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, fr.user_friend, uf.altid as user_friend_altid, uf.username as user_friend_username, uf.userdata as user_friend_userdata, fr.message, fr.since FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user AND fr."user" = $1';
 queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = $1';
 
 /**

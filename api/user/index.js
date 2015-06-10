@@ -124,6 +124,8 @@ module.exports = function (client, messaging, keyspace, api) {
           item[field] = currentUser;
           eachCb(null);
         } else {
+          // Check to see if the 'user_altid' field exists, if so assume the db tier
+          // has joined this data in already for us and use that.
           if (item[field + '_altid']) {
             getUserFromJoinedFields(item, field, eachCb);
           } else {
