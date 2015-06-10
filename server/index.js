@@ -770,8 +770,14 @@ if (require.main === module) {
   });
 
 } else {
-  // Used for testing
-  module.exports = bootstrapServer;
+  module.exports = function (config, next) {
+    require('../api')(config, function (err, api) {
+      if (err) {
+        return next(new Error('Unable to bootstrap API: ' + err.message));
+      }
+      return bootstrapServer(api, next);
+    });
+  };
 }
 
 /**

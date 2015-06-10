@@ -60,7 +60,7 @@ databases.forEach(function (db) {
             expect(err).to.be(null);
             auth.addApplication(account.account, 'test application', null, null, function (err, application) {
               expect(err).to.be(null);
-              startServer(api, function (err, server) {
+              startServer(config, function (err, server) {
                 expect(err).to.be(null);
                 seguirServer = server;
                 server.listen(3001, function () {
