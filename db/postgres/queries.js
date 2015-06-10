@@ -132,7 +132,7 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
  *    DELETE FROM {KEYSPACE}.likes WHERE like = ?
  */
 queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes ("like", "user", item, since) VALUES($1, $2, $3, $4);';
-queries.selectLike = 'SELECT "like", item, "user", since FROM {KEYSPACE}.likes WHERE "like" = $1';
+queries.selectLike = 'SELECT l."like", l.item, l."user", u.altid as user_altid, u.username as user_username, u.userdata as user_userdata, since FROM {KEYSPACE}.likes l, {KEYSPACE}.users u WHERE l.user = u.user AND "like" = $1';
 queries.checkLike = 'SELECT "like", "user", since FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
 
