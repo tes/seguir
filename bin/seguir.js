@@ -12,9 +12,11 @@ program
   .version('0.0.1')
   .option('-s, --setup [file]', 'Use setup file')
   .option('-c, --config [file]', 'Use config file')
+  .option('-d, --database [database]', 'Use database type cassandra|postgres')
   .parse(process.argv);
 
-var defaultConfig = '../server/config';
+var database = program.database || 'cassandra';
+var defaultConfig = '../server/config/' + database;
 var configFn;
 
 if (program.config) {
@@ -26,7 +28,7 @@ if (program.config) {
     process.exit(1);
   }
 } else {
-  var originalConfig = require(defaultConfig)();
+  var originalConfig = require(defaultConfig);
   configFn = function (next) {
     next(null, originalConfig);
   };
@@ -78,7 +80,7 @@ configFn(function (err, config) {
 
       var tasks = {
         'Check current setup': checkSetup,
-        'Initialise a new cassandra instance': coreSetup,
+        'Initialise a new database instance': coreSetup,
         'Add a new account, user and application': promptAccount,
         'List users for account': listUsers,
         'Add a new user to an account': addUser,
@@ -92,7 +94,7 @@ configFn(function (err, config) {
       inquirer.prompt([
         {
           type: 'list',
-          message: 'What would you like to do:',
+          message: 'What would you like to do [DB: ' + database.green + ']:',
           name: 'task',
           choices: _.keys(tasks)
         }

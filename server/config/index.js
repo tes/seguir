@@ -9,11 +9,11 @@ module.exports = function () {
     if (fs.existsSync(configPath)) {
       config = require(configPath);
     } else {
-      console.log('You have specified a config file that doesnt exist! Using default.');
-      config = require(__dirname + '/seguir.json');
+      console.log('You have specified a config file that doesnt exist! Using default cassandra configuration.');
+      config = require(__dirname + '/cassandra.json');
     }
   } else {
-    config = require(__dirname + '/seguir.json');
+    config = require(__dirname + '/cassandra.json');
   }
   return config;
 };
