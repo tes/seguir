@@ -149,6 +149,9 @@ queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, typ
 queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
+queries.timelineLimit = 'LIMIT {limit}';
+queries.timelineSortReverse = 'AND time > ?';
+queries.timelineSort = 'AND time < ?';
 
 module.exports = function (keyspace, name, data) {
   data = data || {};

@@ -3,20 +3,16 @@
  */
 var async = require('async');
 
-function bootstrapWorker (config, next) {
-
-  var client = require('../../api/db/client')(config);
-  var messaging = require('../../api/db/messaging')(config);
-  var api = require('../../api')(client, messaging, config.keyspace);
+function bootstrapWorker (api, next) {
 
   var follower = function (cb) {
-    messaging.listen('seguir-publish-to-followers', function (data, next) {
+    api.messaging.listen('seguir-publish-to-followers', function (data, next) {
       api.feed.insertFollowersTimeline(data, next);
     }, cb);
   };
 
   var mentions = function (cb) {
-    messaging.listen('seguir-publish-mentioned', function (data, cb) {
+    api.messaging.listen('seguir-publish-mentioned', function (data, cb) {
       api.feed.insertMentionedTimeline(data, cb);
     }, cb);
   };
@@ -34,7 +30,10 @@ function bootstrapWorker (config, next) {
 /* istanbul ignore if */
 if (require.main === module) {
   var config = require('../config')();
-  bootstrapWorker(config);
+  require('../../api')(config, function (err, api) {
+    if (err) { return process.exit(0); }
+    bootstrapWorker(api);
+  });
 } else {
   // Used for testing
   module.exports = bootstrapWorker;

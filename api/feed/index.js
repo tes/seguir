@@ -1,9 +1,6 @@
-var cassandra = require('cassandra-driver');
 var moment = require('moment');
-var TimeUuid = cassandra.types.TimeUuid;
 var async = require('async');
 var _ = require('lodash');
-
 var debug = require('debug')('seguir:feed');
 
 var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
@@ -20,21 +17,21 @@ var DEFAULT_LIMIT = 50;
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function insertFollowersTimeline (item, next) {
     if (item.ispersonal) { return next(); }
     client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
-      if (err || data.rows.length === 0) { return next(err); }
-      async.map(data.rows, function (row, cb2) {
+      if (err || data.length === 0) { return next(err); }
+      async.map(data, function (row, cb2) {
         var followIsPrivate = item.isprivate, followIsPersonal = item.ispersonal;
         api.friend.isFriend(item.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!item.isprivate || (item.isprivate && isFriend)) {
-            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, TimeUuid.fromDate(item.timestamp), followIsPrivate, followIsPersonal, cb2);
+            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, client.generateTimeId(item.timestamp), followIsPrivate, followIsPersonal, cb2);
           } else {
             cb2();
           }
@@ -80,7 +77,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return mentioned(); } // no mentioned users
       client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
         if (err) { return cb(err); }
-        var followers = _.map(_.pluck(data.rows || [], 'user_follower'), function (item) {
+        var followers = _.map(_.pluck(data || [], 'user_follower'), function (item) {
           return item.toString();
         });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
@@ -94,7 +91,7 @@ module.exports = function (client, messaging, keyspace, api) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
         if (!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
-          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, TimeUuid.fromDate(item.timestamp), item.isprivate, item.ispersonal, cb2);
+          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, client.generateTimeId(item.timestamp), item.isprivate, item.ispersonal, cb2);
         } else {
           cb2();
         }
@@ -143,7 +140,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        upsertTimeline(keyspace, timeline, user, item, type, TimeUuid.fromDate(timestamp), isprivate, ispersonal, cb2);
+        upsertTimeline(keyspace, timeline, user, item, type, client.generateTimeId(timestamp), isprivate, ispersonal, cb2);
       }, cb);
     };
 
@@ -171,8 +168,8 @@ module.exports = function (client, messaging, keyspace, api) {
     var queryData = [item];
     client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {prepare: true}, function (err, data) {
       /* istanbul ignore if */
-      if (err || data.rows.length === 0) { return next(err); }
-      async.map(data.rows, function (row, cb) {
+      if (err || data.length === 0) { return next(err); }
+      async.map(data, function (row, cb) {
         _removeFeedItemFromTimeline(keyspace, timeline, row.user, row.time, cb);
       }, function (err, rows) {
         next(err);
@@ -204,6 +201,73 @@ module.exports = function (client, messaging, keyspace, api) {
     _getFeed(keyspace, liu, 'user_timeline', user, from, limit, 'raw-reverse', next);
   }
 
+  /**
+   * A collection of helpers based on type that will expand an item in the feed
+   */
+  var silentlyDropError = function (err, item, next) {
+    if (err && (err.statusCode === 403 || err.statusCode === 404)) {
+      next(); // Silently drop posts from the feed
+    } else {
+      if (err) { return next(err); }
+      next(null, item);
+    }
+  };
+
+  function expandPost (keyspace, liu, item, cb) {
+    var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
+    if (postObject) {
+      api.post.getPostFromObject(keyspace, liu, postObject, function (err, post) {
+        silentlyDropError(err, post, cb);
+      });
+    } else {
+      api.post.getPost(keyspace, liu, item.item, function (err, post) {
+        silentlyDropError(err, post, cb);
+      });
+    }
+  }
+
+  function expandLike (keyspace, liu, item, cb) {
+    var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
+    if (likeObject) {
+      api.like.getLikeFromObject(keyspace, likeObject, cb);
+    } else {
+      api.like.getLike(keyspace, item.item, cb);
+    }
+  }
+
+  function expandFollow (keyspace, liu, item, cb) {
+    var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
+    if (followObject) {
+      api.follow.getFollowFromObject(keyspace, liu, followObject, function (err, follow) {
+        silentlyDropError(err, follow, cb);
+      });
+    } else {
+      api.follow.getFollow(keyspace, liu, item.item, function (err, follow) {
+        silentlyDropError(err, follow, cb);
+      });
+    }
+  }
+
+  function expandFriend (keyspace, liu, item, cb) {
+    var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
+    if (friendObject) {
+      api.friend.getFriendFromObject(keyspace, liu, friendObject, function (err, friend) {
+        silentlyDropError(err, friend, cb);
+      });
+    } else {
+      api.friend.getFriend(keyspace, liu, item.item, function (err, friend) {
+        silentlyDropError(err, friend, cb);
+      });
+    }
+  }
+
+  var feedExpanders = {
+    'post': expandPost,
+    'like': expandLike,
+    'follow': expandFollow,
+    'friend': expandFriend
+  };
+
   function _getFeed (keyspace, liu, timeline, user, from, limit, raw, next) {
 
     if (!next) {
@@ -214,8 +278,8 @@ module.exports = function (client, messaging, keyspace, api) {
     var data = [user], timeClause = '', hasMoreResults = false, limitClause = '';
 
     if (from) {
-      var direction = raw === 'raw-reverse' ? '>' : '<';
-      timeClause = ' AND time ' + direction + ' ' + from;
+      timeClause = q(keyspace, raw === 'raw-reverse' ? 'timelineSortReverse' : 'timelineSort');
+      data.push(from);
     }
 
     // We always increase the limit by one so that
@@ -223,7 +287,7 @@ module.exports = function (client, messaging, keyspace, api) {
     // This is removed in the results to keep it consistent with expected results.
     if (!limit) limit = DEFAULT_LIMIT;
     limit = limit + 1;
-    limitClause = ' LIMIT ' + limit;
+    limitClause = q(keyspace, 'timelineLimit', {limit: limit});
 
     var query = q(keyspace, 'selectTimeline', {
       timeClause: timeClause,
@@ -237,54 +301,27 @@ module.exports = function (client, messaging, keyspace, api) {
 
       if (err) { return next(err); }
 
-      if (data.rows && data.rows.length > 0) {
+      if (data && data.length > 0) {
 
         // This is where we check if we have more results or
         // not.
-        if (data.rows.length === limit) {
+        if (data.length === limit) {
           hasMoreResults = true;
-          data.rows.pop();
+          data.pop();
         }
 
-        if (raw) { return next(null, data.rows); }
+        if (raw) { return next(null, data); }
 
-        var timeline = data.rows;
+        var timeline = data;
 
         async.map(timeline, function (item, cb) {
 
-          if (item.type === 'post') {
-            return api.post.getPost(keyspace, liu, item.item, function (err, post) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop posts from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, post);
-              }
-            });
+          var expander = feedExpanders[item.type];
+          if (expander) {
+            return expander(keyspace, liu, item, cb);
+          } else {
+            console.log('Unable to expand unknown feed item type: ' + item.type);
           }
-          if (item.type === 'like') { return api.like.getLike(keyspace, item.item, cb); }
-          if (item.type === 'friend') {
-            return api.friend.getFriend(keyspace, liu, item.item, function (err, friend) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop these from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, friend);
-              }
-            });
-          }
-          if (item.type === 'follow') {
-            return api.follow.getFollow(keyspace, liu, item.item, function (err, follow) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop private items from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, follow);
-              }
-            });
-          }
-
-          return cb();
 
         }, function (err, results) {
 
@@ -299,6 +336,7 @@ module.exports = function (client, messaging, keyspace, api) {
               var currentResult = result;
 
               // Copy elements from feed
+              currentResult._item = timeline[index].item;
               currentResult.type = timeline[index].type;
               currentResult.timeuuid = timeline[index].time;
               currentResult.date = timeline[index].date;
@@ -342,13 +380,13 @@ module.exports = function (client, messaging, keyspace, api) {
     var duration = backfillMatch[1] || '1';
     var period = backfillMatch[2] || 'd';
     var start = moment().subtract(+duration, period);
-    var from = TimeUuid.fromDate(start.toDate());
+    var from = client.generateTimeId(start.toDate());
 
     getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
         if (item.type !== 'post' || item.ispersonal || item.isprivate) return cb();
-        upsertTimeline(keyspace, 'feed_timeline', user.user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
+        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
       }, next);
     });
 

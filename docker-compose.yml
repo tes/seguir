@@ -1,8 +1,9 @@
-api:
-  build: .
-  links:
-   - cassandra
-  ports:
-   - "3000:3000"
 cassandra:
-  image: spotify/cassandra
+  image: cassandra
+  ports:
+   - "9042:9042"
+   - "9160:9160"
+postgres:
+  image: postgres
+  ports:
+   - "5432:5432"

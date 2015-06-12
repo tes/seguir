@@ -1,7 +1,4 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
 var _ = require('lodash');
-var async = require('async');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -13,12 +10,13 @@ var async = require('async');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
-  function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, next) {
-    var follow = Uuid.random();
+  function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, backfill, next) {
+    if (!next) { next = backfill; backfill = null; }
+    var follow = client.generateId();
     var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
@@ -33,7 +31,14 @@ module.exports = function (client, messaging, keyspace, api) {
           ispersonal: ispersonal,
           timestamp: timestamp
         };
-        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
+          if (err) return next(err);
+          if (!backfill) return next(null, follow);
+          api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+            if (err) return next(err);
+            return next(null, follow);
+          });
+        });
       });
     });
   }
@@ -77,44 +82,21 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
+  function getFollowFromObject (keyspace, liu, followObject, next) {
+    api.friend.userCanSeeItem(keyspace, liu, followObject, ['user', 'user_follower'], function (err) {
+      if (err) { return next(err); }
+      api.user.mapUserIdToUser(keyspace, followObject, ['user', 'user_follower'], liu, next);
+    });
+  }
+
   function getFollow (keyspace, liu, follow, next) {
-
     api.common.get(keyspace, 'selectFollow', [follow], 'one', function (err, follower) {
-
       /* istanbul ignore if */
       if (err) { return next(err); }
-
-      var userIsInFollow = liu.toString() === follower.user.toString() || liu.toString() === follower.user_follower.toString();
-
-      var returnUser = function () {
-        api.user.getUser(keyspace, follower.user_follower, function (err, user) {
-          if (err) { return next(err); }
-          follower.username_follower = user.username;
-          api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
-        });
-      };
-
-      // If the relationship is personal, the user must be one of the two parties.
-      if (follower.ispersonal && !userIsInFollow) {
-        return next({statusCode: 403, message: 'You are not allowed to see this item.'});
-      }
-
-      // If the relationship is private, the user must be friends with one of the two parties.
-      if (follower.isprivate) {
-        async.parallel({
-          user: async.apply(api.friend.isFriend, keyspace, liu, follower.user),
-          follower: async.apply(api.friend.isFriend, keyspace, liu, follower.user_follower)
-        }, function (err, result) {
-          if (err) { return next(err); }
-          if (!result.user[0] && !result.follower[0]) {
-            return next({statusCode: 403, message: 'You are not allowed to see this item.'});
-          }
-          returnUser();
-        });
-      } else {
-        returnUser();
-      }
-
+      api.friend.userCanSeeItem(keyspace, liu, follower, ['user', 'user_follower'], function (err) {
+        if (err) { return next(err); }
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], liu, next);
+      });
     });
   }
 
@@ -150,6 +132,7 @@ module.exports = function (client, messaging, keyspace, api) {
     removeFollower: removeFollower,
     getFollowers: getFollowers,
     getFollow: getFollow,
+    getFollowFromObject: getFollowFromObject,
     isFollower: isFollower,
     getFollowersByName: getFollowersByName
   };

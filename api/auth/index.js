@@ -1,16 +1,14 @@
-var cassandra = require('cassandra-driver');
 var restify = require('restify');
 var async = require('async');
 var userHeader = 'x-seguir-user-token';
 var authUtils = require('./utils');
-var setupKeyspace = require('../../setup/setupKeyspace');
 var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'};
-var Uuid = cassandra.types.Uuid;
 var debug = require('debug')('seguir:auth');
 
 function Auth (client, messaging, keyspace, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries,
+      setupTenant = client.setup.setupTenant;
 
   /**
    * Core account API
@@ -20,9 +18,9 @@ function Auth (client, messaging, keyspace, api) {
       if (err) { return next(err); }
       if (checkAccount) { return next(new Error('An account with that name already exists!')); }
 
-      var account = Uuid.random();
+      var account = client.generateId();
       var accountData = [account, name, isadmin, enabled];
-      client.execute(q(keyspace, 'upsertAccount'), accountData, function (err, result) {
+      client.execute(q(keyspace, 'upsertAccount'), accountData, {prepare: true}, function (err, result) {
         if (err) { return next(err); }
         next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
       });
@@ -31,29 +29,29 @@ function Auth (client, messaging, keyspace, api) {
   }
 
   function getAccount (account, next) {
-    client.execute(q(keyspace, 'selectAccount'), [account], function (err, result) {
+    client.get(q(keyspace, 'selectAccount'), [account], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, result && result.rows ? result.rows[0] : null);
+      next(null, result);
     });
   }
 
   function checkAccountDuplicate (name, next) {
-    client.execute(q(keyspace, 'selectAccountByName'), [name], function (err, result) {
+    client.get(q(keyspace, 'selectAccountByName'), [name], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, result && result.rows ? result.rows[0] : null);
+      next(null, result);
     });
   }
 
   function getAccounts (next) {
-    client.execute(q(keyspace, 'selectAccounts'), function (err, result) {
+    client.execute(q(keyspace, 'selectAccounts'), null, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, result ? result.rows : null);
+      next(null, result);
     });
   }
 
   function updateAccount (account, name, isadmin, enabled, next) {
     var accountData = [name, isadmin, enabled, account];
-    client.execute(q(keyspace, 'updateAccount'), accountData, function (err, result) {
+    client.execute(q(keyspace, 'updateAccount'), accountData, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
       next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
     });
@@ -69,7 +67,7 @@ function Auth (client, messaging, keyspace, api) {
       authUtils.hashPassword(password, function (err, hash) {
         if (err) { return next(err); }
         var userData = [account, username, hash, enabled];
-        client.execute(q(keyspace, 'upsertAccountUser'), userData, function (err, result) {
+        client.execute(q(keyspace, 'upsertAccountUser'), userData, {prepare: true}, function (err, result) {
           if (err) { return next(err); }
           next(null, {account: account, username: username, enabled: enabled});
         });
@@ -78,16 +76,16 @@ function Auth (client, messaging, keyspace, api) {
   }
 
   function getAccountUserByName (username, next) {
-    client.execute(q(keyspace, 'selectAccountUserByName'), [username], function (err, result) {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, result && result.rows ? result.rows[0] : null);
+      next(null, result);
     });
   }
 
   function loginUser (username, password, next) {
-    client.execute(q(keyspace, 'selectAccountUserByName'), [username], function (err, result) {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      var user = result.rows ? result.rows[0] : null;
+      var user = result;
       if (!user) { return next(null, false); }
       if (!user.enabled) { return next(null, false); }
       authUtils.checkPassword(password, user.password, function (err, valid) {
@@ -98,9 +96,9 @@ function Auth (client, messaging, keyspace, api) {
   }
 
   function getAccountUsers (account, next) {
-    client.execute(q(keyspace, 'selectAccountUsers'), [account], function (err, result) {
+    client.execute(q(keyspace, 'selectAccountUsers'), [account], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, result ? result.rows : null);
+      next(null, result);
     });
   }
 
@@ -108,7 +106,7 @@ function Auth (client, messaging, keyspace, api) {
     authUtils.hashPassword(password, function (err, hash) {
       if (err) { return next(err); }
       var userData = [hash, enabled, account, username];
-      client.execute(q(keyspace, 'updateAccountUser'), userData, function (err, result) {
+      client.execute(q(keyspace, 'updateAccountUser'), userData, {prepare: true}, function (err, result) {
         if (err) { return next(err); }
         next(null, {account: account, username: username, enabled: enabled});
       });
@@ -120,28 +118,28 @@ function Auth (client, messaging, keyspace, api) {
    */
   function updateApplication (appid, name, enabled, next) {
     var application = [name, enabled, appid];
-    client.execute(q(keyspace, 'updateApplication'), application, function (err) {
+    client.execute(q(keyspace, 'updateApplication'), application, {prepare: true}, function (err) {
       next(err, {name: name, appid: appid, enabled: enabled});
     });
   }
 
   function updateApplicationSecret (appid, next) {
-    var appsecret = authUtils.generateSecret(cassandra.types.uuid());
+    var appsecret = authUtils.generateSecret(client.generateId());
     var application = [appsecret, appid];
-    client.execute(q(keyspace, 'updateApplicationSecret'), application, function (err) {
+    client.execute(q(keyspace, 'updateApplicationSecret'), application, {prepare: true}, function (err) {
       next(err, {appid: appid, appsecret: appsecret});
     });
   }
 
   function addApplication (account, name, appid, appsecret, next) {
-    appid = appid || Uuid.random();
-    appsecret = appsecret || authUtils.generateSecret(cassandra.types.uuid());
+    appid = appid || client.generateId();
+    appsecret = appsecret || authUtils.generateSecret(client.generateId());
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
     var app = [account, name, appkeyspace, appid, appsecret, enabled];
-    client.execute(q(keyspace, 'upsertApplication'), app, function (err, result) {
+    client.execute(q(keyspace, 'upsertApplication'), app, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      setupKeyspace(client, keyspace + '_' + appkeyspace, function (err) {
+      setupTenant(client, keyspace + '_' + appkeyspace, function (err) {
         if (err) { return next(err); }
         next(null, {account: account, name: name, appkeyspace: appkeyspace, appid: appid, appsecret: appsecret, enabled: enabled});
       });
@@ -150,7 +148,8 @@ function Auth (client, messaging, keyspace, api) {
 
   function getApplications (account, next) {
     client.execute(q(keyspace, 'selectApplications'), [account], function (err, result) {
-      next(err, result ? result.rows : null);
+      if (err) { return next(err); }
+      next(null, result);
     });
   }
 
@@ -158,11 +157,11 @@ function Auth (client, messaging, keyspace, api) {
    *  Application Token API
    */
   function addApplicationToken (appid, appkeyspace, tokenid, tokensecret, next) {
-    tokenid = tokenid || Uuid.random();
-    tokensecret = tokensecret || authUtils.generateSecret(cassandra.types.uuid());
+    tokenid = tokenid || client.generateId();
+    tokensecret = tokensecret || authUtils.generateSecret(client.generateId());
     var enabled = true;
     var token = [appid, appkeyspace, tokenid, tokensecret, enabled];
-    client.execute(q(keyspace, 'upsertApplicationToken'), token, function (err, result) {
+    client.execute(q(keyspace, 'upsertApplicationToken'), token, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
       next(null, {appid: appid, appkeyspace: appkeyspace, tokenid: tokenid, tokensecret: tokensecret, enabled: enabled});
     });
@@ -170,15 +169,16 @@ function Auth (client, messaging, keyspace, api) {
 
   function updateApplicationToken (tokenid, enabled, next) {
     var token = [enabled, tokenid];
-    client.execute(q(keyspace, 'updateApplicationToken'), token, function (err) {
+    client.execute(q(keyspace, 'updateApplicationToken'), token, {prepare: true}, function (err) {
       if (err) { return next(err); }
-      next(err, {tokenid: tokenid, enabled: enabled});
+      next(null, {tokenid: tokenid, enabled: enabled});
     });
   }
 
   function getApplicationTokens (appid, next) {
-    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], function (err, result) {
-      next(err, result ? result.rows : null);
+    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {prepare: true}, function (err, result) {
+      if (err) { return next(err); }
+      next(null, result);
     });
   }
 
@@ -251,8 +251,8 @@ function Auth (client, messaging, keyspace, api) {
       return next(new restify.UnauthorizedError('You must provide an application id via the Authorization header to access seguir the seguir API.'));
     }
     var app = [appid];
-    client.execute(q(keyspace, 'checkApplication'), app, function (err, result) {
-      var application = result && result.rows.length > 0 ? result.rows[0] : null;
+    client.get(q(keyspace, 'checkApplication'), app, {prepare: true}, function (err, result) {
+      var application = result;
       if (err) { return next(err); }
       if (!application || !application.enabled) { return next(null, null); }
       next(null, application);
@@ -264,43 +264,35 @@ function Auth (client, messaging, keyspace, api) {
       return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
     var token = [tokenid];
-    client.execute(q(keyspace, 'checkApplicationToken'), token, function (err, result) {
-      var token = result && result.rows.length > 0 ? result.rows[0] : null;
+    client.get(q(keyspace, 'checkApplicationToken'), token, {prepare: true}, function (err, result) {
+      var token = result;
       if (err) { return next(err); }
       if (!token || !token.enabled) { return next(null, null); }
       next(null, token);
     });
   }
 
-  function isUuid (value) {
-    return value instanceof Uuid;
-  }
-
-  function isStringUuid (value) {
-    return (typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4);
-  }
-
   function getUserBySeguirId (user_keyspace, user, next) {
-    client.execute(q(user_keyspace, 'selectUser'), [user], function (err, result) {
+    client.get(q(user_keyspace, 'selectUser'), [user], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      if (!result || result.rows.length === 0) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
-      next(null, result.rows[0]);
+      if (!result) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      next(null, result);
     });
   }
 
   function getUserByAltId (user_keyspace, user, next) {
-    client.execute(q(user_keyspace, 'selectUserByAltId'), [user], function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      if (!result || result.rows.length === 0) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
-      next(null, result.rows[0]);
+      if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      next(null, result);
     });
   }
 
   function getUserByName (user_keyspace, user, next) {
-    client.execute(q(user_keyspace, 'selectUserByUsername'), [user], function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      if (!result || result.rows.length === 0) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
-      next(null, result.rows[0]);
+      if (!result) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      next(null, result);
     });
   }
 
@@ -312,38 +304,33 @@ function Auth (client, messaging, keyspace, api) {
       return next();
     }
 
-    if (isUuid(ids)) {
-      debug('Id %s IS uuid', ids);
-      return next(null, ids);
-    }
-
     var coerce = function (id, cb) {
 
-      if (isStringUuid(id)) {
-        // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
-        debug('Id is string Uuid, converting', ids);
-        return cb(null, Uuid.fromString(id));
-      } else {
-        // Assume altid first, then try name
-        id = '' + id; // Ensure it is a string
-        debug('Trying %s as altid', id);
-        getUserByAltId(user_keyspace, id, function (err, user) {
-          if (err) {
-            debug('Trying %s as username', ids);
-            return getUserByName(user_keyspace, id, function (err, user) {
-              if (err) { return next(err); }
-              debug('%s is username, uuid is %s', id, user && user.user);
-              return cb(err, user && user.user);
-            });
-          }
+      if (client.isValidId(id)) {
+        debug('Id %s IS already valid uuid', id);
+        return cb(null, client.formatId(id));
+      }
+
+      // Assume altid first, then try name
+      id = '' + id; // Ensure it is a string
+      debug('Trying %s as altid', id);
+      getUserByAltId(user_keyspace, id, function (err, user) {
+        if (err) {
+          debug('Trying %s as username', id);
+          getUserByName(user_keyspace, id, function (err, user) {
+            if (err) { return next(err); }
+            debug('%s is username, uuid is %s', id, user && user.user);
+            return cb(err, user && user.user);
+          });
+        } else {
           debug('%s is altid, uuid is %s', id, user && user.user);
           return cb(err, user && user.user);
-        });
-      }
+        }
+      });
 
     };
 
-    if (typeof ids === 'string' || typeof ids === 'number') {
+    if (!Array.isArray(ids)) {
       coerce(ids, next);
     } else {
       async.map(ids, coerce, function (err, uuids) {
@@ -362,12 +349,7 @@ function Auth (client, messaging, keyspace, api) {
       return next(null, anonyomousUser);
     }
 
-    if (isStringUuid(id)) {
-      debug('Converting string %s to uuid', id);
-      id = Uuid.fromString(id);
-    }
-
-    if (isUuid(id)) {
+    if (client.isValidId(id)) {
       debug('User %s is uuid', id);
       // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
       getUserBySeguirId(user_keyspace, id, function (err, user) {

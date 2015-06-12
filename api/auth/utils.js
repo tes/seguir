@@ -20,7 +20,7 @@ function validateAuthorization (headers, appid, appsecret) {
 }
 
 function generateSecret (appid, next) {
-  return crypto.createHash('sha256').update(appid).update('salt').digest('hex');
+  return crypto.createHash('sha256').update(appid.toString()).update('salt').digest('hex');
 }
 
 function hashPassword (password, next) {

@@ -1,31 +1,36 @@
-module.exports = Api;
+module.exports = function (config, next) {
 
-function Api (client, messaging, keyspace) {
+  require('../db')(config, function (err, client) {
 
-  if (!(this instanceof Api)) {
-    return new Api(client, messaging, keyspace);
-  }
+    if (err) { return next(err); }
 
-  keyspace = keyspace || 'seguir';
+    var messaging = require('../db/messaging')(config);
+    var keyspace = config.keyspace || 'seguir';
 
-  // TODO: Refactor out into iteration over array of modules
+    // TODO: Refactor out into iteration over array of modules
+    var auth = require('./auth');
+    var common = require('./common');
+    var user = require('./user');
+    var post = require('./post');
+    var like = require('./like');
+    var feed = require('./feed');
+    var friend = require('./friend');
+    var follow = require('./follow');
 
-  var auth = require('./auth');
-  var common = require('./common');
-  var user = require('./user');
-  var post = require('./post');
-  var like = require('./like');
-  var feed = require('./feed');
-  var friend = require('./friend');
-  var follow = require('./follow');
+    var api = {};
+    api.client = client;
+    api.config = config;
+    api.messaging = messaging;
+    api.auth = auth(client, messaging, keyspace, api);
+    api.common = common(client, messaging, api);
+    api.follow = follow(client, messaging, api);
+    api.feed = feed(client, messaging, api);
+    api.friend = friend(client, messaging, api);
+    api.like = like(client, messaging, api);
+    api.post = post(client, messaging, api);
+    api.user = user(client, messaging, api);
+    next(null, api);
 
-  this.auth = auth(client, messaging, keyspace, this);
-  this.common = common(client, messaging, keyspace, this);
-  this.follow = follow(client, messaging, keyspace, this);
-  this.feed = feed(client, messaging, keyspace, this);
-  this.friend = friend(client, messaging, keyspace, this);
-  this.like = like(client, messaging, keyspace, this);
-  this.post = post(client, messaging, keyspace, this);
-  this.user = user(client, messaging, keyspace, this);
+  });
 
-}
+};

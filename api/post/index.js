@@ -1,6 +1,3 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
-
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -11,20 +8,20 @@ var Uuid = cassandra.types.Uuid;
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function addPost (keyspace, user, content, content_type, timestamp, isprivate, ispersonal, next) {
-    var post = Uuid.random();
+    var post = client.generateId();
 
     // Parse and re-parse the input content, this catches any errors and ensures we don't
     // persist broken data that will subsequently break the feed
-    var cassandraContent = api.common.convertContentToCassandra(content, content_type);
-    var originalContent = api.common.convertContentFromCassandra(cassandraContent, content_type);
+    var convertedContent = api.common.convertContentToString(content, content_type);
+    var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
-    var data = [post, user, cassandraContent, content_type, timestamp, isprivate, ispersonal];
+    var data = [post, user, convertedContent, content_type, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
@@ -66,27 +63,22 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
-  function getPost (keyspace, liu, post, next) {
-    var mapUserField = function (post) {
-      api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], post.user, next);
-    };
+  function getPostFromObject (keyspace, liu, postObject, next) {
+    api.friend.userCanSeeItem(keyspace, liu, postObject, ['user'], function (err) {
+      if (err) { return next(err); }
+      postObject.content = api.common.convertContentFromString(postObject.content, postObject.content_type);
+      api.user.mapUserIdToUser(keyspace, postObject, ['user', 'user_follower'], postObject.user, next);
+    });
+  }
 
+  function getPost (keyspace, liu, post, next) {
     api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
-      post.content = api.common.convertContentFromCassandra(post.content, post.content_type);
-      if (post.ispersonal) {
-        if (liu.toString() !== post.user.toString()) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-        return mapUserField(post);
-      }
-      if (post.isprivate) {
-        api.friend.canSeePrivate(keyspace, liu, post.user, function (err, canSee) {
-          if (err) { return next(err); }
-          if (!canSee) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-          return mapUserField(post);
-        });
-      } else {
-        mapUserField(post);
-      }
+      post.content = api.common.convertContentFromString(post.content, post.content_type);
+      api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+        if (err) { return next(err); }
+        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);
+      });
     });
   }
 
@@ -94,7 +86,8 @@ module.exports = function (client, messaging, keyspace, api) {
     addPost: addPost,
     addPostByName: addPostByName,
     removePost: removePost,
-    getPost: getPost
+    getPost: getPost,
+    getPostFromObject: getPostFromObject
   };
 
 };

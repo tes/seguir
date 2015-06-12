@@ -1,8 +1,9 @@
 var sanitizeHtml = require('sanitize-html');
+var _ = require('lodash');
 
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
-  var q = require('../db/queries');
+  var q = client.queries;
 
   function error (code, message) {
     var err = new Error(message);
@@ -18,10 +19,10 @@ module.exports = function (client, messaging, keyspace, api) {
     return function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      if (!result.rows || (many !== 'many' && result.rows.length !== 1)) {
+      if (!result || (many !== 'many' && result.length !== 1)) {
         return next(error(404, 'Item not found: "' + query + '"" for "' + data.join(', ') + '"'));
       }
-      next(null, many === 'many' ? result.rows : result.rows[0]);
+      next(null, many === 'many' ? result : result[0]);
     };
   }
 
@@ -34,7 +35,7 @@ module.exports = function (client, messaging, keyspace, api) {
 
   // Deal with any content conversion to persist in cassandra
   // While not too many options will just switch
-  function convertContentToCassandra (content, content_type) {
+  function convertContentToString (content, content_type) {
     switch (content_type) {
       case 'application/json':
         if (typeof content === 'object') {
@@ -47,7 +48,7 @@ module.exports = function (client, messaging, keyspace, api) {
   }
 
   // Deal with any content conversion when retrieving from cassandra
-  function convertContentFromCassandra (content, content_type) {
+  function convertContentFromString (content, content_type) {
     switch (content_type) {
       case 'application/json':
         var json;
@@ -62,13 +63,29 @@ module.exports = function (client, messaging, keyspace, api) {
     }
   }
 
+  function expandEmbeddedObject (item, field, test, ignore) {
+    var prefix = field + '_', testField = prefix + test;
+    if (item[testField]) {
+      var embed = {};
+      _.forOwn(item, function (value, key) {
+        if (key.indexOf(prefix) === 0 && !_.contains(ignore, key)) {
+          var embedKey = key.replace(prefix, '');
+          embed[embedKey] = value;
+          delete item[key];
+        }
+      });
+      return embed;
+    }
+  }
+
   return {
     error: error,
     get: get,
     response: response,
     clean: clean,
-    convertContentToCassandra: convertContentToCassandra,
-    convertContentFromCassandra: convertContentFromCassandra
+    convertContentToString: convertContentToString,
+    convertContentFromString: convertContentFromString,
+    expandEmbeddedObject: expandEmbeddedObject
   };
 
 };

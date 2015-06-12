@@ -1,7 +1,7 @@
 /*eslint-env node, mocha */
 
 var expect = require('expect.js');
-var q = require('../../api/db/queries');
+var q = require('../../db/cassandra/queries');
 
 describe('Queries', function () {
 
