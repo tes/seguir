@@ -12,7 +12,7 @@ var debug = require('debug')('seguir:user');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -96,41 +96,32 @@ module.exports = function (client, messaging, keyspace, api) {
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {
 
-    var getUserFromDatabase = function (item, field, cb) {
-      getUser(keyspace, item[field], function (err, user) {
-        item[field] = user;
-        cb(err);
-      });
-    };
-
-    var getUserFromJoinedFields = function (item, field, cb) {
-      var userObject = {
-        user: item[field],
-        altid: item[field + '_altid'],
-        username: item[field + '_username'],
-        userdata: item[field + '_userdata']
-      };
-      item[field] = userObject;
-      delete item[field + '_altid'];
-      delete item[field + '_username'];
-      delete item[field + '_userdata'];
-      cb();
-    };
-
     var getUsersForFields = function (item, cb) {
+
+      // Always replace the longest embedded field to
+      // ensure user_ and user_friend not replaced twice
+      fields.sort(function (a, b) {return b.length - a.length; });
+
       async.each(fields, function (field, eachCb) {
+
         if (!item[field]) { return eachCb(null); }
+
+        // First check if we have the object embedded
+        var userObject = api.common.expandEmbeddedObject(item, field, 'altid', fields);
+        if (userObject) {
+          item[field] = userObject;
+          return eachCb();
+        }
+
+        // Otherwise proceed as normal
         if (currentUser && item[field].toString() === currentUser.user && currentUser.user.toString()) {
           item[field] = currentUser;
           eachCb(null);
         } else {
-          // Check to see if the 'user_altid' field exists, if so assume the db tier
-          // has joined this data in already for us and use that.
-          if (item[field + '_altid']) {
-            getUserFromJoinedFields(item, field, eachCb);
-          } else {
-            getUserFromDatabase(item, field, eachCb);
-          }
+          getUser(keyspace, item[field], function (err, user) {
+            item[field] = user;
+            eachCb(err);
+          });
         }
       }, function (err) {
         if (err) {
@@ -141,6 +132,7 @@ module.exports = function (client, messaging, keyspace, api) {
     };
 
     if (Array.isArray(itemOrItems)) {
+      // Sort to ensure we always replace the longest first
       async.map(itemOrItems, getUsersForFields, function (err, result) {
         if (err) {
           return next(err);

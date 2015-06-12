@@ -11,7 +11,7 @@ var async = require('async');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -94,25 +94,54 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
+  function userCanSeeItem (keyspace, user, item, user_properties, next) {
+
+    // Check if the item provided is one that privacy controls apply to
+    var privacyCheckRequired = item.friend || item.friend_request || item.isprivate || item.ispersonal;
+    if (!privacyCheckRequired) return next();
+
+    // First check if the user is one of the properties
+    var userIsOnItem = _.reduce(user_properties, function (match, prop) {
+      return match || user.toString() === item[prop].toString();
+    }, false);
+    if (userIsOnItem) return next();
+
+    // Now, if it is private they can see it if they are a friends with any
+    // of the users specified in the properties
+    if (item.isprivate) {
+      async.reduce(user_properties, false, function (memo, prop, cb) {
+        isFriend(keyspace, user, item[prop], function (err, ok) {
+          if (err) { return next(err); }
+          cb(null, memo || ok);
+        });
+      }, function (err, ok) {
+        if (err) { return next(err); }
+        if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
+        next();
+      });
+    } else {
+      // Otherwise they can't see it
+      next({statusCode: 403, message: 'You are not allowed to see this item.'});
+    }
+
+  }
+
+  function getFriendFromObject (keyspace, liu, friendObject, next) {
+    api.friend.userCanSeeItem(keyspace, liu, friendObject, ['user', 'user_friend'], function (err) {
+      if (err) { return next(err); }
+      api.user.mapUserIdToUser(keyspace, friendObject, ['user', 'user_friend'], liu, next);
+    });
+  }
+
   function getFriend (keyspace, liu, friend, next) {
     api.common.get(keyspace, 'selectFriend', [friend], 'one', function (err, friendship) {
        /* istanbul ignore if */
       if (err) { return next(err); }
-      isFriend(keyspace, friendship.user_friend, liu, function (err, ok) {
+      userCanSeeItem(keyspace, liu, friendship, ['user', 'user_friend'], function (err) {
         if (err) { return next(err); }
-        if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
-        api.user.getUser(keyspace, friendship.user_friend, function (err, user) {
-          if (err) { return next(err); }
-          friendship.username_friend = user.username;
-          api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], user, next);
-        });
+        api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], liu, next);
       });
     });
-  }
-
-  function canSeePrivate (keyspace, liu, user, next) {
-    if (liu === user) { return next(null, true); }
-    isFriend(keyspace, liu, user, next);
   }
 
   function getFriends (keyspace, liu, user, next) {
@@ -227,8 +256,9 @@ module.exports = function (client, messaging, keyspace, api) {
     removeFriend: removeFriend,
     isFriend: isFriend,
     acceptFriendRequest: acceptFriendRequest,
-    canSeePrivate: canSeePrivate,
+    userCanSeeItem: userCanSeeItem,
     getFriend: getFriend,
+    getFriendFromObject: getFriendFromObject,
     getFriends: getFriends,
     getFriendsByName: getFriendsByName,
     getFriendRequest: getFriendRequest,

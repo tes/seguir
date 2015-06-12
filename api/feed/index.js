@@ -17,7 +17,7 @@ var DEFAULT_LIMIT = 50;
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -201,6 +201,73 @@ module.exports = function (client, messaging, keyspace, api) {
     _getFeed(keyspace, liu, 'user_timeline', user, from, limit, 'raw-reverse', next);
   }
 
+  /**
+   * A collection of helpers based on type that will expand an item in the feed
+   */
+  var silentlyDropError = function (err, item, next) {
+    if (err && (err.statusCode === 403 || err.statusCode === 404)) {
+      next(); // Silently drop posts from the feed
+    } else {
+      if (err) { return next(err); }
+      next(null, item);
+    }
+  };
+
+  function expandPost (keyspace, liu, item, cb) {
+    var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
+    if (postObject) {
+      api.post.getPostFromObject(keyspace, liu, postObject, function (err, post) {
+        silentlyDropError(err, post, cb);
+      });
+    } else {
+      api.post.getPost(keyspace, liu, item.item, function (err, post) {
+        silentlyDropError(err, post, cb);
+      });
+    }
+  }
+
+  function expandLike (keyspace, liu, item, cb) {
+    var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
+    if (likeObject) {
+      api.like.getLikeFromObject(keyspace, likeObject, cb);
+    } else {
+      api.like.getLike(keyspace, item.item, cb);
+    }
+  }
+
+  function expandFollow (keyspace, liu, item, cb) {
+    var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
+    if (followObject) {
+      api.follow.getFollowFromObject(keyspace, liu, followObject, function (err, follow) {
+        silentlyDropError(err, follow, cb);
+      });
+    } else {
+      api.follow.getFollow(keyspace, liu, item.item, function (err, follow) {
+        silentlyDropError(err, follow, cb);
+      });
+    }
+  }
+
+  function expandFriend (keyspace, liu, item, cb) {
+    var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
+    if (friendObject) {
+      api.friend.getFriendFromObject(keyspace, liu, friendObject, function (err, friend) {
+        silentlyDropError(err, friend, cb);
+      });
+    } else {
+      api.friend.getFriend(keyspace, liu, item.item, function (err, friend) {
+        silentlyDropError(err, friend, cb);
+      });
+    }
+  }
+
+  var feedExpanders = {
+    'post': expandPost,
+    'like': expandLike,
+    'follow': expandFollow,
+    'friend': expandFriend
+  };
+
   function _getFeed (keyspace, liu, timeline, user, from, limit, raw, next) {
 
     if (!next) {
@@ -249,39 +316,12 @@ module.exports = function (client, messaging, keyspace, api) {
 
         async.map(timeline, function (item, cb) {
 
-          if (item.type === 'post') {
-            return api.post.getPost(keyspace, liu, item.item, function (err, post) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop posts from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, post);
-              }
-            });
+          var expander = feedExpanders[item.type];
+          if (expander) {
+            return expander(keyspace, liu, item, cb);
+          } else {
+            console.log('Unable to expand unknown feed item type: ' + item.type);
           }
-          if (item.type === 'like') { return api.like.getLike(keyspace, item.item, cb); }
-          if (item.type === 'friend') {
-            return api.friend.getFriend(keyspace, liu, item.item, function (err, friend) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop these from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, friend);
-              }
-            });
-          }
-          if (item.type === 'follow') {
-            return api.follow.getFollow(keyspace, liu, item.item, function (err, follow) {
-              if (err && (err.statusCode === 403 || err.statusCode === 404)) {
-                cb(); // Silently drop private items from the feed
-              } else {
-                if (err) { return cb(err); }
-                cb(null, follow);
-              }
-            });
-          }
-
-          return cb();
 
         }, function (err, results) {
 
@@ -296,6 +336,7 @@ module.exports = function (client, messaging, keyspace, api) {
               var currentResult = result;
 
               // Copy elements from feed
+              currentResult._item = timeline[index].item;
               currentResult.type = timeline[index].type;
               currentResult.timeuuid = timeline[index].time;
               currentResult.date = timeline[index].date;

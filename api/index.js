@@ -22,13 +22,13 @@ module.exports = function (config, next) {
     api.config = config;
     api.messaging = messaging;
     api.auth = auth(client, messaging, keyspace, api);
-    api.common = common(client, messaging, keyspace, api);
-    api.follow = follow(client, messaging, keyspace, api);
-    api.feed = feed(client, messaging, keyspace, api);
-    api.friend = friend(client, messaging, keyspace, api);
-    api.like = like(client, messaging, keyspace, api);
-    api.post = post(client, messaging, keyspace, api);
-    api.user = user(client, messaging, keyspace, api);
+    api.common = common(client, messaging, api);
+    api.follow = follow(client, messaging, api);
+    api.feed = feed(client, messaging, api);
+    api.friend = friend(client, messaging, api);
+    api.like = like(client, messaging, api);
+    api.post = post(client, messaging, api);
+    api.user = user(client, messaging, api);
     next(null, api);
 
   });

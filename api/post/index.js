@@ -8,7 +8,7 @@
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -63,28 +63,22 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
+  function getPostFromObject (keyspace, liu, postObject, next) {
+    api.friend.userCanSeeItem(keyspace, liu, postObject, ['user'], function (err) {
+      if (err) { return next(err); }
+      postObject.content = api.common.convertContentFromCassandra(postObject.content, postObject.content_type);
+      api.user.mapUserIdToUser(keyspace, postObject, ['user', 'user_follower'], postObject.user, next);
+    });
+  }
+
   function getPost (keyspace, liu, post, next) {
-
-    var mapUserField = function (post) {
-      api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], post.user, next);
-    };
-
     api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
       post.content = api.common.convertContentFromCassandra(post.content, post.content_type);
-      if (post.ispersonal) {
-        if (liu.toString() !== post.user.toString()) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-        return mapUserField(post);
-      }
-      if (post.isprivate) {
-        api.friend.canSeePrivate(keyspace, liu, post.user, function (err, canSee) {
-          if (err) { return next(err); }
-          if (!canSee) { return next(api.common.error(403, 'You are not allowed to see this item.')); }
-          return mapUserField(post);
-        });
-      } else {
-        mapUserField(post);
-      }
+      api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+        if (err) { return next(err); }
+        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);
+      });
     });
   }
 
@@ -92,7 +86,8 @@ module.exports = function (client, messaging, keyspace, api) {
     addPost: addPost,
     addPostByName: addPostByName,
     removePost: removePost,
-    getPost: getPost
+    getPost: getPost,
+    getPostFromObject: getPostFromObject
   };
 
 };

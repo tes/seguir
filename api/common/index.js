@@ -1,6 +1,7 @@
 var sanitizeHtml = require('sanitize-html');
+var _ = require('lodash');
 
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -62,13 +63,29 @@ module.exports = function (client, messaging, keyspace, api) {
     }
   }
 
+  function expandEmbeddedObject (item, field, test, ignore) {
+    var prefix = field + '_', testField = prefix + test;
+    if (item[testField]) {
+      var embed = {};
+      _.forOwn(item, function (value, key) {
+        if (key.indexOf(prefix) === 0 && !_.contains(ignore, key)) {
+          var embedKey = key.replace(prefix, '');
+          embed[embedKey] = value;
+          delete item[key];
+        }
+      });
+      return embed;
+    }
+  }
+
   return {
     error: error,
     get: get,
     response: response,
     clean: clean,
     convertContentToCassandra: convertContentToCassandra,
-    convertContentFromCassandra: convertContentFromCassandra
+    convertContentFromCassandra: convertContentFromCassandra,
+    expandEmbeddedObject: expandEmbeddedObject
   };
 
 };

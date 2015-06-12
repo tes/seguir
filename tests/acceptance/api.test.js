@@ -192,6 +192,7 @@ databases.forEach(function (db) {
 
       it('can not retrieve details of a friendship for someone that you are not friends with', function (done) {
         api.friend.getFriend(keyspace, users[0].user, otherFriendId, function (err, friend) {
+          console.dir(friend);
           expect(err.message).to.be('You are not allowed to see this item.');
           done();
         });

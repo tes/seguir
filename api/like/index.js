@@ -8,7 +8,7 @@
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, keyspace, api) {
+module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
@@ -47,6 +47,10 @@ module.exports = function (client, messaging, keyspace, api) {
     });
   }
 
+  function getLikeFromObject (keyspace, likeObject, next) {
+    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], undefined, next);
+  }
+
   function getLike (keyspace, like, next) {
     api.common.get(keyspace, 'selectLike', [like], 'one', function (err, result) {
       if (err) { return next(err); }
@@ -66,6 +70,7 @@ module.exports = function (client, messaging, keyspace, api) {
     addLikeByName: addLikeByName,
     removeLike: removeLike,
     getLike: getLike,
+    getLikeFromObject: getLikeFromObject,
     checkLike: checkLike
   };
 
