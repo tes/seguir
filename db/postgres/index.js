@@ -19,7 +19,7 @@ function createClient (config, next) {
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
-        next(null, result.rows[0]);
+        next(null, result && result.rows ? result.rows[0] : null);
       });
     });
   }
@@ -33,7 +33,7 @@ function createClient (config, next) {
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
-        next(null, result.rows);
+        next(null, result && result.rows ? result.rows : null);
       });
     });
   }
