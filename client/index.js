@@ -344,7 +344,7 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  */
 
 /**
- * @api {function} followUser(liu,user_to_follow,timestamp,isprivate,ispersonal,next) followUser
+ * @api {function} followUser(liu,user_to_follow,timestamp,isprivate,ispersonal,backfill,next) followUser
  * @apiName followUser
  * @apiGroup Following
  * @apiVersion 1.0.0
