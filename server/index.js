@@ -362,6 +362,7 @@ function bootstrapServer (api, next) {
    * @apiDescription Creates a new post, by default all new posts are public, and so can be seen by all users.
    * @apiParam {String} user of the user
    * @apiParam {String} content of the post
+   * @apiParam {String} content_type the type of content in content, use application/json for json data, defaults to text/html
    * @apiParam {Timestamp} timestamp the time that the post occurred
    * @apiParam {Boolean} private is the post private, e.g. only for friends
    * @apiParam {Boolean} private is the post personal, e.g. only for you
