@@ -355,6 +355,7 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
+ * @apiParam {String} backfill amount of time to backfill posts from the followed users direct feed - use moment duration format e.g. '1d'
  * @apiParam {Function} next callback
  * @apiUse followUserSuccessExample
  */
