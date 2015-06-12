@@ -59,7 +59,7 @@ module.exports = function (client, messaging, api) {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
         api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), isprivate, ispersonal, function (err) {
           if (err) { return cb(err); }
-          api.feed.seedFeed(keyspace, user, userToFollow, backfill, cb);
+          api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, cb);
         });
       }, function (err) {
         if (err) { return next(err); }

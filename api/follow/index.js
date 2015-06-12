@@ -14,7 +14,8 @@ module.exports = function (client, messaging, api) {
 
   var q = client.queries;
 
-  function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, next) {
+  function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, backfill, next) {
+    if (!next) { next = backfill; backfill = null; }
     var follow = client.generateId();
     var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
@@ -30,7 +31,14 @@ module.exports = function (client, messaging, api) {
           ispersonal: ispersonal,
           timestamp: timestamp
         };
-        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, next);
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
+          if (err) return next(err);
+          if (!backfill) return next(null, follow);
+          api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+            if (err) return next(err);
+            return next(null, follow);
+          });
+        });
       });
     });
   }

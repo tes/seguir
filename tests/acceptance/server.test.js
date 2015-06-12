@@ -718,6 +718,23 @@ databases.forEach(function (db) {
 
       });
 
+      it('can optionally backfill a follow relationship and automatically populate their feed', function (done) {
+
+        client.addUser(null, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
+          expect(err).to.be(null);
+          client.followUser(user.user, users[0].user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+            expect(err).to.be(null);
+            client.getFeed(user.user, user.user, null, 50, function (err, feed) {
+              expect(err).to.be(null);
+              expect(feed.feed[0].follow).to.eql(follow.follow);
+              expect(feed.feed[1].post).to.eql(postId);
+              done();
+            });
+          });
+        });
+
+      });
+
     });
 
   });

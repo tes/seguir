@@ -386,7 +386,7 @@ module.exports = function (client, messaging, api) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
         if (item.type !== 'post' || item.ispersonal || item.isprivate) return cb();
-        upsertTimeline(keyspace, 'feed_timeline', user.user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
+        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
       }, next);
     });
 

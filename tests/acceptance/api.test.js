@@ -192,7 +192,6 @@ databases.forEach(function (db) {
 
       it('can not retrieve details of a friendship for someone that you are not friends with', function (done) {
         api.friend.getFriend(keyspace, users[0].user, otherFriendId, function (err, friend) {
-          console.dir(friend);
           expect(err.message).to.be('You are not allowed to see this item.');
           done();
         });
@@ -712,7 +711,7 @@ databases.forEach(function (db) {
 
     });
 
-    describe('initialising users', function () {
+    describe('initialising users and follows', function () {
 
       it('can optionally initialise a user with a follow relationship and automatically populate their feed', function (done) {
 
@@ -731,6 +730,23 @@ databases.forEach(function (db) {
             expect(err).to.be(null);
             expect(feed[0].post).to.eql(postId);
             done();
+          });
+        });
+
+      });
+
+      it('can optionally backfill a follow relationship and automatically populate their feed', function (done) {
+
+        api.user.addUser(keyspace, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
+          expect(err).to.be(null);
+          api.follow.addFollower(keyspace, users[0].user, user.user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+            expect(err).to.be(null);
+            api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+              expect(err).to.be(null);
+              expect(feed[0].follow).to.eql(follow.follow);
+              expect(feed[1].post).to.eql(postId);
+              done();
+            });
           });
         });
 
