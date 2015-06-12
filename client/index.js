@@ -189,38 +189,19 @@ Seguir.prototype.addUser = function (liu, username, altid, userdata, initialise,
 };
 
 /**
- * @api {function} addUser(liu,username,altid,userdata,next) addUser
+ * @api {function} updateUser(liu,username,altid,userdata,next) updateUser
  * @apiName addUser
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
- * @apiDescription Creates a new user.
+ * @apiDescription Updates an existing user.
  * @apiParam {String} liu the id of the current logged in user [not used]
  * @apiParam {String} username the username
  * @apiParam {String} altid the local / alternate id
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
- * @apiParam {Object} initialise
- *
- *  Configuration that allows you to initialise a users feed
- *
- *  This can be json data of the following type:
- *
- *     {
-        follow: {
-          users: ['tes', 'cliftonc'],
-          backfill: '1d',
-          isprivate: false,
-          ispersonal: true
-        }
-      }
-
-    Users array should be user id's or names.
-    Backfill is a view of a time period that moment.js will accept as subtraction (when split).
-    isprivate / ispersonal reflects the other typical privacy settings in seguir
- *
  * @apiParam {Function} next callback
  *
- * @apiUse addUserSuccessExample
+ * @apiUse updateUserSuccessExample
  */
 Seguir.prototype.updateUser = function (liu, user, username, altid, userdata, next) {
   var self = this;
