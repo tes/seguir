@@ -17,11 +17,11 @@ module.exports = function (client, messaging, api) {
 
     // Parse and re-parse the input content, this catches any errors and ensures we don't
     // persist broken data that will subsequently break the feed
-    var cassandraContent = api.common.convertContentToCassandra(content, content_type);
-    var originalContent = api.common.convertContentFromCassandra(cassandraContent, content_type);
+    var convertedContent = api.common.convertContentToString(content, content_type);
+    var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
-    var data = [post, user, cassandraContent, content_type, timestamp, isprivate, ispersonal];
+    var data = [post, user, convertedContent, content_type, timestamp, isprivate, ispersonal];
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
@@ -66,7 +66,7 @@ module.exports = function (client, messaging, api) {
   function getPostFromObject (keyspace, liu, postObject, next) {
     api.friend.userCanSeeItem(keyspace, liu, postObject, ['user'], function (err) {
       if (err) { return next(err); }
-      postObject.content = api.common.convertContentFromCassandra(postObject.content, postObject.content_type);
+      postObject.content = api.common.convertContentFromString(postObject.content, postObject.content_type);
       api.user.mapUserIdToUser(keyspace, postObject, ['user', 'user_follower'], postObject.user, next);
     });
   }
@@ -74,7 +74,7 @@ module.exports = function (client, messaging, api) {
   function getPost (keyspace, liu, post, next) {
     api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
       if (err) { return next(err); }
-      post.content = api.common.convertContentFromCassandra(post.content, post.content_type);
+      post.content = api.common.convertContentFromString(post.content, post.content_type);
       api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
         if (err) { return next(err); }
         api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);

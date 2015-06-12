@@ -35,7 +35,7 @@ module.exports = function (client, messaging, api) {
 
   // Deal with any content conversion to persist in cassandra
   // While not too many options will just switch
-  function convertContentToCassandra (content, content_type) {
+  function convertContentToString (content, content_type) {
     switch (content_type) {
       case 'application/json':
         if (typeof content === 'object') {
@@ -48,7 +48,7 @@ module.exports = function (client, messaging, api) {
   }
 
   // Deal with any content conversion when retrieving from cassandra
-  function convertContentFromCassandra (content, content_type) {
+  function convertContentFromString (content, content_type) {
     switch (content_type) {
       case 'application/json':
         var json;
@@ -83,8 +83,8 @@ module.exports = function (client, messaging, api) {
     get: get,
     response: response,
     clean: clean,
-    convertContentToCassandra: convertContentToCassandra,
-    convertContentFromCassandra: convertContentFromCassandra,
+    convertContentToString: convertContentToString,
+    convertContentFromString: convertContentFromString,
     expandEmbeddedObject: expandEmbeddedObject
   };
 
