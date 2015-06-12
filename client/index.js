@@ -190,7 +190,7 @@ Seguir.prototype.addUser = function (liu, username, altid, userdata, initialise,
 
 /**
  * @api {function} updateUser(liu,username,altid,userdata,next) updateUser
- * @apiName addUser
+ * @apiName updateUser
  * @apiGroup Users
  * @apiVersion 1.0.0
  *
