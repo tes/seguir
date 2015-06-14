@@ -24,7 +24,7 @@ databases.forEach(function (db) {
   describe('Seguir Social Server / Client API - ' + db, function () {
 
     this.timeout(10000);
-    this.slow(2000);
+    this.slow(5000);
 
     var api, auth, users = [], liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, seguirServer, client, samples = [];
 
@@ -50,23 +50,34 @@ databases.forEach(function (db) {
     }
 
     before(function (done) {
-      this.timeout(5000);
+      process.stdout.write('Setting up Seguir for test ...\n');
+      process.stdout.write('API: ');
       Api(config, function (err, seguirApi) {
+        process.stdout.write('✓'.green + '\n');
         expect(err).to.be(null);
         api = seguirApi;
         auth = api.auth;
+        process.stdout.write('Seguir: ');
         api.client.setup.setupSeguir(api.client, keyspace, function () {
+          process.stdout.write('✓'.green + '\n');
+          process.stdout.write('Account: ');
           auth.addAccount('test account', false, false, function (err, account) {
+            process.stdout.write('✓'.green + '\n');
             expect(err).to.be(null);
+            process.stdout.write('Application: ');
             auth.addApplication(account.account, 'test application', null, null, function (err, application) {
+              process.stdout.write('✓'.green + '\n');
               expect(err).to.be(null);
+              process.stdout.write('Server: ');
               startServer(config, function (err, server) {
+                process.stdout.write('✓'.green + '\n');
                 expect(err).to.be(null);
                 seguirServer = server;
                 server.listen(3001, function () {
                   credentials.appid = application.appid;
                   credentials.appsecret = application.appsecret;
                   client = new Seguir(credentials);
+                  process.stdout.write('.\n');
                   done();
                 });
               });

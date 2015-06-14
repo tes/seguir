@@ -16,11 +16,10 @@ describe('Worker Processing', function () {
 
   var api, users = [], postId, mentionPostId, followId;
 
-  this.timeout(5000);
-  this.slow(2000);
+  this.timeout(10000);
+  this.slow(5000);
 
   before(function (done) {
-    this.timeout(20000);
     Api(config, function (err, seguirApi) {
       expect(err).to.be(null);
       api = seguirApi;

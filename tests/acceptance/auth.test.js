@@ -20,8 +20,8 @@ databases.forEach(function (db) {
 
     var api, auth, accountId, userId, appId, tokenId;
 
-    this.timeout(5000);
-    this.slow(2000);
+    this.timeout(10000);
+    this.slow(5000);
 
     before(function (done) {
       Api(config, function (err, seguirApi) {

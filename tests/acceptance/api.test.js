@@ -19,12 +19,11 @@ databases.forEach(function (db) {
   describe('Social API - ' + db, function () {
 
     this.timeout(10000);
-    this.slow(2000);
+    this.slow(5000);
 
     var api, users = [], liu, postId, privatePostId, mentionPostId, followId, notFriendFollowId, likeId, friendId, reciprocalFriendId, otherFriendId, friendRequestId, privateFollowId, personalFollowId;
 
     before(function (done) {
-      this.timeout(20000);
       Api(config, function (err, seguirApi) {
         expect(err).to.be(null);
         api = seguirApi;
