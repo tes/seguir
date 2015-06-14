@@ -14,10 +14,16 @@ module.exports = function (client, options) {
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
-    if (verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
-    client.execute('DROP KEYSPACE ' + KEYSPACE, function (err) {
-      if (err && err.code === 8960) { return next(); }
-      return next(err);
+    client._client.connect(function () {
+      if (client._client.metadata.keyspaces[KEYSPACE]) {
+        if (verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
+        client.execute('DROP KEYSPACE ' + KEYSPACE, function (err) {
+          if (err && err.code === 8960) { return next(); }
+          return next(err);
+        });
+      } else {
+        return next();
+      }
     });
   }
 
