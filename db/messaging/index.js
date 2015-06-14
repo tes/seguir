@@ -5,7 +5,7 @@ var RSMQWorker = require('rsmq-worker');
 
 module.exports = function (config) {
 
-  if (!config || !config.redis) {
+  if (!config || !config.messaging) {
     return { enabled: false };
   }
 
@@ -76,8 +76,8 @@ module.exports = function (config) {
 
 function client (config) {
 
-  var redisConfig = config && config.redis ? config.redis : {};
-  redisConfig = _.defaults(config && config.redis || {}, { host: 'localhost', port: 6379, options: { } });
+  var redisConfig = config && config.messaging ? config.messaging : {};
+  redisConfig = _.defaults(config && config.messaging || {}, { host: 'localhost', port: 6379, options: { } });
   redisConfig.options.retry_max_delay = redisConfig.options.retry_max_delay || 10000;
 
   var redisClient = redis.createClient(redisConfig.port, redisConfig.host, redisConfig.options);

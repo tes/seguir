@@ -7,7 +7,7 @@
     "database": "postgres",
     "host": "127.0.0.1"
   },
-  "redis": {
+  "messaging": {
     "host": "127.0.0.1",
     "port": 6379
   }
