@@ -10,9 +10,10 @@ var _ = require('lodash');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, api) {
+module.exports = function (api) {
 
-  var q = client.queries;
+  var client = api.client,
+      q = client.queries;
 
   function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, backfill, next) {
     if (!next) { next = backfill; backfill = null; }

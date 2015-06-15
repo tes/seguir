@@ -1,9 +1,10 @@
 var sanitizeHtml = require('sanitize-html');
 var _ = require('lodash');
 
-module.exports = function (client, messaging, api) {
+module.exports = function (api) {
 
-  var q = client.queries;
+  var client = api.client,
+      q = client.queries;
 
   function error (code, message) {
     var err = new Error(message);

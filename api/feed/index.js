@@ -17,9 +17,11 @@ var DEFAULT_LIMIT = 50;
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, api) {
+module.exports = function (api) {
 
-  var q = client.queries;
+  var client = api.client,
+      messaging = api.messaging,
+      q = client.queries;
 
   function insertFollowersTimeline (item, next) {
     if (item.ispersonal) { return next(); }

@@ -12,9 +12,10 @@ var debug = require('debug')('seguir:user');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, api) {
+module.exports = function (api) {
 
-  var q = client.queries;
+  var client = api.client,
+      q = client.queries;
 
   function addUser (keyspace, username, altid, userdata, initialise, next) {
     if (!next) { next = initialise; initialise = null; }

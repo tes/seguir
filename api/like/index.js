@@ -8,9 +8,10 @@
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (client, messaging, api) {
+module.exports = function (api) {
 
-  var q = client.queries;
+  var client = api.client,
+      q = client.queries;
 
   function addLike (keyspace, user, item, timestamp, next) {
     var like = client.generateId();

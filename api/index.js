@@ -16,19 +16,26 @@ module.exports = function (config, next) {
     var feed = require('./feed');
     var friend = require('./friend');
     var follow = require('./follow');
+    var migrations = require('../db/migrations');
 
     var api = {};
     api.client = client;
     api.config = config;
     api.messaging = messaging;
-    api.auth = auth(client, messaging, keyspace, api);
-    api.common = common(client, messaging, api);
-    api.follow = follow(client, messaging, api);
-    api.feed = feed(client, messaging, api);
-    api.friend = friend(client, messaging, api);
-    api.like = like(client, messaging, api);
-    api.post = post(client, messaging, api);
-    api.user = user(client, messaging, api);
+
+    // Auth and migrations both run on core keyspace
+    api.auth = auth(keyspace, api);
+    api.migrations = migrations(keyspace, api);
+
+    // Other APIs get their keyspace with each api request
+    api.common = common(api);
+    api.follow = follow(api);
+    api.feed = feed(api);
+    api.friend = friend(api);
+    api.like = like(api);
+    api.post = post(api);
+    api.user = user(api);
+
     next(null, api);
 
   });
