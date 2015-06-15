@@ -30,7 +30,8 @@ var u = require('../api/urls');
       }
  */
 var defaults = {
-  host: 'http://localhost:3000'
+  host: 'http://localhost:3000',
+  rootpath: ''
 };
 
 function Seguir (options) {
@@ -45,6 +46,7 @@ function Seguir (options) {
   self.appsecret = options.appsecret;
 
   self.host = options.host || defaults.host;
+  self.rootpath = options.rootpath || defaults.rootpath;
 
   var clientConfig = {
     url: self.host,
@@ -61,21 +63,21 @@ function Seguir (options) {
  */
 Seguir.prototype.get = function (liu, apiPath, next) {
   var self = this;
-  self.client.get({path: apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
+  self.client.get({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
     next(err, obj);
   });
 };
 
 Seguir.prototype.post = function (liu, apiPath, data, next) {
   var self = this;
-  self.client.post({path: apiPath, headers: self.getHeaders(liu)}, data, function (err, req, res, obj) {
+  self.client.post({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, data, function (err, req, res, obj) {
     next(err, obj);
   });
 };
 
 Seguir.prototype.del = function (liu, apiPath, next) {
   var self = this;
-  self.client.del({path: apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
+  self.client.del({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
     next(err, obj);
   });
 };
