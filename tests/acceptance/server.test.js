@@ -50,6 +50,7 @@ databases.forEach(function (db) {
     }
 
     before(function (done) {
+      this.timeout(20000);
       process.stdout.write('Setting up Seguir for test ...\n');
       process.stdout.write('API: ');
       Api(config, function (err, seguirApi) {

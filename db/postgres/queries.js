@@ -11,6 +11,9 @@ var q = function (keyspace, name, data) {
   return st(queries[name], data);
 };
 
+queries.insertSchemaVersion = 'INSERT INTO {KEYSPACE}.schema_version (version, applied) VALUES ($1, $2)';
+queries.selectSchemaVersions = 'SELECT version, applied FROM {KEYSPACE}.schema_version ORDER BY version DESC';
+
 /**
  * @apiDefine ExamplePostgresAccounts
  */

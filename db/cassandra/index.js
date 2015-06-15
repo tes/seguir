@@ -3,18 +3,20 @@ var Uuid = cassandra.types.Uuid;
 var TimeUuid = cassandra.types.TimeUuid;
 
 var debug = require('debug')('seguir:cassandra');
+var debugDriver = require('debug')('seguir:cassandra:driver');
 
 function createClient (config, next) {
 
   var cassandraConfig = config && config.cassandra;
   var client = new cassandra.Client(cassandraConfig);
   client.on('log', function (level, className, message, furtherInfo) {
-    debug('log event: %s -- %s', level, message);
+    debugDriver('log event: %s -- %s', level, message);
   });
 
   function get (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    debug('get', query, data);
     client.execute(query, data, options, function (err, result) {
       if (err) { return next(err); }
       next(null, result && result.rows ? result.rows[0] : null);
@@ -24,6 +26,7 @@ function createClient (config, next) {
   function execute (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    debug('execute', query, data);
     client.execute(query, data, options, function (err, result) {
       if (err) { return next(err); }
       next(null, result && result.rows ? result.rows : null);

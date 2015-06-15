@@ -1,5 +1,7 @@
+var cassandra = require('cassandra-driver');
 var async = require('async');
 var _ = require('lodash');
+var q = require('../queries');
 var verbose = process.env.SEGUIR_DEBUG;
 
 /**
@@ -90,12 +92,20 @@ module.exports = function (client, options) {
 
   }
 
+   /* istanbul ignore next */
+  function initialiseSchemaVersion (next) {
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(1), new Date()], function (err) {
+      return next(err);
+    });
+  }
+
   return {
     dropKeyspace: dropKeyspace,
     createKeyspace: createKeyspace,
     createTables: createTables,
     createSecondaryIndexes: createSecondaryIndexes,
-    assertIndexes: assertIndexes
+    assertIndexes: assertIndexes,
+    initialiseSchemaVersion: initialiseSchemaVersion
   };
 
 };

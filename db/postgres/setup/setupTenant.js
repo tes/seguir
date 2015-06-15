@@ -14,6 +14,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate
    * this documentation, please read the 'parameters' reflects the columns in the tables.
    */
+  tables.push('CREATE TABLE ' + KEYSPACE + '.schema_version (version smallint, applied timestamp)');
 
   /**
    * @api {table} Users Users
@@ -158,7 +159,8 @@ function setup (client, keyspace, next) {
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
-    helpers.createSecondaryIndexes
+    helpers.createSecondaryIndexes,
+    helpers.initialiseSchemaVersion
   ], function (err, data) {
     /* istanbul ignore if */
     if (err) return next(err);

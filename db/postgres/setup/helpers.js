@@ -1,5 +1,6 @@
 var async = require('async');
 var debug = require('debug')('seguir:postgres');
+var q = require('../queries');
 
 /**
  *  Setup code follows below
@@ -48,11 +49,20 @@ module.exports = function (client, options) {
     }, next);
   }
 
+  /* istanbul ignore next */
+  function initialiseSchemaVersion (next) {
+    debug('Initialising schema version for ' + KEYSPACE + '...');
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [1, client.getTimestamp()], function (err) {
+      return next(err);
+    });
+  }
+
   return {
     dropKeyspace: dropKeyspace,
     createKeyspace: createKeyspace,
     createTables: createTables,
-    createSecondaryIndexes: createSecondaryIndexes
+    createSecondaryIndexes: createSecondaryIndexes,
+    initialiseSchemaVersion: initialiseSchemaVersion
   };
 
 };
