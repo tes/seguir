@@ -1,7 +1,7 @@
 /*eslint-env node, mocha */
 
 var expect = require('expect.js');
-var expand = require('../../api/common')({}).expandEmbeddedObject;
+var expand = require('../../api/common')({client: {}}).expandEmbeddedObject;
 
 describe('Embedded object expansion', function () {
 
