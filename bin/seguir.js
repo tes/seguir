@@ -81,6 +81,7 @@ configFn(function (err, config) {
       var tasks = {
         'Check current setup': checkSetup,
         'Initialise a new database instance': coreSetup,
+        'Check and apply database migrations': migration,
         'Add a new account, user and application': promptAccount,
         'List users for account': listUsers,
         'Add a new user to an account': addUser,
@@ -122,6 +123,11 @@ configFn(function (err, config) {
         }
         process.exit();
       });
+    }
+
+    function migration () {
+      console.log('TODO:  APPLY DB MIGRATIONS');
+      process.exit();
     }
 
     function listUsers () {

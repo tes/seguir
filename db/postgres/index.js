@@ -1,5 +1,6 @@
 var pg = require('pg');
 var uuid = require('node-uuid');
+var path = require('path');
 var debug = require('debug')('seguir:postgres');
 
 function createClient (config, next) {
@@ -70,6 +71,7 @@ function createClient (config, next) {
     isValidId: isValidId,
     formatId: formatId,
     getTimestamp: getTimestamp,
+    migrations: path.resolve(__dirname, 'migrations'),
     queries: require('./queries'),
     setup: require('./setup')
   });

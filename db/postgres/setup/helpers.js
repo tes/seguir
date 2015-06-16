@@ -52,7 +52,7 @@ module.exports = function (client, options) {
   /* istanbul ignore next */
   function initialiseSchemaVersion (next) {
     debug('Initialising schema version for ' + KEYSPACE + '...');
-    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [1, client.getTimestamp()], function (err) {
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [0, client.getTimestamp(), 'Initial version'], function (err) {
       return next(err);
     });
   }

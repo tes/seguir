@@ -14,7 +14,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * This section defines the various table structures used to store the data in Cassandra, as we are using apidoc to generate
    * this documentation, please read the 'parameters' reflects the columns in the tables.
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.schema_version (version varint, applied timestamp, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)');
 
   /**
    * @api {table} Users Users

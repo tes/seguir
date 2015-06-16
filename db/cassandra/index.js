@@ -1,7 +1,7 @@
 var cassandra = require('cassandra-driver');
 var Uuid = cassandra.types.Uuid;
 var TimeUuid = cassandra.types.TimeUuid;
-
+var path = require('path');
 var debug = require('debug')('seguir:cassandra');
 var debugDriver = require('debug')('seguir:cassandra:driver');
 
@@ -74,7 +74,7 @@ function createClient (config, next) {
   }
 
   function getTimestamp () {
-    return Date.now();
+    return new Date();
   }
 
   client.connect(function () {
@@ -89,6 +89,7 @@ function createClient (config, next) {
       isValidId: isValidId,
       formatId: formatId,
       getTimestamp: getTimestamp,
+      migrations: path.resolve(__dirname, 'migrations'),
       queries: require('./queries'),
       setup: require('./setup')
     });

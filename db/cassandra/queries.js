@@ -5,7 +5,7 @@ var queries = {};
  * Definitions of queries are referenced in the structure documentation in ../setup/index
  * They exist here so they can be kept up to date with the queries;
  */
-queries.insertSchemaVersion = 'INSERT INTO {KEYSPACE}.schema_version (version, applied) VALUES (?, ?)';
+queries.insertSchemaVersion = 'INSERT INTO {KEYSPACE}.schema_version (version, applied, description) VALUES (?, ?, ?)';
 queries.selectSchemaVersions = 'SELECT version, applied FROM {KEYSPACE}.schema_version';
 
 /**

@@ -10,7 +10,7 @@ function setup (client, keyspace, next) {
     'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',
     'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, appsecret text, account uuid, enabled boolean, PRIMARY KEY (appid))',
     'CREATE TABLE ' + keyspace + '.application_tokens (appid uuid, appkeyspace text, tokenid uuid,  tokensecret text, enabled boolean, PRIMARY KEY (tokenid))',
-    'CREATE TABLE ' + keyspace + '.schema_version (version varint, applied timestamp, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)'
+    'CREATE TABLE ' + keyspace + '.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)'
   ];
 
   var indexes = [

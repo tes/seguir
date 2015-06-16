@@ -94,7 +94,7 @@ module.exports = function (client, options) {
 
    /* istanbul ignore next */
   function initialiseSchemaVersion (next) {
-    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(1), new Date()], function (err) {
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(0), new Date(), 'Initial version'], function (err) {
       return next(err);
     });
   }
