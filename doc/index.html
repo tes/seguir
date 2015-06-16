@@ -94,7 +94,7 @@
     <section id="about" class="container content-section text-center">
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
-                <p>Seguir provides a backend for a simple social network, with persistence in Cassandra.  It is MIT licensed, with high test coverage (and getting higher) and code driven API docs. So, what can it do?</p>
+                <p>Seguir provides a backend for a simple social network, with persistence in Cassandra or Postgres.  It is MIT licensed, with high test coverage (and getting higher) and code driven API docs. So, what can it do?</p>
                 <ul class="about-list list-group">
                     <li class="list-group-item">Multi-tenant, manage application keys and secrets</li>
                     <li class="list-group-item">Command line client to let you manage the install and create applications</li>
@@ -140,7 +140,7 @@
                 <div class="col-lg-4">
                     <h3>Node API</h3>
                     <a href="https://github.com/cliftonc/seguir/blob/master/tests/acceptance/api.test.js" class="btn btn-default btn-lg">Example</a>
-                    <p class='api-text'>This is a raw API that you can require into your application, where your application will be interacting directly with cassandra.  This means no additional network hops but your app and the social features of Seguir will then need to scale together.</p>
+                    <p class='api-text'>This is a raw API that you can require into your application, where your application will be interacting directly with the database.  This means no additional network hops but your app and the social features of Seguir will then need to scale together.</p>
                 </div>
                 <div class="col-lg-4">
                     <h3>Rest API</h3>
