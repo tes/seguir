@@ -21,7 +21,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, like, 'like', false, false, timestamp, function (err, result) {
         if (err) { return next(err); }
-        var tempLike = {like: like, user: user, item: item, timestamp: timestamp};
+        var tempLike = {like: like, user: user, item: item, since: timestamp};
         api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);
       });
     });

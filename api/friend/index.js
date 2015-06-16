@@ -28,7 +28,7 @@ module.exports = function (api) {
           reciprocal: reciprocalFriend,
           user: user,
           user_friend: user_friend,
-          timestamp: timestamp
+          since: timestamp
         };
         api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], user, next);
       });
@@ -51,7 +51,7 @@ module.exports = function (api) {
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, timestamp: timestamp});
+      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp});
     });
   }
 

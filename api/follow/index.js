@@ -30,7 +30,7 @@ module.exports = function (api) {
           user_follower: user_follower,
           isprivate: isprivate,
           ispersonal: ispersonal,
-          timestamp: timestamp
+          since: timestamp
         };
         api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
           if (err) return next(err);

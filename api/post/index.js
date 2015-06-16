@@ -34,7 +34,7 @@ module.exports = function (api) {
           user: user,
           content: originalContent,
           content_type: content_type,
-          timestamp: timestamp,
+          posted: timestamp,
           isprivate: isprivate,
           ispersonal: ispersonal
         };
