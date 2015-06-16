@@ -5,10 +5,11 @@ var authUtils = require('./utils');
 var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'};
 var debug = require('debug')('seguir:auth');
 
-function Auth (keyspace, api) {
+function Auth (api) {
 
   var client = api.client,
       q = client.queries,
+      keyspace = api.config.keyspace,
       setupTenant = client.setup.setupTenant;
 
   /**
