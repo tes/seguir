@@ -126,8 +126,40 @@ configFn(function (err, config) {
     }
 
     function migration () {
-      console.log('TODO:  APPLY DB MIGRATIONS');
-      process.exit();
+      api.migrations.getMigrationsToApply(function (err, migrations) {
+        if (err) return error(err);
+        if (migrations.length === 0) {
+          console.log('No database migrations to apply - everything is up to date.');
+          return process.exit();
+        }
+        console.log('\nMigrations to apply:\n');
+        migrations.forEach(function (migration) {
+          console.log(migration.type.green + '[' + migration.keyspace.cyan + ']: ' + migration.version + ' ' + migration.description);
+        });
+        console.log('');
+        confirmMigration(migrations);
+      });
+    }
+
+    function confirmMigration (migrations) {
+      inquirer.prompt([
+        {
+          type: 'confirm',
+          message: 'Do you want to apply these migrations now?',
+          name: 'confirm'
+        }
+      ], function (confirm) {
+        if (confirm.confirm) {
+          api.migrations.applyMigrations(migrations, function (err) {
+            console.dir(err);
+            if (err) return error(err);
+            console.log('Database migrations complete.');
+            process.exit();
+          });
+        } else {
+          process.exit();
+        }
+      });
     }
 
     function listUsers () {
@@ -251,12 +283,12 @@ configFn(function (err, config) {
     function confirmReset (appid) {
       inquirer.prompt([
         {
-          type: 'confirrm',
+          type: 'confirm',
           message: 'This will modify the appsecret so that the application can no longer access seguir?',
           name: 'confirm'
         }
       ], function (confirm) {
-        if (confirm.confirm === 'y' || confirm.confirm === 'Y') {
+        if (confirm.confirm) {
           api.auth.updateApplicationSecret(appid, function (err, application) {
             if (!err) {
               console.log('Token updated, update the client application if you still want it to have access!');
@@ -276,12 +308,12 @@ configFn(function (err, config) {
     function coreSetup () {
       inquirer.prompt([
         {
-          type: 'confirrm',
+          type: 'confirm',
           message: 'This will DROP the existing keyspace if it already exists, are you sure you want to proceed?',
           name: 'confirm'
         }
       ], function (confirm) {
-        if (confirm.confirm === 'y' || confirm.confirm === 'Y') {
+        if (confirm.confirm) {
           api.client.setup.setupSeguir(api.client, config.keyspace, function () {
             console.log('Completed basic setup, you now need to create your first account and application.');
             promptAccount();
