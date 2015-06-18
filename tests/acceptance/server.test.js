@@ -274,7 +274,7 @@ databases.forEach(function (db) {
     describe('follows', function () {
 
       it('can add a follower who is a friend', function (done) {
-        client.followUser(users[1].user, liu, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[1].user, liu, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[1]);
@@ -285,7 +285,7 @@ databases.forEach(function (db) {
       });
 
       it('can add a follower who is not a friend', function (done) {
-        client.followUser(users[2].user, liu, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[2].user, liu, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[2]);
@@ -295,7 +295,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user who is not a friend', function (done) {
-        client.followUser(users[3].user, users[2].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[3].user, users[2].user, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[2]);
           expect(follow.user_follower).to.eql(users[3]);
@@ -340,7 +340,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and then remove a follower', function (done) {
-        client.followUser(users[3].user, users[4].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[3].user, users[4].user, false, false, function (err, follow) {
           expect(err).to.be(null);
           client.getFollowers(users[4].user, users[4].user, function (err, followers1) {
             expect(err).to.be(null);
@@ -734,7 +734,7 @@ databases.forEach(function (db) {
 
         client.addUser(null, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
           expect(err).to.be(null);
-          client.followUser(user.user, users[0].user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+          client.followUser(user.user, users[0].user, false, false, '1d', function (err, follow) {
             expect(err).to.be(null);
             client.getFeed(user.user, user.user, null, 50, function (err, feed) {
               expect(err).to.be(null);
