@@ -1,1 +1,1 @@
-{  "name": "seguir",  "version": "0.3.1",  "description": "Social network backend",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2015-06-16T13:38:53.538Z",    "url": "http://apidocjs.com",    "version": "0.13.1"  }}
+{  "name": "seguir",  "version": "0.3.2",  "description": "Social network backend",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2015-06-18T11:13:48.152Z",    "url": "http://apidocjs.com",    "version": "0.13.1"  }}
