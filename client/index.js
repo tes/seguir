@@ -289,7 +289,7 @@ Seguir.prototype.removeFriend = function (liu, user_friend, next) {
  */
 
 /**
- * @api {function} addFriendRequest(liu,user_friend,message,timestamp,next) addFriendRequest
+ * @api {function} addFriendRequest(liu,user_friend,message,next) addFriendRequest
  * @apiName addFriendRequest
  * @apiGroup FriendRequests
  * @apiVersion 1.0.0
@@ -298,7 +298,6 @@ Seguir.prototype.removeFriend = function (liu, user_friend, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_friend the id of the user to send a friend request to
  * @apiParam {String} message a message to leave with the request
- * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Function} next callback
  * @apiUse addFriendRequestSuccessExample
  */
@@ -346,7 +345,7 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  */
 
 /**
- * @api {function} followUser(liu,user_to_follow,timestamp,isprivate,ispersonal,backfill,next) followUser
+ * @api {function} followUser(liu,user_to_follow,isprivate,ispersonal,backfill,next) followUser
  * @apiName followUser
  * @apiGroup Following
  * @apiVersion 1.0.0
@@ -367,7 +366,7 @@ Seguir.prototype.followUser = function (liu, user_to_follow, isprivate, isperson
 };
 
 /**
- * @api {function} unFollowUser(liu,user_following,timestamp,next) unFollowUser
+ * @api {function} unFollowUser(liu,user_following,next) unFollowUser
  * @apiName unFollowUser
  * @apiGroup Following
  * @apiVersion 1.0.0
@@ -440,7 +439,7 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  */
 
 /**
- * @api {function} addPost(liu,content,timestamp,isprivate,ispersonal,next) addPost
+ * @api {function} addPost(liu,content,posted,isprivate,ispersonal,next) addPost
  * @apiName addPost
  * @apiGroup Posts
  * @apiVersion 1.0.0
