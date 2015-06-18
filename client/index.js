@@ -346,7 +346,7 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  */
 
 /**
- * @api {function} followUser(liu,user_to_follow,timestamp,isprivate,ispersonal,backfill,next) followUser
+ * @api {function} followUser(liu,user_to_follow,isprivate,ispersonal,backfill,next) followUser
  * @apiName followUser
  * @apiGroup Following
  * @apiVersion 1.0.0
@@ -354,21 +354,20 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  * @apiDescription Follow a user
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_to_follow the id of the user to follow
- * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
  * @apiParam {String} backfill amount of time to backfill posts from the followed users direct feed - use moment duration format e.g. '1d'
  * @apiParam {Function} next callback
  * @apiUse followUserSuccessExample
  */
-Seguir.prototype.followUser = function (liu, user_to_follow, timestamp, isprivate, ispersonal, backfill, next) {
+Seguir.prototype.followUser = function (liu, user_to_follow, isprivate, ispersonal, backfill, next) {
   var self = this;
   if (!next) { next = backfill; backfill = null; }
   self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, isprivate: isprivate, ispersonal: ispersonal, backfill: backfill}, next);
 };
 
 /**
- * @api {function} unFollowUser(liu,user_following,timestamp,next) unFollowUser
+ * @api {function} unFollowUser(liu,user_following,next) unFollowUser
  * @apiName unFollowUser
  * @apiGroup Following
  * @apiVersion 1.0.0
