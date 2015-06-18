@@ -363,7 +363,7 @@ function bootstrapServer (api, next) {
    * @apiParam {String} user of the user
    * @apiParam {String} content of the post
    * @apiParam {String} content_type the type of content in content, use application/json for json data, defaults to text/html
-   * @apiParam {Timestamp} timestamp the time that the post occurred
+   * @apiParam {Timestamp} posted the timestamp that the post occurred - default Date.now()
    * @apiParam {Boolean} private is the post private, e.g. only for friends
    * @apiParam {Boolean} private is the post personal, e.g. only for you
    * @apiUse addPostSuccessExample
@@ -382,11 +382,12 @@ function bootstrapServer (api, next) {
     }
     var isprivate = !!req.params.isprivate,
         ispersonal = !!req.params.ispersonal,
-        content_type = req.params.content_type || 'text/html';
+        content_type = req.params.content_type || 'text/html',
+        posted = api.client.getTimestamp(req.params.posted);
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.post.addPost(req.keyspace, user, req.params.content, content_type, api.client.getTimestamp(), isprivate, ispersonal, _response(res, next));
+      api.post.addPost(req.keyspace, user, req.params.content, content_type, posted, isprivate, ispersonal, _response(res, next));
     });
   });
 

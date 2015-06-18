@@ -302,9 +302,9 @@ Seguir.prototype.removeFriend = function (liu, user_friend, next) {
  * @apiParam {Function} next callback
  * @apiUse addFriendRequestSuccessExample
  */
-Seguir.prototype.addFriendRequest = function (liu, user_friend, message, timestamp, next) {
+Seguir.prototype.addFriendRequest = function (liu, user_friend, message, next) {
   var self = this;
-  self.post(liu, u('addFriendRequest'), {user_friend: user_friend, message: message, timestamp: timestamp}, next);
+  self.post(liu, u('addFriendRequest'), {user_friend: user_friend, message: message}, next);
 };
 
 /**
@@ -354,14 +354,13 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  * @apiDescription Follow a user
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_to_follow the id of the user to follow
- * @apiParam {Timestamp} timestamp time to leave the request
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
  * @apiParam {String} backfill amount of time to backfill posts from the followed users direct feed - use moment duration format e.g. '1d'
  * @apiParam {Function} next callback
  * @apiUse followUserSuccessExample
  */
-Seguir.prototype.followUser = function (liu, user_to_follow, timestamp, isprivate, ispersonal, backfill, next) {
+Seguir.prototype.followUser = function (liu, user_to_follow, isprivate, ispersonal, backfill, next) {
   var self = this;
   if (!next) { next = backfill; backfill = null; }
   self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, isprivate: isprivate, ispersonal: ispersonal, backfill: backfill}, next);
@@ -450,15 +449,15 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} content the id of the user to follow
  * @apiParam {String} content_type the content contained in content, use application/json for json data
- * @apiParam {Timestamp} timestamp time to leave the request
+ * @apiParam {Timestamp} posted the timestamp the post should appear to be created - use Date.now() for now
  * @apiParam {Boolean} isprivate is this visible only to friends
  * @apiParam {Boolean} ispersonal is this visible only to the user
  * @apiParam {Function} next callback
  * @apiUse addPostSuccessExample
  */
-Seguir.prototype.addPost = function (liu, content, content_type, timestamp, isprivate, ispersonal, next) {
+Seguir.prototype.addPost = function (liu, content, content_type, posted, isprivate, ispersonal, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, timestamp: timestamp, isprivate: isprivate, ispersonal: ispersonal}, next);
+  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, posted: posted, isprivate: isprivate, ispersonal: ispersonal}, next);
 };
 
 /**

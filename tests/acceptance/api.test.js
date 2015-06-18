@@ -360,6 +360,8 @@ databases.forEach(function (db) {
 
     describe('posts', function () {
 
+      var timestamp = new Date(1280296860145);
+
       it('can post a message from a user', function (done) {
         api.post.addPost(keyspace, users[0].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
@@ -370,11 +372,12 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can post a private message from a user', function (done) {
-        api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', 'text/html', api.client.getTimestamp(), true, false, function (err, post) {
+      it('can post a private message from a user with a specific timestamp', function (done) {
+        api.post.addPost(keyspace, users[0].user, 'Hello, this is a private post', 'text/html', timestamp, true, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users[0]);
+          expect(post.posted).to.eql(timestamp);
           privatePostId = post.post;
           done();
         });
@@ -401,6 +404,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users[0]);
+          expect(post.posted).to.eql(timestamp);
           done();
         });
       });
@@ -537,11 +541,11 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users[0].user, users[0].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           expect(feed[0].like).to.eql(likeId);
-          expect(feed[1].post).to.eql(privatePostId);
-          expect(feed[2].post).to.eql(postId);
-          expect(feed[3].follow).to.eql(notFriendFollowId);
-          expect(feed[4].follow).to.eql(followId);
-          expect(feed[5].friend).to.eql(friendId);
+          expect(feed[1].post).to.eql(postId);
+          expect(feed[2].follow).to.eql(notFriendFollowId);
+          expect(feed[3].follow).to.eql(followId);
+          expect(feed[4].friend).to.eql(friendId);
+          expect(feed[5].post).to.eql(privatePostId);
           done();
         });
       });
@@ -550,11 +554,11 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users[1].user, users[0].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           expect(feed[0].like).to.eql(likeId);
-          expect(feed[1].post).to.eql(privatePostId); //
-          expect(feed[2].post).to.eql(postId);
-          expect(feed[3].follow).to.eql(notFriendFollowId);
-          expect(feed[4].follow).to.eql(followId);
-          expect(feed[5].friend).to.eql(friendId);
+          expect(feed[1].post).to.eql(postId);
+          expect(feed[2].follow).to.eql(notFriendFollowId);
+          expect(feed[3].follow).to.eql(followId);
+          expect(feed[4].friend).to.eql(friendId);
+          expect(feed[5].post).to.eql(privatePostId); //
           done();
         });
       });
@@ -563,10 +567,11 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users[0].user, users[1].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           expect(feed[0].like).to.eql(likeId);
-          expect(feed[1].post).to.eql(privatePostId);
-          expect(feed[2].post).to.eql(postId);
-          expect(feed[3].follow).to.eql(notFriendFollowId);
-          expect(feed[4].follow).to.eql(followId);
+          expect(feed[1].post).to.eql(postId);
+          expect(feed[2].follow).to.eql(notFriendFollowId);
+          expect(feed[3].follow).to.eql(followId);
+          expect(feed[4].friend).to.eql(reciprocalFriendId);
+          expect(feed[5].post).to.eql(privatePostId);
           done();
         });
       });

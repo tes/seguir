@@ -186,7 +186,7 @@ databases.forEach(function (db) {
     describe('friend requests', function () {
 
       it('can create a friend request', function (done) {
-        client.addFriendRequest(users[0].user, users[1].user, 'Please be my friend', api.client.getTimestamp(), function (err, friend_request) {
+        client.addFriendRequest(users[0].user, users[1].user, 'Please be my friend', function (err, friend_request) {
           expect(err).to.be(null);
           expect(friend_request.user).to.be(users[0].user);
           expect(friend_request.user_friend).to.be(users[1].user);
@@ -250,7 +250,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and remove a friend', function (done) {
-        client.addFriendRequest(users[3].user, users[4].user, 'Please be my friend', api.client.getTimestamp(), function (err, friend_request) {
+        client.addFriendRequest(users[3].user, users[4].user, 'Please be my friend', function (err, friend_request) {
           expect(err).to.be(null);
           client.acceptFriendRequest(users[3].user, friend_request.friend_request, function (err, friend) {
             expect(err).to.be(null);
@@ -274,7 +274,7 @@ databases.forEach(function (db) {
     describe('follows', function () {
 
       it('can add a follower who is a friend', function (done) {
-        client.followUser(users[1].user, liu, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[1].user, liu, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[1]);
@@ -285,7 +285,7 @@ databases.forEach(function (db) {
       });
 
       it('can add a follower who is not a friend', function (done) {
-        client.followUser(users[2].user, liu, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[2].user, liu, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[0]);
           expect(follow.user_follower).to.eql(users[2]);
@@ -295,7 +295,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user who is not a friend', function (done) {
-        client.followUser(users[3].user, users[2].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[3].user, users[2].user, false, false, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users[2]);
           expect(follow.user_follower).to.eql(users[3]);
@@ -340,7 +340,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and then remove a follower', function (done) {
-        client.followUser(users[3].user, users[4].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        client.followUser(users[3].user, users[4].user, false, false, function (err, follow) {
           expect(err).to.be(null);
           client.getFollowers(users[4].user, users[4].user, function (err, followers1) {
             expect(err).to.be(null);
@@ -365,6 +365,8 @@ databases.forEach(function (db) {
 
     describe('posts', function () {
 
+      var timestamp = 1280296860145;
+
       it('can post a message from a user', function (done) {
         client.addPost(liu, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
           expect(err).to.be(null);
@@ -375,11 +377,12 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can post a private message from a user using their altid', function (done) {
-        client.addPost(liuAltId, 'Hello, this is a private post', 'text/html', api.client.getTimestamp(), true, false, function (err, post) {
+      it('can post a private message from a user using their altid with a specific timestamp', function (done) {
+        client.addPost(liuAltId, 'Hello, this is a private post', 'text/html', timestamp, true, false, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users[0]);
+          expect(api.client.getTimestamp(post.posted)).to.eql(api.client.getTimestamp(timestamp));
           privatePostId = post.post;
           done();
         });
@@ -407,6 +410,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users[0]);
+          expect(api.client.getTimestamp(post.posted)).to.eql(api.client.getTimestamp(timestamp));
           done();
         });
       });
@@ -513,11 +517,11 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[3].follow).to.be(followId);
+          expect(feed[4].friend).to.be(friendId);
+          expect(feed[5].post).to.be(privatePostId);
           addSample('getFeed', result);
           done();
         });
@@ -529,11 +533,11 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[3].follow).to.be(followId);
+          expect(feed[4].friend).to.be(friendId);
+          expect(feed[5].post).to.be(privatePostId);
           done();
         });
       });
@@ -544,11 +548,11 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[3].follow).to.be(followId);
+          expect(feed[4].friend).to.be(friendId);
+          expect(feed[5].post).to.be(privatePostId);
           done();
         });
       });
@@ -558,11 +562,11 @@ databases.forEach(function (db) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId); //
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
-          expect(feed[5].friend).to.be(friendId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[3].follow).to.be(followId);
+          expect(feed[4].friend).to.be(friendId);
+          expect(feed[5].post).to.be(privatePostId); //
           done();
         });
       });
@@ -572,10 +576,11 @@ databases.forEach(function (db) {
           var feed = result.feed;
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
-          expect(feed[2].post).to.be(postId);
-          expect(feed[3].follow).to.be(notFriendFollowId);
-          expect(feed[4].follow).to.be(followId);
+          expect(feed[1].post).to.be(postId);
+          expect(feed[2].follow).to.be(notFriendFollowId);
+          expect(feed[3].follow).to.be(followId);
+          expect(feed[4].friend).to.be(reciprocalFriendId);
+          expect(feed[5].post).to.be(privatePostId);
           done();
         });
       });
@@ -637,22 +642,22 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed).to.not.be(undefined);
           expect(feed[0].like).to.be(likeId);
-          expect(feed[1].post).to.be(privatePostId);
+          expect(feed[1].post).to.be(postId);
           var nextFrom = result.more;
           client.getFeed(users[0].user, users[0].user, nextFrom, 2, function (err, result2) {
             var feed2 = result2.feed;
             expect(err).to.be(null);
             expect(feed2).to.not.be(undefined);
-            expect(feed2[0].post).to.be(postId);
-            expect(feed2[1].follow).to.be(notFriendFollowId);
+            expect(feed2[0].follow).to.be(notFriendFollowId);
+            expect(feed2[1].follow).to.be(followId);
             nextFrom = result2.more;
             client.getFeed(users[0].user, users[0].user, nextFrom, 2, function (err, result3) {
               var feed3 = result3.feed;
               expect(err).to.be(null);
               expect(feed3).to.not.be(undefined);
               expect(result3.more).to.be(null);
-              expect(feed3[0].follow).to.be(followId);
-              expect(feed3[1].friend).to.be(friendId);
+              expect(feed3[0].friend).to.be(friendId);
+              expect(feed3[1].post).to.be(privatePostId);
               done();
             });
           });
@@ -734,7 +739,7 @@ databases.forEach(function (db) {
 
         client.addUser(null, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
           expect(err).to.be(null);
-          client.followUser(user.user, users[0].user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+          client.followUser(user.user, users[0].user, false, false, '1d', function (err, follow) {
             expect(err).to.be(null);
             client.getFeed(user.user, user.user, null, 50, function (err, feed) {
               expect(err).to.be(null);

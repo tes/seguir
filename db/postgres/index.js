@@ -49,8 +49,8 @@ function createClient (config, next) {
     return new Date();
   }
 
-  function getTimestamp () {
-    return new Date();
+  function getTimestamp (value) {
+    return value ? new Date(value) : new Date();
   }
 
   function isValidId (value) {

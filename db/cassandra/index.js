@@ -73,8 +73,8 @@ function createClient (config, next) {
     }
   }
 
-  function getTimestamp () {
-    return new Date();
+  function getTimestamp (value) {
+    return value ? new Date(value) : new Date();
   }
 
   client.connect(function () {
