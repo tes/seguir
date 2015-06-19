@@ -37,7 +37,12 @@ module.exports = function (url, data) {
     if (data) {
       var pattern = urls[url];
       _.keys(data).forEach(function (key) {
-        pattern = pattern.replace(':' + key, data[key] ? data[key] : null);
+        var item = data[key];
+        if (item) {
+          // Ensure item is URI encoded if it isn't already
+          item = decodeURIComponent(item) !== item ? item : encodeURIComponent(item);
+          pattern = pattern.replace(':' + key, item);
+        }
       });
       if (data.query) {
         pattern += '?' + data.query;

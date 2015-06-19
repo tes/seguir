@@ -114,7 +114,8 @@ databases.forEach(function (db) {
           {username: 'harold', altid: '5'},
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
-          {username: 'json', altid: '8'}
+          {username: 'json', altid: '8'},
+          {username: 'evil &user <alert>name</alert>', altid: '9'}
         ], function (user, cb) {
           client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
         }, function (err, results) {
@@ -146,12 +147,12 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can retrieve a user by name', function (done) {
-        client.getUserByName(null, 'cliftonc', function (err, user) {
+      it('can retrieve a user by name even if it has invalid url encoded characters', function (done) {
+        client.getUserByName(null, 'evil &user <alert>name</alert>', function (err, user) {
           expect(err).to.be(null);
-          expect(user.user).to.be(users[0].user);
-          expect(user.username).to.be(users[0].username);
-          addSample('getUserByName', users[0]);
+          expect(user.user).to.be(users[8].user);
+          expect(user.username).to.be(users[8].username);
+          addSample('getUserByName', users[8]);
           done();
         });
       });
