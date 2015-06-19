@@ -1,6 +1,8 @@
 var restify = require('restify');
 var u = require('../api/urls');
 var bunyan = require('bunyan');
+var _ = require('lodash');
+
 var defaultLogger = bunyan.createLogger({
     name: 'seguir',
     serializers: restify.bunyan.serializers
@@ -33,10 +35,12 @@ function bootstrapServer (api, config, next) {
     default: 'index.html'
   }));
 
-  server.get('/status', api.auth.checkRequest, function (req, res, cb) {
+  server.get('/status', function (req, res, cb) {
     api.auth.getAccounts(function (err, accounts) {
       if (err) { return _error(err); }
-      res.send({status: 'OK', config: api.config, accounts: accounts});
+      var statusConfig = _.clone(config);
+      delete statusConfig.logger;
+      res.send({status: 'OK', config: statusConfig, accounts: accounts});
       cb();
     });
   });
