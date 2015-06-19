@@ -198,7 +198,7 @@ function Auth (api) {
         user = req.headers[userHeader];
 
     if (!appAuthorization) {
-      return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.'));
+      return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
     }
 
     var appId = appAuthorization.split(':')[0].split(' ')[1],
@@ -208,18 +208,20 @@ function Auth (api) {
 
       checkApplication(appId, function (err, application) {
 
-        if (err) { return res.send(err); }
-        if (!application) { return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.')); }
+        if (err) { return next(err); }
+        if (!application) {
+          return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
+        }
 
         if (authUtils.validateAuthorization(req.headers, application.appid, application.appsecret)) {
           req.keyspace = keyspace + '_' + application.appkeyspace;
           checkUser(req.keyspace, user, function (err, user) {
-            if (err) { return res.send(err); }
+            if (err) { return next(err); }
             req.liu = user;
             next(null);
           });
         } else {
-          return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.'));
+          return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
         }
 
       });
@@ -228,18 +230,20 @@ function Auth (api) {
 
       checkApplicationToken(appId, function (err, token) {
 
-        if (err) { return res.send(err); }
-        if (!user || !token) { return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.')); }
+        if (err) { return next(err); }
+        if (!user || !token) {
+          return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
+        }
 
         if (authUtils.validateAuthorization(req.headers, token.tokenid, token.tokensecret)) {
           req.keyspace = keyspace + '_' + token.appkeyspace;
           checkUser(req.keyspace, user, function (err, user) {
-            if (err) { return res.send(err); }
+            if (err) { return next(err); }
             req.liu = user;
             next(null);
           });
         } else {
-          return res.send(new Error('You must provide an valid Authorization header to access seguir the seguir API.'));
+          return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
         }
 
       });
