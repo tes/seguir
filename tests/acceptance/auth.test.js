@@ -370,13 +370,12 @@ databases.forEach(function (db) {
         };
         var response = {
           send: function (response) {
-            expect(response.message).to.be('You must provide an valid Authorization header to access seguir the seguir API.');
-            done();
           }
         };
         auth.checkRequest(request, response, function (err) {
           // Not called
-          expect(err).to.be(null);
+          expect(err.message).to.be('You must provide an valid Authorization header to access seguir the seguir API.');
+          done();
         });
       });
 
