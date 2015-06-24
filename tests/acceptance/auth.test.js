@@ -7,9 +7,8 @@
 var expect = require('expect.js');
 var Api = require('../../api');
 var _ = require('lodash');
-var databases = ['postgres', 'cassandra'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 var keyspace = 'test_seguir_auth';
-var _ = require('lodash');
 
 databases.forEach(function (db) {
 
