@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -16,10 +18,14 @@ module.exports = function (api) {
   function addLike (keyspace, user, item, timestamp, next) {
     var like = client.generateId();
     var data = [like, user, api.common.clean(item), timestamp];
+    var object = _.object(['like', 'user', 'item', 'timestamp'], data);
+    object.ispersonal = false;
+    object.isprivate = false;
+
     client.execute(q(keyspace, 'upsertLike'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, like, 'like', false, false, timestamp, function (err, result) {
+      api.feed.addFeedItem(keyspace, user, object, 'like', function (err, result) {
         if (err) { return next(err); }
         var tempLike = {like: like, user: user, item: item, since: timestamp};
         api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);

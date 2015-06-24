@@ -37,10 +37,14 @@ module.exports = function (api) {
 
   function addFriendOneWay (keyspace, friend, user, user_friend, timestamp, next) {
     var data = [friend, user, user_friend, timestamp];
+    var object = _.object(['friend', 'user', 'user_friend', 'timestamp'], data);
+    object.ispersonal = false;
+    object.isprivate = true;
+
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, friend, 'friend', true, false, timestamp, next);
+      api.feed.addFeedItem(keyspace, user, object, 'friend', next);
     });
   }
 
