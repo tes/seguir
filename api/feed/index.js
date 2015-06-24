@@ -23,17 +23,17 @@ module.exports = function (api) {
       messaging = api.messaging,
       q = client.queries;
 
-  function insertFollowersTimeline (item, next) {
-    if (item.ispersonal) { return next(); }
-    client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
+  function insertFollowersTimeline (jobData, next) {
+    if (jobData.ispersonal) { return next(); }
+    client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb2) {
-        var followIsPrivate = item.isprivate, followIsPersonal = item.ispersonal;
-        api.friend.isFriend(item.keyspace, row.user, row.user_follower, function (err, isFriend) {
+        var followIsPrivate = jobData.isprivate, followIsPersonal = jobData.ispersonal;
+        api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
-          if (!item.isprivate || (item.isprivate && isFriend)) {
-            upsertTimeline(item.keyspace, 'feed_timeline', row.user_follower, item.item, item.type, client.generateTimeId(item.timestamp), followIsPrivate, followIsPersonal, cb2);
+          if (!jobData.isprivate || (jobData.isprivate && isFriend)) {
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, followIsPrivate, followIsPersonal, cb2);
           } else {
             cb2();
           }
@@ -42,10 +42,10 @@ module.exports = function (api) {
     });
   }
 
-  function insertMentionedTimeline (item, next) {
+  function insertMentionedTimeline (jobData, next) {
 
     var getPost = function (cb) {
-      api.post.getPost(item.keyspace, item.user, item.item, function (err, post) {
+      api.post.getPost(jobData.keyspace, jobData.user, jobData.id, function (err, post) {
         if (err || !post || post.content_type !== 'text/html') return cb();
         cb(null, post.content);
       });
@@ -59,11 +59,11 @@ module.exports = function (api) {
           return user.replace('@', '');
         });
         async.map(users, function (username, cb2) {
-          api.user.getUserByName(item.keyspace, username, function (err, mentionedUser) {
+          api.user.getUserByName(jobData.keyspace, username, function (err, mentionedUser) {
             if (err || !mentionedUser) {
               return cb2();
             }
-            api.friend.isFriend(item.keyspace, mentionedUser.user, item.user, function (err, isFriend) {
+            api.friend.isFriend(jobData.keyspace, mentionedUser.user, jobData.user, function (err, isFriend) {
               if (err) return cb2(err);
               mentionedUser.isFriend = isFriend;
               cb2(null, mentionedUser);
@@ -77,13 +77,13 @@ module.exports = function (api) {
 
     var getMentionedNotFollowers = function (mentioned, cb) {
       if (!cb) { return mentioned(); } // no mentioned users
-      client.execute(q(item.keyspace, 'selectFollowers'), [item.user], {prepare: true}, function (err, data) {
+      client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
         if (err) { return cb(err); }
         var followers = _.map(_.pluck(data || [], 'user_follower'), function (item) {
           return item.toString();
         });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
-          return !(_.contains(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === item.user.toString());
+          return !(_.contains(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === jobData.user.toString());
         });
         cb(null, mentionedNotFollowers);
       });
@@ -92,8 +92,8 @@ module.exports = function (api) {
     var insertMentioned = function (users, cb) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
-        if (!item.isprivate || (item.isprivate && mentionedUser.isFriend)) {
-          upsertTimeline(item.keyspace, 'feed_timeline', mentionedUser.user, item.item, item.type, client.generateTimeId(item.timestamp), item.isprivate, item.ispersonal, cb2);
+        if (!jobData.isprivate || (jobData.isprivate && mentionedUser.isFriend)) {
+          upsertTimeline(jobData.keyspace, 'feed_timeline', mentionedUser.user, jobData.id, jobData.type, client.generateTimeId(jobData.timestamp), jobData.isprivate, jobData.ispersonal, cb2);
         } else {
           cb2();
         }
@@ -109,19 +109,20 @@ module.exports = function (api) {
 
   }
 
-  function addFeedItem (keyspace, user, item, type, isprivate, ispersonal, timestamp, next) {
+  function addFeedItem (keyspace, user, object, type, next) {
 
     var jobData = {
       keyspace: keyspace,
       user: user,
-      item: item,
+      object: object,
+      id: object[type],
       type: type,
-      isprivate: isprivate,
-      ispersonal: ispersonal,
-      timestamp: timestamp
+      timestamp: client.generateTimeId(object.timestamp),
+      isprivate: object.isprivate,
+      ispersonal: object.ispersonal
     };
 
-    debug('Adding feed item', user, item, type, isprivate, ispersonal, timestamp);
+    debug('Adding feed item', user, object, type);
 
     var _insertFollowersTimeline = function (cb) {
       if (messaging.enabled) {
@@ -132,7 +133,7 @@ module.exports = function (api) {
     };
 
     var _insertMentionedTimeline = function (cb) {
-      if (type !== 'post' || ispersonal) { return cb(); }
+      if (type !== 'post' || jobData.ispersonal) { return cb(); }
       if (messaging.enabled) {
         messaging.submit('seguir-publish-mentioned', jobData, cb);
       } else {
@@ -142,7 +143,7 @@ module.exports = function (api) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        upsertTimeline(keyspace, timeline, user, item, type, client.generateTimeId(timestamp), isprivate, ispersonal, cb2);
+        upsertTimeline(keyspace, timeline, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.isprivate, jobData.ispersonal, cb2);
       }, cb);
     };
 

@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -23,11 +25,13 @@ module.exports = function (api) {
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
     var data = [post, user, convertedContent, content_type, timestamp, isprivate, ispersonal];
+    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'isprivate', 'ispersonal'], data);
+
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
 
-      api.feed.addFeedItem(keyspace, user, post, 'post', isprivate, ispersonal, timestamp, function (err, result) {
+      api.feed.addFeedItem(keyspace, user, object, 'post', function (err, result) {
         if (err) { return next(err); }
         var tempPost = {
           post: post,
