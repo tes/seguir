@@ -729,7 +729,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           client.getFeed(user.user, user.user, null, 50, function (err, feed) {
             expect(err).to.be(null);
-            expect(feed.feed[0].post).to.eql(postId);
+            expect(_.last(feed.feed).post).to.eql(postId);
             done();
           });
         });

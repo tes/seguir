@@ -24,7 +24,10 @@ module.exports = function (api) {
       q = client.queries;
 
   function insertFollowersTimeline (jobData, next) {
-    if (jobData.ispersonal) { return next(); }
+    if (jobData.ispersonal && jobData.type !== 'follow') { return next(); }
+    if (jobData.ispersonal && jobData.type === 'follow') {
+      return upsertTimeline(jobData.keyspace, 'feed_timeline', jobData.object.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.isprivate, jobData.ispersonal, next);
+    }
     client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
