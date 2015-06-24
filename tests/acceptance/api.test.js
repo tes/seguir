@@ -612,6 +612,14 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can see personal follows as the following user', function (done) {
+        api.feed.getFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
+          expect(err).to.be(null);
+          expect(feed[3].follow).to.eql(personalFollowId);
+          done();
+        });
+      });
+
       it('anonymous - cant see personal follows as the anonymous user', function (done) {
         api.feed.getFeed(keyspace, '_anonymous_', users[6].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
@@ -733,7 +741,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
             expect(err).to.be(null);
-            expect(feed[0].post).to.eql(postId);
+            expect(_.last(feed).post).to.eql(postId);
             done();
           });
         });
