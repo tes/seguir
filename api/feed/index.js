@@ -20,8 +20,8 @@ var DEFAULT_LIMIT = 50;
 module.exports = function (api) {
 
   var client = api.client,
-      messaging = api.messaging,
-      q = client.queries;
+    messaging = api.messaging,
+    q = client.queries;
 
   function insertFollowersTimeline (jobData, next) {
     if (jobData.ispersonal && jobData.type !== 'follow') { return next(); }
@@ -351,12 +351,15 @@ module.exports = function (api) {
               currentResult.ispersonal = timeline[index].ispersonal;
 
               // Calculated fields to make rendering easier
-              currentResult.fromFollower = currentResult.user !== user.user;
+              currentResult.fromFollower = currentResult.user.user !== user.user;
               currentResult.isLike = currentResult.type === 'like';
               currentResult.isPost = currentResult.type === 'post';
               currentResult.isFollow = currentResult.type === 'follow';
               currentResult.isFriend = currentResult.type === 'friend';
-              currentResult.isUsersItem = currentResult.user.toString() === liu.toString();
+
+              var currentUserIsUser = currentResult.user.user.toString() === liu.toString();
+              var currentUserIsFollower = currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
+              currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
 
               // To page 'more'
               maxTime = currentResult.timeuuid;
