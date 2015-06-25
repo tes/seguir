@@ -348,12 +348,12 @@ module.exports = function (api) {
               currentResult.ispersonal = timeline[index].ispersonal;
 
               // Calculated fields to make rendering easier
-              currentResult.fromFollower = currentResult.user !== user.user;
+              currentResult.fromFollower = currentResult.user.user !== user.user;
               currentResult.isLike = currentResult.type === 'like';
               currentResult.isPost = currentResult.type === 'post';
               currentResult.isFollow = currentResult.type === 'follow';
               currentResult.isFriend = currentResult.type === 'friend';
-              currentResult.isUsersItem = currentResult.user.toString() === liu.toString();
+              currentResult.isUsersItem = currentResult.user.user.toString() === liu.toString();
 
               // To page 'more'
               maxTime = currentResult.timeuuid;
