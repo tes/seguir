@@ -93,9 +93,10 @@ module.exports = function (client, options) {
   }
 
    /* istanbul ignore next */
-  function initialiseSchemaVersion (next) {
-    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(0), new Date(), 'Initial version'], function (err) {
-      return next(err);
+  function initialiseSchemaVersion (version, next) {
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(version), new Date(), 'Initial version'], function () {
+      // Ignore error - as it may be that the schema_version table does not yet exist
+      return next();
     });
   }
 

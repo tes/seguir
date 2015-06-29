@@ -58,11 +58,11 @@ databases.forEach(function (db) {
         expect(migrations[0].type).to.be('seguir');
         expect(migrations[0].version.toString()).to.be('1');
         expect(migrations[1].type).to.be('tenant');
-        expect(migrations[1].version.toString()).to.be('1');
+        expect(migrations[1].version.toString()).to.be('2');
         expect(migrations[2].type).to.be('tenant');
-        expect(migrations[2].version.toString()).to.be('2');
+        expect(migrations[2].version.toString()).to.be('3');
         expect(migrations[3].type).to.be('tenant');
-        expect(migrations[3].version.toString()).to.be('3');
+        expect(migrations[3].version.toString()).to.be('4');
         done();
       });
     });

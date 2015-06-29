@@ -100,6 +100,12 @@ queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND
 queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
 
 /**
+ * @apiDefine ExamplePostgresCounts
+ */
+queries.updateCounter = 'INSERT INTO {KEYSPACE}.counts (user, type, count) VALUES ($1, $2, $3) ON CONFLICT (user, type) DO UPDATE SET count = count + 1';
+queries.updateCounterOrder = 'SET';
+
+/**
  * @apiDefine ExamplePostgresLikes
  */
 queries._likeSelectFields = 'l."like" AS "{PREFIX}like", l.item AS {PREFIX}item, l."user" AS "{PREFIX}user", l.since AS {PREFIX}since';

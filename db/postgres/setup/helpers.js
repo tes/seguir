@@ -50,10 +50,11 @@ module.exports = function (client, options) {
   }
 
   /* istanbul ignore next */
-  function initialiseSchemaVersion (next) {
+  function initialiseSchemaVersion (version, next) {
     debug('Initialising schema version for ' + KEYSPACE + '...');
-    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [0, client.getTimestamp(), 'Initial version'], function (err) {
-      return next(err);
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [version, client.getTimestamp(), 'Initial version'], function () {
+      // Ignore error as we may not yet have a schema version
+      return next();
     });
   }
 

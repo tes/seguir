@@ -123,6 +123,12 @@ queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND us
 queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**
+ * @apiDefine ExampleCqlCounts
+ */
+queries.updateCounter = 'UPDATE {KEYSPACE}.counts WHERE user = ? AND type = ? SET count = count + ?';
+queries.updateCounterOrder = 'WHERE';
+
+/**
  * @apiDefine ExampleCqlLikes
  * @apiExample {cql} Insert Like
  *    INSERT INTO seguir.likes (like, user, item, since) VALUES(?, ?, ?, ?);

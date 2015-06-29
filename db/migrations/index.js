@@ -27,7 +27,6 @@ module.exports = function (api) {
       var migrations = _.union(results[0], results[1]);
       next(null, migrations);
     });
-
   }
 
   function getApplications (keyspace, next) {
@@ -142,7 +141,11 @@ module.exports = function (api) {
 
   function selectSchemaVersions (keyspace, next) {
     client.execute(q(keyspace, 'selectSchemaVersions'), [], {prepare: true}, function (err, result) {
-      if (err) { return next(err); }
+      if (err) {
+        // If we get an error here - we will assume it is because we haven't yet created the 0 migration
+        // So we will return no migrations, so the zero migration applies
+        return next(null, []);
+      }
       next(null, result);
     });
   }

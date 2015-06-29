@@ -1,4 +1,5 @@
 var async = require('async');
+var schemaVersion = 1;
 
 function defineTablesAndIndexes (KEYSPACE) {
 
@@ -122,6 +123,11 @@ function defineTablesAndIndexes (KEYSPACE) {
   tableIndexes.followers = ['follow'];
 
   /**
+   * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.
+   */
+  tables.push('CREATE TABLE ' + KEYSPACE + '.counts (user uuid, type text, count counter, PRIMARY KEY (user, type))');
+
+  /**
    * @api {table} Userline Newsfeed
    * @apiName UserLineData
    * @apiGroup Data
@@ -162,7 +168,7 @@ function setup (client, keyspace, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes,
-    helpers.initialiseSchemaVersion,
+    async.apply(helpers.initialiseSchemaVersion, schemaVersion),
     async.retry(5, helpers.assertIndexes.bind(helpers.assertIndexes))
   ], function (err, data) {
     /* istanbul ignore if */

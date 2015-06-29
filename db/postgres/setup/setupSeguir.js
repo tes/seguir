@@ -2,6 +2,7 @@
  * Sets up the core
  */
 var async = require('async');
+var schemaVersion = 0;
 
 function setup (client, keyspace, next) {
 
@@ -31,7 +32,7 @@ function setup (client, keyspace, next) {
     helpers.dropKeyspace,
     helpers.createKeyspace,
     helpers.createTables,
-    helpers.initialiseSchemaVersion
+    async.apply(helpers.initialiseSchemaVersion, schemaVersion)
   ], function (err, data) {
     /* istanbul ignore if */
     if (err) console.dir(err);
