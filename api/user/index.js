@@ -153,7 +153,8 @@ module.exports = function (api) {
       friendRequest: async.apply(api.friend.isFriendRequestPending, keyspace, user, other_user),
       follow: async.apply(api.follow.isFollower, keyspace, other_user, user),
       followBack: async.apply(api.follow.isFollower, keyspace, user, other_user),
-      inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user)
+      inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user),
+      followerCount: async.apply(api.follow.followerCount, keyspace, other_user)
     }, function (err, result) {
 
       if (err) { return next(err); }
@@ -171,7 +172,8 @@ module.exports = function (api) {
         theyFollowSince: result.followBack[1],
         theyFollowPrivate: result.followBack[2] ? result.followBack[2].isprivate : null,
         theyFollowPersonal: result.followBack[2] ? result.followBack[2].ispersonal : null,
-        inCommon: result.inCommon
+        inCommon: result.inCommon,
+        followerCount: result.followerCount && result.followerCount.count ? +result.followerCount.count.toString() : 0
       };
 
       next(null, relationship);

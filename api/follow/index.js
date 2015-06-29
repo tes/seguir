@@ -23,26 +23,41 @@ module.exports = function (api) {
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
-        if (err) { return next(err); }
-        var follower = {
-          follow: follow,
-          user: user,
-          user_follower: user_follower,
-          isprivate: isprivate,
-          ispersonal: ispersonal,
-          since: timestamp
-        };
-        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
-          if (err) return next(err);
-          if (!backfill) return next(null, follow);
-          api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+      alterFollowerCount(keyspace, user, 1, function () {
+        api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
+          if (err) { return next(err); }
+          var follower = {
+            follow: follow,
+            user: user,
+            user_follower: user_follower,
+            isprivate: isprivate,
+            ispersonal: ispersonal,
+            since: timestamp
+          };
+          api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
             if (err) return next(err);
-            return next(null, follow);
+            if (!backfill) return next(null, follow);
+            api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+              if (err) return next(err);
+              return next(null, follow);
+            });
           });
         });
       });
+
     });
+  }
+
+  function alterFollowerCount (keyspace, user, count, next) {
+    next = next || function () {};
+    var data = [count, user];
+    client.execute(q(keyspace, 'updateCounter', {TABLE: 'followers'}), data, {prepare: true}, next);
+  }
+
+  function followerCount (keyspace, user, next) {
+    next = next || function () {};
+    var data = [user];
+    client.get(q(keyspace, 'selectCount', {TABLE: 'followers'}), data, {prepare: true}, next);
   }
 
   function addFollowerByName (keyspace, username, username_follower, timestamp, isprivate, ispersonal, next) {
@@ -61,9 +76,11 @@ module.exports = function (api) {
       var deleteData = [user, user_follower];
       client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare: true}, function (err, result) {
         if (err) return next(err);
-        api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
-          if (err) return next(err);
-          next(null, {status: 'removed'});
+        alterFollowerCount(keyspace, user, -1, function () {
+          api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
+            if (err) return next(err);
+            next(null, {status: 'removed'});
+          });
         });
       });
     });
@@ -136,7 +153,8 @@ module.exports = function (api) {
     getFollow: getFollow,
     getFollowFromObject: getFollowFromObject,
     isFollower: isFollower,
-    getFollowersByName: getFollowersByName
+    getFollowersByName: getFollowersByName,
+    followerCount: followerCount
   };
 
 };

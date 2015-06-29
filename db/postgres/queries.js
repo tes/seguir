@@ -102,8 +102,8 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
 /**
  * @apiDefine ExamplePostgresCounts
  */
-queries.updateCounter = 'INSERT INTO {KEYSPACE}.counts (user, type, count) VALUES ($1, $2, $3) ON CONFLICT (user, type) DO UPDATE SET count = count + 1';
-queries.updateCounterOrder = 'SET';
+queries.updateCounter = 'SELECT 1 WHERE \'\'=$1 and \'\'=$2';
+queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TABLE} WHERE "user" = $1';
 
 /**
  * @apiDefine ExamplePostgresLikes
