@@ -121,13 +121,6 @@ function defineTablesAndIndexes (KEYSPACE) {
   indexes.push('CREATE INDEX followers_user_follower_idx ON ' + KEYSPACE + '.followers ("user_follower")');
 
   /**
-   * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.
-   */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.counts ("user" varchar(36) NOT NULL, "type" varchar(20) NOT NULL, count integer DEFAULT 0)');
-  indexes.push('CREATE INDEX counts_user_idx ON ' + KEYSPACE + '.counts ("user")');
-  indexes.push('CREATE INDEX counts_type_idx ON ' + KEYSPACE + '.counts ("type")');
-
-  /**
    * @api {table} Userline Newsfeed
    * @apiName UserLineData
    * @apiGroup Data
