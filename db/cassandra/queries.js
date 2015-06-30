@@ -131,8 +131,8 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
 /**
  * @apiDefine ExampleCqlCounts
  */
-queries.updateCounter = 'UPDATE {KEYSPACE}.counts SET count = count + ? WHERE user = ? AND type = \'{TABLE}\'';
-queries.selectCount = 'SELECT count FROM {KEYSPACE}.counts WHERE user = ? AND type = \'{TABLE}\'';
+queries.updateCounter = 'UPDATE {KEYSPACE}.counts SET count = count + ? WHERE item = ? AND type = \'{TYPE}\'';
+queries.selectCount = 'SELECT count FROM {KEYSPACE}.counts WHERE item = ? AND type = \'{TYPE}\'';
 
 /**
  * @apiDefine ExampleCqlLikes

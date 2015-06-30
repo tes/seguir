@@ -125,7 +125,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   /**
    * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.counts (user uuid, type text, count counter, PRIMARY KEY (user, type))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.counts (item uuid, type text, count counter, PRIMARY KEY (item, type))');
 
   /**
    * @api {table} Userline Newsfeed

@@ -51,13 +51,13 @@ module.exports = function (api) {
   function alterFollowerCount (keyspace, user, count, next) {
     next = next || function () {};
     var data = [count, user];
-    client.execute(q(keyspace, 'updateCounter', {TABLE: 'followers'}), data, {prepare: true}, next);
+    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {prepare: true}, next);
   }
 
   function followerCount (keyspace, user, next) {
     next = next || function () {};
     var data = [user];
-    client.get(q(keyspace, 'selectCount', {TABLE: 'followers'}), data, {prepare: true}, next);
+    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true}, next);
   }
 
   function addFollowerByName (keyspace, username, username_follower, timestamp, isprivate, ispersonal, next) {

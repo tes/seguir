@@ -103,7 +103,7 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
  * @apiDefine ExamplePostgresCounts
  */
 queries.updateCounter = null; // We use table counts, the null means no query is executed.
-queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TABLE} WHERE "user" = $1';
+queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TYPE} WHERE "{ITEM}" = $1';
 
 /**
  * @apiDefine ExamplePostgresLikes

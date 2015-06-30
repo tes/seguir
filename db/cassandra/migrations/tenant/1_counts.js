@@ -1,5 +1,5 @@
 function apply (keyspace, api, next) {
-  var schemaVersionCql = 'CREATE TABLE ' + keyspace + '.counts (user uuid, type text, count counter, PRIMARY KEY (user, type))';
+  var schemaVersionCql = 'CREATE TABLE ' + keyspace + '.counts (item uuid, type text, count counter, PRIMARY KEY (item, type))';
   api.client.execute(schemaVersionCql, next);
 }
 
