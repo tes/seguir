@@ -630,6 +630,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed[0].follow).to.eql(personalFollowId);
           expect(feed[0].isUsersItem).to.eql(true);
+          expect(feed[0].isFollower).to.eql(false);
           done();
         });
       });
@@ -638,6 +639,8 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users[5].user, users[5].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           expect(feed[3].follow).to.eql(personalFollowId);
+          expect(feed[3].isUsersItem).to.eql(true);
+          expect(feed[3].isFollower).to.eql(true);
           done();
         });
       });
