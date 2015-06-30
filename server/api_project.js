@@ -1,1 +1,1 @@
-define({  "name": "seguir",  "version": "0.3.4",  "description": "Social network backend",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2015-06-19T13:30:49.820Z",    "url": "http://apidocjs.com",    "version": "0.13.1"  }});
+define({  "name": "seguir",  "version": "0.3.7",  "description": "Social network backend",  "sampleUrl": false,  "apidoc": "0.2.0",  "generator": {    "name": "apidoc",    "time": "2015-06-30T09:19:35.853Z",    "url": "http://apidocjs.com",    "version": "0.13.1"  }});
