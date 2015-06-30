@@ -362,6 +362,7 @@ module.exports = function (api) {
               var currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
               var currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
               currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
+              currentResult.isFollower = currentUserIsFollower;
 
               // To page 'more'
               maxTime = currentResult.timeuuid;
