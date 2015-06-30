@@ -2,7 +2,7 @@ var restify = require('restify');
 var async = require('async');
 var userHeader = 'x-seguir-user-token';
 var authUtils = require('./utils');
-var anonyomousUser = {user: '_anonymous_', username: 'Not logged in.'};
+var anonyomousUser = {user: null, username: 'Not logged in.'};
 var debug = require('debug')('seguir:auth');
 
 function Auth (api) {

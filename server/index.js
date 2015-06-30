@@ -233,9 +233,6 @@ function bootstrapServer (api, config, next) {
    *
    */
   server.get(u('getUserRelationship'), api.auth.checkRequest, function (req, res, next) {
-    if (!req.liu.user) {
-      return next(new restify.UnauthorizedError('You must be logged in to access a friend request list.'));
-    }
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
       api.user.getUserRelationship(req.keyspace, req.liu.user, user, _response(res, next));

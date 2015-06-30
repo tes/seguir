@@ -357,7 +357,7 @@ databases.forEach(function (db) {
         auth.checkRequest(request, response, function (err) {
           expect(err).to.be(null);
           expect(request.keyspace).to.be('test_seguir_auth_another_application');
-          expect(request.liu.user).to.be('_anonymous_');
+          expect(request.liu.user).to.be(null);
           done();
         });
       });

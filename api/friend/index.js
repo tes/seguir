@@ -105,6 +105,9 @@ module.exports = function (api) {
     var privacyCheckRequired = item.friend || item.friend_request || item.isprivate || item.ispersonal;
     if (!privacyCheckRequired) return next();
 
+    // If the user is the anonymous user exit quickly
+    if (privacyCheckRequired && !user) return next({statusCode: 403, message: 'You are not allowed to see this item.'});
+
     // First check if the user is one of the properties
     var userIsOnItem = _.reduce(user_properties, function (match, prop) {
       return match || user.toString() === item[prop].toString();

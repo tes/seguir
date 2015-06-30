@@ -712,6 +712,16 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can query the relationship between user and the anonymous user', function (done) {
+        client.getUserRelationship(null, users[3].user, function (err, relationship) {
+          expect(err).to.be(null);
+          expect(relationship.isFriend).to.be(false);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(false);
+          done();
+        });
+      });
+
     });
 
     describe('initialising users', function () {

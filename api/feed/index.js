@@ -327,6 +327,7 @@ module.exports = function (api) {
             return expander(keyspace, liu, item, cb);
           } else {
             console.log('Unable to expand unknown feed item type: ' + item.type);
+            cb();
           }
 
         }, function (err, results) {
@@ -335,6 +336,7 @@ module.exports = function (api) {
           if (err || !results) { return next(err); }
 
           var feed = [], maxTime;
+
           results.forEach(function (result, index) {
 
             if (result) {
@@ -357,8 +359,8 @@ module.exports = function (api) {
               currentResult.isFollow = currentResult.type === 'follow';
               currentResult.isFriend = currentResult.type === 'friend';
 
-              var currentUserIsUser = currentResult.user.user.toString() === liu.toString();
-              var currentUserIsFollower = currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
+              var currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
+              var currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
               currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
 
               // To page 'more'
