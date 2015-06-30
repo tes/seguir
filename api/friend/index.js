@@ -228,6 +228,7 @@ module.exports = function (api) {
   }
 
   function isFriend (keyspace, user, user_friend, next) {
+    if (!user) { return next(null, false, null, null); }
     if (user.toString() === user_friend.toString()) { return next(null, true, null, null); }
     api.common.get(keyspace, 'isFriend', [user, user_friend], 'one', function (err, friend) {
       if (err) { return next(null, false, null, null); }
@@ -238,6 +239,7 @@ module.exports = function (api) {
   }
 
   function isFriendRequestPending (keyspace, user, user_friend, next) {
+    if (!user) { return next(null, false, null); }
     if (user.toString() === user_friend.toString()) { return next(null, false, null); }
     api.common.get(keyspace, 'selectOutgoingFriendRequests', [user], 'many', function (err, friendRequests) {
       /* istanbul ignore if */

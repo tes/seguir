@@ -87,6 +87,7 @@ module.exports = function (api) {
   }
 
   function isFollower (keyspace, user, user_follower, next) {
+    if (!user || !user_follower) { return next(null, false, null, null); }
     if (user.toString() === user_follower.toString()) {
       return next(null, true, null, {
         isprivate: false,
