@@ -512,6 +512,27 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(like.like).to.eql(likeId);
           expect(like.user).to.eql(users[0]);
+          expect(like.count).to.eql(1);
+          done();
+        });
+      });
+
+      it('can check if a user likes an item if they dont like it', function (done) {
+        api.like.checkLike(keyspace, users[5].user, 'http://github.com', function (err, like) {
+          expect(err).to.be(null);
+          expect(like.like).to.be(undefined);
+          expect(like.user).to.eql(users[5]);
+          expect(like.count).to.eql(1);
+          done();
+        });
+      });
+
+      it('can check if a user likes an item that has never been liked', function (done) {
+        api.like.checkLike(keyspace, users[5].user, 'http://google.com', function (err, like) {
+          expect(err).to.be(null);
+          expect(like.like).to.be(undefined);
+          expect(like.user).to.eql(users[5]);
+          expect(like.count).to.eql(0);
           done();
         });
       });
