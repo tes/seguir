@@ -501,7 +501,9 @@ databases.forEach(function (db) {
             expect(err).to.be(null);
             addSample('removeLike', result);
             client.checkLike(liu, 'http://seguir.com', function (err, like) {
-              expect(err.statusCode).to.be(404);
+              expect(err).to.be(null);
+              expect(like.count).to.be(0);
+              expect(like.user.user).to.eql(liu);
               done();
             });
           });
