@@ -1,6 +1,12 @@
 var st = require('string-template');
 var queries = {};
 
+module.exports = function (keyspace, name, data) {
+  data = data || {};
+  data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
+  return st(queries[name] || '', data);
+};
+
 /**
  * Definitions of queries are referenced in the structure documentation in ../setup/index
  * They exist here so they can be kept up to date with the queries;
@@ -160,9 +166,3 @@ queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE ite
 queries.timelineLimit = 'LIMIT {limit}';
 queries.timelineSortReverse = 'AND time > ?';
 queries.timelineSort = 'AND time < ?';
-
-module.exports = function (keyspace, name, data) {
-  data = data || {};
-  data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
-  return st(queries[name], data);
-};

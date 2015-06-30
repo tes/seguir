@@ -14,6 +14,7 @@ function createClient (config, next) {
   function get (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    if (!query) { return next(null); }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
       debug('get', query, data);
@@ -28,6 +29,7 @@ function createClient (config, next) {
   function execute (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    if (!query) { return next(null); }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
       debug('execute', query, data);

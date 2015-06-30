@@ -8,7 +8,7 @@ var queries = {};
 var q = function (keyspace, name, data) {
   data = data || {};
   data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
-  return st(queries[name], data);
+  return st(queries[name] || '', data);
 };
 
 queries.insertSchemaVersion = 'INSERT INTO {KEYSPACE}.schema_version (version, applied, description) VALUES ($1, $2, $3)';
@@ -102,7 +102,7 @@ queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE
 /**
  * @apiDefine ExamplePostgresCounts
  */
-queries.updateCounter = 'SELECT 1 WHERE \'\'=$1 and \'\'=$2';
+queries.updateCounter = null; // We use table counts, the null means no query is executed.
 queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TABLE} WHERE "user" = $1';
 
 /**

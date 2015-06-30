@@ -16,6 +16,7 @@ function createClient (config, next) {
   function get (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    if (!query) { return next(null); }
     debug('get', query, data);
     client.execute(query, data, options, function (err, result) {
       if (err) { return next(err); }
@@ -26,6 +27,7 @@ function createClient (config, next) {
   function execute (query, data, options, next) {
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
+    if (!query) { return next(null); }
     debug('execute', query, data);
     client.execute(query, data, options, function (err, result) {
       if (err) { return next(err); }
