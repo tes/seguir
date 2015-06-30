@@ -161,6 +161,7 @@ module.exports = function (api) {
   }
 
   function friendsInCommon (keyspace, liu, user, next) {
+    if (!liu || !user) return next();
     if (liu === user) return next();
     async.parallel([
       function (cb) {
