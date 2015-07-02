@@ -313,6 +313,7 @@ function bootstrapServer (api, config, next) {
    * @apiParam {Guid} user The guid of the user
    * @apiParam {String} item The item to check
    * @apiUse checkLikeSuccessExample
+   * @apiUse checkNotLikeSuccessExample
    *
    *  @apiUse UserNotFound
    *  @apiUse ServerError

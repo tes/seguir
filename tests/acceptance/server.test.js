@@ -504,6 +504,7 @@ databases.forEach(function (db) {
               expect(err).to.be(null);
               expect(like.count).to.be(0);
               expect(like.user.user).to.eql(liu);
+              addSample('checkNotLike', like);
               done();
             });
           });
