@@ -328,6 +328,22 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a list of followers for a user who has no followers', function (done) {
+        client.getFollowers(liu, users[6].user, function (err, followers) {
+          expect(err).to.be(null);
+          expect(followers.length).to.be(0);
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user who has no followers if you are the anonymous user', function (done) {
+        client.getFollowers(undefined, users[6].user, function (err, followers) {
+          expect(err).to.be(null);
+          expect(followers.length).to.be(0);
+          done();
+        });
+      });
+
       it('can retrieve a list of followers for a user by altids', function (done) {
         client.getFollowers(liuAltId, users[0].altid, function (err, followers) {
           expect(err).to.be(null);

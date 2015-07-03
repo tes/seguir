@@ -121,7 +121,7 @@ module.exports = function (api) {
   }
 
   function getFollowers (keyspace, liu, user, next) {
-    var isUser = liu.toString() === user.toString();
+    var isUser = liu && user && liu.toString() === user.toString();
     api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
       if (err) { return next(err); }
       api.common.get(keyspace, 'selectFollowers', [user], 'many', function (err, followers) {
