@@ -6,7 +6,7 @@
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
-var Api = require('../../../api');
+var initialiser = require('../../fixtures/initialiser');
 var _ = require('lodash');
 var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 var async = require('async');
@@ -25,13 +25,10 @@ databases.forEach(function (db) {
 
     before(function (done) {
       this.timeout(20000);
-      Api(config, function (err, seguirApi) {
+      initialiser.setupApi(keyspace, config, function (err, seguirApi) {
         expect(err).to.be(null);
         api = seguirApi;
-        console.log('Setting up keyspace in ' + api.client.type + '...');
-        api.client.setup.setupTenant(api.client, keyspace, function (err) {
-          done(err);
-        });
+        done();
       });
     });
 
