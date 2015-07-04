@@ -3,7 +3,7 @@ var Uuid = cassandra.types.Uuid;
 var TimeUuid = cassandra.types.TimeUuid;
 var path = require('path');
 var debug = require('debug')('seguir:cassandra');
-var debugDriver = require('debug')('seguir:cassandra:driver');
+var debugDriver = require('debug')('cassandra:driver');
 
 function createClient (config, next) {
 
