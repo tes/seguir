@@ -5,20 +5,20 @@
 /*eslint-env node, mocha */
 
 var keyspace = 'test_client_seguir_server';
-var Api = require('../../api');
+var Api = require('../../../api');
 var _ = require('lodash');
 var expect = require('expect.js');
-var Seguir = require('../../client');
+var Seguir = require('../../../client');
 var async = require('async');
 var fs = require('fs');
 var hbs = require('handlebars');
 var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
-var startServer = require('../../server');
+var startServer = require('../../../server');
 var credentials = {host: 'http://localhost:3001'};
 
 databases.forEach(function (db) {
 
-  var config = _.clone(require('../fixtures/' + db + '.json'));
+  var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('Seguir Social Server / Client API - ' + db, function () {

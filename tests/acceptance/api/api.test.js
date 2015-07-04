@@ -6,14 +6,14 @@
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
-var Api = require('../../api');
+var Api = require('../../../api');
 var _ = require('lodash');
 var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 var async = require('async');
 
 databases.forEach(function (db) {
 
-  var config = _.clone(require('../fixtures/' + db + '.json'));
+  var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('Social API - ' + db, function () {

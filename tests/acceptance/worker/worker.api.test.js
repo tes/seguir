@@ -6,10 +6,10 @@
 
 var keyspace = 'test_seguir_app_worker';
 var expect = require('expect.js');
-var Api = require('../../api');
-var config = require('../../server/config')();
+var Api = require('../../../api');
+var config = require('../../../server/config')();
 config.keyspace = keyspace;
-var worker = require('../../server/worker');
+var worker = require('../../../server/worker');
 var async = require('async');
 
 describe('Worker Processing', function () {

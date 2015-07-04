@@ -5,7 +5,7 @@
 /*eslint-env node, mocha */
 
 var keyspace = 'test_seguir_migrations';
-var Api = require('../../api');
+var Api = require('../../../api');
 var _ = require('lodash');
 var expect = require('expect.js');
 var path = require('path');
@@ -13,7 +13,7 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 
 databases.forEach(function (db) {
 
-  var config = _.clone(require('../fixtures/' + db + '.json'));
+  var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('Seguir Database Migrations - ' + db, function () {
@@ -29,7 +29,7 @@ databases.forEach(function (db) {
         expect(err).to.be(null);
         api = seguirApi;
         // Fix migration path to fixtures
-        api.client.migrations = path.resolve(__dirname, '..', 'fixtures', 'migrations');
+        api.client.migrations = path.resolve(__dirname, '..', '..', 'fixtures', 'migrations');
         auth = api.auth;
         api.client.setup.setupSeguir(api.client, keyspace, function () {
           auth.addAccount('migration account', false, false, function (err, account) {

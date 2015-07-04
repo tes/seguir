@@ -5,14 +5,15 @@
 /*eslint-env node, mocha */
 
 var expect = require('expect.js');
-var Api = require('../../api');
+var Api = require('../../../api');
+var authUtils = require('../../../api/auth/utils');
 var _ = require('lodash');
 var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 var keyspace = 'test_seguir_auth';
 
 databases.forEach(function (db) {
 
-  var config = _.clone(require('../fixtures/' + db + '.json'));
+  var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('Account and Application Management - ' + db, function () {
@@ -327,7 +328,6 @@ databases.forEach(function (db) {
       });
 
       it('can check if a request has been signed by a valid client', function (done) {
-        var authUtils = require('../../api/auth/utils');
         var request = {
           headers: _.assign(authUtils.generateAuthorization(application.appid, application.appsecret), {'x-seguir-user-token': userId})
         };
@@ -345,7 +345,6 @@ databases.forEach(function (db) {
       });
 
       it('can work with anonymous users', function (done) {
-        var authUtils = require('../../api/auth/utils');
         var request = {
           headers: authUtils.generateAuthorization(application.appid, application.appsecret)
         };
@@ -363,7 +362,6 @@ databases.forEach(function (db) {
       });
 
       it('can fail requests with an invalid secret', function (done) {
-        var authUtils = require('../../api/auth/utils');
         var request = {
           headers: authUtils.generateAuthorization(application.appid, 'MY INVALID SECRET')
         };
@@ -379,7 +377,6 @@ databases.forEach(function (db) {
       });
 
       it('can user application tokens to generate an authorization', function (done) {
-        var authUtils = require('../../api/auth/utils');
         var request = {
           headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret, 'SeguirAppToken'), {'x-seguir-user-token': userId})
         };

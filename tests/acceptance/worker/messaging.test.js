@@ -5,7 +5,7 @@
 /*eslint-env node, mocha */
 
 var expect = require('expect.js');
-var messaging = require('../../db/messaging')({messaging: {}});
+var messaging = require('../../../db/messaging')({messaging: {}});
 
 describe('Messaging primitives', function () {
 
