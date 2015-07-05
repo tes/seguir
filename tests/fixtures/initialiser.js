@@ -4,12 +4,14 @@
 var Api = require('../../api');
 var startServer = require('../../server');
 var Seguir = require('../../client');
+var async = require('async');
+var _ = require('lodash');
 var credentials = {host: 'http://localhost:3001'};
 
 function setupApi (keyspace, config, next) {
   Api(config, function (err, api) {
     if (err) { return next(err); }
-    console.log('Setting up keyspace in ' + api.client.type + '...');
+    console.log('   Setting up keyspace in ' + api.client.type + '...');
     api.client.setup.setupTenant(api.client, keyspace, function (err) {
       if (err) { return next(err); }
       next(null, api);
@@ -20,7 +22,7 @@ function setupApi (keyspace, config, next) {
 function setupServer (config, keyspace, next) {
   Api(config, function (err, api) {
     if (err) { return next(err); }
-    console.log('Setting up seguir in ' + api.client.type + '...');
+    console.log('    Setting up seguir in ' + api.client.type + '...');
     api.client.setup.setupSeguir(api.client, keyspace, function (err) {
       if (err) { return next(err); }
       api.auth.addAccount('test account', false, false, function (err, account) {
@@ -43,7 +45,62 @@ function setupServer (config, keyspace, next) {
   });
 }
 
+function setupUsers (keyspace, api, users, next) {
+  var userMap = {};
+  async.map(users, function (user, cb) {
+    api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
+  }, function (err, results) {
+    if (err) { return next(err); }
+    results.forEach(function (user) {
+      userMap[user.username] = user;
+    });
+    next(null, userMap);
+  });
+}
+
+function setupGraph (keyspace, api, users, actions, next) {
+
+  function addFollow (follow, cb) {
+    api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.isprivate, follow.ispersonal, cb);
+  }
+
+  function addFriend (friend, cb) {
+    api.friend.addFriend(keyspace, users[friend.user].user, users[friend.user_friend].user, api.client.getTimestamp(), cb);
+  }
+
+  function addPost (post, cb) {
+    api.post.addPost(keyspace, users[post.user].user, post.content, post.contentType, post.timestamp || api.client.getTimestamp(), post.isprivate, post.ispersonal, cb);
+  }
+
+  function addLike (like, cb) {
+    api.like.addLike(keyspace, users[like.user].user, like.item, api.client.getTimestamp(), cb);
+  }
+
+  async.mapSeries(actions, function (action, cb) {
+    if (action.type === 'follow') { return addFollow(action, cb); }
+    if (action.type === 'friend') { return addFriend(action, cb); }
+    if (action.type === 'post') { return addPost(action, cb); }
+    if (action.type === 'like') { return addLike(action, cb); }
+    return cb(null);
+  }, function (err, results) {
+    if (err) return next(err);
+    var actionResults = _.zipObject(_.pluck(actions, 'key'), results);
+    // We need to add pseudo items for reciprocal friendships
+    _.mapKeys(actions, function (result, key) {
+      if (result.reciprocal) {
+        var reciprocal = actionResults[result.key].reciprocal,
+            reciprocalKey = result.reciprocal;
+        actionResults[reciprocalKey] = {friend: reciprocal};
+      }
+    });
+    next(null, actionResults);
+  });
+
+}
+
 module.exports = {
   setupApi: setupApi,
-  setupServer: setupServer
+  setupServer: setupServer,
+  setupUsers: setupUsers,
+  setupGraph: setupGraph
 };

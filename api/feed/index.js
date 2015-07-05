@@ -35,6 +35,8 @@ module.exports = function (api) {
         var followIsPrivate = jobData.isprivate, followIsPersonal = jobData.ispersonal;
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
+          // Don't duplicate friend items into followers feeds if the follower is the friend
+          if (jobData.type === 'friend' && jobData.object.user_friend.toString() === row.user_follower.toString()) { return cb2(); }
           if (!jobData.isprivate || (jobData.isprivate && isFriend)) {
             upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, followIsPrivate, followIsPersonal, cb2);
           } else {
@@ -379,7 +381,7 @@ module.exports = function (api) {
 
       } else {
         if (err) { return next(err); }
-        next();
+        next(null, []);
       }
 
     });

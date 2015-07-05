@@ -40,7 +40,6 @@ module.exports = function (api) {
     var object = _.object(['friend', 'user', 'user_friend', 'timestamp'], data);
     object.ispersonal = false;
     object.isprivate = true;
-
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
