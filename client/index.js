@@ -5,6 +5,8 @@ var restify = require('restify');
 var headerNames = require('../api/auth').headerNames;
 var authUtils = require('../api/auth/utils');
 var u = require('../api/urls');
+var v = require('../api/visibility');
+
 /**
  * @apiDefine Client Server Side Seguir Client
  * The Seguir client provides a simple and consistent API for interacting with a seguir server.
@@ -55,6 +57,7 @@ function Seguir (options) {
 
   self.client = restify.createJsonClient(clientConfig);
   self.urls = u;
+  self.visibility = v;
 
 }
 
@@ -177,8 +180,7 @@ Seguir.prototype.getUserByAltId = function (liu, altid, next) {
   follow: {
     users: ['bob', 'cliftonc'],
     backfill: '1d',
-    isprivate: false,
-    ispersonal: true
+    visibility: 'personal'
   }
 }
  *
@@ -345,7 +347,7 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  */
 
 /**
- * @api {function} followUser(liu,user_to_follow,isprivate,ispersonal,backfill,next) followUser
+ * @api {function} followUser(liu,user_to_follow,visibility,backfill,next) followUser
  * @apiName followUser
  * @apiGroup Following
  * @apiVersion 1.0.0
@@ -353,16 +355,15 @@ Seguir.prototype.acceptFriendRequest = function (liu, friend_request, next) {
  * @apiDescription Follow a user
  * @apiParam {String} liu the id of the current logged in user
  * @apiParam {String} user_to_follow the id of the user to follow
- * @apiParam {Boolean} isprivate is this visible only to friends
- * @apiParam {Boolean} ispersonal is this visible only to the user
+ * @apiParam {String} visibility visibility level
  * @apiParam {String} backfill amount of time to backfill posts from the followed users direct feed - use moment duration format e.g. '1d'
  * @apiParam {Function} next callback
  * @apiUse followUserSuccessExample
  */
-Seguir.prototype.followUser = function (liu, user_to_follow, isprivate, ispersonal, backfill, next) {
+Seguir.prototype.followUser = function (liu, user_to_follow, visibility, backfill, next) {
   var self = this;
   if (!next) { next = backfill; backfill = null; }
-  self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, isprivate: isprivate, ispersonal: ispersonal, backfill: backfill}, next);
+  self.post(liu, u('addFollower'), {user: user_to_follow, user_follower: liu, visibility: visibility, backfill: backfill}, next);
 };
 
 /**
@@ -439,7 +440,7 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  */
 
 /**
- * @api {function} addPost(liu,content,posted,isprivate,ispersonal,next) addPost
+ * @api {function} addPost(liu,content,posted,visibility,next) addPost
  * @apiName addPost
  * @apiGroup Posts
  * @apiVersion 1.0.0
@@ -449,14 +450,13 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  * @apiParam {String} content the id of the user to follow
  * @apiParam {String} content_type the content contained in content, use application/json for json data
  * @apiParam {Timestamp} posted the timestamp the post should appear to be created - use Date.now() for now
- * @apiParam {Boolean} isprivate is this visible only to friends
- * @apiParam {Boolean} ispersonal is this visible only to the user
+ * @apiParam {String} visibility visibility level
  * @apiParam {Function} next callback
  * @apiUse addPostSuccessExample
  */
-Seguir.prototype.addPost = function (liu, content, content_type, posted, isprivate, ispersonal, next) {
+Seguir.prototype.addPost = function (liu, content, content_type, posted, visibility, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, posted: posted, isprivate: isprivate, ispersonal: ispersonal}, next);
+  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, posted: posted, visibility: visibility}, next);
 };
 
 /**

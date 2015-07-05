@@ -38,8 +38,7 @@ module.exports = function (api) {
   function addFriendOneWay (keyspace, friend, user, user_friend, timestamp, next) {
     var data = [friend, user, user_friend, timestamp];
     var object = _.object(['friend', 'user', 'user_friend', 'timestamp'], data);
-    object.ispersonal = false;
-    object.isprivate = true;
+    object.visibility = api.visibility.PERSONAL;
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
@@ -88,20 +87,10 @@ module.exports = function (api) {
     });
   }
 
-  function addFriendByName (keyspace, username, username_friend, timestamp, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      api.user.getUserByName(keyspace, username_friend, function (err, friend) {
-        if (err || !friend) { return next(err); }
-        addFriend(keyspace, user.user, friend.user, timestamp, next);
-      });
-    });
-  }
-
   function userCanSeeItem (keyspace, user, item, user_properties, next) {
 
     // Check if the item provided is one that privacy controls apply to
-    var privacyCheckRequired = item.friend || item.friend_request || item.isprivate || item.ispersonal;
+    var privacyCheckRequired = item.friend || item.friend_request || item.visibility;
     if (!privacyCheckRequired) return next();
 
     // If the user is the anonymous user exit quickly
@@ -115,7 +104,7 @@ module.exports = function (api) {
 
     // Now, if it is private they can see it if they are a friends with any
     // of the users specified in the properties
-    if (item.isprivate) {
+    if (item.visibility === api.visibility.PRIVATE) {
       async.reduce(user_properties, false, function (memo, prop, cb) {
         isFriend(keyspace, user, item[prop], function (err, ok) {
           if (err) { return next(err); }
@@ -220,16 +209,6 @@ module.exports = function (api) {
     });
   }
 
-  function getFriendsByName (keyspace, liu, username, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      getFriends(keyspace, liu, user.user, function (err, friends) {
-        if (err || !friends) { return next(err); }
-        next(null, friends);
-      });
-    });
-  }
-
   function isFriend (keyspace, user, user_friend, next) {
     if (!user) { return next(null, false, null, null); }
     if (user.toString() === user_friend.toString()) { return next(null, true, null, null); }
@@ -261,7 +240,6 @@ module.exports = function (api) {
 
   return {
     addFriend: addFriend,
-    addFriendByName: addFriendByName,
     addFriendRequest: addFriendRequest,
     removeFriend: removeFriend,
     isFriend: isFriend,
@@ -270,7 +248,6 @@ module.exports = function (api) {
     getFriend: getFriend,
     getFriendFromObject: getFriendFromObject,
     getFriends: getFriends,
-    getFriendsByName: getFriendsByName,
     getFriendRequest: getFriendRequest,
     getFriendRequests: getFriendRequests,
     getIncomingFriendRequests: getIncomingFriendRequests,

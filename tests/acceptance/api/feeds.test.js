@@ -1,5 +1,10 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Acceptance test of the feeds API
+ * Please see the fixtures/initialiser for two key methods that help this test be readable
+ * and maintainable:
+ *
+ * - setupGraph = run a series of actions against the other apis to generate a feed.
+ * - assertFeed = check that the feed you get is what you expect it to be.
  */
 
 /*eslint-env node, mocha */
@@ -46,23 +51,25 @@ databases.forEach(function (db) {
 
     describe('feeds', function () {
 
-      var actions = [
-        {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
-        {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
-        {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
-        {key: 'follow-private', type: 'follow', user: 'harold', user_follower: 'bill', isprivate: true},
-        {key: 'follow-personal', type: 'follow', user: 'alfred', user_follower: 'jenny', ispersonal: true},
-        {key: 'friend-1', reciprocal: 'reciprocal-friend-1', type: 'friend', user: 'cliftonc', user_friend: 'phteven'},
-        {key: 'friend-2', reciprocal: 'reciprocal-friend-2', type: 'friend', user: 'cliftonc', user_friend: 'harold'},
-        {key: 'post-private-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)},
-        {key: 'post-public', type: 'post', user: 'phteven', content: 'hello', contentType: 'text/html'},
-        {key: 'post-mention', type: 'post', user: 'bill', content: 'mentioning @json', contentType: 'text/html'},
-        {key: 'post-mention-follower', type: 'post', user: 'bill', content: 'mentioning @alfred', contentType: 'text/html'},
-        {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
-      ];
       var actionResults = {};
 
       before(function (done) {
+
+        var actions = [
+          {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
+          {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
+          {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
+          {key: 'follow-private', type: 'follow', user: 'harold', user_follower: 'bill', visibility: api.visibility.PRIVATE},
+          {key: 'follow-personal', type: 'follow', user: 'alfred', user_follower: 'jenny', visibility: api.visibility.PERSONAL},
+          {key: 'friend-1', reciprocal: 'reciprocal-friend-1', type: 'friend', user: 'cliftonc', user_friend: 'phteven'},
+          {key: 'friend-2', reciprocal: 'reciprocal-friend-2', type: 'friend', user: 'cliftonc', user_friend: 'harold'},
+          {key: 'post-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)},
+          {key: 'post-public', type: 'post', user: 'phteven', content: 'hello', contentType: 'text/html'},
+          {key: 'post-mention', type: 'post', user: 'bill', content: 'mentioning @json', contentType: 'text/html'},
+          {key: 'post-mention-follower', type: 'post', user: 'bill', content: 'mentioning @alfred', contentType: 'text/html'},
+          {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
+        ];
+
         initialiser.setupGraph(keyspace, api, users, actions, function (err, results) {
           expect(err).to.be(null);
           actionResults = results;
@@ -81,7 +88,7 @@ databases.forEach(function (db) {
             'friend-1',
             'follow-2',
             'follow-1',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -96,7 +103,7 @@ databases.forEach(function (db) {
             'friend-1',
             'follow-2',
             'follow-1',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -109,11 +116,10 @@ databases.forEach(function (db) {
           var expected = [
             'like-google',
             'post-public',
-            'friend-2',
             'reciprocal-friend-1',
             'follow-2',
             'follow-1',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -126,7 +132,7 @@ databases.forEach(function (db) {
           var expected = [
             'like-google',
             'follow-2',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -140,7 +146,7 @@ databases.forEach(function (db) {
             'like-google',
             'follow-2',
             'follow-1',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -250,7 +256,7 @@ databases.forEach(function (db) {
             'like-google',
             'follow-2',
             'follow-1',
-            'post-private-old'
+            'post-old'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();

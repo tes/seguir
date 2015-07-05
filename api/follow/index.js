@@ -15,11 +15,11 @@ module.exports = function (api) {
   var client = api.client,
       q = client.queries;
 
-  function addFollower (keyspace, user, user_follower, timestamp, isprivate, ispersonal, backfill, next) {
+  function addFollower (keyspace, user, user_follower, timestamp, visibility, backfill, next) {
     if (!next) { next = backfill; backfill = null; }
     var follow = client.generateId();
-    var data = [follow, user, user_follower, timestamp, isprivate, ispersonal];
-    var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'isprivate', 'ispersonal'], data);
+    var data = [follow, user, user_follower, timestamp, visibility];
+    var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'visibility'], data);
     client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
@@ -30,8 +30,7 @@ module.exports = function (api) {
             follow: follow,
             user: user,
             user_follower: user_follower,
-            isprivate: isprivate,
-            ispersonal: ispersonal,
+            visibility: visibility,
             since: timestamp
           };
           api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
@@ -60,16 +59,6 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true}, next);
   }
 
-  function addFollowerByName (keyspace, username, username_follower, timestamp, isprivate, ispersonal, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      api.user.getUserByName(keyspace, username_follower, function (err, follower) {
-        if (err || !follower) { return next(err); }
-        addFollower(keyspace, user.user, follower.user, timestamp, isprivate, ispersonal, next);
-      });
-    });
-  }
-
   function removeFollower (keyspace, user, user_follower, next) {
     isFollower(keyspace, user, user_follower, function (err, isFollower, isFollowerSince, follow) {
       if (err || !isFollower) { return next(err); }
@@ -89,13 +78,10 @@ module.exports = function (api) {
   function isFollower (keyspace, user, user_follower, next) {
     if (!user || !user_follower) { return next(null, false, null, null); }
     if (user.toString() === user_follower.toString()) {
-      return next(null, true, null, {
-        isprivate: false,
-        ispersonal: false
-      });
+      return next(null, true, null, {});
     }
     api.common.get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
-      if (err) { return next(null, false, null, {isprivate: false, ispersonal: false}); }
+      if (err) { return next(null, false, null, {}); }
       var isFollower = !!(follow && follow.follow);
       var isFollowerSince = isFollower ? follow.since : null;
       return next(null, isFollower, isFollowerSince, follow ? follow : null);
@@ -127,8 +113,8 @@ module.exports = function (api) {
       api.common.get(keyspace, 'selectFollowers', [user], 'many', function (err, followers) {
         if (err) { return next(err); }
         var filteredFollowers = _.filter(followers, function (item) {
-          if (item.ispersonal && !isUser) { return false; }
-          if (item.isprivate && !isFriend) { return false; }
+          if (item.visibility === api.visibility.PERSONAL && !isUser) { return false; }
+          if (item.visibility === api.visibility.PRIVATE && !isFriend) { return false; }
           return true;
         });
         api.user.mapUserIdToUser(keyspace, filteredFollowers, ['user_follower'], user, next);
@@ -136,25 +122,13 @@ module.exports = function (api) {
     });
   }
 
-  function getFollowersByName (keyspace, liu, username, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      getFollowers(keyspace, liu, user.user, function (err, followers) {
-        if (err) { return next(err); }
-        next(null, followers);
-      });
-    });
-  }
-
   return {
     addFollower: addFollower,
-    addFollowerByName: addFollowerByName,
     removeFollower: removeFollower,
     getFollowers: getFollowers,
     getFollow: getFollow,
     getFollowFromObject: getFollowFromObject,
     isFollower: isFollower,
-    getFollowersByName: getFollowersByName,
     followerCount: followerCount
   };
 

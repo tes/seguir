@@ -24,21 +24,19 @@ module.exports = function (api) {
     q = client.queries;
 
   function insertFollowersTimeline (jobData, next) {
-    if (jobData.ispersonal && jobData.type !== 'follow') { return next(); }
-    if (jobData.ispersonal && jobData.type === 'follow') {
-      return upsertTimeline(jobData.keyspace, 'feed_timeline', jobData.object.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.isprivate, jobData.ispersonal, next);
+    if (jobData.visibility === api.visibility.PERSONAL && jobData.type !== 'follow') { return next(); }
+    if (jobData.visibility === api.visibility.PERSONAL && jobData.type === 'follow') {
+      return upsertTimeline(jobData.keyspace, 'feed_timeline', jobData.object.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, next);
     }
     client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb2) {
-        var followIsPrivate = jobData.isprivate, followIsPersonal = jobData.ispersonal;
+        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
-          // Don't duplicate friend items into followers feeds if the follower is the friend
-          if (jobData.type === 'friend' && jobData.object.user_friend.toString() === row.user_follower.toString()) { return cb2(); }
-          if (!jobData.isprivate || (jobData.isprivate && isFriend)) {
-            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, followIsPrivate, followIsPersonal, cb2);
+          if (!isPrivate || (isPrivate && isFriend)) {
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, cb2);
           } else {
             cb2();
           }
@@ -97,8 +95,9 @@ module.exports = function (api) {
     var insertMentioned = function (users, cb) {
       if (!cb) { return users(); } // no mentioned users
       async.map(users, function (mentionedUser, cb2) {
-        if (!jobData.isprivate || (jobData.isprivate && mentionedUser.isFriend)) {
-          upsertTimeline(jobData.keyspace, 'feed_timeline', mentionedUser.user, jobData.id, jobData.type, client.generateTimeId(jobData.timestamp), jobData.isprivate, jobData.ispersonal, cb2);
+        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
+        if (!isPrivate || (isPrivate && mentionedUser.isFriend)) {
+          upsertTimeline(jobData.keyspace, 'feed_timeline', mentionedUser.user, jobData.id, jobData.type, client.generateTimeId(jobData.timestamp), jobData.visibility, cb2);
         } else {
           cb2();
         }
@@ -123,8 +122,7 @@ module.exports = function (api) {
       id: object[type],
       type: type,
       timestamp: client.generateTimeId(object.timestamp),
-      isprivate: object.isprivate,
-      ispersonal: object.ispersonal
+      visibility: object.visibility
     };
 
     debug('Adding feed item', user, object, type);
@@ -148,7 +146,7 @@ module.exports = function (api) {
 
     var insertUserTimelines = function (cb) {
       async.map(FEEDS, function (timeline, cb2) {
-        upsertTimeline(keyspace, timeline, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.isprivate, jobData.ispersonal, cb2);
+        upsertTimeline(keyspace, timeline, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, cb2);
       }, cb);
     };
 
@@ -160,9 +158,9 @@ module.exports = function (api) {
 
   }
 
-  function upsertTimeline (keyspace, timeline, user, item, type, time, isprivate, ispersonal, next) {
-    var data = [user, item, type, time, isprivate, ispersonal];
-    debug('Upsert into timeline: ', timeline, user, item, type, time);
+  function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, next) {
+    var data = [user, item, type, time, visibility];
+    debug('Upsert into timeline: ', timeline, user, item, type, time, visibility || 'public');
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
   }
 
@@ -351,8 +349,9 @@ module.exports = function (api) {
               currentResult.timeuuid = timeline[index].time;
               currentResult.date = timeline[index].date;
               currentResult.fromNow = moment(currentResult.date).fromNow();
-              currentResult.isprivate = timeline[index].isprivate;
-              currentResult.ispersonal = timeline[index].ispersonal;
+              currentResult.visibility = timeline[index].visibility;
+              currentResult.isprivate = timeline[index].visibility === api.visibility.PRIVATE;
+              currentResult.ispersonal = timeline[index].visibility === api.visibility.PERSONAL;
 
               // Calculated fields to make rendering easier
               currentResult.fromFollower = currentResult.user.user !== user.user;
@@ -399,8 +398,8 @@ module.exports = function (api) {
     getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
-        if (item.type !== 'post' || item.ispersonal || item.isprivate) return cb();
-        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.isprivate, item.ispersonal, cb);
+        if (item.type !== 'post' || item.visibility) return cb();
+        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, cb);
       }, next);
     });
 

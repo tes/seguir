@@ -15,7 +15,7 @@ module.exports = function (api) {
   var client = api.client,
       q = client.queries;
 
-  function addPost (keyspace, user, content, content_type, timestamp, isprivate, ispersonal, next) {
+  function addPost (keyspace, user, content, content_type, timestamp, visibility, next) {
     var post = client.generateId();
 
     // Parse and re-parse the input content, this catches any errors and ensures we don't
@@ -24,8 +24,8 @@ module.exports = function (api) {
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
-    var data = [post, user, convertedContent, content_type, timestamp, isprivate, ispersonal];
-    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'isprivate', 'ispersonal'], data);
+    var data = [post, user, convertedContent, content_type, timestamp, visibility];
+    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility'], data);
 
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
@@ -39,18 +39,10 @@ module.exports = function (api) {
           content: originalContent,
           content_type: content_type,
           posted: timestamp,
-          isprivate: isprivate,
-          ispersonal: ispersonal
+          visibility: visibility
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user', 'user_follower'], user, next);
       });
-    });
-  }
-
-  function addPostByName (keyspace, username, content, content_type, timestamp, isprivate, ispersonal, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      addPost(keyspace, user.user, content, content_type, timestamp, isprivate, ispersonal, next);
     });
   }
 
@@ -89,7 +81,6 @@ module.exports = function (api) {
 
   return {
     addPost: addPost,
-    addPostByName: addPostByName,
     removePost: removePost,
     getPost: getPost,
     getPostFromObject: getPostFromObject

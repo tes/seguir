@@ -1,5 +1,5 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Friends and Friend Requests
  */
 
 /*eslint-env node, mocha */

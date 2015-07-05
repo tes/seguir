@@ -1,5 +1,5 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Users
  */
 
 /*eslint-env node, mocha */
@@ -134,7 +134,7 @@ databases.forEach(function (db) {
 
         api.user.addUser(keyspace, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
           expect(err).to.be(null);
-          api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+          api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
             expect(err).to.be(null);
             api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
               expect(err).to.be(null);

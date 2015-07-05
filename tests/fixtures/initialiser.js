@@ -62,7 +62,7 @@ function setupUsers (keyspace, api, users, next) {
 function setupGraph (keyspace, api, users, actions, next) {
 
   function addFollow (follow, cb) {
-    api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.isprivate, follow.ispersonal, cb);
+    api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.visibility, cb);
   }
 
   function addFriend (friend, cb) {
@@ -70,7 +70,7 @@ function setupGraph (keyspace, api, users, actions, next) {
   }
 
   function addPost (post, cb) {
-    api.post.addPost(keyspace, users[post.user].user, post.content, post.contentType, post.timestamp || api.client.getTimestamp(), post.isprivate, post.ispersonal, cb);
+    api.post.addPost(keyspace, users[post.user].user, post.content, post.contentType, post.timestamp || api.client.getTimestamp(), post.visibility, cb);
   }
 
   function addLike (like, cb) {

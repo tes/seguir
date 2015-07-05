@@ -79,8 +79,8 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = ?, altid = ?, userd
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, user, posted, isprivate, ispersonal FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?, ?);';
+queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility FROM {KEYSPACE}.posts WHERE post = ?';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, visibility) VALUES(?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 
 /**
@@ -122,11 +122,11 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  * @apiExample {cql} Remove Follow
  *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
-queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectFollow = 'SELECT follow, user, user_follower, since, isprivate, ispersonal FROM {KEYSPACE}.followers WHERE follow = ?';
-queries.selectFollowers = 'SELECT user, user_follower, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = ?';
+queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
+queries.selectFollowers = 'SELECT user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
-queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
+queries.isFollower = 'SELECT follow, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**
  * @apiDefine ExampleCqlCounts
@@ -159,8 +159,8 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, isprivate, ispersonal) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, isprivate, ispersonal FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
 queries.timelineLimit = 'LIMIT {limit}';

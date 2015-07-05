@@ -144,8 +144,7 @@ function bootstrapServer (api, config, next) {
         follow: {
           users: ['bob', 'cliftonc'],
           backfill: '1d',
-          isprivate: false,
-          ispersonal: true
+          visibility: 'personal'
         }
       }
    *
@@ -389,14 +388,13 @@ function bootstrapServer (api, config, next) {
     if (!req.params.content) {
       return next(new restify.InvalidArgumentError('You must provide content for the post.'));
     }
-    var isprivate = !!req.params.isprivate,
-        ispersonal = !!req.params.ispersonal,
+    var visibility = req.params.visibility || null,
         content_type = req.params.content_type || 'text/html',
         posted = api.client.getTimestamp(req.params.posted);
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.post.addPost(req.keyspace, user, req.params.content, content_type, posted, isprivate, ispersonal, _response(res, next));
+      api.post.addPost(req.keyspace, user, req.params.content, content_type, posted, visibility, _response(res, next));
     });
   });
 
@@ -594,8 +592,7 @@ function bootstrapServer (api, config, next) {
    * @apiDescription Adds a new friend to a user account.
    * @apiParam {Guid} user the guid representation of the user who will be followed
    * @apiParam {Guid} user_follower the guid of the user who will be the follower
-   * @apiParam {Boolean} isprivate is the follow private, e.g. only for friends
-   * @apiParam {Boolean} ispersonal is the follow personal, e.g. only for you
+   * @apiParam {String} visibility visibility level
    * @apiParam {String} backfill amount of time to backfill posts from the user followed - e.g. 1d
    * @apiUse followUserSuccessExample
    *
@@ -611,8 +608,7 @@ function bootstrapServer (api, config, next) {
       return next(new restify.InvalidArgumentError('You must provide a user_follower.'));
     }
 
-    var isprivate = !!req.params.isprivate,
-        ispersonal = !!req.params.ispersonal,
+    var visibility = req.params.visibility || null,
         backfill = req.params.backfill;
 
     coerce(req.keyspace, [req.params.user, req.params.user_follower], function (err, users) {
@@ -623,7 +619,7 @@ function bootstrapServer (api, config, next) {
         return next(new restify.ForbiddenError('You can only add your own follow relationships.'));
       }
 
-      api.follow.addFollower(req.keyspace, user, user_follower, api.client.getTimestamp(), isprivate, ispersonal, backfill, _response(res, next));
+      api.follow.addFollower(req.keyspace, user, user_follower, api.client.getTimestamp(), visibility, backfill, _response(res, next));
     });
 
   });

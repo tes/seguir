@@ -1,5 +1,5 @@
 var async = require('async');
-var schemaVersion = 1;
+var schemaVersion = 2;
 
 function defineTablesAndIndexes (KEYSPACE) {
 
@@ -41,12 +41,11 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Guid} user The unique guid for the user.
    * @apiParam {String} type Optional sub-type for the post, defaults to 'varchar(500)'.
    * @apiParam {String} content The content of the post.
-   * @apiParam {Boolean} isprivate Is the post only for friends.
-   * @apiParam {Boolean} ispersonal Is the post only for the user.
+   * @apiParam {String} visibility Visibility level
    * @apiParam {Timestamp} posted The date the post was made.
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, type varchar(500), content varchar(500), content_type varchar(500), isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false, posted timestamptz(3))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, type varchar(500), content varchar(500), content_type varchar(500), visibility varchar(50), posted timestamptz(3))');
   indexes.push('CREATE INDEX posts_user_idx ON ' + KEYSPACE + '.posts ("user")');
 
   /**
@@ -110,12 +109,11 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Guid} follow The unique guid for the follower relationship.
    * @apiParam {Guid} user The unique guid for the user.
    * @apiParam {Guid} user_follower The unique guid for the user they are following.
-   * @apiParam {Boolean} isprivate Is the follow visible only to friends.
-   * @apiParam {Boolean} ispersonal Is the follow visible only for the user and the person being followed.
+   * @apiParam {String} visibility Visibility level
    * @apiParam {Timestamp} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_follower varchar(36) NOT NULL, isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false, since timestamptz(3))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_follower varchar(36) NOT NULL, visibility varchar(50), since timestamptz(3))');
   indexes.push('CREATE INDEX followers_follow_idx ON ' + KEYSPACE + '.followers ("follow")');
   indexes.push('CREATE INDEX followers_user_idx ON ' + KEYSPACE + '.followers ("user")');
   indexes.push('CREATE INDEX followers_user_follower_idx ON ' + KEYSPACE + '.followers ("user_follower")');
@@ -130,14 +128,13 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Guid} time The unique timevarchar(36) for the event, this is how the feed is sorted.
    * @apiParam {Guid} item The unique guid for the item in the feed - this can be a post, follow, friend or like event.
    * @apiParam {String} type The string short name for the type of event, valid values are: 'post','follow','friend','like'.
-   * @apiParam {Boolean} isprivate Is this event private and only visible if the user is a friend.
-   * @apiParam {Boolean} ispersonal Is this event personal and only visible to the user.
+   * @apiParam {String} visibility Visibility level
    * @apiUse ExampleCqlFeed
    */
   var feedTables = ['feed_timeline', 'user_timeline'];
 
   feedTables.forEach(function (table) {
-    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' ("user" varchar(36) NOT NULL, time timestamptz(3) NOT NULL, item varchar(36) NOT NULL, type varchar(500) NOT NULL, isprivate boolean DEFAULT false, ispersonal boolean DEFAULT false)');
+    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' ("user" varchar(36) NOT NULL, time timestamptz(3) NOT NULL, item varchar(36) NOT NULL, type varchar(500) NOT NULL, visibility varchar(50))');
     indexes.push('CREATE INDEX ' + table + '_user_idx ON ' + KEYSPACE + '.' + table + ' ("user")');
     indexes.push('CREATE INDEX ' + table + '_item_idx ON ' + KEYSPACE + '.' + table + ' ("item")');
     indexes.push('CREATE INDEX ' + table + '_time_idx ON ' + KEYSPACE + '.' + table + ' ("time")');

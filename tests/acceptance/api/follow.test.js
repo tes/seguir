@@ -1,5 +1,5 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Follows
  */
 
 /*eslint-env node, mocha */
@@ -47,7 +47,7 @@ databases.forEach(function (db) {
     describe('follows', function () {
 
       it('can follow a user', function (done) {
-        api.follow.addFollower(keyspace, users['cliftonc'].user, users['phteven'].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users['cliftonc'].user, users['phteven'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['phteven']);
@@ -57,7 +57,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow another user', function (done) {
-        api.follow.addFollower(keyspace, users['cliftonc'].user, users['ted'].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users['cliftonc'].user, users['ted'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['ted']);
@@ -66,22 +66,22 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user privately so only your friends can see', function (done) {
-        api.follow.addFollower(keyspace, users['harold'].user, users['jenny'].user, api.client.getTimestamp(), true, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users['harold'].user, users['jenny'].user, api.client.getTimestamp(), api.visibility.PRIVATE, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['harold']);
           expect(follow.user_follower).to.eql(users['jenny']);
-          expect(follow.isprivate).to.be(true);
+          expect(follow.visibility).to.be(api.visibility.PRIVATE);
           privateFollowId = follow.follow;
           done();
         });
       });
 
       it('can follow a user personally so only you can see', function (done) {
-        api.follow.addFollower(keyspace, users['alfred'].user, users['jenny'].user, api.client.getTimestamp(), false, true, function (err, follow) {
+        api.follow.addFollower(keyspace, users['alfred'].user, users['jenny'].user, api.client.getTimestamp(), api.visibility.PERSONAL, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['alfred']);
           expect(follow.user_follower).to.eql(users['jenny']);
-          expect(follow.ispersonal).to.be(true);
+          expect(follow.visibility).to.be(api.visibility.PERSONAL);
           personalFollowId = follow.follow;
           done();
         });
@@ -187,7 +187,7 @@ databases.forEach(function (db) {
       });
 
       it('can remove a follow', function (done) {
-        api.follow.addFollower(keyspace, users['bill'].user, users['harold'].user, api.client.getTimestamp(), false, false, function (err, follow) {
+        api.follow.addFollower(keyspace, users['bill'].user, users['harold'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           api.follow.removeFollower(keyspace, users['bill'].user, users['harold'].user, function (err, result) {
             expect(err).to.be(null);

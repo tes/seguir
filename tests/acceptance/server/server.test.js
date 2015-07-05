@@ -1,5 +1,17 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Acceptance test the client / server API
+ * This test suite will simply excercise all of the client / server logic.
+ * It won't retest application level logic that should be covered within the API tests.
+ * Only bother adding a test here if you add a new end point or change core behaviour related
+ * to the server.
+ *
+ * This typically covers:
+ *
+ *  - ID coercion (e.g. seguirId, altid, username)
+ *  - Parameter options
+ *  - Exceptions / security
+ *  - Anything relating to url encoding
+ *
  */
 
 /*eslint-env node, mocha */
@@ -23,7 +35,7 @@ databases.forEach(function (db) {
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {}, liu, liuAltId, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, server, client, samples = [];
+    var api, users = {}, postId, privatePostId, followId, notFriendFollowId, followUserId, reciprocalFriendId, friendRequestId, likeId, friendId, server, client, samples = [];
 
     function addSample (name, sample) {
       samples.push({name: name, sample: JSON.stringify(sample, null, 2)});
@@ -92,8 +104,6 @@ databases.forEach(function (db) {
           results.forEach(function (user) {
             users[user.username] = user;
           });
-          liu = users['cliftonc'].user; // clifton is logged in
-          liuAltId = users['cliftonc'].altid;
           addSample('addUser', users['cliftonc']);
           done();
         });
@@ -195,7 +205,7 @@ databases.forEach(function (db) {
     describe('friends', function () {
 
       it('can retrieve a friend by id', function (done) {
-        client.getFriend(liu, friendId, function (err, friend) {
+        client.getFriend(users['cliftonc'].user, friendId, function (err, friend) {
           expect(err).to.be(null);
           expect(friend.user).to.eql(users['cliftonc']);
           expect(friend.user_friend).to.eql(users['phteven']);
@@ -205,7 +215,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a list of friends for a user', function (done) {
-        client.getFriends(liu, users['cliftonc'].user, function (err, friends) {
+        client.getFriends(users['cliftonc'].user, users['cliftonc'].user, function (err, friends) {
           expect(err).to.be(null);
           expect(friends[0].user_friend).to.eql(users['phteven']);
           addSample('getFriends', friends);
@@ -214,7 +224,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a list of friends for a user by altids', function (done) {
-        client.getFriends(liuAltId, users['cliftonc'].altid, function (err, friends) {
+        client.getFriends(users['cliftonc'].altid, users['cliftonc'].altid, function (err, friends) {
           expect(err).to.be(null);
           expect(friends[0].user_friend).to.eql(users['phteven']);
           done();
@@ -246,7 +256,7 @@ databases.forEach(function (db) {
     describe('follows', function () {
 
       it('can add a follower who is a friend', function (done) {
-        client.followUser(users['phteven'].user, liu, false, false, function (err, follow) {
+        client.followUser(users['phteven'].user, users['cliftonc'].user, client.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['phteven']);
@@ -257,7 +267,7 @@ databases.forEach(function (db) {
       });
 
       it('can add a follower who is not a friend', function (done) {
-        client.followUser(users['ted'].user, liu, false, false, function (err, follow) {
+        client.followUser(users['ted'].user, users['cliftonc'].user, client.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['ted']);
@@ -267,7 +277,7 @@ databases.forEach(function (db) {
       });
 
       it('can follow a user who is not a friend', function (done) {
-        client.followUser(users['bill'].user, users['ted'].user, false, false, function (err, follow) {
+        client.followUser(users['bill'].user, users['ted'].user, client.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['ted']);
           expect(follow.user_follower).to.eql(users['bill']);
@@ -277,7 +287,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a follow by id', function (done) {
-        client.getFollow(liu, followId, function (err, follow) {
+        client.getFollow(users['cliftonc'].user, followId, function (err, follow) {
           expect(err).to.be(null);
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['phteven']);
@@ -287,7 +297,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a list of followers for a user', function (done) {
-        client.getFollowers(liu, users['cliftonc'].user, function (err, followers) {
+        client.getFollowers(users['cliftonc'].user, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
             return item.user.toString();
@@ -300,7 +310,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a list of followers for a user who has no followers', function (done) {
-        client.getFollowers(liu, users['alfred'].user, function (err, followers) {
+        client.getFollowers(users['cliftonc'].user, users['alfred'].user, function (err, followers) {
           expect(err).to.be(null);
           expect(followers.length).to.be(0);
           done();
@@ -316,7 +326,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a list of followers for a user by altids', function (done) {
-        client.getFollowers(liuAltId, users['cliftonc'].altid, function (err, followers) {
+        client.getFollowers(users['cliftonc'].altid, users['cliftonc'].altid, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) {
             return item.user.toString();
@@ -328,7 +338,7 @@ databases.forEach(function (db) {
       });
 
       it('can add and then remove a follower', function (done) {
-        client.followUser(users['bill'].user, users['harold'].user, false, false, function (err, follow) {
+        client.followUser(users['bill'].user, users['harold'].user, client.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
           client.getFollowers(users['harold'].user, users['harold'].user, function (err, followers1) {
             expect(err).to.be(null);
@@ -356,7 +366,7 @@ databases.forEach(function (db) {
       var timestamp = 1280296860145;
 
       it('can post a message from a user', function (done) {
-        client.addPost(liu, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), false, false, function (err, post) {
+        client.addPost(users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), client.visibility.PUBLIC, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.eql(users['cliftonc']);
@@ -366,7 +376,7 @@ databases.forEach(function (db) {
       });
 
       it('can post a private message from a user using their altid with a specific timestamp', function (done) {
-        client.addPost(liuAltId, 'Hello, this is a private post', 'text/html', timestamp, true, false, function (err, post) {
+        client.addPost(users['cliftonc'].altid, 'Hello, this is a private post', 'text/html', timestamp, client.visibility.PRIVATE, function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a private post');
           expect(post.user).to.eql(users['cliftonc']);
@@ -404,9 +414,9 @@ databases.forEach(function (db) {
       });
 
       it('can remove a post', function (done) {
-        client.addPost(liu, 'Why cant I live longer than a few milliseconds for once?', 'text/html', api.client.getTimestamp(), true, false, function (err, post) {
+        client.addPost(users['cliftonc'].user, 'Why cant I live longer than a few milliseconds for once?', 'text/html', api.client.getTimestamp(), client.visibility.PRIVATE, function (err, post) {
           expect(err).to.be(null);
-          client.removePost(liu, post.post, function (err, result) {
+          client.removePost(users['cliftonc'].user, post.post, function (err, result) {
             expect(err).to.be(null);
             addSample('removePost', result);
             client.getPost(users['phteven'].user, post.post, function (err, post) {
@@ -418,7 +428,7 @@ databases.forEach(function (db) {
       });
 
       it('can add a personal post', function (done) {
-        client.addPost(users['jenny'].user, 'Only you may see me', 'text/html', api.client.getTimestamp(), false, true, function (err, post) {
+        client.addPost(users['jenny'].user, 'Only you may see me', 'text/html', api.client.getTimestamp(), client.visibility.PERSONAL, function (err, post) {
           expect(err).to.be(null);
           client.getPost(users['jenny'].user, post.post, function (err, post) {
             expect(err).to.be(null);
@@ -431,7 +441,7 @@ databases.forEach(function (db) {
       });
 
       it('can post a message that contains an object with type application/json and it returns the object in the post and feed', function (done) {
-        client.addPost(users['json'].user, {hello: 'world'}, 'application/json', api.client.getTimestamp(), false, false, function (err, post) {
+        client.addPost(users['json'].user, {hello: 'world'}, 'application/json', api.client.getTimestamp(), client.visibility.PUBLIC, function (err, post) {
           expect(err).to.be(null);
           expect(post.content.hello).to.be('world');
           addSample('addPost', post);
@@ -452,7 +462,7 @@ databases.forEach(function (db) {
     describe('likes', function () {
 
       it('can like an item from a user', function (done) {
-        client.addLike(liu, 'http://github.com', function (err, like) {
+        client.addLike(users['cliftonc'].user, 'http://github.com', function (err, like) {
           expect(err).to.be(null);
           expect(like.item).to.be(encodeURIComponent('http://github.com'));
           likeId = like.like;
@@ -462,7 +472,7 @@ databases.forEach(function (db) {
       });
 
       it('can retrieve a like by id', function (done) {
-        client.getLike(liu, likeId, function (err, like) {
+        client.getLike(users['cliftonc'].user, likeId, function (err, like) {
           expect(err).to.be(null);
           expect(like.item).to.be(encodeURIComponent('http://github.com'));
           expect(like.user).to.eql(users['cliftonc']);
@@ -472,7 +482,7 @@ databases.forEach(function (db) {
       });
 
       it('can check if a user likes an item', function (done) {
-        client.checkLike(liu, 'http://github.com', function (err, like) {
+        client.checkLike(users['cliftonc'].user, 'http://github.com', function (err, like) {
           expect(err).to.be(null);
           expect(like.like).to.be(likeId);
           expect(like.user).to.eql(users['cliftonc']);
@@ -482,15 +492,15 @@ databases.forEach(function (db) {
       });
 
       it('can remove a like', function (done) {
-        client.addLike(liu, 'http://seguir.com', function (err, like) {
+        client.addLike(users['cliftonc'].user, 'http://seguir.com', function (err, like) {
           expect(err).to.be(null);
-          client.removeLike(liu, 'http://seguir.com', function (err, result) {
+          client.removeLike(users['cliftonc'].user, 'http://seguir.com', function (err, result) {
             expect(err).to.be(null);
             addSample('removeLike', result);
-            client.checkLike(liu, 'http://seguir.com', function (err, like) {
+            client.checkLike(users['cliftonc'].user, 'http://seguir.com', function (err, like) {
               expect(err).to.be(null);
               expect(like.count).to.be(0);
-              expect(like.user.user).to.eql(liu);
+              expect(like.user.user).to.eql(users['cliftonc'].user);
               addSample('checkNotLike', like);
               done();
             });
@@ -720,8 +730,7 @@ databases.forEach(function (db) {
           follow: {
             users: [users['cliftonc'].username, users['phteven'].username],
             backfill: '1d',
-            isprivate: false,
-            ispersonal: true
+            visibility: client.visibility.PERSONAL
           }
         };
 
@@ -740,7 +749,7 @@ databases.forEach(function (db) {
 
         client.addUser(null, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
           expect(err).to.be(null);
-          client.followUser(user.user, users['cliftonc'].user, false, false, '1d', function (err, follow) {
+          client.followUser(user.user, users['cliftonc'].user, client.visibility.PUBLIC, '1d', function (err, follow) {
             expect(err).to.be(null);
             client.getFeed(user.user, user.user, null, 50, function (err, feed) {
               expect(err).to.be(null);
