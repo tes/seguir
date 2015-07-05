@@ -83,7 +83,7 @@ databases.forEach(function (db) {
             'follow-1',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -98,7 +98,7 @@ databases.forEach(function (db) {
             'follow-1',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -115,7 +115,7 @@ databases.forEach(function (db) {
             'follow-1',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -128,7 +128,7 @@ databases.forEach(function (db) {
             'follow-2',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -142,7 +142,7 @@ databases.forEach(function (db) {
             'follow-1',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -154,7 +154,7 @@ databases.forEach(function (db) {
             'reciprocal-friend-2',
             'follow-private'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -163,7 +163,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, null, users['harold'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var expected = [];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -177,7 +177,7 @@ databases.forEach(function (db) {
             'follow-personal',
             'follow-3'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -190,7 +190,7 @@ databases.forEach(function (db) {
             'post-mention',
             'follow-3'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -203,7 +203,7 @@ databases.forEach(function (db) {
             'post-mention',
             'follow-3'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -214,7 +214,7 @@ databases.forEach(function (db) {
           var expected = [
             'follow-personal'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -227,7 +227,7 @@ databases.forEach(function (db) {
             'post-mention',
             'follow-3'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -238,7 +238,7 @@ databases.forEach(function (db) {
           var expected = [
             'post-mention'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -252,7 +252,7 @@ databases.forEach(function (db) {
             'follow-1',
             'post-private-old'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -265,7 +265,7 @@ databases.forEach(function (db) {
             'post-mention',
             'follow-3'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -277,7 +277,7 @@ databases.forEach(function (db) {
             'post-public',
             'reciprocal-friend-1'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -288,7 +288,7 @@ databases.forEach(function (db) {
           var expected = [
             'post-public'
           ];
-          assertFeed(feed, actionResults, expected);
+          initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
@@ -298,18 +298,3 @@ databases.forEach(function (db) {
   });
 
 });
-
-function assertFeed (feed, actionResults, expected) {
-  var feedKeys = _.map(feed, function (item) { return {item: item._item, type: item.type}; });
-  var expectedFeed = _.map(expected, function (key) {
-    var type;
-    // This is due to no common identifier and type - we should refactor to add these
-    if (actionResults[key].like) { type = 'like'; }
-    if (actionResults[key].post) { type = 'post'; }
-    if (actionResults[key].friend) { type = 'friend'; }
-    if (actionResults[key].follow) { type = 'follow'; }
-    return {item: actionResults[key][type], type: type};
-  });
-  expect(feedKeys).to.eql(expectedFeed);
-}
-

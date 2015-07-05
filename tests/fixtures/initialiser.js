@@ -4,6 +4,7 @@
 var Api = require('../../api');
 var startServer = require('../../server');
 var Seguir = require('../../client');
+var expect = require('expect.js');
 var async = require('async');
 var _ = require('lodash');
 var credentials = {host: 'http://localhost:3001'};
@@ -98,9 +99,25 @@ function setupGraph (keyspace, api, users, actions, next) {
 
 }
 
+function assertFeed (feed, actionResults, expected) {
+  var feedKeys = _.map(feed, function (item) { return {item: item._item, type: item.type}; });
+  var expectedFeed = _.map(expected, function (key) {
+    var type;
+    // This is due to no common identifier and type - we should refactor to add these
+    if (!actionResults[key]) { return; }
+    if (actionResults[key].like) { type = 'like'; }
+    if (actionResults[key].post) { type = 'post'; }
+    if (actionResults[key].friend) { type = 'friend'; }
+    if (actionResults[key].follow) { type = 'follow'; }
+    return {item: actionResults[key][type], type: type};
+  });
+  expect(feedKeys).to.eql(expectedFeed);
+}
+
 module.exports = {
   setupApi: setupApi,
   setupServer: setupServer,
   setupUsers: setupUsers,
-  setupGraph: setupGraph
+  setupGraph: setupGraph,
+  assertFeed: assertFeed
 };

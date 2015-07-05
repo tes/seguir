@@ -92,6 +92,63 @@ databases.forEach(function (db) {
 
     });
 
+    describe('initialising users and follows', function () {
+
+      var actions = [
+        {key: 'post-public', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'},
+        {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
+      ];
+      var actionResults = {};
+
+      before(function (done) {
+        initialiser.setupGraph(keyspace, api, users, actions, function (err, results) {
+          expect(err).to.be(null);
+          actionResults = results;
+          done();
+        });
+      });
+
+      it('can optionally initialise a user with a follow relationship and automatically populate their feed', function (done) {
+
+        var initialise = {
+          follow: {
+            users: [users['cliftonc'].username, users['phteven'].username],
+            backfill: '1d',
+            isprivate: false,
+            ispersonal: true
+          }
+        };
+
+        api.user.addUser(keyspace, 'shaun', 'baah', {type: 'sheep'}, initialise, function (err, user) {
+          expect(err).to.be(null);
+          api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+            expect(err).to.be(null);
+            expect(feed[2].post).to.eql(actionResults['post-public'].post);
+            done();
+          });
+        });
+
+      });
+
+      it('can optionally backfill a follow relationship and automatically populate their feed', function (done) {
+
+        api.user.addUser(keyspace, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
+          expect(err).to.be(null);
+          api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), false, false, '1d', function (err, follow) {
+            expect(err).to.be(null);
+            api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+              expect(err).to.be(null);
+              expect(feed[0].follow).to.eql(follow.follow);
+              expect(feed[1].post).to.eql(actionResults['post-public'].post);
+              done();
+            });
+          });
+        });
+
+      });
+
+    });
+
   });
 
 });
