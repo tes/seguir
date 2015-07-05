@@ -49,6 +49,7 @@ databases.forEach(function (db) {
       var actions = [
         {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
         {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
+        {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
         {key: 'follow-private', type: 'follow', user: 'harold', user_follower: 'bill', isprivate: true},
         {key: 'follow-personal', type: 'follow', user: 'alfred', user_follower: 'jenny', ispersonal: true},
         {key: 'friend-1', reciprocal: 'reciprocal-friend-1', type: 'friend', user: 'cliftonc', user_friend: 'phteven'},
@@ -56,6 +57,7 @@ databases.forEach(function (db) {
         {key: 'post-private-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)},
         {key: 'post-public', type: 'post', user: 'phteven', content: 'hello', contentType: 'text/html'},
         {key: 'post-mention', type: 'post', user: 'bill', content: 'mentioning @json', contentType: 'text/html'},
+        {key: 'post-mention-follower', type: 'post', user: 'bill', content: 'mentioning @alfred', contentType: 'text/html'},
         {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
       ];
       var actionResults = {};
@@ -170,7 +172,10 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'follow-personal'
+            'post-mention-follower',
+            'post-mention',
+            'follow-personal',
+            'follow-3'
           ];
           assertFeed(feed, actionResults, expected);
           done();
@@ -180,7 +185,11 @@ databases.forEach(function (db) {
       it('cant see personal follows as another user', function (done) {
         api.feed.getFeed(keyspace, users['cliftonc'].user, users['alfred'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
-          var expected = [];
+          var expected = [
+            'post-mention-follower',
+            'post-mention',
+            'follow-3'
+          ];
           assertFeed(feed, actionResults, expected);
           done();
         });
@@ -189,7 +198,11 @@ databases.forEach(function (db) {
       it('cant see personal follows as the anonymous user', function (done) {
         api.feed.getFeed(keyspace, null, users['alfred'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
-          var expected = [];
+          var expected = [
+            'post-mention-follower',
+            'post-mention',
+            'follow-3'
+          ];
           assertFeed(feed, actionResults, expected);
           done();
         });
@@ -210,7 +223,9 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['bill'].user, users['bill'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'post-mention'
+            'post-mention-follower',
+            'post-mention',
+            'follow-3'
           ];
           assertFeed(feed, actionResults, expected);
           done();
@@ -246,7 +261,9 @@ databases.forEach(function (db) {
         api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'post-mention'
+            'post-mention-follower',
+            'post-mention',
+            'follow-3'
           ];
           assertFeed(feed, actionResults, expected);
           done();
