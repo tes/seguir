@@ -60,7 +60,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the relationship began.
    * @apiUse ExampleCqlFriends
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, since timestamptz(3))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, since timestamptz(3), visibility varchar(50))');
   indexes.push('CREATE INDEX friends_user_idx ON ' + KEYSPACE + '.friends ("user")');
   indexes.push('CREATE INDEX friends_user_friend_idx ON ' + KEYSPACE + '.friends ("user_friend")');
 
@@ -77,7 +77,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} time The date the request was made.
    * @apiUse ExampleCqlFriendRequests
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, message varchar(1000), since timestamptz(3))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, user_friend varchar(36) NOT NULL, message varchar(1000), since timestamptz(3), visibility varchar(50))');
   indexes.push('CREATE INDEX friendreqs_user_friend_idx ON ' + KEYSPACE + '.friend_request ("user_friend")');
   indexes.push('CREATE INDEX friendreqs_user_idx ON ' + KEYSPACE + '.friend_request ("user")');
 
@@ -96,7 +96,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the like was made.
    * @apiUse ExampleCqlLikes
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.likes ("like" varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, item varchar(256) NOT NULL, since timestamptz(3))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.likes ("like" varchar(36) NOT NULL PRIMARY KEY, "user" varchar(36) NOT NULL, item varchar(256) NOT NULL, since timestamptz(3), visibility varchar(50))');
   indexes.push('CREATE INDEX like_user_idx ON ' + KEYSPACE + '.likes ("user")');
   indexes.push('CREATE INDEX like_item_idx ON ' + KEYSPACE + '.likes ("item")');
 

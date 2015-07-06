@@ -94,8 +94,8 @@ queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
  * @apiExample {cql} Remove Friend
  *    DELETE FROM {KEYSPACE}.friends WHERE friend = ?
  */
-queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since) VALUES(?, ?, ?, ?)';
-queries.selectFriend = 'SELECT friend, user, user_friend, since FROM {KEYSPACE}.friends WHERE friend = ?';
+queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, user, user_friend, since, visibility) VALUES(?, ?, ?, ?, ?)';
+queries.selectFriend = 'SELECT friend, user, user_friend, since, visibility FROM {KEYSPACE}.friends WHERE friend = ?';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE user = ?';
 queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE user = ? AND user_friend=?';
 queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? AND user_friend = ?';
@@ -105,10 +105,10 @@ queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE user = ? 
  * @apiExample {cql} Insert Friend Request
  *    INSERT INTO seguir.friend_request (friend_request, user, user_friend, message, time) VALUES(?, ?, ?, ?)
  */
-queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, user, user_friend, message, since) VALUES(?, ?, ?, ?, ?)';
-queries.selectFriendRequest = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
-queries.selectIncomingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user_friend = ?';
-queries.selectOutgoingFriendRequests = 'SELECT friend_request, user, user_friend, message, since FROM {KEYSPACE}.friend_request WHERE user = ?';
+queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, user, user_friend, message, since, visibility) VALUES(?, ?, ?, ?, ?, ?)';
+queries.selectFriendRequest = 'SELECT friend_request, user, user_friend, message, since, visibility FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
+queries.selectIncomingFriendRequests = 'SELECT friend_request, user, user_friend, message, since, visibility FROM {KEYSPACE}.friend_request WHERE user_friend = ?';
+queries.selectOutgoingFriendRequests = 'SELECT friend_request, user, user_friend, message, since, visibility FROM {KEYSPACE}.friend_request WHERE user = ?';
 queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = ?';
 
 /**
@@ -145,9 +145,9 @@ queries.selectCount = 'SELECT count FROM {KEYSPACE}.counts WHERE item = ? AND ty
  * @apiExample {cql} Remove Like
  *    DELETE FROM {KEYSPACE}.likes WHERE like = ?
  */
-queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
-queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
-queries.checkLike = 'SELECT like, user, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.selectLike = 'SELECT like, item, user, since, visibility FROM {KEYSPACE}.likes WHERE like = ?';
+queries.checkLike = 'SELECT like, user, since, visibility FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
 
 /**

@@ -100,6 +100,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           var expected = [
             'like-google',
+            'friend-2',
             'friend-1',
             'follow-2',
             'follow-1',

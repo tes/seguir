@@ -36,8 +36,8 @@ module.exports = function (api) {
   }
 
   function addFriendOneWay (keyspace, friend, user, user_friend, timestamp, next) {
-    var data = [friend, user, user_friend, timestamp];
-    var object = _.object(['friend', 'user', 'user_friend', 'timestamp'], data);
+    var data = [friend, user, user_friend, timestamp, api.visibility.PRIVATE];
+    var object = _.object(['friend', 'user', 'user_friend', 'timestamp', 'visibility'], data);
     object.visibility = api.visibility.PERSONAL;
     client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
@@ -49,11 +49,11 @@ module.exports = function (api) {
   function addFriendRequest (keyspace, user, user_friend, message, timestamp, next) {
     var friend_request = client.generateId();
     var cleanMessage = api.common.clean(message);
-    var data = [friend_request, user, user_friend, cleanMessage, timestamp];
+    var data = [friend_request, user, user_friend, cleanMessage, timestamp, api.visibility.PRIVATE];
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare: true}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp});
+      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp, visibility: api.visibility.PRIVATE});
     });
   }
 

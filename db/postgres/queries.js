@@ -70,22 +70,22 @@ queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
 /**
  * @apiDefine ExamplePostgresFriends
  */
-queries._friendSelectFields = 'f.friend AS {PREFIX}friend, f."user" AS "{PREFIX}user", f.user_friend AS {PREFIX}user_friend, f.since AS {PREFIX}since';
+queries._friendSelectFields = 'f.friend AS {PREFIX}friend, f."user" AS "{PREFIX}user", f.user_friend AS {PREFIX}user_friend, f.since AS {PREFIX}since, f.visibility AS {PREFIX}visibility';
 queries.selectFriend = 'SELECT ' + q(null, '_friendSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_friend_'}) + ' FROM {KEYSPACE}.friends f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_friend = uf.user AND f.friend = $1';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE "user" = $1';
-queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, "user", user_friend, since) VALUES($1, $2, $3, $4)';
+queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, "user", user_friend, since, visibility) VALUES($1, $2, $3, $4, $5)';
 queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE "user" = $1 AND user_friend=$2';
 queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE "user" = $1 AND user_friend = $2';
 
 /**
  * @apiDefine ExamplePostgresFriendRequests
  */
-queries._friendRequestSelectFields = 'fr.friend_request AS {PREFIX}friend_request, fr."user" AS "{PREFIX}user", fr.user_friend AS {PREFIX}user_friend, fr.message AS {PREFIX}message, fr.since AS {PREFIX}since';
+queries._friendRequestSelectFields = 'fr.friend_request AS {PREFIX}friend_request, fr."user" AS "{PREFIX}user", fr.user_friend AS {PREFIX}user_friend, fr.message AS {PREFIX}message, fr.since AS {PREFIX}since, fr.visibility AS {PREFIX}visibility';
 queries._selectFriendRequestBase = 'SELECT ' + q(null, '_friendRequestSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_friend_'}) + ' FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user';
 queries.selectFriendRequest = queries._selectFriendRequestBase + ' AND fr.friend_request = $1';
 queries.selectIncomingFriendRequests = queries._selectFriendRequestBase + ' AND fr.user_friend = $1';
 queries.selectOutgoingFriendRequests = queries._selectFriendRequestBase + ' AND fr."user" = $1';
-queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, "user", user_friend, message, since) VALUES($1, $2, $3, $4, $5)';
+queries.upsertFriendRequest = 'INSERT INTO {KEYSPACE}.friend_request (friend_request, "user", user_friend, message, since, visibility) VALUES($1, $2, $3, $4, $5, $6)';
 queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE friend_request = $1';
 
 /**
@@ -108,10 +108,10 @@ queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TYPE} WHERE "
 /**
  * @apiDefine ExamplePostgresLikes
  */
-queries._likeSelectFields = 'l."like" AS "{PREFIX}like", l.item AS {PREFIX}item, l."user" AS "{PREFIX}user", l.since AS {PREFIX}since';
+queries._likeSelectFields = 'l."like" AS "{PREFIX}like", l.item AS {PREFIX}item, l."user" AS "{PREFIX}user", l.since AS {PREFIX}since, l.visibility AS {PREFIX}visibility';
 queries.selectLike = 'SELECT ' + q(null, '_likeSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.likes l, {KEYSPACE}.users u WHERE l.user = u.user AND l."like" = $1';
 queries.checkLike = 'SELECT "like", "user", since FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
-queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes ("like", "user", item, since) VALUES($1, $2, $3, $4);';
+queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes ("like", "user", item, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
 
 /**

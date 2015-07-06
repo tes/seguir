@@ -3,6 +3,9 @@ var async = require('async');
 function apply (keyspace, api, next) {
 
   var schemaVersionCql = [
+    'ALTER TABLE ' + keyspace + '.likes ADD COLUMN visibility varchar(50)',
+    'ALTER TABLE ' + keyspace + '.friends ADD COLUMN visibility varchar(50)',
+    'ALTER TABLE ' + keyspace + '.friend_request ADD COLUMN visibility varchar(50)',
     'ALTER TABLE ' + keyspace + '.posts ADD COLUMN visibility varchar(50)',
     'ALTER TABLE ' + keyspace + '.posts DROP COLUMN isprivate',
     'ALTER TABLE ' + keyspace + '.posts DROP COLUMN ispersonal',

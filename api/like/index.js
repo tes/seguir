@@ -18,8 +18,8 @@ module.exports = function (api) {
   function addLike (keyspace, user, item, timestamp, next) {
     var like = client.generateId();
     var cleanItem = api.common.clean(item);
-    var data = [like, user, cleanItem, timestamp];
-    var object = _.object(['like', 'user', 'item', 'timestamp'], data);
+    var data = [like, user, cleanItem, timestamp, api.visibility.PUBLIC];
+    var object = _.object(['like', 'user', 'item', 'timestamp', 'visibility'], data);
     object.ispersonal = false;
     object.isprivate = false;
     client.execute(q(keyspace, 'upsertLike'), data, {prepare: true}, function (err) {
@@ -28,7 +28,7 @@ module.exports = function (api) {
       alterLikeCount(keyspace, cleanItem, 1, function () {
         api.feed.addFeedItem(keyspace, user, object, 'like', function (err, result) {
           if (err) { return next(err); }
-          var tempLike = {like: like, user: user, item: item, since: timestamp};
+          var tempLike = {like: like, user: user, item: item, since: timestamp, visibility: api.visibility.PUBLIC};
           api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);
         });
       });

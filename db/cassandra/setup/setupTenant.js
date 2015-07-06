@@ -62,7 +62,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the relationship began.
    * @apiUse ExampleCqlFriends
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend uuid, user uuid, user_friend uuid, since timestamp, PRIMARY KEY (user, user_friend))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend uuid, user uuid, user_friend uuid, since timestamp, visibility text, PRIMARY KEY (user, user_friend))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friends(friend)');
   tableIndexes.friends = ['friend'];
 
@@ -79,7 +79,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} time The date the request was made.
    * @apiUse ExampleCqlFriendRequests
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, PRIMARY KEY (friend_request))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, visibility text, PRIMARY KEY (friend_request))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
   tableIndexes.friend_request = ['user', 'user_friend'];
@@ -99,7 +99,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timestamp} since The date the like was made.
    * @apiUse ExampleCqlLikes
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like uuid, user uuid, item text, since timestamp, PRIMARY KEY (user, item))');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like uuid, user uuid, item text, since timestamp, visibility text, PRIMARY KEY (user, item))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.likes(like)');
   tableIndexes.likes = ['like'];
 
