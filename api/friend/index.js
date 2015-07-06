@@ -90,7 +90,7 @@ module.exports = function (api) {
   function userCanSeeItem (keyspace, user, item, user_properties, next) {
 
     // Check if the item provided is one that privacy controls apply to
-    var privacyCheckRequired = item.friend || item.friend_request || item.visibility;
+    var privacyCheckRequired = item.friend || item.friend_request || item.visibility !== api.visibility.PUBLIC;
     if (!privacyCheckRequired) return next();
 
     // If the user is the anonymous user exit quickly

@@ -160,7 +160,7 @@ module.exports = function (api) {
 
   function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, next) {
     var data = [user, item, type, time, visibility];
-    debug('Upsert into timeline: ', timeline, user, item, type, time, visibility || 'public');
+    debug('Upsert into timeline: ', timeline, user, item, type, time, visibility || api.visibility.PUBLIC);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
   }
 
@@ -352,6 +352,7 @@ module.exports = function (api) {
               currentResult.visibility = timeline[index].visibility;
               currentResult.isprivate = timeline[index].visibility === api.visibility.PRIVATE;
               currentResult.ispersonal = timeline[index].visibility === api.visibility.PERSONAL;
+              currentResult.ispublic = timeline[index].visibility === api.visibility.PUBLIC;
 
               // Calculated fields to make rendering easier
               currentResult.fromFollower = currentResult.user.user !== user.user;
@@ -398,7 +399,7 @@ module.exports = function (api) {
     getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
-        if (item.type !== 'post' || item.visibility) return cb();
+        if (item.type !== 'post' || item.visibility !== api.visibility.PUBLIC) return cb();
         upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, cb);
       }, next);
     });

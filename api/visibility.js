@@ -1,5 +1,5 @@
 module.exports = {
-  PUBLIC: null, // Simpler check for public
+  PUBLIC: 'public',
   PRIVATE: 'private',
   PERSONAL: 'personal'
 };
