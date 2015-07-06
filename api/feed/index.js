@@ -355,7 +355,7 @@ module.exports = function (api) {
               currentResult.ispublic = currentResult.visibility === api.visibility.PUBLIC;
 
               // Calculated fields to make rendering easier
-              currentResult.fromFollower = currentResult.user.user !== user.user;
+              currentResult.fromFollower = currentResult.user.user.toString() !== user.toString();
               currentResult.isLike = currentResult.type === 'like';
               currentResult.isPost = currentResult.type === 'post';
               currentResult.isFollow = currentResult.type === 'follow';
