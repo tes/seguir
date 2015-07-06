@@ -12,7 +12,8 @@ module.exports = function (api) {
       q = client.queries;
 
   function toApply (schemaVersions, migrations) {
-    var migrationVersions = _.pluck(migrations, 'version');
+    var minimumSchemaVersion = _.min(schemaVersions);
+    var migrationVersions = _.filter(_.pluck(migrations, 'version'), function (version) { if (version >= minimumSchemaVersion) return true; });
     var toApplyVersions = _.difference(migrationVersions, schemaVersions);
     var migrationsToApply = _.filter(migrations, function (item) { return _.contains(toApplyVersions, item.version); });
     return migrationsToApply;
