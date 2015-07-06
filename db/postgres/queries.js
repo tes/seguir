@@ -62,9 +62,9 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, use
 /**
  * @apiDefine ExamplePostgresPosts
  */
-queries._postSelectFields = 'p.post AS {PREFIX}post, p.content AS {PREFIX}content, p.content_type AS {PREFIX}content_type, p."user" AS "{PREFIX}user", p.posted AS {PREFIX}posted, p.isprivate AS {PREFIX}isprivate, p.ispersonal AS {PREFIX}ispersonal';
+queries._postSelectFields = 'p.post AS {PREFIX}post, p.content AS {PREFIX}content, p.content_type AS {PREFIX}content_type, p."user" AS "{PREFIX}user", p.posted AS {PREFIX}posted, p.visibility AS {PREFIX}visibility';
 queries.selectPost = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.post = $1';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6, $7);';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, visibility) VALUES($1, $2, $3, $4, $5, $6);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
 
 /**
@@ -91,13 +91,13 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
 /**
  * @apiDefine ExamplePostgresFollows
  */
-queries._followSelectFields = 'fl.follow AS {PREFIX}follow, fl."user" AS "{PREFIX}user", fl.user_follower AS {PREFIX}user_follower, fl.since AS {PREFIX}since, fl.isprivate AS {PREFIX}isprivate, fl.ispersonal AS {PREFIX}ispersonal';
+queries._followSelectFields = 'fl.follow AS {PREFIX}follow, fl."user" AS "{PREFIX}user", fl.user_follower AS {PREFIX}user_follower, fl.since AS {PREFIX}since, fl.visibility AS {PREFIX}visibility';
 queries._followSelectBase = 'SELECT ' + q(null, '_followSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_follower_'}) + ' FROM {KEYSPACE}.followers fl, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fl.user = u.user AND fl.user_follower = uf.user';
 queries.selectFollow = queries._followSelectBase + ' AND fl.follow = $1';
 queries.selectFollowers = queries._followSelectBase + ' AND fl."user" = $1';
-queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6);';
+queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
-queries.isFollower = 'SELECT follow, since, isprivate, ispersonal from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
+queries.isFollower = 'SELECT follow, since, visibility from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
 
 /**
  * @apiDefine ExamplePostgresCounts
@@ -117,7 +117,7 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = 
 /**
  * @apiDefine ExamplePostgresFeed
  */
-queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, tl.type, tl.isprivate, tl.ispersonal, ' +
+queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, tl.type, tl.visibility, ' +
                          q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' +
                          q(null, '_postSelectFields', {PREFIX: 'post_'}) + ', ' +
                          q(null, '_likeSelectFields', {PREFIX: 'like_'}) + ', ' +
@@ -132,7 +132,7 @@ queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, t
                          'WHERE tl."user" = $1{timeClause} ' +
                          'ORDER BY time DESC {limitClause}';
 
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} ("user", item, type, time, isprivate, ispersonal) VALUES($1, $2, $3, $4, $5, $6);';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} ("user", item, type, time, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE "user" = $1 AND time = $2';
 queries.selectAllItems = 'SELECT "user", time FROM {KEYSPACE}.{TIMELINE} WHERE item = $1';
 queries.timelineLimit = ' LIMIT {limit} OFFSET 0';

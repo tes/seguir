@@ -1,5 +1,5 @@
 /**
- * Acceptance test the Cassandra API directly.
+ * Acceptance test of the authentication API
  */
 
 /*eslint-env node, mocha */

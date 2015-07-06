@@ -52,13 +52,11 @@ module.exports = function (api) {
 
   function initialiseUserWithFollowers (keyspace, user, follow, next) {
     var backfill = follow.backfill || '1d';
-    var isprivate = !!follow.isprivate;
-    var ispersonal = !!follow.ispersonal;
     api.auth.coerceUserToUuid(keyspace, follow.users, function (err, usersToFollow) {
       if (err) { return next(err); }
       async.map(usersToFollow, function (userToFollow, cb) {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
-        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), isprivate, ispersonal, function (err) {
+        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility, function (err) {
           if (err) { return cb(err); }
           api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, cb);
         });
@@ -166,12 +164,14 @@ module.exports = function (api) {
         isFriendRequestSince: result.friendRequest[1],
         youFollow: result.follow[0],
         youFollowSince: result.follow[1],
-        youFollowPrivate: result.follow[2] ? result.follow[2].isprivate : null,
-        youFollowPersonal: result.follow[2] ? result.follow[2].ispersonal : null,
+        youFollowVisibility: result.follow[2] ? result.follow[2].visibility : null,
+        youFollowPrivate: result.follow[2] ? result.follow[2].visibility === api.visibility.PRIVATE : null,
+        youFollowPersonal: result.follow[2] ? result.follow[2].visibility === api.visibility.PERSONAL : null,
         theyFollow: result.followBack[0],
         theyFollowSince: result.followBack[1],
-        theyFollowPrivate: result.followBack[2] ? result.followBack[2].isprivate : null,
-        theyFollowPersonal: result.followBack[2] ? result.followBack[2].ispersonal : null,
+        theyFollowVisibility: result.followBack[2] ? result.followBack[2].visibility : null,
+        theyFollowPrivate: result.followBack[2] ? result.followBack[2].visibility === api.visibility.PRIVATE : null,
+        theyFollowPersonal: result.followBack[2] ? result.followBack[2].visibility === api.visibility.PERSONAL : null,
         inCommon: result.inCommon,
         followerCount: result.followerCount && result.followerCount.count ? +result.followerCount.count.toString() : 0
       };
