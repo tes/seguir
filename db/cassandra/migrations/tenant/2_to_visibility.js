@@ -20,7 +20,7 @@ function apply (keyspace, api, next) {
     'ALTER TABLE ' + keyspace + '.user_timeline DROP ispersonal'
   ];
 
-  async.map(schemaVersionCql, api.client.execute, next);
+  async.mapSeries(schemaVersionCql, api.client.execute, next);
 
 }
 

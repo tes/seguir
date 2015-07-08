@@ -158,14 +158,14 @@ function Auth (api) {
   /**
    *  Application Token API
    */
-  function addApplicationToken (appid, appkeyspace, tokenid, tokensecret, next) {
+  function addApplicationToken (appid, appkeyspace, tokenid, tokensecret, description, next) {
     tokenid = tokenid || client.generateId();
     tokensecret = tokensecret || authUtils.generateSecret(client.generateId());
     var enabled = true;
-    var token = [appid, appkeyspace, tokenid, tokensecret, enabled];
+    var token = [appid, appkeyspace, tokenid, tokensecret, description, enabled];
     client.execute(q(keyspace, 'upsertApplicationToken'), token, {prepare: true}, function (err, result) {
       if (err) { return next(err); }
-      next(null, {appid: appid, appkeyspace: appkeyspace, tokenid: tokenid, tokensecret: tokensecret, enabled: enabled});
+      next(null, {appid: appid, appkeyspace: appkeyspace, tokenid: tokenid, tokensecret: tokensecret, description: description, enabled: enabled});
     });
   }
 

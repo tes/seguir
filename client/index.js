@@ -46,6 +46,7 @@ function Seguir (options) {
   }
   self.appid = options.appid;
   self.appsecret = options.appsecret;
+  self.authtype = options.authtype || 'SeguirToken';
 
   self.host = options.host || defaults.host;
   self.rootpath = options.rootpath || defaults.rootpath;
@@ -87,7 +88,7 @@ Seguir.prototype.del = function (liu, apiPath, next) {
 
 Seguir.prototype.getHeaders = function (liu) {
   var self = this;
-  var headers = authUtils.generateAuthorization(self.appid, self.appsecret);
+  var headers = authUtils.generateAuthorization(self.appid, self.appsecret, self.authtype);
   if (liu) {
     headers[headerNames.userHeader] = liu;
   }
