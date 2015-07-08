@@ -70,6 +70,7 @@ module.exports = function (api) {
       async.apply(getMigrations, keyspace, type)
     ], function (err, results) {
       if (err) return next(err);
+      console.dir(results);
       // Have to convert the schema version to an integer from cassandra Integer type
       var schemaVersions = _.map(_.pluck(results[0], 'version'), function (v) { return +v.toString(); });
       var migrations = results[1];

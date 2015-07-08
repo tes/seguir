@@ -350,9 +350,9 @@ module.exports = function (api) {
               currentResult.date = timeline[index].date;
               currentResult.fromNow = moment(currentResult.date).fromNow();
               currentResult.visibility = timeline[index].visibility || api.visibility.PUBLIC;
-              currentResult.isprivate = currentResult.visibility === api.visibility.PRIVATE;
-              currentResult.ispersonal = currentResult.visibility === api.visibility.PERSONAL;
-              currentResult.ispublic = currentResult.visibility === api.visibility.PUBLIC;
+              currentResult.isPrivate = currentResult.visibility === api.visibility.PRIVATE;
+              currentResult.isPersonal = currentResult.visibility === api.visibility.PERSONAL;
+              currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
 
               // Calculated fields to make rendering easier
               currentResult.fromFollower = currentResult.user.user.toString() !== user.toString();
