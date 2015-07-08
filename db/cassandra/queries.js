@@ -126,7 +126,7 @@ queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_f
 queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
 queries.selectFollowers = 'SELECT user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
-queries.isFollower = 'SELECT follow, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
+queries.isFollower = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**
  * @apiDefine ExampleCqlCounts

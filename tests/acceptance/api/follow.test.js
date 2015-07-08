@@ -35,7 +35,8 @@ databases.forEach(function (db) {
           {username: 'harold', altid: '5'},
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
-          {username: 'json', altid: '8'}
+          {username: 'json', altid: '8'},
+          {username: 'aamir', altid: '9'}
         ], function (err, userMap) {
           expect(err).to.be(null);
           users = userMap;
@@ -62,6 +63,34 @@ databases.forEach(function (db) {
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['ted']);
           done();
+        });
+      });
+
+      it('can not follow yourself if you are aamir', function (done) {
+        api.follow.addFollower(keyspace, users['aamir'].user, users['aamir'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
+          expect(err.statusCode).to.be(500);
+          done();
+        });
+      });
+
+      it('can not unfollow someone you dont follow', function (done) {
+        api.follow.removeFollower(keyspace, users['aamir'].user, users['cliftonc'].user, function (err, result) {
+          expect(err.statusCode).to.be(404);
+          done();
+        });
+      });
+
+      it('can not follow someone twice', function (done) {
+        api.follow.addFollower(keyspace, users['aamir'].user, users['cliftonc'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow1) {
+          expect(err).to.be(null);
+          expect(follow1.user).to.eql(users['aamir']);
+          expect(follow1.user_follower).to.eql(users['cliftonc']);
+          api.follow.addFollower(keyspace, users['aamir'].user, users['cliftonc'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow2) {
+            expect(err).to.be(null);
+            expect(follow2.user).to.eql(users['aamir']);
+            expect(follow2.user_follower).to.eql(users['cliftonc']);
+            done();
+          });
         });
       });
 

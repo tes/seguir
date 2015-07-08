@@ -17,28 +17,47 @@ module.exports = function (api) {
 
   function addFollower (keyspace, user, user_follower, timestamp, visibility, backfill, next) {
     if (!next) { next = backfill; backfill = null; }
-    var follow = client.generateId();
-    var data = [follow, user, user_follower, timestamp, visibility];
-    var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'visibility'], data);
-    client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
-      /* istanbul ignore if */
+    if (user.toString() === user_follower.toString()) {
+      return next({statusCode: 500, message: 'You are not allowed to follow yourself.'});
+    }
+
+    var mapFollowResponse = function (follower) {
+      api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
+        if (err) return next(err);
+        return next(null, follow);
+      });
+    };
+
+    isFollower(keyspace, user, user_follower, function (err, isFollower, followerSince, follow) {
+
       if (err) { return next(err); }
-      alterFollowerCount(keyspace, user, 1, function () {
-        api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
-          if (err) { return next(err); }
-          var follower = {
-            follow: follow,
-            user: user,
-            user_follower: user_follower,
-            visibility: visibility,
-            since: timestamp
-          };
-          api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
-            if (err) return next(err);
-            if (!backfill) return next(null, follow);
+
+      // We are already following, so just return the existing relationship
+      if (isFollower) {
+        return mapFollowResponse(follow);
+      }
+
+      // Create a new follow relationship
+      var newFollow = client.generateId();
+      var data = [newFollow, user, user_follower, timestamp, visibility];
+      var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'visibility'], data);
+      client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        alterFollowerCount(keyspace, user, 1, function () {
+          api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
+            if (err) { return next(err); }
+            var follower = {
+              follow: newFollow,
+              user: user,
+              user_follower: user_follower,
+              visibility: visibility,
+              since: timestamp
+            };
+            if (!backfill) return mapFollowResponse(follower);
             api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
               if (err) return next(err);
-              return next(null, follow);
+              mapFollowResponse(follower);
             });
           });
         });
@@ -61,7 +80,8 @@ module.exports = function (api) {
 
   function removeFollower (keyspace, user, user_follower, next) {
     isFollower(keyspace, user, user_follower, function (err, isFollower, isFollowerSince, follow) {
-      if (err || !isFollower) { return next(err); }
+      if (err) { return next(err); }
+      if (!isFollower) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
       var deleteData = [user, user_follower];
       client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare: true}, function (err, result) {
         if (err) return next(err);
@@ -78,7 +98,7 @@ module.exports = function (api) {
   function isFollower (keyspace, user, user_follower, next) {
     if (!user || !user_follower) { return next(null, false, null, null); }
     if (user.toString() === user_follower.toString()) {
-      return next(null, true, null, {});
+      return next(null, false, null, {});
     }
     api.common.get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
       if (err) { return next(null, false, null, {}); }
