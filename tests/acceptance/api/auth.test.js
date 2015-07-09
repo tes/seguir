@@ -135,11 +135,10 @@ databases.forEach(function (db) {
     describe('Account Applications', function () {
 
       it('can create account applications', function (done) {
-        auth.addApplication(accountId, 'Fancy Application', null, null, function (err, application) {
+        auth.addApplication(accountId, 'Fancy Application', null, function (err, application) {
           expect(err).to.be(null);
           expect(application.name).to.be('Fancy Application');
           expect(application.appkeyspace).to.be('fancy_application');
-          expect(application.appsecret).to.not.be(undefined);
           expect(application.appid).to.not.be(undefined);
           appId = application.appid;
           done();
@@ -162,18 +161,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can reset an application secret', function (done) {
-        auth.updateApplicationSecret(appId, function (err, application) {
-          expect(err).to.be(null);
-          expect(application.appsecret).to.not.be(undefined);
-          done();
-        });
-      });
-
       it('can add an additional application token', function (done) {
-        auth.addApplicationToken(appId, 'test-seguir', null, null, function (err, token) {
-          tokenId = token.tokenid;
+        auth.addApplicationToken(appId, 'test-seguir', 'test-token', function (err, token) {
           expect(err).to.be(null);
+          tokenId = token.tokenid;
           expect(token.appid).to.equal(appId);
           expect(token.enabled).to.equal(true);
           done();
@@ -181,9 +172,10 @@ databases.forEach(function (db) {
       });
 
       it('can update application tokens', function (done) {
-        auth.updateApplicationToken(tokenId, false, function (err, token) {
+        auth.updateApplicationToken(tokenId, false, 'changed name', function (err, token) {
           expect(err).to.be(null);
           expect(token.enabled).to.equal(false);
+          expect(token.description).to.equal('changed name');
           done();
         });
       });
@@ -192,6 +184,7 @@ databases.forEach(function (db) {
         auth.getApplicationTokens(appId, function (err, tokens) {
           expect(err).to.be(null);
           expect(tokens[0].enabled).to.equal(false);
+          expect(tokens[0].description).to.equal('changed name');
           done();
         });
       });
@@ -203,30 +196,14 @@ databases.forEach(function (db) {
       var application, token;
 
       before(function (done) {
-        auth.addApplication(accountId, 'another application', null, null, function (err, anotherApplication) {
+        auth.addApplication(accountId, 'another application', function (err, anotherApplication) {
           expect(err).to.be(null);
           application = anotherApplication;
-          auth.addApplicationToken(application.appid, application.appkeyspace, null, null, function (err, anotherToken) {
+          auth.addApplicationToken(application.appid, application.appkeyspace, 'token', function (err, anotherToken) {
             expect(err).to.be(null);
             token = anotherToken;
             done();
           });
-        });
-      });
-
-      it('can check if a provided app id is valid and fail if not enabled', function (done) {
-        auth.checkApplication(appId, function (err, checkedApplication) {
-          expect(err).to.be(null);
-          expect(checkedApplication).to.be(null);
-          done();
-        });
-      });
-
-      it('can check if a provided app id is valid', function (done) {
-        auth.checkApplication(application.appid, function (err, checkedApplication) {
-          expect(err).to.be(null);
-          expect(application.appid).to.eql(checkedApplication.appid);
-          done();
         });
       });
 
@@ -329,7 +306,7 @@ databases.forEach(function (db) {
 
       it('can check if a request has been signed by a valid client', function (done) {
         var request = {
-          headers: _.assign(authUtils.generateAuthorization(application.appid, application.appsecret), {'x-seguir-user-token': userId})
+          headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret), {'x-seguir-user-token': userId})
         };
         var response = {
           send: function (response) {
@@ -346,7 +323,7 @@ databases.forEach(function (db) {
 
       it('can work with anonymous users', function (done) {
         var request = {
-          headers: authUtils.generateAuthorization(application.appid, application.appsecret)
+          headers: authUtils.generateAuthorization(token.tokenid, token.tokensecret)
         };
         var response = {
           send: function (response) {
@@ -363,7 +340,7 @@ databases.forEach(function (db) {
 
       it('can fail requests with an invalid secret', function (done) {
         var request = {
-          headers: authUtils.generateAuthorization(application.appid, 'MY INVALID SECRET')
+          headers: authUtils.generateAuthorization(token.tokenid, 'MY INVALID SECRET')
         };
         var response = {
           send: function (response) {
@@ -372,23 +349,6 @@ databases.forEach(function (db) {
         auth.checkRequest(request, response, function (err) {
           // Not called
           expect(err.message).to.be('You must provide an valid Authorization header to access seguir the seguir API.');
-          done();
-        });
-      });
-
-      it('can user application tokens to generate an authorization', function (done) {
-        var request = {
-          headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret, 'SeguirAppToken'), {'x-seguir-user-token': userId})
-        };
-        var response = {
-          send: function (response) {
-            // Not expected to be called
-          }
-        };
-        auth.checkRequest(request, response, function (err) {
-          expect(err).to.be(null);
-          expect(request.keyspace).to.be('test_seguir_auth_another_application');
-          expect(request.liu.user).to.eql(userId);
           done();
         });
       });
