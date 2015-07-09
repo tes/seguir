@@ -87,8 +87,8 @@ configFn(function (err, config) {
         'Add a new user to an account': addUser,
         'List applications for account': listApplications,
         'Add a new application to an account': addApplication,
-        'Reset application token': resetApplication,
         'Add a new application token': addToken,
+        'Reset application token secret': resetApplicationToken,
         'List application tokens for an application': listTokens
       };
 
@@ -188,7 +188,7 @@ configFn(function (err, config) {
           if (err) return error(err);
           if (apps) {
             apps.forEach(function (app) {
-              console.log(' - [' + app.name + '] appid: ' + app.appid + ' / appsecret: ' + app.appsecret);
+              console.log(' - [' + app.name + '] appid: ' + app.appid);
             });
           } else {
             console.log(' > No apps for this account!');
@@ -203,13 +203,24 @@ configFn(function (err, config) {
         if (err) return error(err);
         selectApplication(account, function (err, application, name, appkeyspace) {
           if (err) return error(err);
-          api.auth.addApplicationToken(application, appkeyspace, null, null, function (err, token) {
-            if (err) return error(err);
-            if (token) {
-              console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+          inquirer.prompt([
+            {
+              type: 'input',
+              message: 'Enter a token description:',
+              name: 'description'
             }
-            process.exit();
+          ], function (output) {
+            if (!output.description) { return; }
+            api.auth.addApplicationToken(application, appkeyspace, output.description, function (err, token) {
+              if (err) return error(err);
+              if (token) {
+                console.log(' Added token: ' + output.description);
+                console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+              }
+              process.exit();
+            });
           });
+
         });
       });
     }
@@ -224,7 +235,7 @@ configFn(function (err, config) {
             if (err) return error(err);
             if (tokens) {
               tokens.forEach(function (token) {
-                console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+                console.log(' - [s' + token.description + '] >> tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
               });
             } else {
               console.log(' > No tokens for this account!');
@@ -235,12 +246,15 @@ configFn(function (err, config) {
       });
     }
 
-    function resetApplication () {
+    function resetApplicationToken () {
       selectAccount(function (err, account) {
         if (err) return error(err);
         selectApplication(account, function (err, application) {
           if (err) return error(err);
-          confirmReset(application);
+          selectApplicationToken(application, function (err, token) {
+            if (err) return error(err);
+            confirmReset(token);
+          });
         });
       });
     }
@@ -276,6 +290,24 @@ configFn(function (err, config) {
         ], function (answer) {
           var application = _.find(applications, { 'name': answer.name });
           next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
+        });
+      });
+    }
+
+    function selectApplicationToken (application, next) {
+      api.auth.getApplicationTokens(application, function (err, tokens) {
+        if (err) return error(err);
+        var tokenDescriptions = _.pluck(tokens, 'description');
+        inquirer.prompt([
+          {
+            type: 'list',
+            message: 'Select an application token:',
+            name: 'description',
+            choices: tokenDescriptions
+          }
+        ], function (answer) {
+          var token = _.tokens(tokens, { 'description': answer.description });
+          next(null, token);
         });
       });
     }
@@ -354,9 +386,12 @@ configFn(function (err, config) {
           if (err) return error(err);
           promptAccountUser(account.account, account.name, function (err) {
             if (err) return error(err);
-            promptApplication(account.account, account.name, function (err) {
+            promptApplication(account.account, account.name, function (err, application) {
               if (err) return error(err);
-              process.exit(0);
+              promptApplicationToken(application, function (err) {
+                if (err) return error(err);
+                process.exit(0);
+              });
             });
           });
         });
@@ -417,15 +452,39 @@ configFn(function (err, config) {
       });
     }
 
+    function promptApplicationToken (application, next) {
+      inquirer.prompt([
+        {
+          type: 'input',
+          message: 'Enter application token description (e.g. first-consumer) to add to application ' + application.name + ':',
+          name: 'name'
+        }
+      ], function (token) {
+        setupApplicationToken(application, token.name, next);
+      });
+    }
+
     function setupApplication (account, name, appid, appsecret, next) {
-      api.auth.addApplication(account, name, appid, appsecret, function (err, application) {
+      console.log(' ... creating schema ...');
+      api.auth.addApplication(account, name, appid, function (err, application) {
         if (err) {
           console.log(err.message);
           process.exit(0);
         }
-        console.log('Application details are:');
-        console.log('appid: ' + application.appid);
-        console.log('appsecret: ' + application.appsecret);
+        next(null, application);
+      });
+    }
+
+    function setupApplicationToken (application, name, next) {
+      api.auth.addApplicationToken(application.appid, application.appkeypsace, name, function (err, token) {
+        if (err) {
+          console.log(err.message);
+          process.exit(0);
+        }
+        console.log('Token details are:');
+        console.log('description: ' + token.description);
+        console.log('tokenid: ' + token.tokenid);
+        console.log('tokensecret: ' + token.tokensecret);
         next();
       });
     }

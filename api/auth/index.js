@@ -126,6 +126,7 @@ function Auth (api) {
   }
 
   function addApplication (account, name, appid, next) {
+    if (!next) { next = appid; appid = null; };
     appid = appid || client.generateId();
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
@@ -149,7 +150,9 @@ function Auth (api) {
   /**
    *  Application Token API
    */
-  function addApplicationToken (appid, appkeyspace, tokenid, tokensecret, description, next) {
+  function addApplicationToken (appid, appkeyspace, description, tokenid, tokensecret, next) {
+    if (!next) { next = tokensecret; tokensecret = null; };
+    if (!next) { next = tokenid; tokenid = null; };
     tokenid = tokenid || client.generateId();
     tokensecret = tokensecret || authUtils.generateSecret(client.generateId());
     var enabled = true;
@@ -164,7 +167,7 @@ function Auth (api) {
     var token = [enabled, description, tokenid];
     client.execute(q(keyspace, 'updateApplicationToken'), token, {prepare: true}, function (err) {
       if (err) { return next(err); }
-      next(null, {tokenid: tokenid, enabled: enabled});
+      next(null, {tokenid: tokenid, description: description, enabled: enabled});
     });
   }
 
@@ -197,7 +200,7 @@ function Auth (api) {
     checkApplicationToken(appId, function (err, token) {
 
       if (err) { return next(err); }
-      if (!user || !token) {
+      if (!token) {
         return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
       }
 

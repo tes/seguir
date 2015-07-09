@@ -34,20 +34,19 @@ queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = $1, 
 /**
  * @apiDefine ExamplePostgresApplications
  */
-queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, appsecret, enabled) VALUES($1, $2, $3, $4, $5, $6)';
-queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE appid = $1';
-queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = $1';
+queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, enabled) VALUES($1, $2, $3, $4, $5)';
+queries.checkApplication = 'SELECT account, name, appkeyspace, appid, enabled FROM {KEYSPACE}.applications WHERE appid = $1';
+queries.selectApplications = 'SELECT account, name, appkeyspace, appid, enabled FROM {KEYSPACE}.applications WHERE account = $1';
 queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = $1, enabled = $2 WHERE appid = $3';
-queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = $1 WHERE appid = $2';
 
 /**
  * @apiDefine ExamplePostgresApplicationTokens
  */
-queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, enabled) VALUES($1, $2, $3, $4, $5)';
-queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = $1';
-queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE appid = $1';
-queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = $1 WHERE tokenid = $2';
-queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid=$1';
+queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES($1, $2, $3, $4, $5, $6)';
+queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = $1';
+queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE appid = $1';
+queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = $1, description = $2 WHERE tokenid = $3';
+queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid = $1';
 
 /**
  * @apiDefine ExamplePostgresUser
