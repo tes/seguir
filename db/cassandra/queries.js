@@ -42,20 +42,19 @@ queries.updateAccountUser = 'UPDATE {KEYSPACE}.account_users SET password = ?, e
  * @apiExample {cql} Check Application
  *    SELECT application, name FROM seguir.applications WHERE key = ?
  */
-queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, appsecret, enabled) VALUES(?, ?, ?, ?, ?, ?)';
-queries.checkApplication = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE appid = ?';
-queries.selectApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM {KEYSPACE}.applications WHERE account = ?';
+queries.upsertApplication = 'INSERT INTO {KEYSPACE}.applications (account, name, appkeyspace, appid, enabled) VALUES(?, ?, ?, ?, ?)';
+queries.checkApplication = 'SELECT account, name, appkeyspace, appid, enabled FROM {KEYSPACE}.applications WHERE appid = ?';
+queries.selectApplications = 'SELECT account, name, appkeyspace, appid, enabled FROM {KEYSPACE}.applications WHERE account = ?';
 queries.updateApplication = 'UPDATE {KEYSPACE}.applications SET name = ?, enabled = ? WHERE appid = ?';
-queries.updateApplicationSecret = 'UPDATE {KEYSPACE}.applications SET appsecret = ? WHERE appid = ?';
 
 /**
  * @apiDefine ExampleCqlApplicationTokens
  */
-queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, enabled) VALUES(?, ?, ?, ?, ?)';
-queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
-queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, enabled FROM {KEYSPACE}.application_tokens WHERE appid = ?';
-queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = ? WHERE tokenid = ?';
-queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid=?';
+queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES(?, ?, ?, ?, ?, ?)';
+queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
+queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE appid = ?';
+queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = ?, description = ? WHERE tokenid = ?';
+queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
 
 /**
  * @apiDefine ExampleCqlUsers

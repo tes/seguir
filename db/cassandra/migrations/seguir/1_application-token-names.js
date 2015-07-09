@@ -1,20 +1,29 @@
 var async = require('async');
 
+/**
+ * This migration moves the appsecret from applications, onto application tokens
+ * so that they can be managed completely independently from the application itself.
+ *
+ * Particularly this allows you to change the secret by adding a new one, then redeploying
+ * clients, then removing the old.
+ */
 function apply (keyspace, api, next) {
-  var cql = [
-    'ALTER TABLE ' + keyspace + '.application_tokens ADD description text'
-  ];
-  // Migrate the current appid / appsecret over to a new application_token
+
+  var addDescription = 'ALTER TABLE ' + keyspace + '.application_tokens ADD description text';
+  var removeAppsecret = 'ALTER TABLE ' + keyspace + '.applications DROP appsecret';
   var getApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM ' + keyspace + '.applications';
   var insertApplicationToken = 'INSERT INTO ' + keyspace + '.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES(?, ?, ?, ?, ?, ?)';
-  async.mapSeries(cql, api.client.execute, function (err) {
+
+  api.client.execute(addDescription, function (err) {
     if (err) return next(err);
     api.client.execute(getApplications, function (err, results) {
       if (err) return next(err);
       async.mapSeries(results, function (item, cb) {
         var data = [item.appid, item.appkeyspace, item.appid, item.appsecret, 'Initial Token', item.enabled];
         api.client.execute(insertApplicationToken, data, cb);
-      }, next);
+      }, function () {
+        api.client.execute(removeAppsecret, next);
+      });
     });
   });
 }
