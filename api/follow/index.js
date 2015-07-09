@@ -21,12 +21,12 @@ module.exports = function (api) {
       return next({statusCode: 500, message: 'You are not allowed to follow yourself.'});
     }
 
-    var mapFollowResponse = function(follower) {
+    var mapFollowResponse = function (follower) {
       api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
         if (err) return next(err);
         return next(null, follow);
       });
-    }
+    };
 
     isFollower(keyspace, user, user_follower, function (err, isFollower, followerSince, follow) {
 
@@ -38,8 +38,8 @@ module.exports = function (api) {
       }
 
       // Create a new follow relationship
-      var follow = client.generateId();
-      var data = [follow, user, user_follower, timestamp, visibility];
+      var newFollow = client.generateId();
+      var data = [newFollow, user, user_follower, timestamp, visibility];
       var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'visibility'], data);
       client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
         /* istanbul ignore if */
@@ -48,7 +48,7 @@ module.exports = function (api) {
           api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
             if (err) { return next(err); }
             var follower = {
-              follow: follow,
+              follow: newFollow,
               user: user,
               user_follower: user_follower,
               visibility: visibility,

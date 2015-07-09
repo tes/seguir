@@ -61,8 +61,8 @@ databases.forEach(function (db) {
         api.user.getUserRelationship(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, relationship) {
           expect(err).to.be(null);
           expect(relationship.isFriend).to.be(true);
-          expect(relationship.youFollow).to.be(true);
-          expect(relationship.theyFollow).to.be(true);
+          expect(relationship.youFollow).to.be(false);
+          expect(relationship.theyFollow).to.be(false);
           expect(relationship.followerCount).to.be(2);
           done();
         });
