@@ -120,6 +120,26 @@ app.get('/user/:username/feed', function (req, res, next) {
 
 You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
 
+## Debugging
+
+Use debug environment variables to see what is going on:
+
+```
+DEBUG=seguir:* npm test
+```
+
+Options are:
+
+```
+seguir:client
+seguir:server
+seguir:cassandra
+seguir:postgres
+seguir:auth
+seguir:feed
+seguir:user
+```
+
 ## Contributing & Developing
 
 Test coverage is slowly increasing, intention is to get it to 100 and then pin pre-commit hooks to it.
