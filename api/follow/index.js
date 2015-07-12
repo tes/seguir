@@ -29,45 +29,47 @@ module.exports = function (api) {
       });
     };
 
+    var backfillFeed = function (follow) {
+      api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+        if (err) return next(err);
+        mapFollowResponse(follow);
+      });
+    };
+
+    var addBidirectionalFeedItem = function (follow, cb) {
+      api.feed.addFeedItem(keyspace, user, follow, 'follow', function (err, result) {
+        if (err) { return next(err); }
+        api.feed.addFeedItem(keyspace, user_follower, follow, 'follow', function (err, result) {
+          if (err) { return next(err); }
+          cb(null, result);
+        });
+      });
+    };
+
     isFollower(keyspace, user, user_follower, function (err, isFollower, followerSince, follow) {
 
       if (err) { return next(err); }
-
-      // We are already following, so just return the existing relationship
       if (isFollower) {
         return mapFollowResponse(follow);
       }
 
-      // Create a new follow relationship
-      var newFollow = client.generateId();
-      var data = [newFollow, user, user_follower, timestamp, visibility];
-      var object = _.object(['follow', 'user', 'user_follower', 'timestamp', 'visibility'], data);
+      var newFollowId = client.generateId();
+      var data = [newFollowId, user, user_follower, timestamp, visibility];
+      var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], data);
+
       client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
         /* istanbul ignore if */
         if (err) { return next(err); }
         alterFollowerCount(keyspace, user, 1, function () {
-          api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
+          addBidirectionalFeedItem(newFollow, function (err, result) {
             if (err) { return next(err); }
-            api.feed.addFeedItem(keyspace, user_follower, object, 'follow', function (err, result) {
-              if (err) { return next(err); }
-              var follower = {
-                follow: newFollow,
-                user: user,
-                user_follower: user_follower,
-                visibility: visibility,
-                since: timestamp
-              };
-              if (!backfill) return mapFollowResponse(follower);
-              api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
-                if (err) return next(err);
-                mapFollowResponse(follower);
-              });
-            });
+            backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
           });
         });
       });
 
     });
+
   }
 
   function alterFollowerCount (keyspace, user, count, next) {
