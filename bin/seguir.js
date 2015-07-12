@@ -87,9 +87,10 @@ configFn(function (err, config) {
         '[account] Add a new user to an account': addUser,
         '[apps]    List applications for account': listApplications,
         '[apps]    Add a new application to an account': addApplication,
+        '[tokens]  List application tokens': listTokens,
         '[tokens]  Add a token to an application': addToken,
         '[tokens]  Reset application token': resetApplicationToken,
-        '[tokens]  List application tokens': listTokens
+        '[tokens]  Enable / disable application token': disableApplicationToken
       };
 
       inquirer.prompt([
@@ -235,7 +236,7 @@ configFn(function (err, config) {
             if (err) return error(err);
             if (tokens) {
               tokens.forEach(function (token) {
-                console.log(' - [' + token.description + '] >> tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+                console.log(' - [' + token.description + ' - ' + (token.enabled ? 'ENABLED' : 'DISABLED') + '] - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
               });
             } else {
               console.log(' > No tokens for this account!');
@@ -246,16 +247,30 @@ configFn(function (err, config) {
       });
     }
 
-    function resetApplicationToken () {
+    function promptToken (next) {
       selectAccount(function (err, account) {
         if (err) return error(err);
         selectApplication(account, function (err, application) {
           if (err) return error(err);
           selectApplicationToken(application, function (err, token) {
             if (err) return error(err);
-            confirmReset(token);
+            next(null, token);
           });
         });
+      });
+    }
+
+    function resetApplicationToken () {
+      promptToken(function (err, token) {
+        if (err) return error(err);
+        confirmResetToken(token);
+      });
+    }
+
+    function disableApplicationToken () {
+      promptToken(function (err, token) {
+        if (err) return error(err);
+        confirmDisableToken(token);
       });
     }
 
@@ -312,7 +327,7 @@ configFn(function (err, config) {
       });
     }
 
-    function confirmReset (token) {
+    function confirmResetToken (token) {
       inquirer.prompt([
         {
           type: 'confirm',
@@ -326,6 +341,30 @@ configFn(function (err, config) {
               console.log('Token updated, update the client application if you still want it to have access!');
               console.log('tokenid:     ' + token.tokenid);
               console.log('tokensecret: ' + token.tokensecret);
+            } else {
+              console.log('ERROR: ' + err.message);
+            }
+            process.exit();
+          });
+        } else {
+          process.exit();
+        }
+      });
+    }
+
+    function confirmDisableToken (token) {
+      var message = token.enabled ? 'This will disable a token so that any applications using it can no longer access seguir - they will immediately stop working - continue?' : 'Re-enable token?';
+      inquirer.prompt([
+        {
+          type: 'confirm',
+          message: message,
+          name: 'confirm'
+        }
+      ], function (confirm) {
+        if (confirm.confirm) {
+          api.auth.updateApplicationToken(token.tokenid, !token.enabled, token.description, function (err, token) {
+            if (!err) {
+              console.log('Token is now: ' + (token.enabled ? 'ENABLED' : 'DISABLED'));
             } else {
               console.log('ERROR: ' + err.message);
             }
