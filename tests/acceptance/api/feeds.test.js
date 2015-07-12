@@ -232,6 +232,7 @@ databases.forEach(function (db) {
           var expected = [
             'post-mention-follower',
             'post-mention',
+            'follow-private',
             'follow-3'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
@@ -270,6 +271,7 @@ databases.forEach(function (db) {
           var expected = [
             'post-mention-follower',
             'post-mention',
+            'follow-private',
             'follow-3'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
@@ -282,7 +284,8 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           var expected = [
             'post-public',
-            'reciprocal-friend-1'
+            'reciprocal-friend-1',
+            'follow-1'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -293,7 +296,8 @@ databases.forEach(function (db) {
         api.feed.getUserFeed(keyspace, null, users['phteven'].user, null, 100, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'post-public'
+            'post-public',
+            'follow-1'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
