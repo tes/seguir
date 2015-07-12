@@ -2,14 +2,14 @@
  * Sets up the core
  */
 var async = require('async');
-var schemaVersion = 0;
+var schemaVersion = 1;
 
 function setup (client, keyspace, next) {
 
   var tables = [
     'CREATE TABLE ' + keyspace + '.accounts (account varchar(36), name varchar(100), isadmin boolean, enabled boolean)',
     'CREATE TABLE ' + keyspace + '.account_users (account varchar(36), username varchar(100), password varchar(500), enabled boolean)',
-    'CREATE TABLE ' + keyspace + '.applications (appid varchar(36), name varchar(100), appkeyspace varchar(500), appsecret varchar(100), account varchar(36), enabled boolean)',
+    'CREATE TABLE ' + keyspace + '.applications (appid varchar(36), name varchar(100), appkeyspace varchar(500), account varchar(36), enabled boolean)',
     'CREATE TABLE ' + keyspace + '.application_tokens (appid varchar(36), appkeyspace varchar(100), tokenid varchar(36), tokensecret varchar(100), enabled boolean, description varchar(500))',
     'CREATE TABLE ' + keyspace + '.schema_version (version smallint, applied timestamptz, description varchar(500))'
   ];

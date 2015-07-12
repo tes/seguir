@@ -92,11 +92,7 @@ databases.forEach(function (db) {
             expect(follow2.user).to.eql(users['aamir']);
             expect(follow2.user_follower).to.eql(users['cliftonc']);
             done();
-<<<<<<< HEAD
           });
-=======
-           });
->>>>>>> WIP on auth refactor
         });
       });
 

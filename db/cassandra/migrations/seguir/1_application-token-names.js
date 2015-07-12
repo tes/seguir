@@ -16,11 +16,13 @@ function apply (keyspace, api, next) {
 
   api.client.execute(addDescription, function (err) {
     if (err) return next(err);
-    api.client.execute(getApplications, function(err, results) {
-      async.mapSeries(results, function(item, cb) {
+    api.client.execute(getApplications, function (err, results) {
+      if (err) return next(err);
+      async.mapSeries(results, function (item, cb) {
         var data = [item.appid, item.appkeyspace, item.appid, item.appsecret, 'Initial Token', item.enabled];
         api.client.execute(insertApplicationToken, data, cb);
-      }, function () {
+      }, function (err) {
+        if (err) return next(err);
         api.client.execute(removeAppsecret, next);
       });
     });

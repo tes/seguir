@@ -34,7 +34,7 @@ databases.forEach(function (db) {
         api.client.setup.setupSeguir(api.client, keyspace, function () {
           auth.addAccount('migration account', false, false, function (err, account) {
             expect(err).to.be(null);
-            auth.addApplication(account.account, 'migration a', null, null, function (err, application) {
+            auth.addApplication(account.account, 'migration a', function (err, application) {
               expect(err).to.be(null);
               done();
             });
@@ -47,7 +47,7 @@ databases.forEach(function (db) {
       api.migrations.getSchemaVersions(function (err, versions) {
         expect(err).to.be(null);
         // Cassandra stores integers as a type Integer that needs to be converted
-        expect(versions[0].version.toString()).to.be('0');
+        expect(versions[0].version.toString()).to.be('1');
         done();
       });
     });

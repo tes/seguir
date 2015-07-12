@@ -28,16 +28,19 @@ function setupServer (config, keyspace, next) {
       if (err) { return next(err); }
       api.auth.addAccount('test account', false, false, function (err, account) {
         if (err) { return next(err); }
-        api.auth.addApplication(account.account, 'test application', null, null, function (err, application) {
+        api.auth.addApplication(account.account, 'test application', function (err, application) {
           if (err) { return next(err); }
-          startServer(config, function (err, server) {
-            if (err) { return next(err); }
-            server.listen(3001, function () {
-              credentials.appid = application.appid;
-              credentials.appsecret = application.appsecret;
-              var client = new Seguir(credentials);
-              process.stdout.write('.\n');
-              next(null, api, server, client);
+          api.auth.addApplicationToken(application.appid, application.appkeyspace, 'test token', function (err, token) {
+            if (err) return next(err);
+            startServer(config, function (err, server) {
+              if (err) { return next(err); }
+              server.listen(3001, function () {
+                credentials.appid = token.tokenid;
+                credentials.appsecret = token.tokensecret;
+                var client = new Seguir(credentials);
+                process.stdout.write('.\n');
+                next(null, api, server, client);
+              });
             });
           });
         });
