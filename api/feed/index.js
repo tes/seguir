@@ -25,15 +25,13 @@ module.exports = function (api) {
 
   function insertFollowersTimeline (jobData, next) {
     if (jobData.visibility === api.visibility.PERSONAL && jobData.type !== 'follow') { return next(); }
-    if (jobData.visibility === api.visibility.PERSONAL && jobData.type === 'follow') {
-      return upsertTimeline(jobData.keyspace, 'feed_timeline', jobData.object.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, next);
-    }
     client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb2) {
         var isPrivate = jobData.visibility === api.visibility.PRIVATE;
-        var followerIsFollower = jobData.type === 'follow' && row.user_follower.toString() === jobData.object.user_follower.toString();
+        var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
+        // Follow is added to followers feed directly, not via the follow relationship
         if (followerIsFollower) { return cb2(); }
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }

@@ -613,7 +613,8 @@ databases.forEach(function (db) {
         client.getUserFeed(users['cliftonc'].user, users['phteven'].user, null, 100, function (err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
-          expect(feed[0].friend).to.be(reciprocalFriendId);
+          expect(feed[0].follow).to.be(followId);
+          expect(feed[1].friend).to.be(reciprocalFriendId);
           addSample('getUserFeed', feed);
           done();
         });
@@ -623,7 +624,8 @@ databases.forEach(function (db) {
         client.getUserFeed(users['cliftonc'].altid, users['phteven'].altid, null, 100, function (err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
-          expect(feed[0].friend).to.be(reciprocalFriendId);
+          expect(feed[0].follow).to.be(followId);
+          expect(feed[1].friend).to.be(reciprocalFriendId);
           done();
         });
       });
@@ -632,7 +634,8 @@ databases.forEach(function (db) {
         client.getUserFeed(null, users['phteven'].user, null, 100, function (err, result) {
           var feed = result.feed;
           expect(err).to.be(null);
-          expect(feed.length).to.be(0);
+          expect(feed.length).to.be(1);
+          expect(feed[0].follow).to.be(followId);
           done();
         });
       });
