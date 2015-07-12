@@ -67,7 +67,7 @@ configFn(function (err, config) {
       api.client.setup.setupSeguir(api.client, setup.keyspace, function () {
         setupAccount(setup.account, function (err, account) {
           if (err) return error(err);
-          setupApplicationUser(account.account, setup.account, setup.user, setup.password, setup.admin, function (err, user) {
+          setupAccountUser(account.account, setup.account, setup.user, setup.password, setup.admin, function (err, user) {
             if (err) return error(err);
             setupApplication(account.account, setup.application, setup.appid, setup.appsecret, function () {
               process.exit(0);
@@ -79,17 +79,17 @@ configFn(function (err, config) {
     } else {
 
       var tasks = {
-        'Check current setup': checkSetup,
-        'Initialise a new database instance': coreSetup,
-        'Check and apply database migrations': migration,
-        'Add a new account, user and application': promptAccount,
-        'List users for account': listUsers,
-        'Add a new user to an account': addUser,
-        'List applications for account': listApplications,
-        'Add a new application to an account': addApplication,
-        'Add a new application token': addToken,
-        'Reset application token secret': resetApplicationToken,
-        'List application tokens for an application': listTokens
+        '[setup]   Check current setup': checkSetup,
+        '[setup]   Initialise a new database instance': coreSetup,
+        '[setup]   Add a new account, user and application': promptAccount,
+        '[migrate] Check and apply database migrations': migration,
+        '[account] List users for account': listUsers,
+        '[account] Add a new user to an account': addUser,
+        '[apps]    List applications for account': listApplications,
+        '[apps]    Add a new application to an account': addApplication,
+        '[tokens]  Add a token to an application': addToken,
+        '[tokens]  Reset application token': resetApplicationToken,
+        '[tokens]  List application tokens': listTokens
       };
 
       inquirer.prompt([
@@ -235,7 +235,7 @@ configFn(function (err, config) {
             if (err) return error(err);
             if (tokens) {
               tokens.forEach(function (token) {
-                console.log(' - [s' + token.description + '] >> tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+                console.log(' - [' + token.description + '] >> tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
               });
             } else {
               console.log(' > No tokens for this account!');
@@ -388,10 +388,7 @@ configFn(function (err, config) {
             if (err) return error(err);
             promptApplication(account.account, account.name, function (err, application) {
               if (err) return error(err);
-              promptApplicationToken(application, function (err) {
-                if (err) return error(err);
-                process.exit(0);
-              });
+              process.exit(0);
             });
           });
         });
@@ -426,11 +423,11 @@ configFn(function (err, config) {
           name: 'isadmin'
         }
       ], function (user) {
-        setupApplicationUser(account, name, user.username, user.password, user.isadmin === 'y', next);
+        setupAccountUser(account, name, user.username, user.password, user.isadmin === 'y', next);
       });
     }
 
-    function setupApplicationUser (account, name, username, password, isadmin, next) {
+    function setupAccountUser (account, name, username, password, isadmin, next) {
       api.auth.addAccountUser(account, username, password, isadmin, function (err, user) {
         if (err) {
           console.log(err.message);
@@ -471,7 +468,7 @@ configFn(function (err, config) {
           console.log(err.message);
           process.exit(0);
         }
-        next(null, application);
+        promptApplicationToken(application, next);
       });
     }
 
