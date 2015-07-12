@@ -2,6 +2,7 @@ var restify = require('restify');
 var u = require('../api/urls');
 var bunyan = require('bunyan');
 var _ = require('lodash');
+var debug = require('debug')('seguir:server');
 
 var defaultLogger = bunyan.createLogger({
     name: 'seguir',
@@ -21,6 +22,10 @@ function bootstrapServer (api, config, next) {
   server.use(restify.queryParser({ mapParams: false }));
   server.use(restify.gzipResponse());
   server.use(restify.CORS());
+  server.use(function (req, res, cb) {
+    debug(req.url, req.params, req.headers);
+    cb();
+  });
 
   // Logging
   server.on('after', function (request, response, route, error) {

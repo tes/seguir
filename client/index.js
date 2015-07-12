@@ -6,6 +6,7 @@ var headerNames = require('../api/auth').headerNames;
 var authUtils = require('../api/auth/utils');
 var u = require('../api/urls');
 var v = require('../api/visibility');
+var debug = require('debug')('seguir:client');
 
 /**
  * @apiDefine Client Server Side Seguir Client
@@ -60,6 +61,8 @@ function Seguir (options) {
   self.urls = u;
   self.visibility = v;
 
+  debug('Initialised seguir client with options', options);
+
 }
 
 /**
@@ -67,6 +70,7 @@ function Seguir (options) {
  */
 Seguir.prototype.get = function (liu, apiPath, next) {
   var self = this;
+  debug('GET ' + apiPath, liu);
   self.client.get({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
     next(err, obj);
   });
@@ -74,6 +78,7 @@ Seguir.prototype.get = function (liu, apiPath, next) {
 
 Seguir.prototype.post = function (liu, apiPath, data, next) {
   var self = this;
+  debug('POST ' + apiPath, liu, data);
   self.client.post({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, data, function (err, req, res, obj) {
     next(err, obj);
   });
@@ -81,6 +86,7 @@ Seguir.prototype.post = function (liu, apiPath, data, next) {
 
 Seguir.prototype.del = function (liu, apiPath, next) {
   var self = this;
+  debug('DEL ' + apiPath, liu);
   self.client.del({path: self.rootpath + apiPath, headers: self.getHeaders(liu)}, function (err, req, res, obj) {
     next(err, obj);
   });
