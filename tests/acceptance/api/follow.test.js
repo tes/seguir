@@ -233,6 +233,18 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can see new follows of people you follow in your feed', function (done) {
+        api.follow.addFollower(keyspace, users['jenny'].user, users['cliftonc'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
+          expect(err).to.be(null);
+          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, null, 100, function (err, feed) {
+            expect(err).to.be(null);
+            var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            expect(followerIds).to.contain(follow.follow.toString());
+            done();
+          });
+        });
+      });
+
     });
 
   });

@@ -48,17 +48,20 @@ module.exports = function (api) {
         alterFollowerCount(keyspace, user, 1, function () {
           api.feed.addFeedItem(keyspace, user, object, 'follow', function (err, result) {
             if (err) { return next(err); }
-            var follower = {
-              follow: newFollow,
-              user: user,
-              user_follower: user_follower,
-              visibility: visibility,
-              since: timestamp
-            };
-            if (!backfill) return mapFollowResponse(follower);
-            api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
-              if (err) return next(err);
-              mapFollowResponse(follower);
+            api.feed.addFeedItem(keyspace, user_follower, object, 'follow', function (err, result) {
+              if (err) { return next(err); }
+              var follower = {
+                follow: newFollow,
+                user: user,
+                user_follower: user_follower,
+                visibility: visibility,
+                since: timestamp
+              };
+              if (!backfill) return mapFollowResponse(follower);
+              api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+                if (err) return next(err);
+                mapFollowResponse(follower);
+              });
             });
           });
         });

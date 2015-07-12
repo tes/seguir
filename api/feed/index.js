@@ -33,6 +33,8 @@ module.exports = function (api) {
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb2) {
         var isPrivate = jobData.visibility === api.visibility.PRIVATE;
+        var followerIsFollower = jobData.type === 'follow' && row.user_follower.toString() === jobData.object.user_follower.toString();
+        if (followerIsFollower) { return cb2(); }
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!isPrivate || (isPrivate && isFriend)) {
@@ -350,12 +352,12 @@ module.exports = function (api) {
               currentResult.date = timeline[index].date;
               currentResult.fromNow = moment(currentResult.date).fromNow();
               currentResult.visibility = timeline[index].visibility || api.visibility.PUBLIC;
-              currentResult.isprivate = currentResult.visibility === api.visibility.PRIVATE;
-              currentResult.ispersonal = currentResult.visibility === api.visibility.PERSONAL;
-              currentResult.ispublic = currentResult.visibility === api.visibility.PUBLIC;
+              currentResult.isPrivate = currentResult.visibility === api.visibility.PRIVATE;
+              currentResult.isPersonal = currentResult.visibility === api.visibility.PERSONAL;
+              currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
 
               // Calculated fields to make rendering easier
-              currentResult.fromFollower = currentResult.user.user.toString() !== user.toString();
+              currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== user.toString();
               currentResult.isLike = currentResult.type === 'like';
               currentResult.isPost = currentResult.type === 'post';
               currentResult.isFollow = currentResult.type === 'follow';
