@@ -53,7 +53,9 @@ databases.forEach(function (db) {
           expect(follow.user).to.eql(users['cliftonc']);
           expect(follow.user_follower).to.eql(users['phteven']);
           followId = follow.follow;
-          done();
+          // Slight delay to ensure we test that followers appear
+          // in the correct order in later tests
+          setTimeout(done, 100);
         });
       });
 
@@ -139,12 +141,12 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can retrieve a list of followers for a user', function (done) {
+      it('can retrieve a list of followers for a user and get it in the right order', function (done) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
-          expect(followerIds).to.contain(users['phteven'].user.toString());
-          expect(followerIds).to.contain(users['ted'].user.toString());
+          expect(followerIds[1]).to.be(users['phteven'].user.toString());
+          expect(followerIds[0]).to.be(users['ted'].user.toString());
           done();
         });
       });

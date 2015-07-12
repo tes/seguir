@@ -16,6 +16,7 @@ module.exports = function (api) {
       q = client.queries;
 
   function addFollower (keyspace, user, user_follower, timestamp, visibility, backfill, next) {
+
     if (!next) { next = backfill; backfill = null; }
     if (user.toString() === user_follower.toString()) {
       return next({statusCode: 500, message: 'You are not allowed to follow yourself.'});
@@ -137,7 +138,11 @@ module.exports = function (api) {
           if (item.visibility === api.visibility.PRIVATE && !isFriend) { return false; }
           return true;
         });
-        api.user.mapUserIdToUser(keyspace, filteredFollowers, ['user_follower'], user, next);
+        // This is definitely a ticking time bomb re. number of followers
+        // It needs a separate data model just like the feed that has time
+        // built in to allow pagination
+        var sortedFollowers = _.sortByOrder(filteredFollowers, ['since'], ['desc']);
+        api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
       });
     });
   }
