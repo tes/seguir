@@ -171,6 +171,15 @@ function Auth (api) {
     });
   }
 
+  function updateApplicationTokenSecret (tokenid, next) {
+    var tokensecret = authUtils.generateSecret(client.generateId());
+    var token = [tokensecret, tokenid];
+    client.execute(q(keyspace, 'updateApplicationTokenSecret'), token, {prepare: true}, function (err) {
+      if (err) { return next(err); }
+      next(null, {tokenid: tokenid, tokensecret: tokensecret});
+    });
+  }
+
   function getApplicationTokens (appid, next) {
     client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {prepare: true}, function (err, result) {
       if (err) { return next(err); }
@@ -349,6 +358,7 @@ function Auth (api) {
     updateApplication: updateApplication,
     addApplicationToken: addApplicationToken,
     updateApplicationToken: updateApplicationToken,
+    updateApplicationTokenSecret: updateApplicationTokenSecret,
     getApplicationTokens: getApplicationTokens,
     checkRequest: checkRequest,
     checkApplicationToken: checkApplicationToken,

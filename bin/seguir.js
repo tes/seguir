@@ -306,26 +306,26 @@ configFn(function (err, config) {
             choices: tokenDescriptions
           }
         ], function (answer) {
-          var token = _.tokens(tokens, { 'description': answer.description });
+          var token = _.find(tokens, { 'description': answer.description });
           next(null, token);
         });
       });
     }
 
-    function confirmReset (appid) {
+    function confirmReset (token) {
       inquirer.prompt([
         {
           type: 'confirm',
-          message: 'This will modify the appsecret so that the application can no longer access seguir?',
+          message: 'This will modify the tokensecret so that the consumer using that token can no longer access seguir?',
           name: 'confirm'
         }
       ], function (confirm) {
         if (confirm.confirm) {
-          api.auth.updateApplicationSecret(appid, function (err, application) {
+          api.auth.updateApplicationTokenSecret(token.tokenid, function (err, token) {
             if (!err) {
               console.log('Token updated, update the client application if you still want it to have access!');
-              console.log('appid:     ' + application.appid);
-              console.log('appsecret: ' + application.appsecret);
+              console.log('tokenid:     ' + token.tokenid);
+              console.log('tokensecret: ' + token.tokensecret);
             } else {
               console.log('ERROR: ' + err.message);
             }

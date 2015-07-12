@@ -54,6 +54,7 @@ queries.upsertApplicationToken = 'INSERT INTO {KEYSPACE}.application_tokens (app
 queries.checkApplicationToken = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
 queries.selectApplicationTokens = 'SELECT appid, appkeyspace, tokenid, tokensecret, description, enabled FROM {KEYSPACE}.application_tokens WHERE appid = ?';
 queries.updateApplicationToken = 'UPDATE {KEYSPACE}.application_tokens SET enabled = ?, description = ? WHERE tokenid = ?';
+queries.updateApplicationTokenSecret = 'UPDATE {KEYSPACE}.application_tokens SET tokensecret = ? WHERE tokenid = ?';
 queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHERE tokenid = ?';
 
 /**
