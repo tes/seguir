@@ -520,7 +520,7 @@ configFn(function (err, config) {
     function setupApplicationToken (application, name, tokenid, tokensecret, next) {
       if (!next) { next = tokensecret; tokensecret = null; }
       if (!next) { next = tokenid; tokenid = null; }
-      api.auth.addApplicationToken(application.appid, application.appkeypsace, name, tokenid, tokensecret, function (err, token) {
+      api.auth.addApplicationToken(application.appid, application.appkeyspace, name, tokenid, tokensecret, function (err, token) {
         if (err) {
           console.log(err.message);
           process.exit(0);
