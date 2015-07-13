@@ -69,8 +69,12 @@ configFn(function (err, config) {
           if (err) return error(err);
           setupAccountUser(account.account, setup.account, setup.user, setup.password, setup.admin, function (err, user) {
             if (err) return error(err);
-            setupApplication(account.account, setup.application, setup.appid, setup.appsecret, function () {
-              process.exit(0);
+            setupApplication(account.account, setup.application, true, function (err, application) {
+              if (err) return error(err);
+              setupApplicationToken(application, setup.application, setup.appid, setup.appsecret, function (err) {
+                if (err) return error(err);
+                process.exit(0);
+              });
             });
           });
         });
@@ -484,7 +488,7 @@ configFn(function (err, config) {
           name: 'name'
         }
       ], function (application) {
-        setupApplication(account, application.name, null, null, next);
+        setupApplication(account, application.name, next);
       });
     }
 
@@ -500,19 +504,23 @@ configFn(function (err, config) {
       });
     }
 
-    function setupApplication (account, name, appid, appsecret, next) {
+    function setupApplication (account, name, noToken, next) {
+      if (!next) { next = noToken; noToken = false; }
       console.log(' ... creating schema ...');
-      api.auth.addApplication(account, name, appid, function (err, application) {
+      api.auth.addApplication(account, name, function (err, application) {
         if (err) {
           console.log(err.message);
           process.exit(0);
         }
+        if (noToken) return next(null, application);
         promptApplicationToken(application, next);
       });
     }
 
-    function setupApplicationToken (application, name, next) {
-      api.auth.addApplicationToken(application.appid, application.appkeypsace, name, function (err, token) {
+    function setupApplicationToken (application, name, tokenid, tokensecret, next) {
+      if (!next) { next = tokensecret; tokensecret = null; }
+      if (!next) { next = tokenid; tokenid = null; }
+      api.auth.addApplicationToken(application.appid, application.appkeypsace, name, tokenid, tokensecret, function (err, token) {
         if (err) {
           console.log(err.message);
           process.exit(0);
