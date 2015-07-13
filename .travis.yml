@@ -1,13 +1,15 @@
 language: node_js
 node_js:
-  - "2.3"
-  - "2.0"
-  - "0.12"
-  - "0.10"
+- '2.3'
+- '2.0'
+- '0.12'
+- '0.10'
 services:
-  - redis-server
-  - cassandra
+- redis-server
+- cassandra
 addons:
-  postgresql: "9.3"
-
-
+  postgresql: '9.3'
+notifications:
+  hipchat:
+    rooms:
+      secure: cwunRMkBq13vx1AOgbyqVzgRyWoFIGcH4+kKcEtWL754EZd3T/qC4bpa7V2BGibD/YhY0d4+mB9kbMm9SQoJX7E5BGGRsEhw1OcBdCkHiInbdES5CCt4N2QCQFOmdd2Vt/NlSLXmYNXIJa55STOJ+OZzibCgApRfjGrlxISOZ1Q=
