@@ -1,5 +1,5 @@
 var async = require('async');
-var schemaVersion = 2;
+var schemaVersion = 3;
 
 function defineTablesAndIndexes (KEYSPACE) {
 
@@ -134,10 +134,11 @@ function defineTablesAndIndexes (KEYSPACE) {
   var feedTables = ['feed_timeline', 'user_timeline'];
 
   feedTables.forEach(function (table) {
-    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' ("user" varchar(36) NOT NULL, time timestamptz(3) NOT NULL, item varchar(36) NOT NULL, type varchar(500) NOT NULL, visibility varchar(50))');
+    tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' ("user" varchar(36) NOT NULL, time timestamptz(3) NOT NULL, item varchar(36) NOT NULL, type varchar(500) NOT NULL, visibility varchar(50), from_follow varchar(36))');
     indexes.push('CREATE INDEX ' + table + '_user_idx ON ' + KEYSPACE + '.' + table + ' ("user")');
     indexes.push('CREATE INDEX ' + table + '_item_idx ON ' + KEYSPACE + '.' + table + ' ("item")');
     indexes.push('CREATE INDEX ' + table + '_time_idx ON ' + KEYSPACE + '.' + table + ' ("time")');
+    indexes.push('CREATE INDEX ' + table + '_from_follow_idx ON ' + KEYSPACE + '.' + table + ' ("from_follow")');
   });
 
   return {

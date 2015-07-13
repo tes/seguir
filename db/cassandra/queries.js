@@ -124,7 +124,7 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  */
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, visibility) VALUES(?, ?, ?, ?, ?);';
 queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
-queries.selectFollowers = 'SELECT user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
+queries.selectFollowers = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 queries.isFollower = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
@@ -159,10 +159,11 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  * @apiExample {cql} Remove Item from feed)
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, visibility, from_follow) VALUES(?, ?, ?, ?, ?, ?);';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
+queries.selectAllFollowItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE from_follow = ?';
 queries.timelineLimit = 'LIMIT {limit}';
 queries.timelineSortReverse = 'AND time > ?';
 queries.timelineSort = 'AND time < ?';

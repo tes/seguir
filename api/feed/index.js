@@ -36,7 +36,7 @@ module.exports = function (api) {
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
           if (err) { return cb2(err); }
           if (!isPrivate || (isPrivate && isFriend)) {
-            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, cb2);
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, cb2);
           } else {
             cb2();
           }
@@ -158,8 +158,9 @@ module.exports = function (api) {
 
   }
 
-  function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, next) {
-    var data = [user, item, type, time, visibility];
+  function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, from_follow, next) {
+    if (!next) { next = from_follow; from_follow = null; }
+    var data = [user, item, type, time, visibility, from_follow];
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility || api.visibility.PUBLIC);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
   }
@@ -220,6 +221,7 @@ module.exports = function (api) {
   };
 
   function expandPost (keyspace, liu, item, cb) {
+
     var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
     if (postObject) {
       api.post.getPostFromObject(keyspace, liu, postObject, function (err, post) {

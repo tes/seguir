@@ -117,7 +117,7 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = 
 /**
  * @apiDefine ExamplePostgresFeed
  */
-queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, tl.type, tl.visibility, ' +
+queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, tl.type, tl.visibility, tl.from_follow, ' +
                          q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' +
                          q(null, '_postSelectFields', {PREFIX: 'post_'}) + ', ' +
                          q(null, '_likeSelectFields', {PREFIX: 'like_'}) + ', ' +
@@ -132,9 +132,10 @@ queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, t
                          'WHERE tl."user" = $1{timeClause} ' +
                          'ORDER BY time DESC {limitClause}';
 
-queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} ("user", item, type, time, visibility) VALUES($1, $2, $3, $4, $5);';
+queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} ("user", item, type, time, visibility, from_follow) VALUES($1, $2, $3, $4, $5, $6);';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE "user" = $1 AND time = $2';
 queries.selectAllItems = 'SELECT "user", time FROM {KEYSPACE}.{TIMELINE} WHERE item = $1';
+queries.selectAllFollowItems = 'SELECT "user", time FROM {KEYSPACE}.{TIMELINE} WHERE from_follow = $1';
 queries.timelineLimit = ' LIMIT {limit} OFFSET 0';
 queries.timelineSortReverse = ' AND tl.time > $2';
 queries.timelineSort = ' AND tl.time < $2';
