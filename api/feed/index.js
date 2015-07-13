@@ -275,6 +275,14 @@ module.exports = function (api) {
     }
   }
 
+  function ensureFollowStillActive (keyspace, liu, item, cb) {
+    if (!item.from_follow) { return cb(); }
+    api.follow.getFollow(keyspace, liu, item.from_follow, function (err, follow) {
+      if (err) { return cb(err); }
+      cb();
+    });
+  }
+
   var feedExpanders = {
     'post': expandPost,
     'like': expandLike,
@@ -330,13 +338,16 @@ module.exports = function (api) {
 
         async.map(timeline, function (item, cb) {
 
-          var expander = feedExpanders[item.type];
-          if (expander) {
-            return expander(keyspace, liu, item, cb);
-          } else {
-            console.log('Unable to expand unknown feed item type: ' + item.type);
-            cb();
-          }
+          ensureFollowStillActive(keyspace, liu, item, function (err) {
+            if (err) { return cb(); }
+            var expander = feedExpanders[item.type];
+            if (expander) {
+              return expander(keyspace, liu, item, cb);
+            } else {
+              console.log('Unable to expand unknown feed item type: ' + item.type);
+              cb();
+            }
+          });
 
         }, function (err, results) {
 

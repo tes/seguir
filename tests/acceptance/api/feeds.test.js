@@ -303,6 +303,21 @@ databases.forEach(function (db) {
         });
       });
 
+      it('if you unfollow someone their items are no longer visible in your feed', function (done) {
+        api.follow.removeFollower(keyspace, users['cliftonc'].user, users['phteven'].user, function (err) {
+          expect(err).to.be(null);
+          api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, null, 100, function (err, feed) {
+            expect(err).to.be(null);
+            var expected = [
+              'post-public',
+              'reciprocal-friend-1'
+            ];
+            initialiser.assertFeed(feed, actionResults, expected);
+            done();
+          });
+        });
+      });
+
     });
 
   });
