@@ -578,10 +578,9 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           expect(feed[0].like).to.be(likeId);
           expect(feed[1].post).to.be(postId);
-          expect(feed[2].follow).to.be(notFriendFollowId);
-          expect(feed[3].follow).to.be(followId);
-          expect(feed[4].friend).to.be(reciprocalFriendId);
-          expect(feed[5].post).to.be(privatePostId);
+          expect(feed[2].follow).to.be(followId);
+          expect(feed[3].friend).to.be(reciprocalFriendId);
+          expect(feed[4].post).to.be(privatePostId);
           done();
         });
       });

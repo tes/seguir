@@ -245,6 +245,18 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can not see when others follow people you follow in your feed, it only appears in their feed', function (done) {
+        api.follow.addFollower(keyspace, users['cliftonc'].user, users['jenny'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
+          expect(err).to.be(null);
+          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, null, 100, function (err, feed) {
+            expect(err).to.be(null);
+            var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            expect(followerIds).to.not.contain(follow.follow.toString());
+            done();
+          });
+        });
+      });
+
     });
 
   });

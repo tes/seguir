@@ -118,7 +118,6 @@ databases.forEach(function (db) {
             'like-google',
             'post-public',
             'reciprocal-friend-1',
-            'follow-2',
             'follow-1',
             'post-old'
           ];

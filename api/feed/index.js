@@ -24,7 +24,13 @@ module.exports = function (api) {
     q = client.queries;
 
   function insertFollowersTimeline (jobData, next) {
-    if (jobData.visibility === api.visibility.PERSONAL && jobData.type !== 'follow') { return next(); }
+
+    // If you are the recipient of a follow, do not copy this out to your follow graph - it will appear in your feed only
+    if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
+
+    // If you the action is personal do not copy out to followers feeds
+    if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
+
     client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
