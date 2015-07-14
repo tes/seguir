@@ -25,7 +25,8 @@ module.exports = function (api) {
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
-    var userid = options.userid || client.generateId();
+
+    var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
     var user = [userid, username, '' + altid, userdata];
     client.execute(q(keyspace, 'upsertUser'), user, {
       prepare: true,
