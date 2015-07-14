@@ -5,8 +5,8 @@ var _ = require('lodash');
 var debug = require('debug')('seguir:server');
 
 var defaultLogger = bunyan.createLogger({
-    name: 'seguir',
-    serializers: restify.bunyan.serializers
+  name: 'seguir',
+  serializers: restify.bunyan.serializers
 });
 
 function bootstrapServer (api, config, next) {
@@ -19,7 +19,7 @@ function bootstrapServer (api, config, next) {
 
   // Default middleware
   server.use(restify.bodyParser({mapParams: true}));
-  server.use(restify.queryParser({ mapParams: false }));
+  server.use(restify.queryParser({mapParams: false}));
   server.use(restify.gzipResponse());
   server.use(restify.CORS());
   server.use(function (req, res, cb) {
@@ -394,8 +394,8 @@ function bootstrapServer (api, config, next) {
       return next(new restify.InvalidArgumentError('You must provide content for the post.'));
     }
     var visibility = req.params.visibility || null,
-        content_type = req.params.content_type || 'text/html',
-        posted = api.client.getTimestamp(req.params.posted);
+      content_type = req.params.content_type || 'text/html',
+      posted = api.client.getTimestamp(req.params.posted);
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
@@ -439,7 +439,7 @@ function bootstrapServer (api, config, next) {
     api.post.removePost(req.keyspace, req.liu.user, req.params.post, _response(res, next));
   });
 
- /**
+  /**
    * @api {get} /friend/:friend Get friend
    * @apiName GetFriend
    * @apiGroup ApiFriends
@@ -480,7 +480,7 @@ function bootstrapServer (api, config, next) {
     });
   });
 
-/**
+  /**
    * @api {delete} /user/:user/friend/:user_friend Remove a friendship.
    * @apiName RemoveFriend
    * @apiGroup ApiFriends
@@ -511,7 +511,7 @@ function bootstrapServer (api, config, next) {
     });
   });
 
-/**
+  /**
    * @apiDefine ApiFriendRequests Friend Requests
    *
    * This is a collection of methods that allow you to use the friend request workflow (instead of creating friends automatically).
@@ -582,7 +582,7 @@ function bootstrapServer (api, config, next) {
     api.friend.acceptFriendRequest(req.keyspace, req.liu.user, req.params.friend_request, _response(res, next));
   });
 
-   /**
+  /**
    * @apiDefine ApiFollowers Followers
    *
    * This is a collection of methods that allow you to create and retrieve follows.
@@ -614,7 +614,7 @@ function bootstrapServer (api, config, next) {
     }
 
     var visibility = req.params.visibility || null,
-        backfill = req.params.backfill;
+      backfill = req.params.backfill;
 
     coerce(req.keyspace, [req.params.user, req.params.user_follower], function (err, users) {
       if (err) { return next(_error(err)); }
@@ -703,7 +703,7 @@ function bootstrapServer (api, config, next) {
 
   });
 
-   /**
+  /**
    * @apiDefine ApiFeeds Feeds
    *
    * This is a collection of methods that allow you to retrieve the news feed for a user.
@@ -735,7 +735,7 @@ function bootstrapServer (api, config, next) {
     });
   });
 
- /**
+  /**
    * @api {get} /feed/:user/direct Get a direct feed for a user
    * @apiName GetFeedDirect
    * @apiGroup ApiFeeds
@@ -897,686 +897,686 @@ if (require.main === module) {
 /**
  * @apiDefine addUserSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
-  }
-}
+ HTTP1.1 200 Success
+ {
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "username": "cliftonc",
+   "altid": "1",
+   "userdata": {
+     "avatar": "test.jpg"
+   }
+ }
  */
 /**
  * @apiDefine getUserSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
-  }
-}
+ HTTP1.1 200 Success
+ {
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "username": "cliftonc",
+   "altid": "1",
+   "userdata": {
+     "avatar": "test.jpg"
+   }
+ }
  */
 /**
  * @apiDefine getUserByNameSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "user": "7b95e210-996d-4645-8b0d-812b0e73c0b4",
-  "username": "evil &user <alert>name</alert>",
-  "altid": "9",
-  "userdata": {
-    "avatar": "test.jpg"
-  }
-}
+ HTTP1.1 200 Success
+ {
+   "user": "7b95e210-996d-4645-8b0d-812b0e73c0b4",
+   "username": "evil &user <alert>name</alert>",
+   "altid": "9",
+   "userdata": {
+     "avatar": "test.jpg"
+   }
+ }
  */
 /**
  * @apiDefine getUserByAltIdSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-  "username": "cliftonc",
-  "altid": "1",
-  "userdata": {
-    "avatar": "test.jpg"
-  }
-}
+ HTTP1.1 200 Success
+ {
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "username": "cliftonc",
+   "altid": "1",
+   "userdata": {
+     "avatar": "test.jpg"
+   }
+ }
  */
 /**
  * @apiDefine updateUserSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "user": "dfc23404-d7b0-4359-aebd-9f84e35277aa",
-  "username": "new_name",
-  "altid": "new_altid",
-  "userdata": {
-    "hello": "world"
-  }
-}
+ HTTP1.1 200 Success
+ {
+   "user": "dfc23404-d7b0-4359-aebd-9f84e35277aa",
+   "username": "new_name",
+   "altid": "new_altid",
+   "userdata": {
+     "hello": "world"
+   }
+ }
  */
 /**
  * @apiDefine addFriendRequestSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "friend_request": "b705095f-72ca-473e-8455-259d149b7741",
-  "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-  "user_friend": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-  "message": "Please be my friend",
-  "since": "2015-07-06T06:25:32.389Z",
-  "visibility": "private"
-}
+ HTTP1.1 200 Success
+ {
+   "friend_request": "b705095f-72ca-473e-8455-259d149b7741",
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "user_friend": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+   "message": "Please be my friend",
+   "since": "2015-07-06T06:25:32.389Z",
+   "visibility": "private"
+ }
  */
 /**
  * @apiDefine getFriendRequestsSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "incoming": [],
-  "outgoing": [
-    {
-      "friend_request": "b705095f-72ca-473e-8455-259d149b7741",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "user_friend": {
-        "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "message": "Please be my friend",
-      "since": "2015-07-06T06:25:32.389Z",
-      "visibility": "private"
-    }
-  ]
-}
+ HTTP1.1 200 Success
+ {
+   "incoming": [],
+   "outgoing": [
+     {
+       "friend_request": "b705095f-72ca-473e-8455-259d149b7741",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "user_friend": {
+         "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+         "username": "phteven",
+         "altid": "2",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "message": "Please be my friend",
+       "since": "2015-07-06T06:25:32.389Z",
+       "visibility": "private"
+     }
+   ]
+ }
  */
 /**
  * @apiDefine acceptFriendRequestSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
-  "reciprocal": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "user_friend": {
-    "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-    "username": "phteven",
-    "altid": "2",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "since": "2015-07-06T06:25:32.481Z"
-}
+ HTTP1.1 200 Success
+ {
+   "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
+   "reciprocal": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "user_friend": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.481Z"
+ }
  */
 /**
  * @apiDefine getFriendSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "user_friend": {
-    "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-    "username": "phteven",
-    "altid": "2",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "since": "2015-07-06T06:25:32.481Z",
-  "visibility": "private"
-}
+ HTTP1.1 200 Success
+ {
+   "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "user_friend": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.481Z",
+   "visibility": "private"
+ }
  */
 /**
  * @apiDefine getFriendsSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-[
-  {
-    "user_friend": {
-      "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-      "username": "phteven",
-      "altid": "2",
-      "userdata": {
-        "avatar": "test.jpg"
-      }
-    },
-    "since": "2015-07-06T06:25:32.481Z"
-  }
-]
+ HTTP1.1 200 Success
+ [
+ {
+   "user_friend": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.481Z"
+ }
+ ]
  */
 /**
  * @apiDefine removeFriendSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "status": "removed"
-}
+ HTTP1.1 200 Success
+ {
+   "status": "removed"
+ }
  */
 /**
  * @apiDefine followUserSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "user_follower": {
-    "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-    "username": "phteven",
-    "altid": "2",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "visibility": "public",
-  "since": "2015-07-06T06:25:32.894Z"
-}
+ HTTP1.1 200 Success
+ {
+   "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "user_follower": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "visibility": "public",
+   "since": "2015-07-06T06:25:32.894Z"
+ }
  */
 /**
  * @apiDefine getFollowSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "user_follower": {
-    "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-    "username": "phteven",
-    "altid": "2",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "since": "2015-07-06T06:25:32.894Z",
-  "visibility": "public"
-}
+ HTTP1.1 200 Success
+ {
+   "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "user_follower": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.894Z",
+   "visibility": "public"
+ }
  */
 /**
  * @apiDefine getFollowersSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-[
-  {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "user_follower": {
-      "user": "372f3c26-6355-4a4e-9f47-d47827327809",
-      "username": "ted",
-      "altid": "3",
-      "userdata": {
-        "avatar": "test.jpg"
-      }
-    },
-    "since": "2015-07-06T06:25:32.985Z",
-    "visibility": "public"
-  },
-  {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "user_follower": {
-      "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-      "username": "phteven",
-      "altid": "2",
-      "userdata": {
-        "avatar": "test.jpg"
-      }
-    },
-    "since": "2015-07-06T06:25:32.894Z",
-    "visibility": "public"
-  }
-]
+ HTTP1.1 200 Success
+ [
+ {
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "user_follower": {
+     "user": "372f3c26-6355-4a4e-9f47-d47827327809",
+     "username": "ted",
+     "altid": "3",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.985Z",
+   "visibility": "public"
+ },
+ {
+   "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+   "user_follower": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.894Z",
+   "visibility": "public"
+ }
+ ]
  */
 /**
  * @apiDefine unFollowUserSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "status": "removed"
-}
+ HTTP1.1 200 Success
+ {
+   "status": "removed"
+ }
  */
 /**
  * @apiDefine getPostSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "post": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
-  "content": "Hello, this is a post",
-  "content_type": "text/html",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "posted": "2015-07-06T06:25:33.403Z",
-  "visibility": "public"
-}
+ HTTP1.1 200 Success
+ {
+   "post": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
+   "content": "Hello, this is a post",
+   "content_type": "text/html",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "posted": "2015-07-06T06:25:33.403Z",
+   "visibility": "public"
+ }
  */
 /**
  * @apiDefine removePostSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "status": "removed"
-}
+ HTTP1.1 200 Success
+ {
+   "status": "removed"
+ }
  */
 /**
  * @apiDefine addPostSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "post": "c0acf0d8-a796-41ec-9b94-0aebe265890b",
-  "user": {
-    "user": "dfc23404-d7b0-4359-aebd-9f84e35277aa",
-    "username": "new_name",
-    "altid": "new_altid",
-    "userdata": {
-      "hello": "world"
-    }
-  },
-  "content": {
-    "hello": "world"
-  },
-  "content_type": "application/json",
-  "posted": "2015-07-06T06:25:33.909Z",
-  "visibility": "public"
-}
+ HTTP1.1 200 Success
+ {
+   "post": "c0acf0d8-a796-41ec-9b94-0aebe265890b",
+   "user": {
+     "user": "dfc23404-d7b0-4359-aebd-9f84e35277aa",
+     "username": "new_name",
+     "altid": "new_altid",
+     "userdata": {
+       "hello": "world"
+     }
+   },
+   "content": {
+     "hello": "world"
+   },
+   "content_type": "application/json",
+   "posted": "2015-07-06T06:25:33.909Z",
+   "visibility": "public"
+ }
  */
 /**
  * @apiDefine addLikeSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "like": "4b8db403-5096-4e7e-b748-7802effe6459",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "item": "http%3A%2F%2Fgithub.com",
-  "since": "2015-07-06T06:25:34.054Z",
-  "visibility": "public"
-}
+ HTTP1.1 200 Success
+ {
+   "like": "4b8db403-5096-4e7e-b748-7802effe6459",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "item": "http%3A%2F%2Fgithub.com",
+   "since": "2015-07-06T06:25:34.054Z",
+   "visibility": "public"
+ }
  */
 /**
  * @apiDefine getLikeSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "like": "4b8db403-5096-4e7e-b748-7802effe6459",
-  "item": "http%3A%2F%2Fgithub.com",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "since": "2015-07-06T06:25:34.054Z",
-  "visibility": "public"
-}
+ HTTP1.1 200 Success
+ {
+   "like": "4b8db403-5096-4e7e-b748-7802effe6459",
+   "item": "http%3A%2F%2Fgithub.com",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:34.054Z",
+   "visibility": "public"
+ }
  */
 /**
  * @apiDefine checkLikeSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "like": "4b8db403-5096-4e7e-b748-7802effe6459",
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "since": "2015-07-06T06:25:34.054Z",
-  "visibility": "public",
-  "userLikes": true,
-  "count": 1
-}
+ HTTP1.1 200 Success
+ {
+   "like": "4b8db403-5096-4e7e-b748-7802effe6459",
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:34.054Z",
+   "visibility": "public",
+   "userLikes": true,
+   "count": 1
+ }
  */
 /**
  * @apiDefine removeLikeSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "status": "removed"
-}
+ HTTP1.1 200 Success
+ {
+   "status": "removed"
+ }
  */
 /**
  * @apiDefine checkNotLikeSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "userLikes": false,
-  "user": {
-    "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-    "username": "cliftonc",
-    "altid": "1",
-    "userdata": {
-      "avatar": "test.jpg"
-    }
-  },
-  "count": 0
-}
+ HTTP1.1 200 Success
+ {
+   "userLikes": false,
+   "user": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "count": 0
+ }
  */
 /**
  * @apiDefine getFeedSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "feed": [
-    {
-      "like": "4b8db403-5096-4e7e-b748-7802effe6459",
-      "item": "http%3A%2F%2Fgithub.com",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "since": "2015-07-06T06:25:34.054Z",
-      "visibility": "public",
-      "_item": "4b8db403-5096-4e7e-b748-7802effe6459",
-      "type": "like",
-      "timeuuid": "ceca406e-23a7-11e5-876e-872b9811c160",
-      "date": "2015-07-06T06:25:34.054Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": false,
-      "ispublic": true,
-      "fromFollower": false,
-      "isLike": true,
-      "isPost": false,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true,
-      "isFollower": false
-    },
-    {
-      "post": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
-      "content": "Hello, this is a post",
-      "content_type": "text/html",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "posted": "2015-07-06T06:25:33.403Z",
-      "visibility": "public",
-      "_item": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
-      "type": "post",
-      "timeuuid": "ce66eab9-23a7-11e5-9915-4815ea7a5f2b",
-      "date": "2015-07-06T06:25:33.403Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": false,
-      "ispublic": true,
-      "fromFollower": false,
-      "isLike": false,
-      "isPost": true,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true,
-      "isFollower": false
-    },
-    {
-      "follow": "fcd91073-97c0-4592-9ab4-a079c8a933a9",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "user_follower": {
-        "user": "372f3c26-6355-4a4e-9f47-d47827327809",
-        "username": "ted",
-        "altid": "3",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "since": "2015-07-06T06:25:32.985Z",
-      "visibility": "public",
-      "_item": "fcd91073-97c0-4592-9ab4-a079c8a933a9",
-      "type": "follow",
-      "timeuuid": "ce272296-23a7-11e5-91d3-da51f98ed5d0",
-      "date": "2015-07-06T06:25:32.985Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": false,
-      "ispublic": true,
-      "fromFollower": false,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": true,
-      "isFriend": false,
-      "isUsersItem": true,
-      "isFollower": false
-    },
-    {
-      "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "user_follower": {
-        "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "since": "2015-07-06T06:25:32.894Z",
-      "visibility": "public",
-      "_item": "1128a137-fd77-4b99-b76d-cce1ebb82476",
-      "type": "follow",
-      "timeuuid": "ce193fe5-23a7-11e5-b9e4-77881b94e661",
-      "date": "2015-07-06T06:25:32.894Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": false,
-      "ispublic": true,
-      "fromFollower": false,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": true,
-      "isFriend": false,
-      "isUsersItem": true,
-      "isFollower": false
-    },
-    {
-      "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "user_friend": {
-        "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-        "username": "phteven",
-        "altid": "2",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "since": "2015-07-06T06:25:32.481Z",
-      "visibility": "personal",
-      "_item": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
-      "type": "friend",
-      "timeuuid": "cdda3b11-23a7-11e5-9704-cdf7e40011e3",
-      "date": "2015-07-06T06:25:32.481Z",
-      "fromNow": "a few seconds ago",
-      "isprivate": false,
-      "ispersonal": true,
-      "ispublic": false,
-      "fromFollower": false,
-      "isLike": false,
-      "isPost": false,
-      "isFollow": false,
-      "isFriend": true,
-      "isUsersItem": true,
-      "isFollower": false
-    },
-    {
-      "post": "50bbf7d0-fe54-4069-a498-48c3eab26e1a",
-      "content": "Hello, this is a private post",
-      "content_type": "text/html",
-      "user": {
-        "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-        "username": "cliftonc",
-        "altid": "1",
-        "userdata": {
-          "avatar": "test.jpg"
-        }
-      },
-      "posted": "2010-07-28T06:01:00.145Z",
-      "visibility": "private",
-      "_item": "50bbf7d0-fe54-4069-a498-48c3eab26e1a",
-      "type": "post",
-      "timeuuid": "7f10961a-9a0d-11df-841d-fcdc9cf681c7",
-      "date": "2010-07-28T06:01:00.145Z",
-      "fromNow": "5 years ago",
-      "isprivate": true,
-      "ispersonal": false,
-      "ispublic": false,
-      "fromFollower": false,
-      "isLike": false,
-      "isPost": true,
-      "isFollow": false,
-      "isFriend": false,
-      "isUsersItem": true,
-      "isFollower": false
-    }
-  ],
-  "more": null
-}
+ HTTP1.1 200 Success
+ {
+   "feed": [
+     {
+       "like": "4b8db403-5096-4e7e-b748-7802effe6459",
+       "item": "http%3A%2F%2Fgithub.com",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "since": "2015-07-06T06:25:34.054Z",
+       "visibility": "public",
+       "_item": "4b8db403-5096-4e7e-b748-7802effe6459",
+       "type": "like",
+       "timeuuid": "ceca406e-23a7-11e5-876e-872b9811c160",
+       "date": "2015-07-06T06:25:34.054Z",
+       "fromNow": "a few seconds ago",
+       "isprivate": false,
+       "ispersonal": false,
+       "ispublic": true,
+       "fromFollower": false,
+       "isLike": true,
+       "isPost": false,
+       "isFollow": false,
+       "isFriend": false,
+       "isUsersItem": true,
+       "isFollower": false
+     },
+     {
+       "post": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
+       "content": "Hello, this is a post",
+       "content_type": "text/html",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "posted": "2015-07-06T06:25:33.403Z",
+       "visibility": "public",
+       "_item": "7f3b2df8-6b9d-43d3-b988-88a9ce50f272",
+       "type": "post",
+       "timeuuid": "ce66eab9-23a7-11e5-9915-4815ea7a5f2b",
+       "date": "2015-07-06T06:25:33.403Z",
+       "fromNow": "a few seconds ago",
+       "isprivate": false,
+       "ispersonal": false,
+       "ispublic": true,
+       "fromFollower": false,
+       "isLike": false,
+       "isPost": true,
+       "isFollow": false,
+       "isFriend": false,
+       "isUsersItem": true,
+       "isFollower": false
+     },
+     {
+       "follow": "fcd91073-97c0-4592-9ab4-a079c8a933a9",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "user_follower": {
+         "user": "372f3c26-6355-4a4e-9f47-d47827327809",
+         "username": "ted",
+         "altid": "3",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "since": "2015-07-06T06:25:32.985Z",
+       "visibility": "public",
+       "_item": "fcd91073-97c0-4592-9ab4-a079c8a933a9",
+       "type": "follow",
+       "timeuuid": "ce272296-23a7-11e5-91d3-da51f98ed5d0",
+       "date": "2015-07-06T06:25:32.985Z",
+       "fromNow": "a few seconds ago",
+       "isprivate": false,
+       "ispersonal": false,
+       "ispublic": true,
+       "fromFollower": false,
+       "isLike": false,
+       "isPost": false,
+       "isFollow": true,
+       "isFriend": false,
+       "isUsersItem": true,
+       "isFollower": false
+     },
+     {
+       "follow": "1128a137-fd77-4b99-b76d-cce1ebb82476",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "user_follower": {
+         "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+         "username": "phteven",
+         "altid": "2",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "since": "2015-07-06T06:25:32.894Z",
+       "visibility": "public",
+       "_item": "1128a137-fd77-4b99-b76d-cce1ebb82476",
+       "type": "follow",
+       "timeuuid": "ce193fe5-23a7-11e5-b9e4-77881b94e661",
+       "date": "2015-07-06T06:25:32.894Z",
+       "fromNow": "a few seconds ago",
+       "isprivate": false,
+       "ispersonal": false,
+       "ispublic": true,
+       "fromFollower": false,
+       "isLike": false,
+       "isPost": false,
+       "isFollow": true,
+       "isFriend": false,
+       "isUsersItem": true,
+       "isFollower": false
+     },
+     {
+       "friend": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "user_friend": {
+         "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+         "username": "phteven",
+         "altid": "2",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "since": "2015-07-06T06:25:32.481Z",
+       "visibility": "personal",
+       "_item": "8aa3fb3d-9dfc-4b25-86f2-4a5284e9c391",
+       "type": "friend",
+       "timeuuid": "cdda3b11-23a7-11e5-9704-cdf7e40011e3",
+       "date": "2015-07-06T06:25:32.481Z",
+       "fromNow": "a few seconds ago",
+       "isprivate": false,
+       "ispersonal": true,
+       "ispublic": false,
+       "fromFollower": false,
+       "isLike": false,
+       "isPost": false,
+       "isFollow": false,
+       "isFriend": true,
+       "isUsersItem": true,
+       "isFollower": false
+     },
+     {
+       "post": "50bbf7d0-fe54-4069-a498-48c3eab26e1a",
+       "content": "Hello, this is a private post",
+       "content_type": "text/html",
+       "user": {
+         "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+         "username": "cliftonc",
+         "altid": "1",
+         "userdata": {
+           "avatar": "test.jpg"
+         }
+       },
+       "posted": "2010-07-28T06:01:00.145Z",
+       "visibility": "private",
+       "_item": "50bbf7d0-fe54-4069-a498-48c3eab26e1a",
+       "type": "post",
+       "timeuuid": "7f10961a-9a0d-11df-841d-fcdc9cf681c7",
+       "date": "2010-07-28T06:01:00.145Z",
+       "fromNow": "5 years ago",
+       "isprivate": true,
+       "ispersonal": false,
+       "ispublic": false,
+       "fromFollower": false,
+       "isLike": false,
+       "isPost": true,
+       "isFollow": false,
+       "isFriend": false,
+       "isUsersItem": true,
+       "isFollower": false
+     }
+   ],
+   "more": null
+ }
  */
 /**
  * @apiDefine getUserFeedSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-[
-  {
-    "friend": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
-    "user": {
-      "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
-      "username": "phteven",
-      "altid": "2",
-      "userdata": {
-        "avatar": "test.jpg"
-      }
-    },
-    "user_friend": {
-      "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
-      "username": "cliftonc",
-      "altid": "1",
-      "userdata": {
-        "avatar": "test.jpg"
-      }
-    },
-    "since": "2015-07-06T06:25:32.481Z",
-    "visibility": "personal",
-    "_item": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
-    "type": "friend",
-    "timeuuid": "cdda3b12-23a7-11e5-b49f-1acc33ebcd20",
-    "date": "2015-07-06T06:25:32.481Z",
-    "fromNow": "a few seconds ago",
-    "isprivate": false,
-    "ispersonal": true,
-    "ispublic": false,
-    "fromFollower": false,
-    "isLike": false,
-    "isPost": false,
-    "isFollow": false,
-    "isFriend": true,
-    "isUsersItem": false,
-    "isFollower": false
-  }
-]
+ HTTP1.1 200 Success
+ [
+ {
+   "friend": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
+   "user": {
+     "user": "4816fa06-9ea7-4c29-bb42-c716598072c7",
+     "username": "phteven",
+     "altid": "2",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "user_friend": {
+     "user": "b3672c6a-9d77-4e72-a088-0f2148c9b80b",
+     "username": "cliftonc",
+     "altid": "1",
+     "userdata": {
+       "avatar": "test.jpg"
+     }
+   },
+   "since": "2015-07-06T06:25:32.481Z",
+   "visibility": "personal",
+   "_item": "cfbcf3da-c2a2-4294-a23a-38203858eff1",
+   "type": "friend",
+   "timeuuid": "cdda3b12-23a7-11e5-b49f-1acc33ebcd20",
+   "date": "2015-07-06T06:25:32.481Z",
+   "fromNow": "a few seconds ago",
+   "isprivate": false,
+   "ispersonal": true,
+   "ispublic": false,
+   "fromFollower": false,
+   "isLike": false,
+   "isPost": false,
+   "isFollow": false,
+   "isFriend": true,
+   "isUsersItem": false,
+   "isFollower": false
+ }
+ ]
  */
 /**
  * @apiDefine getUserRelationshipSuccessExample
  * @apiSuccessExample
-HTTP1.1 200 Success
-{
-  "isFriend": true,
-  "isFriendSince": "2015-07-06T06:25:32.481Z",
-  "isFriendRequestPending": false,
-  "isFriendRequestSince": null,
-  "youFollow": false,
-  "youFollowSince": null,
-  "youFollowPrivate": false,
-  "youFollowPersonal": false,
-  "theyFollow": true,
-  "theyFollowSince": "2015-07-06T06:25:32.894Z",
-  "theyFollowVisibility": "public",
-  "theyFollowPrivate": false,
-  "theyFollowPersonal": false,
-  "inCommon": [],
-  "followerCount": 0
-}
+ HTTP1.1 200 Success
+ {
+   "isFriend": true,
+   "isFriendSince": "2015-07-06T06:25:32.481Z",
+   "isFriendRequestPending": false,
+   "isFriendRequestSince": null,
+   "youFollow": false,
+   "youFollowSince": null,
+   "youFollowPrivate": false,
+   "youFollowPersonal": false,
+   "theyFollow": true,
+   "theyFollowSince": "2015-07-06T06:25:32.894Z",
+   "theyFollowVisibility": "public",
+   "theyFollowPrivate": false,
+   "theyFollowPersonal": false,
+   "inCommon": [],
+   "followerCount": 0
+ }
  */
