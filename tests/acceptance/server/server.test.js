@@ -736,7 +736,7 @@ databases.forEach(function (db) {
           }
         };
 
-        client.addUser(null, 'shaun', 'baah', {type: 'sheep'}, initialise, function (err, user) {
+        client.addUser(null, 'shaun', 'baah', {type: 'sheep'}, {initialise: initialise}, function (err, user) {
           expect(err).to.be(null);
           client.getFeed(user.user, user.user, null, 50, function (err, feed) {
             expect(err).to.be(null);

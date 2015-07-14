@@ -193,10 +193,10 @@ Seguir.prototype.getUserByAltId = function (liu, altid, next) {
  *
  * @apiUse addUserSuccessExample
  */
-Seguir.prototype.addUser = function (liu, username, altid, userdata, initialise, next) {
+Seguir.prototype.addUser = function (liu, username, altid, userdata, options, next) {
   var self = this;
-  if (!next) { next = initialise; initialise = null; }
-  self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata, initialise: initialise}, next);
+  if (!next) { next = options; options = {}; }
+  self.post(liu, u('addUser'), {username: username, altid: altid, userdata: userdata, initialise: options.initialise, userid: options.userid}, next);
 };
 
 /**
