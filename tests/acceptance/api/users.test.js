@@ -119,7 +119,7 @@ databases.forEach(function (db) {
           }
         };
 
-        api.user.addUser(keyspace, 'shaun', 'baah', {type: 'sheep'}, initialise, function (err, user) {
+        api.user.addUser(keyspace, 'shaun', 'baah', {type: 'sheep'}, {initialise: initialise}, function (err, user) {
           expect(err).to.be(null);
           api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
             expect(err).to.be(null);
@@ -132,7 +132,7 @@ databases.forEach(function (db) {
 
       it('can optionally backfill a follow relationship and automatically populate their feed', function (done) {
 
-        api.user.addUser(keyspace, 'bitzer', 'woof', {type: 'dog'}, function (err, user) {
+        api.user.addUser(keyspace, 'bitzer', 'woof', {type: 'dog'}, {}, function (err, user) {
           expect(err).to.be(null);
           api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
             expect(err).to.be(null);
