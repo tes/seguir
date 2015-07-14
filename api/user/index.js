@@ -17,12 +17,16 @@ module.exports = function (api) {
   var client = api.client,
       q = client.queries;
 
-  function addUser (keyspace, username, altid, userdata, initialise, next) {
-    if (!next) { next = initialise; initialise = null; }
+  function addUser (keyspace, username, altid, userdata, options, next) {
+    if (!next) { next = options; options = {}; }
+
+    var initialise = options.initialise;
+
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
-    var userid = client.generateId();
+
+    var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
     var user = [userid, username, '' + altid, userdata];
     client.execute(q(keyspace, 'upsertUser'), user, {
       prepare: true,

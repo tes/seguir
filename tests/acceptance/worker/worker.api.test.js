@@ -37,7 +37,7 @@ describe('Worker Processing', function () {
           {username: 'phteven', altid: '2'},
           {username: 'ted', altid: '3'}
         ], function (user, cb) {
-          api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
+          api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, {}, cb);
         }, function (err, results) {
           expect(err).to.be(null);
           users = results;

@@ -52,7 +52,7 @@ function setupServer (config, keyspace, next) {
 function setupUsers (keyspace, api, users, next) {
   var userMap = {};
   async.map(users, function (user, cb) {
-    api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, cb);
+    api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, {}, cb);
   }, function (err, results) {
     if (err) { return next(err); }
     results.forEach(function (user) {
