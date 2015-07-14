@@ -175,6 +175,7 @@ Seguir.prototype.getUserByAltId = function (liu, altid, next) {
  * @apiParam {String} altid the local / alternate id
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
  * @apiParam {Object} initialise optional data structure that allows you to initialise a user in seguir
+ * @apiParam {String} userid optional uuid that will be used for the user's id if provided
  * @apiParam {Function} next callback
  * @apiParamExample {json} userdata-example
 {
