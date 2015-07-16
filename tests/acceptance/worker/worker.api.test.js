@@ -24,7 +24,7 @@ describe('Worker Processing', function () {
       expect(err).to.be(null);
       api = seguirApi;
       api.client.setup.setupTenant(api.client, keyspace, function () {
-        worker(api, done);
+        worker(config, done);
       });
     });
   });

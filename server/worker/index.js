@@ -3,7 +3,7 @@
  */
 var async = require('async');
 
-function bootstrapWorker (api, next) {
+function bootstrapWorker (api, config, next) {
 
   var follower = function (cb) {
     api.messaging.listen('seguir-publish-to-followers', function (data, next) {
@@ -32,9 +32,16 @@ if (require.main === module) {
   var config = require('../config')();
   require('../../api')(config, function (err, api) {
     if (err) { return process.exit(0); }
-    bootstrapWorker(api);
+    bootstrapWorker(api, config);
   });
 } else {
   // Used for testing
-  module.exports = bootstrapWorker;
+  module.exports = function (config, next) {
+    require('../../api')(config, function (err, api) {
+      if (err) {
+        return next(new Error('Unable to bootstrap API: ' + err.message));
+      }
+      return bootstrapWorker(api, config, next);
+    });
+  };
 }
