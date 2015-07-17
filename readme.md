@@ -120,6 +120,37 @@ app.get('/user/:username/feed', function (req, res, next) {
 
 You can see this flow with the sample application (uses Passport for authentication):  [https://github.com/cliftonc/seguir-example-application](https://github.com/cliftonc/seguir-example-application).
 
+## Running a Worker
+
+You can defer costly newsfeed updates (fanouts to followers) to a worker process.  To do this, you need to do two things.  First is add config for the messaging (via Redis) to the configuration:
+
+https://github.com/cliftonc/seguir/blob/master/server/config/cassandra.json#L8
+
+```json
+{
+  "logging": true,
+  "port":3000,
+  "keyspace":"seguir",
+  "cassandra": {
+    "contactPoints": ["127.0.0.1"]
+  },
+  "messaging": {
+    "host": "127.0.0.1",
+    "port": 6379
+  }
+}
+```
+
+Now, you can either instantiate a worker programmatically with this config (e.g. like in the example application), or just start the worker:
+
+```bash
+node server/worker
+```
+
+It works by using a FIFO queue built on top of a redis list via RSMQ.  For implementation details for the way the messaging drives the workers:
+
+https://github.com/cliftonc/seguir/blob/master/db/messaging/index.js
+
 ## Debugging
 
 Use debug environment variables to see what is going on:
