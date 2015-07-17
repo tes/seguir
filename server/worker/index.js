@@ -2,17 +2,25 @@
  * A worker will listen for jobs on the job queue, and execute them.
  */
 var async = require('async');
+var restify = require('restify');
+var bunyan = require('bunyan');
+var logger = bunyan.createLogger({
+  name: 'seguir',
+  serializers: restify.bunyan.serializers
+});
 
 function bootstrapWorker (api, config, next) {
 
   var follower = function (cb) {
     api.messaging.listen('seguir-publish-to-followers', function (data, next) {
+      logger.debug('Processing publish-to-followers message', data);
       api.feed.insertFollowersTimeline(data, next);
     }, cb);
   };
 
   var mentions = function (cb) {
     api.messaging.listen('seguir-publish-mentioned', function (data, cb) {
+      logger.debug('Processing publish-mentioned message', data);
       api.feed.insertMentionedTimeline(data, cb);
     }, cb);
   };
