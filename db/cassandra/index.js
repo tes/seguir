@@ -25,12 +25,27 @@ function createClient (config, next) {
   }
 
   function execute (query, data, options, next) {
+    var self = this;
     if (!next) { next = options; options = null; }
     if (!next) { next = data; data = null; }
     if (!query) { return next(null); }
     debug('execute', query, data);
     client.execute(query, data, options, function (err, result) {
-      if (err) { return next(err); }
+      if (err) {
+        if (self.truncate && err.message.indexOf('No secondary indexes on the restricted columns') >= 0) {
+          // This error occurs after failures in index creation, so in test / truncate mode
+          // we need to trigger that the tests rebuild the DB on next go around
+          // See https://github.com/cliftonc/seguir/issues/15
+          var keyspace = query.split('FROM ')[1].split('.')[0];
+          if (keyspace) {
+            console.log('Truncating schema version to recover from index failure ...');
+            return execute('TRUNCATE ' + keyspace + '.schema_version;', function () {
+              next(err);
+            });
+          }
+        }
+        return next(err);
+      }
       next(null, result && result.rows ? result.rows : null);
     });
   }

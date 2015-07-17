@@ -13,9 +13,14 @@ function setupApi (keyspace, config, next) {
   Api(config, function (err, api) {
     if (err) { return next(err); }
     console.log('   Setting up keyspace in ' + api.client.type + '...');
-    api.client.setup.setupTenant(api.client, keyspace, function (err) {
+    api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', function (err, migrations) {
       if (err) { return next(err); }
-      next(null, api);
+      var truncate = migrations.length === 0 && !process.env.CLEAN;
+      api.client.truncate = truncate;
+      api.client.setup.setupTenant(api.client, keyspace, truncate, function (err) {
+        if (err) { return next(err); }
+        next(null, api);
+      });
     });
   });
 }

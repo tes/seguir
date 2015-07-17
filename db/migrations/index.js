@@ -12,7 +12,7 @@ module.exports = function (api) {
       q = client.queries;
 
   function toApply (schemaVersions, migrations) {
-    var minimumSchemaVersion = _.min(schemaVersions);
+    var minimumSchemaVersion = schemaVersions.length ? _.min(schemaVersions) : -1;
     var migrationVersions = _.filter(_.pluck(migrations, 'version'), function (version) { if (version >= minimumSchemaVersion) return true; });
     var toApplyVersions = _.difference(migrationVersions, schemaVersions);
     var migrationsToApply = _.filter(migrations, function (item) { return _.contains(toApplyVersions, item.version); });
@@ -163,7 +163,8 @@ module.exports = function (api) {
     getSchemaVersions: getSchemaVersions,
     getMigrations: getMigrations,
     getMigrationsToApply: getMigrationsToApply,
-    applyMigrations: applyMigrations
+    applyMigrations: applyMigrations,
+    getMigrationsToApplyToKeyspace: getMigrationsToApplyToKeyspace
   };
 
 };

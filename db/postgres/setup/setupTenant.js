@@ -147,7 +147,9 @@ function defineTablesAndIndexes (KEYSPACE) {
   };
 }
 
-function setup (client, keyspace, next) {
+function setup (client, keyspace, truncateIfExists, next) {
+
+  if (!next) { next = truncateIfExists; truncateIfExists = false; }
 
   var options = defineTablesAndIndexes(keyspace);
   options.KEYSPACE = keyspace;

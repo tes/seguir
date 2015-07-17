@@ -154,12 +154,18 @@ function defineTablesAndIndexes (KEYSPACE) {
   };
 }
 
-function setup (client, keyspace, next) {
+function setup (client, keyspace, truncateIfExists, next) {
+
+  if (!next) { next = truncateIfExists; truncateIfExists = false; }
 
   var options = defineTablesAndIndexes(keyspace);
   options.KEYSPACE = keyspace;
 
   var helpers = require('./helpers')(client, options);
+
+  if (truncateIfExists) {
+    return helpers.truncate(next);
+  }
 
   async.series([
     helpers.dropKeyspace,

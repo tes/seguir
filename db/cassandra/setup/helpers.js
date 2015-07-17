@@ -36,6 +36,19 @@ module.exports = function (client, options) {
                   '= {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};', next);
   }
 
+  function truncate (next) {
+    console.log('    !! Truncating vs recreating tables ...');
+    async.map(tables, function (cql, cb) {
+      var tableName = cql.split(KEYSPACE + '.')[1].split(' ')[0];
+      if (tableName !== 'schema_version') {
+        var truncateCql = 'TRUNCATE ' + KEYSPACE + '.' + tableName;
+        client.execute(truncateCql, cb);
+      } else {
+        cb();
+      }
+    }, next);
+  }
+
   /* istanbul ignore next */
   function createTables (next) {
 
@@ -58,7 +71,6 @@ module.exports = function (client, options) {
 
     if (verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
     async.map(indexes, function (cql, cb) {
-      if (verbose) console.log(cql);
       client.execute(cql, function (err) {
         if (err && (err.code === 9216 || err.code === 8704)) { // Already exists
           return cb();
@@ -106,7 +118,8 @@ module.exports = function (client, options) {
     createTables: createTables,
     createSecondaryIndexes: createSecondaryIndexes,
     assertIndexes: assertIndexes,
-    initialiseSchemaVersion: initialiseSchemaVersion
+    initialiseSchemaVersion: initialiseSchemaVersion,
+    truncate: truncate
   };
 
 };
