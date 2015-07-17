@@ -151,6 +151,10 @@ It works by using a FIFO queue built on top of a redis list via RSMQ.  For imple
 
 https://github.com/cliftonc/seguir/blob/master/db/messaging/index.js
 
+The actual code paths that make the shift between in process and out of process worker use:
+
+https://github.com/cliftonc/seguir/blob/master/api/feed/index.js#L136
+
 ## Debugging
 
 Use debug environment variables to see what is going on:
