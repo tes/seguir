@@ -122,7 +122,7 @@ You can see this flow with the sample application (uses Passport for authenticat
 
 ## Running a Worker
 
-You can defer costly newsfeed updates (fanouts to followers) to a worker process.  To do this, you need to do two things.  First is add config for the messaging (via Redis) to the configuration:
+You can defer costly newsfeed updates (fanouts to followers) to a worker process.  To do this, you need to do two things.  First is add config for the messaging (via Redis) to the configuration.  If you do NOT have this section, it will just process these jobs in context of the current process - if you add it, it will expect a worker to be up and listening.
 
 https://github.com/cliftonc/seguir/blob/master/server/config/cassandra.json#L8
 
