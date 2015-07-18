@@ -90,6 +90,13 @@ databases.forEach(function (db) {
         });
       });
 
+      it('cant create a second user with the same altid', function (done) {
+        api.user.addUser(keyspace, 'altido', '1', function (err, user) {
+          expect(err.statusCode).to.be(409);
+          done();
+        });
+      });
+
     });
 
     describe('initialising users and follows', function () {

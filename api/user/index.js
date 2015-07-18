@@ -18,28 +18,37 @@ module.exports = function (api) {
       q = client.queries;
 
   function addUser (keyspace, username, altid, userdata, options, next) {
-    if (!next) { next = options; options = {}; }
 
+    if (!next) { next = options; options = {}; }
+    if (!next) { next = userdata; userdata = {}; }
     var initialise = options.initialise;
 
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
 
-    var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
-    var user = [userid, username, '' + altid, userdata];
-    client.execute(q(keyspace, 'upsertUser'), user, {
-      prepare: true,
-      hints: [null, null, 'map']
-    }, function (err, result) {
-      if (err) { return next(err); }
-      var tempUser = {user: userid, username: username, altid: altid, userdata: userdata};
-      if (initialise) {
-        initialiseUserWith(keyspace, tempUser, initialise, next);
-      } else {
-        next(null, tempUser);
-      }
+    // Check user doesn't exist as per issue #36
+    getUserByAltId(keyspace, altid, function (err, existingUser) {
+
+      if (err && err.statusCode !== 404) { return next(err); }
+      if (existingUser) { return next({statusCode: 409, message: 'User with altid ' + altid + ' already exists, use updateUser to update.'}); }
+
+      var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
+      var user = [userid, username, '' + altid, userdata];
+      client.execute(q(keyspace, 'upsertUser'), user, {
+        prepare: true,
+        hints: [null, null, 'map']
+      }, function (err, result) {
+        if (err) { return next(err); }
+        var tempUser = {user: userid, username: username, altid: altid, userdata: userdata};
+        if (initialise) {
+          initialiseUserWith(keyspace, tempUser, initialise, next);
+        } else {
+          next(null, tempUser);
+        }
+      });
     });
+
   }
 
   function initialiseUserWith (keyspace, user, initialise, next) {

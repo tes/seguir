@@ -283,7 +283,7 @@ databases.forEach(function (db) {
       });
 
       it('can coerce a string uuid to a uuid', function (done) {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, {}, function (err, user) {
+        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, {}, function (err, user) {
           expect(err).to.be(null);
           auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, user.user.toString(), function (err, id) {
             expect(err).to.be(null);
@@ -294,9 +294,9 @@ databases.forEach(function (db) {
       });
 
       it('can coerce an array of altids to uuids', function (done) {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, {}, function (err, user) {
+        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc8', '8', {}, {}, function (err, user) {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, ['7'], function (err, ids) {
+          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, ['8'], function (err, ids) {
             expect(err).to.be(null);
             expect(ids[0]).to.eql(user.user);
             done();
