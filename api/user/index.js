@@ -41,7 +41,8 @@ module.exports = function (api) {
         hints: [null, null, 'map']
       }, function (err, result) {
         if (err) { return next(err); }
-        var tempUser = _.object(['user', 'username', 'altid', 'userdata'], user);
+        var tempUser = _.object(['user', 'username', 'altid'], user);
+        tempUser.userdata = userdata;
         if (initialise) {
           initialiseUserWith(keyspace, tempUser, initialise, next);
         } else {
