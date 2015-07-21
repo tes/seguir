@@ -35,12 +35,13 @@ module.exports = function (api) {
 
       var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
       var user = [userid, username, '' + altid, userdata];
+
       client.execute(q(keyspace, 'upsertUser'), user, {
         prepare: true,
         hints: [null, null, 'map']
       }, function (err, result) {
         if (err) { return next(err); }
-        var tempUser = {user: userid, username: username, altid: altid, userdata: userdata};
+        var tempUser = _.object(['user', 'username', 'altid', 'userdata'], user);
         if (initialise) {
           initialiseUserWith(keyspace, tempUser, initialise, next);
         } else {
@@ -103,7 +104,7 @@ module.exports = function (api) {
   }
 
   function getUserByAltId (keyspace, altid, next) {
-    api.common.get(keyspace, 'selectUserByAltId', [altid], 'one', next);
+    api.common.get(keyspace, 'selectUserByAltId', ['' + altid], 'one', next);
   }
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {

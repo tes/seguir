@@ -97,6 +97,18 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can create a user with a non string altid and it will coerce to string', function (done) {
+        api.user.addUser(keyspace, 'altido', 999, function (err, user) {
+          expect(err).to.be(null);
+          expect(user.altid).to.be('999');
+          api.user.getUserByAltId(keyspace, 999, function (err, user) {
+            expect(err).to.be(null);
+            expect(user.altid).to.be('999');
+            done();
+          });
+        });
+      });
+
     });
 
     describe('initialising users and follows', function () {
