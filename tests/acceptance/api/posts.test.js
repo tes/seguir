@@ -174,7 +174,7 @@ databases.forEach(function (db) {
       });
 
       it('can update an existing post by id', function (done) {
-        api.post.updatePost(keyspace, users['json'].user, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, post) {
+        api.post.updatePost(keyspace, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, post) {
           expect(err).to.be(null);
           api.post.getPost(keyspace, users['json'].user, postId, function (err, getPost) {
             expect(err).to.be(null);
@@ -185,7 +185,7 @@ databases.forEach(function (db) {
       });
 
       it('can update an existing post by altid', function (done) {
-        api.post.updatePostByAltid(keyspace, users['json'].user, 'ALTID', 'CHANGED AGAIN', 'text/html', api.visibility.PUBLIC, function (err, post) {
+        api.post.updatePostByAltid(keyspace, 'ALTID', 'CHANGED AGAIN', 'text/html', api.visibility.PUBLIC, function (err, post) {
           expect(err).to.be(null);
           api.post.getPostByAltid(keyspace, users['json'].user, 'ALTID', function (err, getPost) {
             expect(err).to.be(null);
