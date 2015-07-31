@@ -79,9 +79,13 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = ?, altid = ?, userd
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility FROM {KEYSPACE}.posts WHERE post = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, visibility) VALUES(?, ?, ?, ?, ?, ?);';
+queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
+queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
+queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid=?';
+queries.updatePost = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE post = ?';
+queries.updatePostByAltid = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE altid = ?';
 
 /**
  * @apiDefine ExampleCqlFriends

@@ -44,10 +44,12 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {String} content The content of the post.
    * @apiParam {String} visibility The visibility of the post
    * @apiParam {Timestamp} posted The date the post was made.
+   * @apiParam {String} altid Optional altid for the post
    * @apiUse ExampleCqlPosts
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, visibility text, posted timestamp)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, visibility text, posted timestamp, altid text)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(altid)');
   tableIndexes.posts = ['user'];
 
   /**

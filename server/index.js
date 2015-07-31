@@ -381,8 +381,7 @@ function bootstrapServer (api, config, next) {
    * @apiParam {String} content of the post
    * @apiParam {String} content_type the type of content in content, use application/json for json data, defaults to text/html
    * @apiParam {Timestamp} posted the timestamp that the post occurred - default Date.now()
-   * @apiParam {Boolean} private is the post private, e.g. only for friends
-   * @apiParam {Boolean} private is the post personal, e.g. only for you
+   * @apiParam {String} visibility is the post private, e.g. only for friends
    * @apiUse addPostSuccessExample
    *
    *  @apiUse MissingUser
@@ -403,7 +402,92 @@ function bootstrapServer (api, config, next) {
 
     coerce(req.keyspace, req.params.user, function (err, user) {
       if (err) { return next(_error(err)); }
-      api.post.addPost(req.keyspace, user, req.params.content, content_type, posted, visibility, _response(res, next));
+      api.post.addPost(req.keyspace, user, req.params.content, content_type, posted, visibility, req.params.altid, _response(res, next));
+    });
+  });
+
+  /**
+   * @api {post} /post/:post Update a post by a user
+   * @apiName UpdatePost
+   * @apiGroup ApiPosts
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Updates a post.
+   * @apiParam {Guid} post the guid for the post
+   * @apiParam {String} content of the post
+   * @apiParam {String} content_type the type of content in content, use application/json for json data, defaults to text/html
+   * @apiParam {String} private is the post private, e.g. only for friends
+   * @apiUse updatePostSuccessExample
+   *
+   *  @apiUse MissingUser
+   *  @apiUse MissingContent
+   *  @apiUse ServerError
+   */
+  server.post(u('updatePost'), api.auth.checkRequest, function (req, res, next) {
+
+    if (!req.params.post) {
+      return next(new restify.InvalidArgumentError('You must provide a guid for the post.'));
+    }
+
+    if (!req.params.content) {
+      return next(new restify.InvalidArgumentError('You must provide content for the post.'));
+    }
+
+    api.post.getPost(req.keyspace, req.liu.user, req.params.post, function (err, post) {
+
+      if (err) { return next(_error(err)); }
+
+      if (post.user.user.toString() !== req.liu.user.toString()) {
+        return next(new restify.ForbiddenError('You can only update your own posts.'));
+      }
+
+      var visibility = req.params.visibility || post.visibility,
+          content_type = req.params.content_type || post.content_type;
+
+      api.post.updatePost(req.keyspace, req.params.post, req.params.content, content_type, visibility, _response(res, next));
+
+    });
+  });
+
+  /**
+   * @api {post} /post/:altid/altid Update a post by a user by altid
+   * @apiName UpdatePost
+   * @apiGroup ApiPosts
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Updates a post by altid
+   * @apiParam {String} altid the altid for the post
+   * @apiParam {String} content of the post
+   * @apiParam {String} content_type the type of content in content, use application/json for json data, defaults to text/html
+   * @apiParam {String} private is the post private, e.g. only for friends
+   * @apiUse updatePostSuccessExample
+   *
+   *  @apiUse MissingUser
+   *  @apiUse MissingContent
+   *  @apiUse ServerError
+   */
+  server.post(u('updatePostByAltid'), api.auth.checkRequest, function (req, res, next) {
+
+    if (!req.params.altid) {
+      return next(new restify.InvalidArgumentError('You must provide a altid for the post.'));
+    }
+
+    if (!req.params.content) {
+      return next(new restify.InvalidArgumentError('You must provide content for the post.'));
+    }
+
+    api.post.getPostByAltid(req.keyspace, req.liu.user, req.params.altid, function (err, post) {
+
+      if (err) { return next(_error(err)); }
+      if (post.user.user.toString() !== req.liu.user.toString()) {
+        return next(new restify.ForbiddenError('You can only update your own posts.'));
+      }
+
+      var visibility = req.params.visibility || post.visibility,
+          content_type = req.params.content_type || post.content_type;
+
+      api.post.updatePost(req.keyspace, post.post, req.params.content, content_type, visibility, _response(res, next));
+
     });
   });
 
@@ -424,6 +508,22 @@ function bootstrapServer (api, config, next) {
   });
 
   /**
+   * @api {get} /post/:altid/altid Get a specific post by altid
+   * @apiName GetPostByAltid
+   * @apiGroup ApiPosts
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Retrieves details of a specific post by altid
+   * @apiParam {String} altid The altid of the post
+   * @apiUse getPostSuccessExample
+   *
+   *  @apiUse ServerError
+   */
+  server.get(u('getPostByAltid'), api.auth.checkRequest, function (req, res, next) {
+    api.post.getPostByAltid(req.keyspace, req.liu.user, req.params.altid, _response(res, next));
+  });
+
+  /**
    * @api {delete} /post/:post Remove a post.
    * @apiName RemovePost
    * @apiGroup ApiPosts
@@ -441,6 +541,26 @@ function bootstrapServer (api, config, next) {
       return next(new restify.InvalidArgumentError('You must provide a post guid.'));
     }
     api.post.removePost(req.keyspace, req.liu.user, req.params.post, _response(res, next));
+  });
+
+  /**
+   * @api {delete} /post/:altid/altid Remove a post by altid
+   * @apiName RemovePostByAltid
+   * @apiGroup ApiPosts
+   * @apiVersion 1.0.0
+   *
+   * @apiDescription Removes a post by altid
+   * @apiParam {String} post the altid representation of the post
+   * @apiUse removePostSuccessExample
+   *
+   *  @apiUse MissingPost
+   *  @apiUse ServerError
+   */
+  server.del(u('removePostByAltid'), api.auth.checkRequest, function (req, res, next) {
+    if (!req.params.altid) {
+      return next(new restify.InvalidArgumentError('You must provide a post altid.'));
+    }
+    api.post.removePostByAltid(req.keyspace, req.liu.user, req.params.altid, _response(res, next));
   });
 
   /**

@@ -62,10 +62,14 @@ queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, use
 /**
  * @apiDefine ExamplePostgresPosts
  */
-queries._postSelectFields = 'p.post AS {PREFIX}post, p.content AS {PREFIX}content, p.content_type AS {PREFIX}content_type, p."user" AS "{PREFIX}user", p.posted AS {PREFIX}posted, p.visibility AS {PREFIX}visibility';
+queries._postSelectFields = 'p.post AS {PREFIX}post, p.content AS {PREFIX}content, p.content_type AS {PREFIX}content_type, p."user" AS "{PREFIX}user", p.posted AS {PREFIX}posted, p.visibility AS {PREFIX}visibility, p.altid as {PREFIX}altid';
 queries.selectPost = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.post = $1';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, visibility) VALUES($1, $2, $3, $4, $5, $6);';
+queries.selectPostByAltid = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.altid = $1';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, visibility, altid) VALUES($1, $2, $3, $4, $5, $6, $7);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
+queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid = $1';
+queries.updatePost = 'UPDATE {KEYSPACE}.posts SET content = $1, content_type = $2, visibility = $3 WHERE post = $4';
+queries.updatePostByAltid = 'UPDATE {KEYSPACE}.posts SET content = $1, content_type = $2, visibility = $3 WHERE altid = $4';
 
 /**
  * @apiDefine ExamplePostgresFriends

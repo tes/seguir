@@ -455,16 +455,58 @@ Seguir.prototype.getFollow = function (liu, follow, next) {
  *
  * @apiDescription Create a new post on a users news feed
  * @apiParam {String} liu the id of the current logged in user
- * @apiParam {String} content the id of the user to follow
+ * @apiParam {String} content the content of the post
  * @apiParam {String} content_type the content contained in content, use application/json for json data
  * @apiParam {Timestamp} posted the timestamp the post should appear to be created - use Date.now() for now
  * @apiParam {String} visibility visibility level
+ * @apiParam {String} altid optional altid
  * @apiParam {Function} next callback
  * @apiUse addPostSuccessExample
  */
-Seguir.prototype.addPost = function (liu, content, content_type, posted, visibility, next) {
+Seguir.prototype.addPost = function (liu, content, content_type, posted, visibility, altid, next) {
   var self = this;
-  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, posted: posted, visibility: visibility}, next);
+  if (!next) { next = altid; altid = null; }
+  self.post(liu, u('addPost'), {user: liu, content: content, content_type: content_type, posted: posted, visibility: visibility, altid: altid}, next);
+};
+
+/**
+ * @api {function} updatePost(liu,post,content,content_type,visibility,next) updatePost
+ * @apiName updatePost
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Update content of specific post
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {Guid} post the id of the post to update
+ * @apiParam {String} content the content of the post
+ * @apiParam {String} content_type the content contained in content, use application/json for json data
+ * @apiParam {String} visibility visibility level
+ * @apiParam {Function} next callback
+ * @apiUse getPostSuccessExample
+ */
+Seguir.prototype.updatePost = function (liu, post, content, content_type, visibility, next) {
+  var self = this;
+  self.post(liu, u('updatePost', {post: post}), {content: content, content_type: content_type, visibility: visibility}, next);
+};
+
+/**
+ * @api {function} updatePostByAltid(liu,altid,content,content_type,visibility,next) updatePostByAltid
+ * @apiName updatePostByAltid
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Update content of specific post by altid
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} altid the id of the post to update
+ * @apiParam {String} content the content of the post
+ * @apiParam {String} content_type the content contained in content, use application/json for json data
+ * @apiParam {String} visibility visibility level
+ * @apiParam {Function} next callback
+ * @apiUse getPostSuccessExample
+ */
+Seguir.prototype.updatePostByAltid = function (liu, altid, content, content_type, visibility, next) {
+  var self = this;
+  self.post(liu, u('updatePostByAltid', {altid: altid}), {content: content, content_type: content_type, visibility: visibility}, next);
 };
 
 /**
@@ -485,6 +527,23 @@ Seguir.prototype.getPost = function (liu, post, next) {
 };
 
 /**
+ * @api {function} getPostByAltid(liu,altid,next) getPostByAltid
+ * @apiName getPostByAltid
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Retrieve details of a specific post by altid
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} altid the altid of the post to retrieve
+ * @apiParam {Function} next callback
+ * @apiUse getPostSuccessExample
+ */
+Seguir.prototype.getPostByAltid = function (liu, altid, next) {
+  var self = this;
+  self.get(liu, u('getPostByAltid', {altid: altid}), next);
+};
+
+/**
  * @api {function} removePost(liu,post,next) removePost
  * @apiName removePost
  * @apiGroup Posts
@@ -499,6 +558,23 @@ Seguir.prototype.getPost = function (liu, post, next) {
 Seguir.prototype.removePost = function (liu, post, next) {
   var self = this;
   self.del(liu, u('removePost', {post: post}), next);
+};
+
+/**
+ * @api {function} removePostByAltid(liu,altid,next) removePostByAltid
+ * @apiName removePostByAltid
+ * @apiGroup Posts
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription Remove a specific post from your newsfeed
+ * @apiParam {String} liu the id of the current logged in user
+ * @apiParam {String} altid the altid of the post to remove
+ * @apiParam {Function} next callback
+ * @apiUse removePostSuccessExample
+ */
+Seguir.prototype.removePostByAltid = function (liu, altid, next) {
+  var self = this;
+  self.del(liu, u('removePostByAltid', {altid: altid}), next);
 };
 
 /**

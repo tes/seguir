@@ -49,7 +49,7 @@ databases.forEach(function (db) {
       var timestamp = new Date(1280296860145);
 
       it('can post a message from a user', function (done) {
-        api.post.addPost(keyspace, users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), api.visibility.PUBLIC, function (err, post) {
+        api.post.addPost(keyspace, users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), api.visibility.PUBLIC, 'ALTID', function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.eql(users['cliftonc']);
@@ -173,6 +173,46 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can update an existing post by id', function (done) {
+        api.post.updatePost(keyspace, users['json'].user, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, post) {
+          expect(err).to.be(null);
+          api.post.getPost(keyspace, users['json'].user, postId, function (err, getPost) {
+            expect(err).to.be(null);
+            expect(getPost.content).to.be('CHANGED!');
+            done();
+          });
+        });
+      });
+
+      it('can update an existing post by altid', function (done) {
+        api.post.updatePostByAltid(keyspace, users['json'].user, 'ALTID', 'CHANGED AGAIN', 'text/html', api.visibility.PUBLIC, function (err, post) {
+          expect(err).to.be(null);
+          api.post.getPostByAltid(keyspace, users['json'].user, 'ALTID', function (err, getPost) {
+            expect(err).to.be(null);
+            expect(getPost.content).to.be('CHANGED AGAIN');
+            done();
+          });
+        });
+      });
+
+      it('cant create, retrieve and delete a post by altid', function (done) {
+        api.post.addPost(keyspace, users['json'].user, '{"hello":"world"}', 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', function (err, post) {
+          expect(err).to.be(null);
+          expect(post.altid).to.be('P-1234');
+          api.post.getPostByAltid(keyspace, users['json'].user, 'P-1234', function (err, retrievedPost) {
+            expect(err).to.be(null);
+            expect(retrievedPost.altid).to.be('P-1234');
+            api.post.removePostByAltid(keyspace, users['json'].user, 'P-1234', function (err, status) {
+              expect(err).to.be(null);
+              expect(status.status).to.be('removed');
+              api.post.getPostByAltid(keyspace, users['json'].user, 'P-1234', function (err, retrievedPost) {
+                expect(err.statusCode).to.be(404);
+                done();
+              });
+            });
+          });
+        });
+      });
     });
 
   });

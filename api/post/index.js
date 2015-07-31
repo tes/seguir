@@ -15,17 +15,18 @@ module.exports = function (api) {
   var client = api.client,
       q = client.queries;
 
-  function addPost (keyspace, user, content, content_type, timestamp, visibility, next) {
+  function addPost (keyspace, user, content, content_type, timestamp, visibility, altid, next) {
+
+    if (!next) { next = altid; altid = null; }
+
     var post = client.generateId();
 
-    // Parse and re-parse the input content, this catches any errors and ensures we don't
-    // persist broken data that will subsequently break the feed
     var convertedContent = api.common.convertContentToString(content, content_type);
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
-    var data = [post, user, convertedContent, content_type, timestamp, visibility];
-    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility'], data);
+    var data = [post, user, convertedContent, content_type, timestamp, visibility, altid];
+    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
 
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
@@ -39,23 +40,59 @@ module.exports = function (api) {
           content: originalContent,
           content_type: content_type,
           posted: timestamp,
-          visibility: visibility
+          visibility: visibility,
+          altid: altid
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user', 'user_follower'], user, next);
       });
     });
   }
 
+  function updatePost (keyspace, post, content, content_type, visibility, next) {
+    _updatePost(keyspace, 'updatePost', post, content, content_type, visibility, next);
+  }
+
+  function updatePostByAltid (keyspace, altid, content, content_type, visibility, next) {
+    _updatePost(keyspace, 'updatePostByAltid', altid, content, content_type, visibility, next);
+  }
+
+  function _updatePost (keyspace, query, key, content, content_type, visibility, next) {
+
+    var convertedContent = api.common.convertContentToString(content, content_type);
+    var originalContent = api.common.convertContentFromString(convertedContent, content_type);
+    if (!originalContent) { return next(new Error('Unable to parse input content, post not updated.')); }
+
+    var data = [convertedContent, content_type, visibility, key];
+
+    client.execute(q(keyspace, query), data, {prepare: true}, function (err, result) {
+      /* istanbul ignore if */
+      if (err) { return next(err); }
+      next(null, {status: 'updated'});
+    });
+
+  }
+
   function removePost (keyspace, user, post, next) {
     getPost(keyspace, user, post, function (err, postItem) {
       if (err) { return next(err); }
-      var deleteData = [post];
-      client.execute(q(keyspace, 'removePost'), deleteData, {prepare: true}, function (err, result) {
+      _removePost(keyspace, postItem.post, next);
+    });
+  }
+
+  function removePostByAltid (keyspace, user, altid, next) {
+    getPostByAltid(keyspace, user, altid, function (err, postItem) {
+      if (err) { return next(err); }
+      _removePost(keyspace, postItem.post, next);
+    });
+  }
+
+  function _removePost (keyspace, post, next) {
+    var deleteData = [post];
+    client.execute(q(keyspace, 'removePost'), deleteData, {prepare: true}, function (err, result) {
+      if (err) return next(err);
+      api.feed.removeFeedsForItem(keyspace, post, function (err) {
         if (err) return next(err);
-        api.feed.removeFeedsForItem(keyspace, post, function (err) {
-          if (err) return next(err);
-          next(null, {status: 'removed'});
-        });
+        next(null, {status: 'removed'});
       });
     });
   }
@@ -79,11 +116,26 @@ module.exports = function (api) {
     });
   }
 
+  function getPostByAltid (keyspace, liu, altid, next) {
+    api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, post) {
+      if (err) { return next(err); }
+      post.content = api.common.convertContentFromString(post.content, post.content_type);
+      api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+        if (err) { return next(err); }
+        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);
+      });
+    });
+  }
+
   return {
     addPost: addPost,
     removePost: removePost,
+    removePostByAltid: removePostByAltid,
     getPost: getPost,
-    getPostFromObject: getPostFromObject
+    getPostByAltid: getPostByAltid,
+    getPostFromObject: getPostFromObject,
+    updatePost: updatePost,
+    updatePostByAltid: updatePostByAltid
   };
 
 };

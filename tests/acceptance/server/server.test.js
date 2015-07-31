@@ -366,10 +366,11 @@ databases.forEach(function (db) {
       var timestamp = 1280296860145;
 
       it('can post a message from a user', function (done) {
-        client.addPost(users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), client.visibility.PUBLIC, function (err, post) {
+        client.addPost(users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), client.visibility.PUBLIC, 'ALTID', function (err, post) {
           expect(err).to.be(null);
           expect(post.content).to.be('Hello, this is a post');
           expect(post.user).to.eql(users['cliftonc']);
+          expect(post.altid).to.eql('ALTID');
           postId = post.post;
           done();
         });
@@ -451,6 +452,41 @@ databases.forEach(function (db) {
             client.getFeed(users['json'].user, users['json'].user, null, 100, function (err, feed) {
               expect(err).to.be(null);
               expect(feed.feed[0].content.hello).to.be('world');
+              done();
+            });
+          });
+        });
+      });
+
+      it('can retrieve and update a post', function (done) {
+        client.updatePost(users['cliftonc'].user, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, result) {
+          expect(err).to.be(null);
+          client.getPost(users['cliftonc'].user, postId, function (err, updatedPost) {
+            expect(err).to.be(null);
+            expect(updatedPost.content).to.be('CHANGED!');
+            done();
+          });
+        });
+      });
+
+      it('can retrieve and update a post by altid', function (done) {
+        client.updatePostByAltid(users['cliftonc'].user, 'ALTID', 'CHANGED AGAIN!', 'text/html', api.visibility.PUBLIC, function (err, result) {
+          expect(err).to.be(null);
+          client.getPostByAltid(users['cliftonc'].user, 'ALTID', function (err, updatedPost) {
+            expect(err).to.be(null);
+            expect(updatedPost.content).to.be('CHANGED AGAIN!');
+            done();
+          });
+        });
+      });
+
+      it('can create and delete a post by altid', function (done) {
+        client.addPost(users['json'].user, {'hello': 'world'}, 'application/json', api.client.getTimestamp(), client.visibility.PUBLIC, 'JSON', function (err, post) {
+          expect(err).to.be(null);
+          client.removePostByAltid(users['json'].user, 'JSON', function (err, updatedPost) {
+            expect(err).to.be(null);
+            client.getPostByAltid(users['json'].user, 'JSON', function (err, updatedPost) {
+              expect(err.statusCode).to.be(404);
               done();
             });
           });
