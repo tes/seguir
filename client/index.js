@@ -482,7 +482,7 @@ Seguir.prototype.addPost = function (liu, content, content_type, posted, visibil
  * @apiParam {String} content_type the content contained in content, use application/json for json data
  * @apiParam {String} visibility visibility level
  * @apiParam {Function} next callback
- * @apiUse getPostSuccessExample
+ * @apiUse updatePostSuccessExample
  */
 Seguir.prototype.updatePost = function (liu, post, content, content_type, visibility, next) {
   var self = this;
@@ -502,7 +502,7 @@ Seguir.prototype.updatePost = function (liu, post, content, content_type, visibi
  * @apiParam {String} content_type the content contained in content, use application/json for json data
  * @apiParam {String} visibility visibility level
  * @apiParam {Function} next callback
- * @apiUse getPostSuccessExample
+ * @apiUse updatePostSuccessExample
  */
 Seguir.prototype.updatePostByAltid = function (liu, altid, content, content_type, visibility, next) {
   var self = this;
