@@ -703,7 +703,7 @@ module.exports = Seguir;
  * @apiSuccessExample
 addUser result
 {
-  "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+  "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -716,7 +716,7 @@ addUser result
  * @apiSuccessExample
 getUser result
 {
-  "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+  "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -729,7 +729,7 @@ getUser result
  * @apiSuccessExample
 getUserByName result
 {
-  "user": "347c5e6d-a3e4-4ebd-9ec8-983e905247e1",
+  "user": "ec23f664-1063-4532-8d2f-338202eaeff8",
   "username": "evil &user <alert>name</alert>",
   "altid": "9",
   "userdata": {
@@ -742,7 +742,7 @@ getUserByName result
  * @apiSuccessExample
 getUserByAltId result
 {
-  "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+  "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
   "username": "cliftonc",
   "altid": "1",
   "userdata": {
@@ -755,7 +755,7 @@ getUserByAltId result
  * @apiSuccessExample
 updateUser result
 {
-  "user": "b27ad4ce-405f-4de2-b957-427f8700ed1b",
+  "user": "ba067748-6e6d-4e86-a3ba-53e1ab79cc2c",
   "username": "new_name",
   "altid": "new_altid",
   "userdata": {
@@ -768,11 +768,11 @@ updateUser result
  * @apiSuccessExample
 addFriendRequest result
 {
-  "friend_request": "27f1652a-e8f7-466c-9ca6-90cd406d81bc",
-  "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
-  "user_friend": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+  "friend_request": "a96c7129-d15c-422c-803c-dce81ccd35fc",
+  "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
+  "user_friend": "25ee8a9b-f255-466a-b362-1013611fdbe6",
   "message": "Please be my friend",
-  "since": "2015-08-01T08:21:47.856Z",
+  "since": "2015-08-01T08:23:04.892Z",
   "visibility": "private"
 }
  */
@@ -784,9 +784,9 @@ getFriendRequests result
   "incoming": [],
   "outgoing": [
     {
-      "friend_request": "27f1652a-e8f7-466c-9ca6-90cd406d81bc",
+      "friend_request": "a96c7129-d15c-422c-803c-dce81ccd35fc",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -794,7 +794,7 @@ getFriendRequests result
         }
       },
       "user_friend": {
-        "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+        "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
         "username": "phteven",
         "altid": "2",
         "userdata": {
@@ -802,7 +802,7 @@ getFriendRequests result
         }
       },
       "message": "Please be my friend",
-      "since": "2015-08-01T08:21:47.856Z",
+      "since": "2015-08-01T08:23:04.892Z",
       "visibility": "private"
     }
   ]
@@ -813,10 +813,10 @@ getFriendRequests result
  * @apiSuccessExample
 acceptFriendRequest result
 {
-  "friend": "533d5696-f8e6-42ff-bf64-e2521140b30a",
-  "reciprocal": "7bea4ecc-1ff9-4d24-89c7-2f53bbd9f661",
+  "friend": "f00d3170-5c3d-4c97-aea2-95ecf02c702f",
+  "reciprocal": "cfb1d19b-8224-4c92-8fe4-331450e45615",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -824,14 +824,14 @@ acceptFriendRequest result
     }
   },
   "user_friend": {
-    "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+    "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
     "username": "phteven",
     "altid": "2",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:47.926Z"
+  "since": "2015-08-01T08:23:04.973Z"
 }
  */
 /**
@@ -839,9 +839,9 @@ acceptFriendRequest result
  * @apiSuccessExample
 getFriend result
 {
-  "friend": "533d5696-f8e6-42ff-bf64-e2521140b30a",
+  "friend": "f00d3170-5c3d-4c97-aea2-95ecf02c702f",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -849,14 +849,14 @@ getFriend result
     }
   },
   "user_friend": {
-    "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+    "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
     "username": "phteven",
     "altid": "2",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:47.926Z",
+  "since": "2015-08-01T08:23:04.973Z",
   "visibility": "private"
 }
  */
@@ -867,14 +867,14 @@ getFriends result
 [
   {
     "user_friend": {
-      "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+      "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
       "username": "phteven",
       "altid": "2",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-08-01T08:21:47.926Z"
+    "since": "2015-08-01T08:23:04.973Z"
   }
 ]
  */
@@ -891,9 +891,9 @@ removeFriend result
  * @apiSuccessExample
 followUser result
 {
-  "follow": "b0624c08-3621-4881-b13a-727e671e245f",
+  "follow": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -901,14 +901,14 @@ followUser result
     }
   },
   "user_follower": {
-    "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+    "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
     "username": "phteven",
     "altid": "2",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:48.073Z",
+  "since": "2015-08-01T08:23:05.220Z",
   "visibility": "public"
 }
  */
@@ -917,9 +917,9 @@ followUser result
  * @apiSuccessExample
 getFollow result
 {
-  "follow": "b0624c08-3621-4881-b13a-727e671e245f",
+  "follow": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -927,14 +927,14 @@ getFollow result
     }
   },
   "user_follower": {
-    "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+    "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
     "username": "phteven",
     "altid": "2",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:48.073Z",
+  "since": "2015-08-01T08:23:05.220Z",
   "visibility": "public"
 }
  */
@@ -944,31 +944,31 @@ getFollow result
 getFollowers result
 [
   {
-    "follow": "8daa9704-7918-4742-9dbf-ab7a9f8e867a",
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "follow": "f21bf47f-9ffe-45eb-84a8-a7b6f81143b2",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "user_follower": {
-      "user": "c34e4bff-bc53-45b8-81c6-6228d7c14c3f",
+      "user": "7c9b3e26-e015-4d44-8628-94dd9cca1180",
       "username": "ted",
       "altid": "3",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-08-01T08:21:48.099Z",
+    "since": "2015-08-01T08:23:05.251Z",
     "visibility": "public"
   },
   {
-    "follow": "b0624c08-3621-4881-b13a-727e671e245f",
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "follow": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "user_follower": {
-      "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+      "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
       "username": "phteven",
       "altid": "2",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-08-01T08:21:48.073Z",
+    "since": "2015-08-01T08:23:05.220Z",
     "visibility": "public"
   }
 ]
@@ -986,18 +986,18 @@ unFollowUser result
  * @apiSuccessExample
 getPost result
 {
-  "post": "2f183d9d-ecec-4152-bc14-8c627c36797c",
+  "post": "ba02e6dc-bcfc-429b-a11e-4463d241f101",
   "content": "Hello, this is a post",
   "content_type": "text/html",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "posted": "2015-08-01T08:21:48.293Z",
+  "posted": "2015-08-01T08:23:05.420Z",
   "visibility": "public",
   "altid": "ALTID"
 }
@@ -1015,9 +1015,9 @@ removePost result
  * @apiSuccessExample
 addPost result
 {
-  "post": "24e21232-caa2-4f47-9629-ea93634ddff4",
+  "post": "ebfdf270-0fd2-4de4-a353-b62a3e2f701b",
   "user": {
-    "user": "b27ad4ce-405f-4de2-b957-427f8700ed1b",
+    "user": "ba067748-6e6d-4e86-a3ba-53e1ab79cc2c",
     "username": "new_name",
     "altid": "new_altid",
     "userdata": {
@@ -1028,7 +1028,7 @@ addPost result
     "hello": "world"
   },
   "content_type": "application/json",
-  "posted": "2015-08-01T08:21:48.590Z",
+  "posted": "2015-08-01T08:23:05.651Z",
   "visibility": "public",
   "altid": null
 }
@@ -1046,9 +1046,9 @@ updatePost result
  * @apiSuccessExample
 addLike result
 {
-  "like": "4884ba5c-c5a3-4b02-9da8-6064517c9ffc",
+  "like": "4c1caa08-0854-4bd4-8e86-65151a3e5205",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -1056,7 +1056,7 @@ addLike result
     }
   },
   "item": "http%3A%2F%2Fgithub.com",
-  "since": "2015-08-01T08:21:48.803Z",
+  "since": "2015-08-01T08:23:05.903Z",
   "visibility": "public"
 }
  */
@@ -1065,17 +1065,17 @@ addLike result
  * @apiSuccessExample
 getLike result
 {
-  "like": "4884ba5c-c5a3-4b02-9da8-6064517c9ffc",
+  "like": "4c1caa08-0854-4bd4-8e86-65151a3e5205",
   "item": "http%3A%2F%2Fgithub.com",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:48.803Z",
+  "since": "2015-08-01T08:23:05.903Z",
   "visibility": "public"
 }
  */
@@ -1084,16 +1084,16 @@ getLike result
  * @apiSuccessExample
 checkLike result
 {
-  "like": "4884ba5c-c5a3-4b02-9da8-6064517c9ffc",
+  "like": "4c1caa08-0854-4bd4-8e86-65151a3e5205",
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
       "avatar": "test.jpg"
     }
   },
-  "since": "2015-08-01T08:21:48.803Z",
+  "since": "2015-08-01T08:23:05.903Z",
   "visibility": "public",
   "userLikes": true,
   "count": 1
@@ -1114,7 +1114,7 @@ checkNotLike result
 {
   "userLikes": false,
   "user": {
-    "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+    "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
     "username": "cliftonc",
     "altid": "1",
     "userdata": {
@@ -1131,22 +1131,22 @@ getFeed result
 {
   "feed": [
     {
-      "like": "4884ba5c-c5a3-4b02-9da8-6064517c9ffc",
+      "like": "4c1caa08-0854-4bd4-8e86-65151a3e5205",
       "item": "http%3A%2F%2Fgithub.com",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-08-01T08:21:48.803Z",
+      "since": "2015-08-01T08:23:05.903Z",
       "visibility": "public",
-      "_item": "4884ba5c-c5a3-4b02-9da8-6064517c9ffc",
+      "_item": "4c1caa08-0854-4bd4-8e86-65151a3e5205",
       "type": "like",
-      "timeuuid": "5acdfd43-3826-11e5-8eb6-ab4bd63fe5b4",
-      "date": "2015-08-01T08:21:48.803Z",
+      "timeuuid": "88c28403-3826-11e5-bcbd-458900e79519",
+      "date": "2015-08-01T08:23:05.903Z",
       "fromNow": "a few seconds ago",
       "isPrivate": false,
       "isPersonal": false,
@@ -1160,24 +1160,24 @@ getFeed result
       "isFollower": false
     },
     {
-      "post": "2f183d9d-ecec-4152-bc14-8c627c36797c",
+      "post": "ba02e6dc-bcfc-429b-a11e-4463d241f101",
       "content": "CHANGED AGAIN!",
       "content_type": "text/html",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "posted": "2015-08-01T08:21:48.293Z",
+      "posted": "2015-08-01T08:23:05.420Z",
       "visibility": "public",
       "altid": "ALTID",
-      "_item": "2f183d9d-ecec-4152-bc14-8c627c36797c",
+      "_item": "ba02e6dc-bcfc-429b-a11e-4463d241f101",
       "type": "post",
-      "timeuuid": "5a802b5d-3826-11e5-bae0-aa1cf9a6c866",
-      "date": "2015-08-01T08:21:48.293Z",
+      "timeuuid": "8878d0cd-3826-11e5-a241-11e608c570e6",
+      "date": "2015-08-01T08:23:05.420Z",
       "fromNow": "a few seconds ago",
       "isPrivate": false,
       "isPersonal": false,
@@ -1191,9 +1191,9 @@ getFeed result
       "isFollower": false
     },
     {
-      "follow": "8daa9704-7918-4742-9dbf-ab7a9f8e867a",
+      "follow": "f21bf47f-9ffe-45eb-84a8-a7b6f81143b2",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1201,19 +1201,19 @@ getFeed result
         }
       },
       "user_follower": {
-        "user": "c34e4bff-bc53-45b8-81c6-6228d7c14c3f",
+        "user": "7c9b3e26-e015-4d44-8628-94dd9cca1180",
         "username": "ted",
         "altid": "3",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-08-01T08:21:48.099Z",
+      "since": "2015-08-01T08:23:05.251Z",
       "visibility": "public",
-      "_item": "8daa9704-7918-4742-9dbf-ab7a9f8e867a",
+      "_item": "f21bf47f-9ffe-45eb-84a8-a7b6f81143b2",
       "type": "follow",
-      "timeuuid": "5a637b97-3826-11e5-84d3-f500c8832977",
-      "date": "2015-08-01T08:21:48.105Z",
+      "timeuuid": "885fa377-3826-11e5-90bd-a660d0e6a19e",
+      "date": "2015-08-01T08:23:05.255Z",
       "fromNow": "a few seconds ago",
       "isPrivate": false,
       "isPersonal": false,
@@ -1227,9 +1227,9 @@ getFeed result
       "isFollower": false
     },
     {
-      "follow": "b0624c08-3621-4881-b13a-727e671e245f",
+      "follow": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1237,19 +1237,19 @@ getFeed result
         }
       },
       "user_follower": {
-        "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+        "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
         "username": "phteven",
         "altid": "2",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-08-01T08:21:48.073Z",
+      "since": "2015-08-01T08:23:05.220Z",
       "visibility": "public",
-      "_item": "b0624c08-3621-4881-b13a-727e671e245f",
+      "_item": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
       "type": "follow",
-      "timeuuid": "5a604745-3826-11e5-93f7-1ee402260608",
-      "date": "2015-08-01T08:21:48.084Z",
+      "timeuuid": "885ce455-3826-11e5-9a78-f27b1a9f5c75",
+      "date": "2015-08-01T08:23:05.237Z",
       "fromNow": "a few seconds ago",
       "isPrivate": false,
       "isPersonal": false,
@@ -1263,9 +1263,9 @@ getFeed result
       "isFollower": false
     },
     {
-      "friend": "533d5696-f8e6-42ff-bf64-e2521140b30a",
+      "friend": "f00d3170-5c3d-4c97-aea2-95ecf02c702f",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1273,19 +1273,19 @@ getFeed result
         }
       },
       "user_friend": {
-        "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+        "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
         "username": "phteven",
         "altid": "2",
         "userdata": {
           "avatar": "test.jpg"
         }
       },
-      "since": "2015-08-01T08:21:47.926Z",
+      "since": "2015-08-01T08:23:04.973Z",
       "visibility": "personal",
-      "_item": "533d5696-f8e6-42ff-bf64-e2521140b30a",
+      "_item": "f00d3170-5c3d-4c97-aea2-95ecf02c702f",
       "type": "friend",
-      "timeuuid": "5a482b61-3826-11e5-b3b9-0e363bfecfb0",
-      "date": "2015-08-01T08:21:47.926Z",
+      "timeuuid": "88349bd1-3826-11e5-aa1a-825bc6ab1da7",
+      "date": "2015-08-01T08:23:04.973Z",
       "fromNow": "a few seconds ago",
       "isPrivate": false,
       "isPersonal": true,
@@ -1299,11 +1299,11 @@ getFeed result
       "isFollower": false
     },
     {
-      "post": "620bd8c7-b15e-4759-b408-c8362754856d",
+      "post": "b44f609d-1dcf-43b3-9d3a-4cb6dd33ff7d",
       "content": "Hello, this is a private post",
       "content_type": "text/html",
       "user": {
-        "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+        "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
         "username": "cliftonc",
         "altid": "1",
         "userdata": {
@@ -1313,9 +1313,9 @@ getFeed result
       "posted": "2010-07-28T06:01:00.145Z",
       "visibility": "private",
       "altid": null,
-      "_item": "620bd8c7-b15e-4759-b408-c8362754856d",
+      "_item": "b44f609d-1dcf-43b3-9d3a-4cb6dd33ff7d",
       "type": "post",
-      "timeuuid": "7f10961e-9a0d-11df-9fc8-83f8700c21be",
+      "timeuuid": "7f10961e-9a0d-11df-9d6c-03c49392d69e",
       "date": "2010-07-28T06:01:00.145Z",
       "fromNow": "5 years ago",
       "isPrivate": true,
@@ -1339,9 +1339,9 @@ getFeed result
 getUserFeed result
 [
   {
-    "follow": "b0624c08-3621-4881-b13a-727e671e245f",
+    "follow": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
     "user": {
-      "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+      "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
       "username": "cliftonc",
       "altid": "1",
       "userdata": {
@@ -1349,19 +1349,19 @@ getUserFeed result
       }
     },
     "user_follower": {
-      "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+      "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
       "username": "phteven",
       "altid": "2",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-08-01T08:21:48.073Z",
+    "since": "2015-08-01T08:23:05.220Z",
     "visibility": "public",
-    "_item": "b0624c08-3621-4881-b13a-727e671e245f",
+    "_item": "86c913cf-bbb9-444c-8e4b-0aedfcfffd4c",
     "type": "follow",
-    "timeuuid": "5a609566-3826-11e5-88f9-615fca247a3b",
-    "date": "2015-08-01T08:21:48.086Z",
+    "timeuuid": "885d3276-3826-11e5-b6bb-e6329cb55dd3",
+    "date": "2015-08-01T08:23:05.239Z",
     "fromNow": "a few seconds ago",
     "isPrivate": false,
     "isPersonal": false,
@@ -1375,9 +1375,9 @@ getUserFeed result
     "isFollower": false
   },
   {
-    "friend": "7bea4ecc-1ff9-4d24-89c7-2f53bbd9f661",
+    "friend": "cfb1d19b-8224-4c92-8fe4-331450e45615",
     "user": {
-      "user": "825f0c1a-fb11-47f0-b060-2d8f9b8dd6f8",
+      "user": "25ee8a9b-f255-466a-b362-1013611fdbe6",
       "username": "phteven",
       "altid": "2",
       "userdata": {
@@ -1385,19 +1385,19 @@ getUserFeed result
       }
     },
     "user_friend": {
-      "user": "6159153a-478f-411d-8f6c-b38d7c813f6b",
+      "user": "c4d5b799-ebcb-44ca-91b5-85d95fcdd9cc",
       "username": "cliftonc",
       "altid": "1",
       "userdata": {
         "avatar": "test.jpg"
       }
     },
-    "since": "2015-08-01T08:21:47.926Z",
+    "since": "2015-08-01T08:23:04.973Z",
     "visibility": "personal",
-    "_item": "7bea4ecc-1ff9-4d24-89c7-2f53bbd9f661",
+    "_item": "cfb1d19b-8224-4c92-8fe4-331450e45615",
     "type": "friend",
-    "timeuuid": "5a482b62-3826-11e5-9ad1-cc6f305ffe4a",
-    "date": "2015-08-01T08:21:47.926Z",
+    "timeuuid": "88349bd2-3826-11e5-a5b7-48f2cd58f5ba",
+    "date": "2015-08-01T08:23:04.973Z",
     "fromNow": "a few seconds ago",
     "isPrivate": false,
     "isPersonal": true,
@@ -1418,7 +1418,7 @@ getUserFeed result
 getUserRelationship result
 {
   "isFriend": true,
-  "isFriendSince": "2015-08-01T08:21:47.926Z",
+  "isFriendSince": "2015-08-01T08:23:04.973Z",
   "isFriendRequestPending": false,
   "isFriendRequestSince": null,
   "youFollow": false,
@@ -1426,7 +1426,7 @@ getUserRelationship result
   "youFollowPrivate": false,
   "youFollowPersonal": false,
   "theyFollow": true,
-  "theyFollowSince": "2015-08-01T08:21:48.073Z",
+  "theyFollowSince": "2015-08-01T08:23:05.220Z",
   "theyFollowVisibility": "public",
   "theyFollowPrivate": false,
   "theyFollowPersonal": false,
