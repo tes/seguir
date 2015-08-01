@@ -49,22 +49,25 @@ module.exports = function (api) {
   }
 
   function updatePost (keyspace, post, content, content_type, visibility, next) {
-    _updatePost(keyspace, 'updatePost', post, content, content_type, visibility, next);
+    _updatePost(keyspace, post, content, content_type, visibility, next);
   }
 
   function updatePostByAltid (keyspace, altid, content, content_type, visibility, next) {
-    _updatePost(keyspace, 'updatePostByAltid', altid, content, content_type, visibility, next);
+    api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, post) {
+      if (err) { return next(err); }
+      _updatePost(keyspace, post.post, content, content_type, visibility, next);
+    });
   }
 
-  function _updatePost (keyspace, query, key, content, content_type, visibility, next) {
+  function _updatePost (keyspace, post, content, content_type, visibility, next) {
 
     var convertedContent = api.common.convertContentToString(content, content_type);
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not updated.')); }
 
-    var data = [convertedContent, content_type, visibility, key];
+    var data = [convertedContent, content_type, visibility, post];
 
-    client.execute(q(keyspace, query), data, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'updatePost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       next(null, {status: 'updated'});
