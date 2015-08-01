@@ -461,6 +461,7 @@ databases.forEach(function (db) {
       it('can retrieve and update a post', function (done) {
         client.updatePost(users['cliftonc'].user, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, result) {
           expect(err).to.be(null);
+          addSample('updatePost', result);
           client.getPost(users['cliftonc'].user, postId, function (err, updatedPost) {
             expect(err).to.be(null);
             expect(updatedPost.content).to.be('CHANGED!');
@@ -472,7 +473,6 @@ databases.forEach(function (db) {
       it('can retrieve and update a post by altid', function (done) {
         client.updatePostByAltid(users['cliftonc'].user, 'ALTID', 'CHANGED AGAIN!', 'text/html', api.visibility.PUBLIC, function (err, result) {
           expect(err).to.be(null);
-          addSample('updatePost', result);
           client.getPostByAltid(users['cliftonc'].user, 'ALTID', function (err, updatedPost) {
             expect(err).to.be(null);
             expect(updatedPost.content).to.be('CHANGED AGAIN!');
