@@ -11,6 +11,10 @@ describe('Messaging primitives', function () {
 
   this.timeout(5000);
 
+  after(function () {
+    messaging.shutdown();
+  });
+
   describe('Job queue', function () {
 
     it('redis client is working', function (done) {
@@ -20,6 +24,19 @@ describe('Messaging primitives', function () {
         expect(result).to.be('PONG');
         done();
       });
+
+    });
+
+    it('can publish and subscribe', function (done) {
+
+      messaging.subscribe('test', function (msg) {
+        expect(msg.hello).to.be('world');
+        done();
+      });
+
+      setTimeout(function () {
+        messaging.publish('test', {hello: 'world'});
+      }, 200);
 
     });
 

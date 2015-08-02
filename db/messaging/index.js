@@ -2,6 +2,7 @@ var redis = require('redis');
 var _ = require('lodash');
 var RSMQ = require('rsmq');
 var RSMQWorker = require('rsmq-worker');
+var clients = [];
 
 module.exports = function (config) {
 
@@ -50,17 +51,34 @@ module.exports = function (config) {
   }
 
   /**
-   * Publish a notification onto a pubsub topic
+   * Publish a notification onto a pubsub topic for downstream systems
    */
-  function publish (topic, data) {
-
+  function publish (name, data) {
+    var channel = [config.messaging.namespace || 'seguir', name].join('.');
+    redisClient.publish(channel, JSON.stringify(data));
   }
 
   /**
-   * Subscribe to a pubsub topic
+   * Subscribe
    */
-  function subscribe (topic, callback) {
+  function subscribe (name, callback) {
+    // Redis subscriptions block the normal client, so we create another
+    var subscriberClient = client(config);
+    var channel = [config.messaging.namespace || 'seguir', name].join('.');
+    subscriberClient.on('message', function (channel, message) {
+      callback(JSON.parse(message));
+    });
+    subscriberClient.subscribe(channel);
+  }
 
+  /**
+   * Shutdown all active redis clients
+   */
+  function shutdown () {
+    clients.forEach(function (client) {
+      client.unsubscribe();
+      client.end();
+    });
   }
 
   return {
@@ -69,6 +87,7 @@ module.exports = function (config) {
     publish: publish,
     subscribe: subscribe,
     client: redisClient,
+    shutdown: shutdown,
     enabled: true
   };
 
@@ -91,6 +110,9 @@ function client (config) {
   });
 
   redisClient.select(redisConfig.db || 0);
+
+  // Keep a reference to it for later shutdown
+  clients.push(redisClient);
 
   return redisClient;
 
