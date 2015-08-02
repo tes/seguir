@@ -14,17 +14,26 @@ var async = require('async');
 
 describe('Worker Processing', function () {
 
-  var api, users = [], postId, mentionPostId, followId;
+  var api, users = [], postId, mentionPostId, followId, messages = [];
 
   this.timeout(10000);
   this.slow(5000);
+
+  function subscriber (msg) {
+    messages.push(msg);
+  }
 
   before(function (done) {
     Api(config, function (err, seguirApi) {
       expect(err).to.be(null);
       api = seguirApi;
       api.client.setup.setupTenant(api.client, keyspace, function () {
-        worker(config, done);
+        worker(config, function () {
+          api.messaging.subscribe('feed-view', subscriber);
+          api.messaging.subscribe('feed-add', subscriber);
+          api.messaging.subscribe('feed-remove', subscriber);
+          done();
+        });
       });
     });
   });
@@ -79,6 +88,19 @@ describe('Worker Processing', function () {
         expect(post.content).to.be('Hello, this is a post mentioning @cliftonc, not from a follower');
         mentionPostId = post.post;
         done();
+      });
+    });
+
+    it('you can create and delete a post', function (done) {
+      api.post.addPost(keyspace, users[0].user, 'This is a short lived post', 'text/html', Date.now(), api.visibility.PUBLIC, function (err, post) {
+        expect(err).to.be(null);
+        setTimeout(function () {
+          api.post.removePost(keyspace, users[0].user, post.post, function (err, result) {
+            expect(err).to.be(null);
+            expect(result.status).to.be('removed');
+            done();
+          });
+        }, 1000);
       });
     });
 
