@@ -164,31 +164,30 @@ module.exports = function (api) {
 
   }
 
-  function notify (keyspace, type, user, item) {
-    if (type === 'feed-add') {
+  function notify (keyspace, action, user, item) {
+    if (action === 'feed-add') {
       var expander = feedExpanders[item.type];
       if (expander) {
         api.user.getUser(keyspace, user, function (err, userObject) {
           if (err) { return; }
           expander(keyspace, user, item, function (err, expandedItem) {
             if (err) { return; }
-            messaging.publish(type, {type: type, user: userObject, data: expandedItem});
+            messaging.publish(action, {action: action, item: item, user: userObject, data: expandedItem});
           });
         });
       }
     }
-    if (type === 'feed-remove') {
+    if (action === 'feed-remove') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.publish('feed-remove', {type: type, user: userObject, data: {item: item}});
+        messaging.publish('feed-remove', {action: action, user: userObject, item: item});
       });
     }
-    if (type === 'feed-view') {
+    if (action === 'feed-view') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.publish('feed-add', {type: type, user: userObject});
+        messaging.publish('feed-view', {action: action, user: userObject});
       });
-
     }
   }
 
@@ -234,7 +233,7 @@ module.exports = function (api) {
   }
 
   function getFeed (keyspace, liu, user, from, limit, next) {
-    if (liu.toString() === user.toString() && messaging.enabled) notify(keyspace, 'feed-view', user, {});
+    if (liu && liu.toString() === user.toString() && messaging.enabled) notify(keyspace, 'feed-view', user, {});
     _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, next);
   }
 
