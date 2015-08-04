@@ -208,6 +208,7 @@ Seguir.prototype.addUser = function (liu, username, altid, userdata, options, ne
  *
  * @apiDescription Updates an existing user.
  * @apiParam {String} liu the id of the current logged in user [not used]
+ * @apiParam {String} user the id of the user
  * @apiParam {String} username the username
  * @apiParam {String} altid the local / alternate id
  * @apiParam {Object} userdata arbitrary user data (one level of key values only)
