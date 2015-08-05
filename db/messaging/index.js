@@ -43,7 +43,7 @@ module.exports = function (config) {
    * Listen to a queue to process jobs
    */
   function listen (name, callback, next) {
-    var worker = new RSMQWorker(name, {rsmq: rsmq, autostart: true, interval: [0.1, 0.2, 0.5, 1, 2, 3, 5]});
+    var worker = new RSMQWorker(name, {rsmq: rsmq, autostart: true});
     worker.on('message', function (msg, cb) {
       callback(JSON.parse(msg), cb);
     });
@@ -88,7 +88,8 @@ module.exports = function (config) {
     subscribe: subscribe,
     client: redisClient,
     shutdown: shutdown,
-    enabled: true
+    enabled: true,
+    feed: config.messaging.feed
   };
 
 };

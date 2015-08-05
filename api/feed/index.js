@@ -165,6 +165,7 @@ module.exports = function (api) {
   }
 
   function notify (keyspace, action, user, item) {
+    if (!messaging.enabled || !messaging.feed) { return; }
     if (action === 'feed-add') {
       var expander = feedExpanders[item.type];
       if (expander) {
@@ -176,7 +177,7 @@ module.exports = function (api) {
             var isUser = expandedItem.type === 'follow' ?
                           userObject.user.toString() === expandedItem.user_follower.user.toString() :
                           userObject.user.toString() === expandedItem.user.user.toString();
-            if (!isUser) { messaging.publish(action, {action: action, item: item, user: userObject, data: expandedItem}); }
+            if (!isUser) { messaging.submit('seguir-feed', {action: action, item: item, user: userObject, data: expandedItem}); }
           });
         });
       }
@@ -184,13 +185,13 @@ module.exports = function (api) {
     if (action === 'feed-remove') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.publish('feed-remove', {action: action, user: userObject, item: item});
+        messaging.submit('seguir-feed', {action: action, user: userObject, item: item});
       });
     }
     if (action === 'feed-view') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.publish('feed-view', {action: action, user: userObject});
+        messaging.submit('seguir-feed', {action: action, user: userObject});
       });
     }
   }
@@ -199,7 +200,7 @@ module.exports = function (api) {
     if (!next) { next = from_follow; from_follow = null; }
     visibility = visibility || api.visibility.PUBLIC;
     var data = [user, item, type, time, visibility, from_follow];
-    if (timeline === 'feed_timeline' && messaging.enabled) notify(keyspace, 'feed-add', user, {item: item, type: type});
+    if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
   }
@@ -225,7 +226,7 @@ module.exports = function (api) {
 
   function _removeFeedItemFromTimeline (keyspace, timeline, user, time, item, next) {
     var deleteData = [user, time];
-    if (timeline === 'feed_timeline' && messaging.enabled) notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
+    if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
     client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {prepare: true}, function (err, result) {
       if (err) return next(err);
       next(null, {status: 'removed'});
@@ -237,7 +238,7 @@ module.exports = function (api) {
   }
 
   function getFeed (keyspace, liu, user, from, limit, next) {
-    if (liu && liu.toString() === user.toString() && messaging.enabled) notify(keyspace, 'feed-view', user, {});
+    if (liu && liu.toString() === user.toString()) notify(keyspace, 'feed-view', user, {});
     _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, next);
   }
 

@@ -14,14 +14,10 @@ var async = require('async');
 
 describe('Worker Processing', function () {
 
-  var api, users = [], postId, mentionPostId, followId, messages = [];
+  var api, users = [], postId, mentionPostId, followId;
 
   this.timeout(10000);
   this.slow(5000);
-
-  function subscriber (msg) {
-    messages.push(msg);
-  }
 
   before(function (done) {
     Api(config, function (err, seguirApi) {
@@ -29,9 +25,6 @@ describe('Worker Processing', function () {
       api = seguirApi;
       api.client.setup.setupTenant(api.client, keyspace, function () {
         worker(config, function () {
-          api.messaging.subscribe('feed-view', subscriber);
-          api.messaging.subscribe('feed-add', subscriber);
-          api.messaging.subscribe('feed-remove', subscriber);
           done();
         });
       });
