@@ -172,7 +172,11 @@ module.exports = function (api) {
           if (err) { return; }
           expander(keyspace, user, item, function (err, expandedItem) {
             if (err) { return; }
-            messaging.publish(action, {action: action, item: item, user: userObject, data: expandedItem});
+            // Do not notify a user about things that they post or where they are the follower
+            var isUser = expandedItem.type === 'follow' ?
+                          userObject.user.toString() === expandedItem.user_follower.user.toString() :
+                          userObject.user.toString() === expandedItem.user.user.toString();
+            if (!isUser) { messaging.publish(action, {action: action, item: item, user: userObject, data: expandedItem}); }
           });
         });
       }

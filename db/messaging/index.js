@@ -53,7 +53,7 @@ module.exports = function (config) {
   /**
    * Publish a notification onto a pubsub topic for downstream systems
    */
-  function publish (name, data) {
+  function publish (name, data, next) {
     var channel = [config.messaging.namespace || 'seguir', name].join('.');
     redisClient.publish(channel, JSON.stringify(data));
   }
