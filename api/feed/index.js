@@ -165,6 +165,7 @@ module.exports = function (api) {
   }
 
   function notify (keyspace, action, user, item) {
+    var NOTIFY_Q = 'seguir-notify';
     if (!messaging.enabled || !messaging.feed) { return; }
     if (action === 'feed-add') {
       var expander = feedExpanders[item.type];
@@ -177,7 +178,7 @@ module.exports = function (api) {
             var isUser = expandedItem.type === 'follow' ?
                           userObject.user.toString() === expandedItem.user_follower.user.toString() :
                           userObject.user.toString() === expandedItem.user.user.toString();
-            if (!isUser) { messaging.submit('seguir-feed', {action: action, item: item, user: userObject, data: expandedItem}); }
+            if (!isUser) { messaging.submit(NOTIFY_Q, {action: action, item: item, user: userObject, data: expandedItem}); }
           });
         });
       }
@@ -185,13 +186,13 @@ module.exports = function (api) {
     if (action === 'feed-remove') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.submit('seguir-feed', {action: action, user: userObject, item: item});
+        messaging.submit(NOTIFY_Q, {action: action, user: userObject, item: item});
       });
     }
     if (action === 'feed-view') {
       api.user.getUser(keyspace, user, function (err, userObject) {
         if (err) { return; }
-        messaging.submit('seguir-feed', {action: action, user: userObject});
+        messaging.submit(NOTIFY_Q, {action: action, user: userObject});
       });
     }
   }
