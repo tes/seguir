@@ -155,6 +155,12 @@ The actual code paths that make the shift between in process and out of process 
 
 https://github.com/cliftonc/seguir/blob/master/api/feed/index.js#L136
 
+## Notifications
+
+You can notify users of things that they have missed, via the component ```seguir-notify```:
+
+[https://github.com/cliftonc/seguir-notify](https://github.com/cliftonc/seguir-notify)
+
 ## Debugging
 
 Use debug environment variables to see what is going on:
