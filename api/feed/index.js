@@ -444,7 +444,7 @@ module.exports = function (api) {
 
   }
 
-  function seedFeed (keyspace, user, userFollowing, backfill, next) {
+  function seedFeed (keyspace, user, userFollowing, backfill, follow, next) {
 
     var backfillMatch = /(\d+)(.*)/.exec(backfill);
     var duration = backfillMatch[1] || '1';
@@ -456,7 +456,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
         if (item.type !== 'post' || item.visibility !== api.visibility.PUBLIC) return cb();
-        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, cb);
+        upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, follow.follow, cb);
       }, next);
     });
 

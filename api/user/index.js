@@ -71,9 +71,9 @@ module.exports = function (api) {
       if (err) { return next(err); }
       async.map(usersToFollow, function (userToFollow, cb) {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
-        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility, function (err) {
+        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility, function (err, follow) {
           if (err) { return cb(err); }
-          api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, cb);
+          api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, follow, cb);
         });
       }, function (err) {
         if (err) { return next(err); }

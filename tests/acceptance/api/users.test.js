@@ -166,6 +166,27 @@ databases.forEach(function (db) {
 
       });
 
+      it('if I unfollow a user who I backfilled I no longer see their items in my feed', function (done) {
+
+        api.follow.addFollower(keyspace, users['cliftonc'].user, users['json'].user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
+          expect(err).to.be(null);
+          api.feed.getFeed(keyspace, users['json'].user, users['json'].user, null, 50, function (err, feed) {
+            expect(err).to.be(null);
+            expect(feed[0].follow).to.eql(follow.follow);
+            expect(feed[1].post).to.eql(actionResults['post-public'].post);
+            api.follow.removeFollower(keyspace, users['cliftonc'].user, users['json'].user, function (err, result) {
+              expect(err).to.be(null);
+              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, null, 50, function (err, feed) {
+                expect(err).to.be(null);
+                expect(feed.length).to.eql(0);
+                done();
+              });
+            });
+          });
+        });
+
+      });
+
     });
 
   });

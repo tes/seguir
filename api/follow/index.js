@@ -30,7 +30,7 @@ module.exports = function (api) {
     };
 
     var backfillFeed = function (follow) {
-      api.feed.seedFeed(keyspace, user_follower, user, backfill, function (err) {
+      api.feed.seedFeed(keyspace, user_follower, user, backfill, follow, function (err) {
         if (err) return next(err);
         mapFollowResponse(follow);
       });
