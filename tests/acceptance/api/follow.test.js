@@ -257,6 +257,20 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can see the status of your relationship with another users followers', function (done) {
+        api.follow.addFollower(keyspace, users['jenny'].user, users['phteven'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
+          expect(err).to.be(null);
+          api.follow.getFollowers(keyspace, users['phteven'].user, users['cliftonc'].user, function (err, followers) {
+            expect(err).to.be(null);
+            expect(followers[0].liuIsFollowing).to.be(true);
+            expect(followers[1].liuIsFollowing).to.be(false);
+            expect(followers[2].liuIsFollowing).to.be(true);
+            expect(followers[2].liuIsUser).to.be(true);
+            done();
+          });
+        });
+      });
+
     });
 
   });

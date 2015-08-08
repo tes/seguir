@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var async = require('async');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -143,11 +144,31 @@ module.exports = function (api) {
           if (item.visibility === api.visibility.PRIVATE && !isFriend) { return false; }
           return true;
         });
-        // This is definitely a ticking time bomb re. number of followers
-        // It needs a separate data model just like the feed that has time
-        // built in to allow pagination
+
         var sortedFollowers = _.sortByOrder(filteredFollowers, ['since'], ['desc']);
-        api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+
+        // For each follower, check if the liu is following them if we are logged in
+        if (liu) {
+          async.map(sortedFollowers, function (follow, cb) {
+            if (follow.user_follower.toString() === liu.toString()) {
+              follow.liuIsFollowing = true;
+              follow.liuIsUser = true;
+              return cb(null, follow);
+            }
+            isFollower(keyspace, follow.user_follower, liu, function (err, isFollower) {
+              if (err) { return cb(err); }
+              follow.liuIsFollowing = isFollower;
+              follow.liuIsUser = false;
+              cb(null, follow);
+            });
+          }, function (err, followersWithState) {
+            if (err) { return next(err); }
+            api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+          });
+        } else {
+          api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+        }
+
       });
     });
   }
