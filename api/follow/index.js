@@ -84,8 +84,7 @@ module.exports = function (api) {
   }
 
   function followerCount (keyspace, user, next) {
-    next = next || function () {
-      };
+    next = next || function () { };
     var data = [user.toString()];
     client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true}, next);
   }
@@ -138,6 +137,7 @@ module.exports = function (api) {
     });
   }
 
+  // TODO: erk.  This method needs more async love (or promises)
   function getFollowers (keyspace, liu, user, next) {
     var isUser = liu && user && liu.toString() === user.toString();
     api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
@@ -155,16 +155,22 @@ module.exports = function (api) {
         // For each follower, check if the liu is following them if we are logged in
         if (liu) {
           async.map(sortedFollowers, function (follow, cb) {
-            if (follow.user_follower.toString() === liu.toString()) {
-              follow.liuIsFollowing = true;
-              follow.liuIsUser = true;
-              return cb(null, follow);
-            }
-            isFollower(keyspace, follow.user_follower, liu, function (err, isFollower) {
+            followerCount(keyspace, follow.user_follower, function (err, followerCount) {
               if (err) { return cb(err); }
-              follow.liuIsFollowing = isFollower;
-              follow.liuIsUser = false;
-              cb(null, follow);
+
+              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
+              if (follow.user_follower.toString() === liu.toString()) {
+                follow.liuIsFollowing = true;
+                follow.liuIsUser = true;
+                return cb(null, follow);
+              }
+
+              isFollower(keyspace, follow.user_follower, liu, function (err, isFollower) {
+                if (err) { return cb(err); }
+                follow.liuIsFollowing = isFollower;
+                follow.liuIsUser = false;
+                cb(null, follow);
+              });
             });
           }, function (err, followersWithState) {
             if (err) { return next(err); }
