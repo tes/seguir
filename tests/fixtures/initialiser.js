@@ -57,7 +57,7 @@ function setupServer (config, keyspace, next) {
 function setupUsers (keyspace, api, users, next) {
   var userMap = {};
   async.map(users, function (user, cb) {
-    api.user.addUser(keyspace, user.username, user.altid, {'age': 15}, {}, cb);
+    api.user.addUser(keyspace, user.username, user.altid, {userdata: {'age': 15}}, cb);
   }, function (err, results) {
     if (err) { return next(err); }
     results.forEach(function (user) {
@@ -98,7 +98,7 @@ function setupGraph (keyspace, api, users, actions, next) {
     _.mapKeys(actions, function (result, key) {
       if (result.reciprocal) {
         var reciprocal = actionResults[result.key].reciprocal,
-            reciprocalKey = result.reciprocal;
+          reciprocalKey = result.reciprocal;
         actionResults[reciprocalKey] = {friend: reciprocal};
       }
     });

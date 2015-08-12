@@ -15,13 +15,29 @@ var debug = require('debug')('seguir:user');
 module.exports = function (api) {
 
   var client = api.client,
-      q = client.queries;
+    q = client.queries;
 
-  function addUser (keyspace, username, altid, userdata, options, next) {
+  /**
+   * Add a user to cassandra
+   * @param keyspace
+   * @param username
+   * @param altid
+   * @param options Set of optional parameters for this method
+   * @param options.initialize - Set up follows relationships for this user on creation { 'follow': <seguirId> }
+   * @param options.userdata - Set of optional, arbitrary data that will be added to the user record
+   * @param options.userid - If provided will be used as the id for this user (rather than generating one)
+   * @param next
+   */
+  function addUser (keyspace, username, altid, options, next) {
 
-    if (!next) { next = options; options = {}; }
-    if (!next) { next = userdata; userdata = {}; }
-    var initialise = options.initialise;
+    if (!next) {
+      next = options;
+      options = {};
+    }
+
+    var initialise = options.initialise || {};
+    var userdata = options.userdata || {};
+    var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
 
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
@@ -31,9 +47,13 @@ module.exports = function (api) {
     getUserByAltId(keyspace, altid, function (err, existingUser) {
 
       if (err && err.statusCode !== 404) { return next(err); }
-      if (existingUser) { return next({statusCode: 409, message: 'User with altid ' + altid + ' already exists, use updateUser to update.'}); }
+      if (existingUser) {
+        return next({
+          statusCode: 409,
+          message: 'User with altid ' + altid + ' already exists, use updateUser to update.'
+        });
+      }
 
-      var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
       var user = [userid, username, '' + altid, userdata];
 
       client.execute(q(keyspace, 'upsertUser'), user, {

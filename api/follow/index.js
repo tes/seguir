@@ -14,11 +14,14 @@ var async = require('async');
 module.exports = function (api) {
 
   var client = api.client,
-      q = client.queries;
+    q = client.queries;
 
   function addFollower (keyspace, user, user_follower, timestamp, visibility, backfill, next) {
 
-    if (!next) { next = backfill; backfill = null; }
+    if (!next) {
+      next = backfill;
+      backfill = null;
+    }
     if (user.toString() === user_follower.toString()) {
       return next({statusCode: 500, message: 'You are not allowed to follow yourself.'});
     }
@@ -74,13 +77,15 @@ module.exports = function (api) {
   }
 
   function alterFollowerCount (keyspace, user, count, next) {
-    next = next || function () {};
+    next = next || function () {
+      };
     var data = [count, user.toString()];
     client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {prepare: true}, next);
   }
 
   function followerCount (keyspace, user, next) {
-    next = next || function () {};
+    next = next || function () {
+      };
     var data = [user.toString()];
     client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true}, next);
   }
