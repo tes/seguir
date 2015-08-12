@@ -166,9 +166,10 @@ function bootstrapServer (api, config, next) {
     }
     var options = {
       initialise: req.params.initialise,
-      userid: req.params.userid
+      userid: req.params.userid,
+      userdata: req.params.userdata
     };
-    api.user.addUser(req.keyspace, req.params.username, req.params.altid, req.params.userdata, options, _response(res, next));
+    api.user.addUser(req.keyspace, req.params.username, req.params.altid, options, _response(res, next));
   });
 
   /**
