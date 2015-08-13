@@ -393,23 +393,6 @@ Seguir.prototype.unFollowUser = function (liu, user_following, next) {
 };
 
 /**
- * @api {function} removeFollower(liu,user_follower,next) removeFollower
- * @apiName removeFollower
- * @apiGroup Following
- * @apiVersion 1.0.0
- *
- * @apiDescription Stop following a user
- * @apiParam {String} liu the id of the current logged in user
- * @apiParam {String} user_follower the id of user to remove as a follower
- * @apiParam {Function} next callback
- * @apiUse unFollowUserSuccessExample
- */
-Seguir.prototype.removeFollower = function (liu, user_follower, next) {
-  var self = this;
-  self.del(liu, u('removeFollower', {user: liu, user_follower: user_follower}), next);
-};
-
-/**
  * @api {function} getFollowers(liu,user,next) getFollowers
  * @apiName getFollowers
  * @apiGroup Following
