@@ -263,9 +263,12 @@ databases.forEach(function (db) {
           api.follow.getFollowers(keyspace, users['phteven'].user, users['cliftonc'].user, function (err, followers) {
             expect(err).to.be(null);
             expect(followers[0].liuIsFollowing).to.be(true);
+            expect(followers[0].followerCount).to.be(2);
             expect(followers[1].liuIsFollowing).to.be(false);
+            expect(followers[1].followerCount).to.be(0);
             expect(followers[2].liuIsFollowing).to.be(true);
             expect(followers[2].liuIsUser).to.be(true);
+            expect(followers[2].followerCount).to.be(0);
             done();
           });
         });
