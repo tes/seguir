@@ -1,13 +1,11 @@
 /**
  * Cassandra doesn't do joins, so we use a cache for GETs.
  *
- * This configuration simply looks for a 'redis' config key, if it exists it will use it as a cache.
- *
- * GET - cache(key, next);
- * SET - cache(key, value, next);
+ * This configuration simply looks for a 'redis' config key, if it exists it will use it as a cache in front
+ * of most of the elements that are retrieved in the news feed.
  */
 
-var FIVE_MINUTES = 60 * 5;
+var TEN_MINUTES = 60 * 10;
 var redis = require('../../redis');
 var _ = require('lodash');
 var cassandra = require('cassandra-driver');
@@ -28,7 +26,17 @@ module.exports = function (config, next) {
 
   var redisClient = redis(config.redis);
 
-  var to_persist = function (object) {
+  /**
+   * Persisting objects in redis converts all of the values to strings.
+   * So we need to serialise it in a way that we can then recover it back to its former glory.
+   *
+   * - Cassandra UUID > String
+   * - Embedded json > String
+   * - Dates - ISO strings (to retain the milliseconds)
+   *
+   * Then we do the reverse on the way back
+   */
+  var to_cache = function (object) {
 
     if (!object) return;
 
@@ -49,7 +57,7 @@ module.exports = function (config, next) {
 
   };
 
-  var from_persist = function (clone) {
+  var from_cache = function (clone) {
 
     // Convert all of the Cassandra IDs back
     ['post', 'user', 'follow', 'friend', 'like'].forEach(function (item) {
@@ -70,8 +78,8 @@ module.exports = function (config, next) {
     if (!key) { return cb(null, value); }
     debug('SET', key);
     redisClient.multi()
-      .hmset(key, to_persist(value))
-      .expire(key, FIVE_MINUTES)
+      .hmset(key, to_cache(value))
+      .expire(key, config.redis.ttl || TEN_MINUTES)
       .exec(function (err) {
         if (err) { /* Purposeful ignore of err */ }
         cb(null, value);
@@ -101,7 +109,7 @@ module.exports = function (config, next) {
     redisClient.hgetall(key, function (err, object) {
       if (err) { /* Purposeful ignore of err */ }
       debug(object ? 'HIT' : 'MISS', key);
-      cb(null, object ? from_persist(object) : null);
+      cb(null, object ? from_cache(object) : null);
     });
   };
 
