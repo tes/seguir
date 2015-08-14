@@ -60,12 +60,14 @@ module.exports = function (api) {
     checkLike(keyspace, user, cleanItem, function (err, like) {
       if (err || !like) { return next(err); }
       var deleteData = [user, cleanItem];
-      client.execute(q(keyspace, 'removeLike'), deleteData, {prepare: true}, function (err, result) {
+      client.execute(q(keyspace, 'removeLike'), deleteData, {prepare: true, cacheKey: 'like:' + like}, function (err, result) {
         if (err) return next(err);
         alterLikeCount(keyspace, cleanItem, -1, function () {
           api.feed.removeFeedsForItem(keyspace, like.like, function (err) {
             if (err) return next(err);
-            next(null, {status: 'removed'});
+            client.deleteCacheItem('like:' + user + ':' + cleanItem, function () {
+              next(null, {status: 'removed'});
+            });
           });
         });
       });
@@ -77,16 +79,17 @@ module.exports = function (api) {
   }
 
   function getLike (keyspace, like, next) {
-    api.common.get(keyspace, 'selectLike', [like], 'one', function (err, result) {
+    client.get(q(keyspace, 'selectLike'), [like], {cacheKey: 'like:' + like}, function (err, result) {
       if (err) { return next(err); }
+      if (!result) { return next({statusCode: 404, message: 'Like not found'}); }
       api.user.mapUserIdToUser(keyspace, result, ['user'], undefined, next);
     });
   }
 
   function checkLike (keyspace, user, item, next) {
     var cleanItem = api.common.clean(item);
-    api.common.get(keyspace, 'checkLike', [user, cleanItem], 'one', function (err, like) {
-      if (err) {
+    client.get(q(keyspace, 'checkLike'), [user, cleanItem], {cacheKey: 'like:' + user + ':' + cleanItem}, function (err, like) {
+      if (err || !like) {
         like = {
           userLikes: false,
           user: user

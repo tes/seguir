@@ -119,7 +119,8 @@ module.exports = function (client, options) {
     createSecondaryIndexes: createSecondaryIndexes,
     assertIndexes: assertIndexes,
     initialiseSchemaVersion: initialiseSchemaVersion,
-    truncate: truncate
+    truncate: truncate,
+    flushCache: client.flushCache
   };
 
 };

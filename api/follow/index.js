@@ -94,7 +94,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       if (!isFollower) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
       var deleteData = [user, user_follower];
-      client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare: true}, function (err, result) {
+      client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare: true, cacheKey: 'follow:' + follow.follow}, function (err, result) {
         if (err) return next(err);
         alterFollowerCount(keyspace, user, -1, function () {
           api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
@@ -111,7 +111,7 @@ module.exports = function (api) {
     if (user.toString() === user_follower.toString()) {
       return next(null, false, null, {});
     }
-    api.common.get(keyspace, 'isFollower', [user, user_follower], 'one', function (err, follow) {
+    client.get(q(keyspace, 'isFollower'), [user, user_follower], {prepare: true}, function (err, follow) {
       if (err) { return next(null, false, null, {}); }
       var isFollower = !!(follow && follow.follow);
       var isFollowerSince = isFollower ? follow.since : null;
@@ -127,9 +127,10 @@ module.exports = function (api) {
   }
 
   function getFollow (keyspace, liu, follow, next) {
-    api.common.get(keyspace, 'selectFollow', [follow], 'one', function (err, follower) {
+    client.get(q(keyspace, 'selectFollow'), [follow], {prepare: true, cacheKey: 'follow:' + follow}, function (err, follower) {
       /* istanbul ignore if */
       if (err) { return next(err); }
+      if (!follower) { return next({statusCode: 404, message: 'Follow not found'}); }
       api.friend.userCanSeeItem(keyspace, liu, follower, ['user', 'user_follower'], function (err) {
         if (err) { return next(err); }
         api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], liu, next);
@@ -139,6 +140,7 @@ module.exports = function (api) {
 
   // TODO: erk.  This method needs more async love (or promises)
   function getFollowers (keyspace, liu, user, next) {
+
     var isUser = liu && user && liu.toString() === user.toString();
     api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
       if (err) { return next(err); }
@@ -171,7 +173,9 @@ module.exports = function (api) {
                 follow.liuIsUser = false;
                 cb(null, follow);
               });
+
             });
+
           }, function (err, followersWithState) {
             if (err) { return next(err); }
             api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);

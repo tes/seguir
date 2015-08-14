@@ -67,7 +67,7 @@ module.exports = function (api) {
 
     var data = [convertedContent, content_type, visibility, post];
 
-    client.execute(q(keyspace, 'updatePost'), data, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'updatePost'), data, {prepare: true, cacheKey: 'post:' + post}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       next(null, {status: 'updated'});
@@ -91,7 +91,7 @@ module.exports = function (api) {
 
   function _removePost (keyspace, post, next) {
     var deleteData = [post];
-    client.execute(q(keyspace, 'removePost'), deleteData, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'removePost'), deleteData, {prepare: true, cacheKey: 'post:' + post}, function (err, result) {
       if (err) return next(err);
       api.feed.removeFeedsForItem(keyspace, post, function (err) {
         if (err) return next(err);
@@ -109,8 +109,9 @@ module.exports = function (api) {
   }
 
   function getPost (keyspace, liu, post, next) {
-    api.common.get(keyspace, 'selectPost', [post], 'one', function (err, post) {
+    client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, post) {
       if (err) { return next(err); }
+      if (!post) { return next({statusCode: 404, message: 'Post not found'}); }
       post.content = api.common.convertContentFromString(post.content, post.content_type);
       api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
         if (err) { return next(err); }

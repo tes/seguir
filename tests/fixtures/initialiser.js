@@ -10,6 +10,7 @@ var _ = require('lodash');
 var credentials = {host: 'http://localhost:3001'};
 
 function setupApi (keyspace, config, next) {
+
   Api(config, function (err, api) {
     if (err) { return next(err); }
     console.log('   Setting up keyspace in ' + api.client.type + '...');

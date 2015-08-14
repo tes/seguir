@@ -109,6 +109,7 @@ module.exports = function (api) {
     var user = [username, '' + altid, userdata, userid];
     client.execute(q(keyspace, 'updateUser'), user, {
       prepare: true,
+      cacheKey: 'user:' + userid,
       hints: [null, null, 'map']
     }, function (err, result) {
       if (err) { return next(err); }
@@ -117,15 +118,15 @@ module.exports = function (api) {
   }
 
   function getUser (keyspace, user, next) {
-    api.common.get(keyspace, 'selectUser', [user], 'one', next);
+    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, next);
   }
 
   function getUserByName (keyspace, username, next) {
-    api.common.get(keyspace, 'selectUserByUsername', [username], 'one', next);
+    client.get(q(keyspace, 'selectUserByUsername'), [username], next);
   }
 
   function getUserByAltId (keyspace, altid, next) {
-    api.common.get(keyspace, 'selectUserByAltId', ['' + altid], 'one', next);
+    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], next);
   }
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {
