@@ -16,10 +16,6 @@ module.exports = function client (config) {
     console.error('Error connecting to redis [%s:%s] - %s', redisConfig.host, redisConfig.port, err.message);
   });
 
-  redisClient.on('ready', function () {
-    // Do nothing - assume success unless proven otherwise
-  });
-
   redisClient.select(redisConfig.db || 0);
 
   return redisClient;
