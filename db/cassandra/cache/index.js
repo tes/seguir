@@ -11,6 +11,7 @@ var _ = require('lodash');
 var cassandra = require('cassandra-driver');
 var Uuid = cassandra.types.Uuid;
 var debug = require('debug')('seguir:cassandra:cache');
+var UUID_COLUMNS = ['post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like'];
 
 module.exports = function (config, next) {
 
@@ -42,7 +43,7 @@ module.exports = function (config, next) {
 
     // Convert all of the Cassandra IDs
     var clone = _.clone(object);
-    ['post', 'user', 'follow', 'friend', 'like'].forEach(function (item) {
+    UUID_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
 
@@ -60,7 +61,7 @@ module.exports = function (config, next) {
   var from_cache = function (clone) {
 
     // Convert all of the Cassandra IDs back
-    ['post', 'user', 'follow', 'friend', 'like'].forEach(function (item) {
+    UUID_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
     });
 

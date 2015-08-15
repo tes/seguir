@@ -7,7 +7,7 @@
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
 var initialiser = require('../../fixtures/initialiser');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra', 'cassandra-redis'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra-redis'];
 var _ = require('lodash');
 
 databases.forEach(function (db) {
