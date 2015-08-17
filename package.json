@@ -1,6 +1,6 @@
 {
   "name": "seguir",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "description": "Self-hosted social network backend and API",
   "main": "api/index.js",
   "scripts": {
