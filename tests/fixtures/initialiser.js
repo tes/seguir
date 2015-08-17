@@ -20,9 +20,7 @@ function setupApi (keyspace, config, next) {
       api.client.truncate = truncate;
       api.client.setup.setupTenant(api.client, keyspace, truncate, function (err) {
         if (err) { return next(err); }
-        setTimeout(function () {
-          next(null, api);
-        }, truncate ? 0 : 2000);
+        next(null, api);
       });
     });
   });
@@ -47,9 +45,7 @@ function setupServer (config, keyspace, next) {
                 credentials.appsecret = token.tokensecret;
                 var client = new Seguir(credentials);
                 process.stdout.write('.\n');
-                setTimeout(function () {
-                  next(null, api, server, client);
-                }, 5000);
+                next(null, api, server, client);
               });
             });
           });

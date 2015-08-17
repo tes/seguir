@@ -90,6 +90,23 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can update a users data and it clears any cache', function (done) {
+        api.user.getUserByAltId(keyspace, users['cliftonc'].altid, function (err, user) {
+          expect(err).to.be(null);
+          api.user.updateUser(keyspace, users['cliftonc'].user, 'cliftonc', '1', {goodbye: 'world'}, function (err, user) {
+            expect(err).to.be(null);
+            api.user.getUserByAltId(keyspace, users['cliftonc'].altid, function (err, user) {
+              expect(err).to.be(null);
+              expect(user.user).to.eql(users['cliftonc'].user);
+              expect(user.username).to.be('cliftonc');
+              expect(user.userdata.goodbye).to.be('world');
+              expect(user.userdata.hello).to.be(undefined);
+              done();
+            });
+          });
+        });
+      });
+
       it('cant create a second user with the same altid', function (done) {
         api.user.addUser(keyspace, 'altido', '1', function (err, user) {
           expect(err.statusCode).to.be(409);

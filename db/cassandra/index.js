@@ -11,7 +11,7 @@ function createClient (config, next) {
   redisCache(config, function (err, cache) {
 
     if (err) {
-      console.log('Failed to initialise redis cache: ' + err);
+      /* Purposeful ignore of err - never sent */
     }
 
     var cassandraConfig = config && config.cassandra;
