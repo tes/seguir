@@ -274,6 +274,16 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can see the followerCounts for non-logged in users', function (done) {
+        api.follow.getFollowers(keyspace, null, users['cliftonc'].user, function (err, followers) {
+          expect(err).to.be(null);
+          expect(followers[0].followerCount).to.be(2);
+          expect(followers[1].followerCount).to.be(0);
+          expect(followers[2].followerCount).to.be(0);
+          done();
+        });
+      });
+
     });
 
   });

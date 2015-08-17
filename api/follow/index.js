@@ -177,7 +177,16 @@ module.exports = function (api) {
             api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
           });
         } else {
-          api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+          async.map(sortedFollowers, function (follow, cb) {
+            followerCount(keyspace, follow.user_follower, function (err, followerCount) {
+              if (err) { return cb(err); }
+              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
+              cb(null, follow);
+            });
+          }, function (err, followersWithState) {
+            if (err) { return next(err); }
+            api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+          });
         }
 
       });
