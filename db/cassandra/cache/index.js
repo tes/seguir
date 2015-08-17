@@ -60,6 +60,8 @@ module.exports = function (config, next) {
 
   var from_cache = function (clone) {
 
+    if (!clone) return;
+
     // Convert all of the Cassandra IDs back
     UUID_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
