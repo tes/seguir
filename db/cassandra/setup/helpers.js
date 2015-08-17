@@ -46,7 +46,9 @@ module.exports = function (client, options) {
       } else {
         cb();
       }
-    }, next);
+    }, function () {
+      flushCache(next);
+    });
   }
 
   /* istanbul ignore next */
@@ -112,6 +114,10 @@ module.exports = function (client, options) {
     });
   }
 
+  function flushCache (next) {
+    client.flushCache(next);
+  }
+
   return {
     dropKeyspace: dropKeyspace,
     createKeyspace: createKeyspace,
@@ -119,7 +125,8 @@ module.exports = function (client, options) {
     createSecondaryIndexes: createSecondaryIndexes,
     assertIndexes: assertIndexes,
     initialiseSchemaVersion: initialiseSchemaVersion,
-    truncate: truncate
+    truncate: truncate,
+    flushCache: flushCache
   };
 
 };

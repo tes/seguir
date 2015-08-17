@@ -8,7 +8,7 @@ var expect = require('expect.js');
 var Api = require('../../../api');
 var authUtils = require('../../../api/auth/utils');
 var _ = require('lodash');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra-redis'];
 var keyspace = 'test_seguir_auth';
 
 databases.forEach(function (db) {
@@ -16,7 +16,7 @@ databases.forEach(function (db) {
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
-  describe('Account and Application Management - ' + db, function () {
+  describe('API [Account and Application] - ' + db, function () {
 
     var api, auth, accountId, userId, appId, tokenId;
 

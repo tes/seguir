@@ -1,0 +1,13 @@
+{
+  "logging": false,
+  "port":3000,
+  "keyspace":"seguir",
+  "cassandra": {
+    "contactPoints": ["0.0.0.0"]
+  },
+  "redis": {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "db": 3
+  }
+}

@@ -23,7 +23,7 @@ var initialiser = require('../../fixtures/initialiser');
 var async = require('async');
 var fs = require('fs');
 var hbs = require('handlebars');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres'];
 
 databases.forEach(function (db) {
 

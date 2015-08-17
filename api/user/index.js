@@ -106,26 +106,38 @@ module.exports = function (api) {
     userdata = _.mapValues(userdata, function (value) {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
-    var user = [username, '' + altid, userdata, userid];
-    client.execute(q(keyspace, 'updateUser'), user, {
-      prepare: true,
-      hints: [null, null, 'map']
-    }, function (err, result) {
+
+    /*
+     * Retrieve the existing record as we need to clear the old caches assuming altid
+     * or username can change
+     */
+    getUser(keyspace, userid, function (err, user) {
       if (err) { return next(err); }
-      next(null, {user: userid, username: username, altid: altid, userdata: userdata});
+      var cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+      async.map(cachedItems, client.deleteCacheItem, function () {
+        var user = [username, '' + altid, userdata, userid];
+        client.execute(q(keyspace, 'updateUser'), user, {
+          prepare: true,
+          cacheKey: 'user:' + userid,
+          hints: [null, null, 'map']
+        }, function (err, result) {
+          if (err) { return next(err); }
+          next(null, {user: userid, username: username, altid: altid, userdata: userdata});
+        });
+      });
     });
   }
 
   function getUser (keyspace, user, next) {
-    api.common.get(keyspace, 'selectUser', [user], 'one', next);
+    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, next);
   }
 
   function getUserByName (keyspace, username, next) {
-    api.common.get(keyspace, 'selectUserByUsername', [username], 'one', next);
+    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, next);
   }
 
   function getUserByAltId (keyspace, altid, next) {
-    api.common.get(keyspace, 'selectUserByAltId', ['' + altid], 'one', next);
+    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, next);
   }
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {

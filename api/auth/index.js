@@ -31,7 +31,7 @@ function Auth (api) {
   }
 
   function getAccount (account, next) {
-    client.get(q(keyspace, 'selectAccount'), [account], {prepare: true}, function (err, result) {
+    client.get(q(keyspace, 'selectAccount'), [account], {prepare: true, cacheKey: 'account:' + account}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -53,7 +53,7 @@ function Auth (api) {
 
   function updateAccount (account, name, isadmin, enabled, next) {
     var accountData = [name, isadmin, enabled, account];
-    client.execute(q(keyspace, 'updateAccount'), accountData, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'updateAccount'), accountData, {prepare: true, cacheKey: 'account:' + account}, function (err, result) {
       if (err) { return next(err); }
       next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
     });
@@ -120,7 +120,7 @@ function Auth (api) {
    */
   function updateApplication (appid, name, enabled, next) {
     var application = [name, enabled, appid];
-    client.execute(q(keyspace, 'updateApplication'), application, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'updateApplication'), application, {prepare: true, cacheKey: 'application:' + appid}, function (err) {
       next(err, {name: name, appid: appid, enabled: enabled});
     });
   }
@@ -233,7 +233,7 @@ function Auth (api) {
       return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
     var token = [tokenid];
-    client.get(q(keyspace, 'checkApplicationToken'), token, {prepare: true}, function (err, result) {
+    client.get(q(keyspace, 'checkApplicationToken'), token, {prepare: true, cacheKey: 'token:' + tokenid}, function (err, result) {
       var token = result;
       if (err) { return next(err); }
       if (!token || !token.enabled) { return next(null, null); }
@@ -242,7 +242,7 @@ function Auth (api) {
   }
 
   function getUserBySeguirId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUser'), [user], {prepare: true}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUser'), [user], {prepare: true, cacheKey: 'user:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);

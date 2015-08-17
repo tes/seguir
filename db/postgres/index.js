@@ -63,11 +63,18 @@ function createClient (config, next) {
     return value;
   }
 
+  function noOpCache (key, cb) {
+    if (!cb) { cb = key; key = null; }
+    cb();
+  }
+
   next(null, {
     type: 'postgres',
     config: pgConfig,
     get: get,
     execute: execute,
+    deleteCacheItem: noOpCache,
+    flushCache: noOpCache,
     generateId: generateId,
     generateTimeId: generateTimeId,
     isValidId: isValidId,

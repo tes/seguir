@@ -174,6 +174,7 @@ function setup (client, keyspace, truncateIfExists, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes,
+    helpers.flushCache,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion),
     async.retry(5, helpers.assertIndexes.bind(helpers.assertIndexes))
   ], function (err, data) {
