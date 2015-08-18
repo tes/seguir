@@ -23,7 +23,7 @@ var initialiser = require('../../fixtures/initialiser');
 var async = require('async');
 var fs = require('fs');
 var hbs = require('handlebars');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra-redis'];
 
 databases.forEach(function (db) {
 
@@ -96,7 +96,8 @@ databases.forEach(function (db) {
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
           {username: 'json', altid: '8'},
-          {username: 'evil &user <alert>name</alert>', altid: '9'}
+          {username: 'evil &user <alert>name</alert>', altid: '9'},
+          {username: 'mario', altid: '10'}
         ], function (user, cb) {
           client.addUser(null, user.username, user.altid, {avatar: 'test.jpg'}, cb);
         }, function (err, results) {
@@ -158,6 +159,19 @@ databases.forEach(function (db) {
             expect(user.username).to.be('new_name');
             expect(user.altid).to.be('new_altid');
             expect(user.userdata.hello).to.be('world');
+            done();
+          });
+        });
+      });
+
+      it('can update a users data by altid', function (done) {
+        client.updateUser(null, users['mario'].altid, 'mario_beta', '100', {hello: 'goodbye'}, function (err, user) {
+          expect(err).to.be(null);
+          client.getUser(null, users['mario'].user, function (err, user) {
+            expect(err).to.be(null);
+            expect(user.user).to.eql(users['mario'].user);
+            expect(user.altid).to.be('100');
+            expect(user.userdata.hello).to.be('goodbye');
             done();
           });
         });

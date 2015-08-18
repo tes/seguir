@@ -79,6 +79,7 @@ module.exports = function (config, next) {
 
   var set = function (key, value, cb) {
     if (!key) { return cb(null, value); }
+    if (!value) { return cb(null); }
     debug('SET', key);
     redisClient.multi()
       .hmset(key, to_cache(value))

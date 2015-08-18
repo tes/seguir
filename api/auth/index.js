@@ -250,7 +250,7 @@ function Auth (api) {
   }
 
   function getUserByAltId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {prepare: true}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {prepare: true, cacheKey: 'useraltid:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
@@ -258,7 +258,7 @@ function Auth (api) {
   }
 
   function getUserByName (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {prepare: true}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {prepare: true, cacheKey: 'username:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
