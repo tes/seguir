@@ -39,6 +39,7 @@ function createClient (config, next) {
         client.execute(query, data, options, function (err, result) {
           if (err) { return next(err); }
           var item = result && result.rows ? result.rows[0] : null;
+          if (!item) { return next(); }
           cache.set(cacheKey, item, next);
         });
       });

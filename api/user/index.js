@@ -129,15 +129,27 @@ module.exports = function (api) {
   }
 
   function getUser (keyspace, user, next) {
-    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, next);
+    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find user by id: ' + user)); }
+      next(null, result);
+    });
   }
 
   function getUserByName (keyspace, username, next) {
-    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, next);
+    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find user by name: ' + username)); }
+      next(null, result);
+    });
   }
 
   function getUserByAltId (keyspace, altid, next) {
-    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, next);
+    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find user by altid: ' + altid)); }
+      next(null, result);
+    });
   }
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {

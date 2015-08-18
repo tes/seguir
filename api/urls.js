@@ -38,6 +38,7 @@ var urls = {
 
 module.exports = function (url, data) {
   if (urls[url]) {
+    var expectsData = url.indexOf(':') > 0;
     if (data) {
       var pattern = urls[url];
       _.keys(data).forEach(function (key) {
@@ -53,6 +54,9 @@ module.exports = function (url, data) {
       }
       return pattern;
     } else {
+      if (expectsData) {
+        console.log('No data provided to url: ' + url + ' > ' + urls[url]);
+      }
       return urls[url];
     }
   } else {

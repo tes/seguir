@@ -177,6 +177,16 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a user that doesnt yet exist and it doesnt cache anything', function (done) {
+        client.getUserByAltId(null, 'CRAZY_ALTID', function (err, user) {
+          expect(err.statusCode).to.be(404);
+          client.getUserByAltId(null, 'CRAZY_ALTID', function (err, user) {
+            expect(err.statusCode).to.be(404);
+            done();
+          });
+        });
+      });
+
     });
 
     describe('friend requests', function () {
