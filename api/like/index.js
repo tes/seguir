@@ -78,11 +78,12 @@ module.exports = function (api) {
     api.user.mapUserIdToUser(keyspace, likeObject, ['user'], undefined, next);
   }
 
-  function getLike (keyspace, like, next) {
+  function getLike (keyspace, like, expandUser, next) {
+    if (!next) { next = expandUser; expandUser = true; }
     client.get(q(keyspace, 'selectLike'), [like], {cacheKey: 'like:' + like}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next({statusCode: 404, message: 'Like not found'}); }
-      api.user.mapUserIdToUser(keyspace, result, ['user'], undefined, next);
+      api.user.mapUserIdToUser(keyspace, result, ['user'], undefined, expandUser, next);
     });
   }
 

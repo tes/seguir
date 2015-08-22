@@ -263,50 +263,53 @@ module.exports = function (api) {
     }
   };
 
-  function expandPost (keyspace, liu, item, cb) {
-
+  function expandPost (keyspace, liu, item, expandUser, cb) {
+    if (!cb) { cb = expandUser; expandUser = true; }
     var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
     if (postObject) {
       api.post.getPostFromObject(keyspace, liu, postObject, function (err, post) {
         silentlyDropError(err, post, cb);
       });
     } else {
-      api.post.getPost(keyspace, liu, item.item, function (err, post) {
+      api.post.getPost(keyspace, liu, item.item, expandUser, function (err, post) {
         silentlyDropError(err, post, cb);
       });
     }
   }
 
-  function expandLike (keyspace, liu, item, cb) {
+  function expandLike (keyspace, liu, item, expandUser, cb) {
+    if (!cb) { cb = expandUser; expandUser = true; }
     var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
     if (likeObject) {
       api.like.getLikeFromObject(keyspace, likeObject, cb);
     } else {
-      api.like.getLike(keyspace, item.item, cb);
+      api.like.getLike(keyspace, item.item, expandUser, cb);
     }
   }
 
-  function expandFollow (keyspace, liu, item, cb) {
+  function expandFollow (keyspace, liu, item, expandUser, cb) {
+    if (!cb) { cb = expandUser; expandUser = true; }
     var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
     if (followObject) {
       api.follow.getFollowFromObject(keyspace, liu, followObject, function (err, follow) {
         silentlyDropError(err, follow, cb);
       });
     } else {
-      api.follow.getFollow(keyspace, liu, item.item, function (err, follow) {
+      api.follow.getFollow(keyspace, liu, item.item, expandUser, function (err, follow) {
         silentlyDropError(err, follow, cb);
       });
     }
   }
 
-  function expandFriend (keyspace, liu, item, cb) {
+  function expandFriend (keyspace, liu, item, expandUser, cb) {
+    if (!cb) { cb = expandUser; expandUser = true; }
     var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
     if (friendObject) {
       api.friend.getFriendFromObject(keyspace, liu, friendObject, function (err, friend) {
         silentlyDropError(err, friend, cb);
       });
     } else {
-      api.friend.getFriend(keyspace, liu, item.item, function (err, friend) {
+      api.friend.getFriend(keyspace, liu, item.item, expandUser, function (err, friend) {
         silentlyDropError(err, friend, cb);
       });
     }
@@ -371,67 +374,84 @@ module.exports = function (api) {
 
         if (raw) { return next(null, data); }
 
-        var timeline = data;
+        var timeline = data, followCache = {}, expandUser = false;
 
-        async.map(timeline, function (item, cb) {
+        var expand = function (item, cb) {
+          var expander = feedExpanders[item.type];
+          if (expander) {
+            return expander(keyspace, liu, item, expandUser, cb);
+          } else {
+            console.log('Unable to expand unknown feed item type: ' + item.type);
+            cb();
+          }
+        };
 
-          ensureFollowStillActive(keyspace, liu, item, function (err) {
-            if (err) { return cb(); }
-            var expander = feedExpanders[item.type];
-            if (expander) {
-              return expander(keyspace, liu, item, cb);
-            } else {
-              console.log('Unable to expand unknown feed item type: ' + item.type);
-              cb();
-            }
-          });
-
+        async.mapSeries(timeline, function (item, cb) {
+          if (followCache[item.item]) {
+            expand(item, cb);
+          } else {
+            ensureFollowStillActive(keyspace, liu, item, function (err) {
+              if (err) { return cb(); }
+              followCache[item.item] = true;
+              expand(item, cb);
+            });
+          }
         }, function (err, results) {
+
+          /* Ensure caches clear */
+          followCache = null;
 
           /* istanbul ignore if */
           if (err || !results) { return next(err); }
 
           var feed = [], maxTime;
 
-          results.forEach(function (result, index) {
+          // Now go and get the users in one go so we can cache results
+          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, function (err, resultsWithUsers) {
 
-            if (result) {
+            if (err) { return next(err); }
 
-              var currentResult = result;
+            resultsWithUsers.forEach(function (result, index) {
 
-              // Copy elements from feed
-              currentResult._item = timeline[index].item;
-              currentResult.type = timeline[index].type;
-              currentResult.timeuuid = timeline[index].time;
-              currentResult.date = timeline[index].date;
-              currentResult.fromNow = moment(currentResult.date).fromNow();
-              currentResult.visibility = timeline[index].visibility || api.visibility.PUBLIC;
-              currentResult.isPrivate = currentResult.visibility === api.visibility.PRIVATE;
-              currentResult.isPersonal = currentResult.visibility === api.visibility.PERSONAL;
-              currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
+              if (result) {
 
-              // Calculated fields to make rendering easier
-              currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== user.toString();
-              currentResult.isLike = currentResult.type === 'like';
-              currentResult.isPost = currentResult.type === 'post';
-              currentResult.isFollow = currentResult.type === 'follow';
-              currentResult.isFriend = currentResult.type === 'friend';
+                var currentResult = result;
 
-              var currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
-              var currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
-              currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
-              currentResult.isFollower = currentUserIsFollower;
+                // Copy elements from feed
+                currentResult._item = timeline[index].item;
+                currentResult.type = timeline[index].type;
+                currentResult.timeuuid = timeline[index].time;
+                currentResult.date = timeline[index].date;
+                currentResult.fromNow = moment(currentResult.date).fromNow();
+                currentResult.visibility = timeline[index].visibility || api.visibility.PUBLIC;
+                currentResult.isPrivate = currentResult.visibility === api.visibility.PRIVATE;
+                currentResult.isPersonal = currentResult.visibility === api.visibility.PERSONAL;
+                currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
 
-              // To page 'more'
-              maxTime = currentResult.timeuuid;
+                // Calculated fields to make rendering easier
+                currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== user.toString();
+                currentResult.isLike = currentResult.type === 'like';
+                currentResult.isPost = currentResult.type === 'post';
+                currentResult.isFollow = currentResult.type === 'follow';
+                currentResult.isFriend = currentResult.type === 'friend';
 
-              feed.push(currentResult);
+                var currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
+                var currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
+                currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
+                currentResult.isFollower = currentUserIsFollower;
 
-            }
+                // To page 'more'
+                maxTime = currentResult.timeuuid;
+
+                feed.push(currentResult);
+
+              }
+
+            });
+
+            next(null, feed, hasMoreResults ? maxTime : null);
 
           });
-
-          next(null, feed, hasMoreResults ? maxTime : null);
 
         });
 

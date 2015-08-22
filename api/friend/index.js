@@ -129,13 +129,14 @@ module.exports = function (api) {
     });
   }
 
-  function getFriend (keyspace, liu, friend, next) {
+  function getFriend (keyspace, liu, friend, expandUser, next) {
+    if (!next) { next = expandUser; expandUser = true; }
     api.common.get(keyspace, 'selectFriend', [friend], 'one', function (err, friendship) {
        /* istanbul ignore if */
       if (err) { return next(err); }
       userCanSeeItem(keyspace, liu, friendship, ['user', 'user_friend'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], liu, next);
+        api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], liu, expandUser, next);
       });
     });
   }

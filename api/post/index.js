@@ -108,14 +108,15 @@ module.exports = function (api) {
     });
   }
 
-  function getPost (keyspace, liu, post, next) {
+  function getPost (keyspace, liu, post, expandUser, next) {
+    if (!next) { next = expandUser; expandUser = true; }
     client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, post) {
       if (err) { return next(err); }
       if (!post) { return next({statusCode: 404, message: 'Post not found'}); }
       post.content = api.common.convertContentFromString(post.content, post.content_type);
       api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);
+        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, expandUser, next);
       });
     });
   }

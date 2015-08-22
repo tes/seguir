@@ -126,14 +126,15 @@ module.exports = function (api) {
     });
   }
 
-  function getFollow (keyspace, liu, follow, next) {
+  function getFollow (keyspace, liu, follow, expandUser, next) {
+    if (!next) { next = expandUser; expandUser = true; }
     client.get(q(keyspace, 'selectFollow'), [follow], {prepare: true, cacheKey: 'follow:' + follow}, function (err, follower) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       if (!follower) { return next({statusCode: 404, message: 'Follow not found'}); }
       api.friend.userCanSeeItem(keyspace, liu, follower, ['user', 'user_follower'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], liu, next);
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], liu, expandUser, next);
       });
     });
   }

@@ -152,17 +152,30 @@ module.exports = function (api) {
     });
   }
 
-  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, next) {
+  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, expandUser, next) {
+
+    if (!next) { next = expandUser; expandUser = true; }
+
+    if (!expandUser) {
+      return next(null, itemOrItems);
+    }
+
+    var userCache = {};
 
     var getUsersForFields = function (item, cb) {
+
+      if (!item) { return cb(); }
 
       // Always replace the longest embedded field to
       // ensure user_ and user_friend not replaced twice
       fields.sort(function (a, b) {return b.length - a.length; });
 
-      async.each(fields, function (field, eachCb) {
+      async.mapSeries(fields, function (field, eachCb) {
 
         if (!item[field]) { return eachCb(null); }
+
+        // If the item is already expanded lets just move on
+        if (item[field] && item[field].user) { return eachCb(null); }
 
         // First check if we have the object embedded
         var userObject = api.common.expandEmbeddedObject(item, field, 'altid', fields);
@@ -171,15 +184,27 @@ module.exports = function (api) {
           return eachCb();
         }
 
+        var userKey = item[field].toString();
+
         // Otherwise proceed as normal
-        if (currentUser && item[field].toString() === currentUser.user && currentUser.user.toString()) {
+        if (currentUser && userKey === currentUser.user && currentUser.user.toString()) {
           item[field] = currentUser;
+          userCache[userKey] = currentUser;
           eachCb(null);
         } else {
-          getUser(keyspace, item[field], function (err, user) {
-            item[field] = user;
-            eachCb(err);
-          });
+          // Check if the user is already in the cache for this request
+          if (userCache[userKey]) {
+            debug('cache hit', field, userKey);
+            item[field] = userCache[userKey];
+            eachCb(null);
+          } else {
+            debug('cache miss', field, userKey);
+            getUser(keyspace, userKey, function (err, user) {
+              item[field] = user;
+              userCache[userKey] = user;
+              eachCb(err);
+            });
+          }
         }
       }, function (err) {
         if (err) {
@@ -191,7 +216,7 @@ module.exports = function (api) {
 
     if (Array.isArray(itemOrItems)) {
       // Sort to ensure we always replace the longest first
-      async.map(itemOrItems, getUsersForFields, function (err, result) {
+      async.mapSeries(itemOrItems, getUsersForFields, function (err, result) {
         if (err) {
           return next(err);
         }
