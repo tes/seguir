@@ -74,8 +74,13 @@ module.exports = function (api) {
     });
   }
 
-  function getLikeFromObject (keyspace, likeObject, next) {
-    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], undefined, next);
+  function getLikeFromObject (keyspace, item, next) {
+    var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
+    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], undefined, true, function (err, objectWithUsers) {
+      if (err) { return next(err); }
+      likeObject.user = objectWithUsers.user;
+      next(null, likeObject);
+    });
   }
 
   function getLike (keyspace, like, expandUser, next) {

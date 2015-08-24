@@ -31,7 +31,6 @@ module.exports = function (api) {
     client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-
       api.feed.addFeedItem(keyspace, user, object, 'post', function (err, result) {
         if (err) { return next(err); }
         var tempPost = {
@@ -43,7 +42,7 @@ module.exports = function (api) {
           visibility: visibility,
           altid: altid
         };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user', 'user_follower'], user, next);
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
       });
     });
   }
@@ -100,11 +99,15 @@ module.exports = function (api) {
     });
   }
 
-  function getPostFromObject (keyspace, liu, postObject, next) {
+  function getPostFromObject (keyspace, liu, item, next) {
+    var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
     api.friend.userCanSeeItem(keyspace, liu, postObject, ['user'], function (err) {
       if (err) { return next(err); }
       postObject.content = api.common.convertContentFromString(postObject.content, postObject.content_type);
-      api.user.mapUserIdToUser(keyspace, postObject, ['user', 'user_follower'], postObject.user, next);
+      api.user.mapUserIdToUser(keyspace, item, ['user'], liu, true, function (err, objectWithUsers) {
+        postObject.user = objectWithUsers.user;
+        next(err, postObject);
+      });
     });
   }
 
@@ -116,7 +119,7 @@ module.exports = function (api) {
       post.content = api.common.convertContentFromString(post.content, post.content_type);
       api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, expandUser, next);
+        api.user.mapUserIdToUser(keyspace, post, ['user'], liu, expandUser, next);
       });
     });
   }
@@ -127,7 +130,7 @@ module.exports = function (api) {
       post.content = api.common.convertContentFromString(post.content, post.content_type);
       api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, post, ['user', 'user_follower'], liu, next);
+        api.user.mapUserIdToUser(keyspace, post, ['user'], liu, next);
       });
     });
   }

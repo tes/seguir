@@ -137,6 +137,7 @@ function createClient (config, next) {
         execute: execute,
         deleteCacheItem: cache.del,
         flushCache: cache.flush,
+        cacheStats: cache.stats,
         generateId: generateId,
         generateTimeId: generateTimeId,
         isValidId: isValidId,

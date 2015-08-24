@@ -17,6 +17,18 @@ module.exports = function (api) {
   var client = api.client,
     q = client.queries;
 
+  var _userCacheStats = {};
+  var userCacheStats = function (key, action) {
+    var keyType = key.split(':')[0];
+    _userCacheStats[keyType] = _userCacheStats[keyType] || {GET: 0, SET: 0, HIT: 0, MISS: 0, EMBED: 0, ISUSER: 0};
+    _userCacheStats[keyType][action] = _userCacheStats[keyType][action] + 1;
+  };
+
+  // Clear each minute to avoid memory leaks
+  setInterval(function () {
+    _userCacheStats = {};
+  }, 60000);
+
   /**
    * Add a user to cassandra
    * @param keyspace
@@ -152,15 +164,15 @@ module.exports = function (api) {
     });
   }
 
-  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, expandUser, next) {
+  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, expandUser, userCache, next) {
 
+    // expandUser and userCache optional
+    if (!next) { next = userCache; userCache = {}; }
     if (!next) { next = expandUser; expandUser = true; }
 
     if (!expandUser) {
       return next(null, itemOrItems);
     }
-
-    var userCache = {};
 
     var getUsersForFields = function (item, cb) {
 
@@ -180,32 +192,31 @@ module.exports = function (api) {
         // First check if we have the object embedded
         var userObject = api.common.expandEmbeddedObject(item, field, 'altid', fields);
         if (userObject) {
+          debug('cache expand', field);
+          userCacheStats('user', 'EMBED');
           item[field] = userObject;
           return eachCb();
         }
 
         var userKey = item[field].toString();
-
-        // Otherwise proceed as normal
-        if (currentUser && userKey === currentUser.user && currentUser.user.toString()) {
-          item[field] = currentUser;
-          userCache[userKey] = currentUser;
-          eachCb(null);
+        // Check if the user is already in the cache for this request
+        userCacheStats('user', 'GET');
+        if (userCache[userKey]) {
+          userCacheStats('user', 'HIT');
+          debug('cache hit', field, userKey);
+          item[field] = userCache[userKey];
+          setImmediate(function () { eachCb(null); });
         } else {
-          // Check if the user is already in the cache for this request
-          if (userCache[userKey]) {
-            debug('cache hit', field, userKey);
-            item[field] = userCache[userKey];
-            eachCb(null);
-          } else {
-            debug('cache miss', field, userKey);
-            getUser(keyspace, userKey, function (err, user) {
-              item[field] = user;
-              userCache[userKey] = user;
-              eachCb(err);
-            });
-          }
+          debug('cache miss', field, userKey);
+          userCacheStats('user', 'MISS');
+          getUser(keyspace, userKey, function (err, user) {
+            item[field] = user;
+            userCache[userKey] = user;
+            userCacheStats('user', 'SET');
+            eachCb(err);
+          });
         }
+
       }, function (err) {
         if (err) {
           return cb(err);
@@ -273,7 +284,8 @@ module.exports = function (api) {
     getUserByName: getUserByName,
     getUserByAltId: getUserByAltId,
     mapUserIdToUser: mapUserIdToUser,
-    getUserRelationship: getUserRelationship
+    getUserRelationship: getUserRelationship,
+    userCacheStats: _userCacheStats
   };
 
 };

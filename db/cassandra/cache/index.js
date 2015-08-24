@@ -15,6 +15,17 @@ var UUID_COLUMNS = ['post', 'user', 'follow', 'user_follower', 'friend', 'user_f
 
 module.exports = function (config, next) {
 
+  var _stats = {};
+  var stats = function (key, action) {
+    var keyType = key.split(':')[0];
+    _stats[keyType] = _stats[keyType] || {GET: 0, SET: 0, HIT: 0, MISS: 0, DEL: 0};
+    _stats[keyType][action] = _stats[keyType][action] + 1;
+  };
+  // Clear each minute to avoid memory leaks
+  setInterval(function () {
+    _stats = {};
+  }, 60000);
+
   var noCache = function (key, value, cb) {
     if (!cb) { cb = value; value = null; }
     if (!cb) { cb = key; key = null; }
@@ -81,6 +92,7 @@ module.exports = function (config, next) {
     if (!key) { return cb(null, value); }
     if (!value) { return cb(null); }
     debug('SET', key);
+    stats(key, 'SET');
     redisClient.multi()
       .hmset(key, to_cache(value))
       .expire(key, config.redis.ttl || TEN_MINUTES)
@@ -93,6 +105,7 @@ module.exports = function (config, next) {
   var del = function (key, cb) {
     if (!key) { return cb(null); }
     debug('DEL', key);
+    stats(key, 'DEL');
     redisClient.del(key, function (err) {
       if (err) { /* Purposeful ignore of err */ }
       cb(null);
@@ -110,9 +123,12 @@ module.exports = function (config, next) {
   var get = function (key, cb) {
     if (!key) { return cb(null); }
     debug('GET', key);
+    stats(key, 'GET');
     redisClient.hgetall(key, function (err, object) {
       if (err) { /* Purposeful ignore of err */ }
-      debug(object ? 'HIT' : 'MISS', key);
+      var hitOrMiss = object ? 'HIT' : 'MISS';
+      debug(hitOrMiss, key);
+      stats(key, hitOrMiss);
       cb(null, object ? from_cache(object) : null);
     });
   };
@@ -121,7 +137,8 @@ module.exports = function (config, next) {
     get: get,
     set: set,
     del: del,
-    flush: flush
+    flush: flush,
+    stats: _stats
   };
 
   next(null, cache);

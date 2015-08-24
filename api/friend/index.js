@@ -122,10 +122,16 @@ module.exports = function (api) {
 
   }
 
-  function getFriendFromObject (keyspace, liu, friendObject, next) {
+  function getFriendFromObject (keyspace, liu, item, next) {
+    var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
     api.friend.userCanSeeItem(keyspace, liu, friendObject, ['user', 'user_friend'], function (err) {
       if (err) { return next(err); }
-      api.user.mapUserIdToUser(keyspace, friendObject, ['user', 'user_friend'], liu, next);
+      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_friend'], liu, true, function (err, objectWithUsers) {
+        if (err) { return next(err); }
+        friendObject.user = objectWithUsers.user;
+        friendObject.user_friend = objectWithUsers.user_friend;
+        next(null, friendObject);
+      });
     });
   }
 

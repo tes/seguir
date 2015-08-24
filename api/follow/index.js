@@ -119,10 +119,16 @@ module.exports = function (api) {
     });
   }
 
-  function getFollowFromObject (keyspace, liu, followObject, next) {
+  function getFollowFromObject (keyspace, liu, item, next) {
+    var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
     api.friend.userCanSeeItem(keyspace, liu, followObject, ['user', 'user_follower'], function (err) {
       if (err) { return next(err); }
-      api.user.mapUserIdToUser(keyspace, followObject, ['user', 'user_follower'], liu, next);
+      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_follower'], liu, true, function (err, objectWithUsers) {
+        if (err) { return next(err); }
+        followObject.user = objectWithUsers.user;
+        followObject.user_follower = objectWithUsers.user_follower;
+        next(null, followObject);
+      });
     });
   }
 

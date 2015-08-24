@@ -265,9 +265,9 @@ module.exports = function (api) {
 
   function expandPost (keyspace, liu, item, expandUser, cb) {
     if (!cb) { cb = expandUser; expandUser = true; }
-    var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
-    if (postObject) {
-      api.post.getPostFromObject(keyspace, liu, postObject, function (err, post) {
+    var hasEmbeddedPost = !!item.post_post;
+    if (hasEmbeddedPost) {
+      api.post.getPostFromObject(keyspace, liu, item, function (err, post) {
         silentlyDropError(err, post, cb);
       });
     } else {
@@ -279,9 +279,9 @@ module.exports = function (api) {
 
   function expandLike (keyspace, liu, item, expandUser, cb) {
     if (!cb) { cb = expandUser; expandUser = true; }
-    var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
-    if (likeObject) {
-      api.like.getLikeFromObject(keyspace, likeObject, cb);
+    var hasEmbeddedLike = !!item.like_like;
+    if (hasEmbeddedLike) {
+      api.like.getLikeFromObject(keyspace, item, cb);
     } else {
       api.like.getLike(keyspace, item.item, expandUser, cb);
     }
@@ -289,9 +289,9 @@ module.exports = function (api) {
 
   function expandFollow (keyspace, liu, item, expandUser, cb) {
     if (!cb) { cb = expandUser; expandUser = true; }
-    var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
-    if (followObject) {
-      api.follow.getFollowFromObject(keyspace, liu, followObject, function (err, follow) {
+    var hasEmbeddedFollow = !!item.follow_follow;
+    if (hasEmbeddedFollow) {
+      api.follow.getFollowFromObject(keyspace, liu, item, function (err, follow) {
         silentlyDropError(err, follow, cb);
       });
     } else {
@@ -303,9 +303,9 @@ module.exports = function (api) {
 
   function expandFriend (keyspace, liu, item, expandUser, cb) {
     if (!cb) { cb = expandUser; expandUser = true; }
-    var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
-    if (friendObject) {
-      api.friend.getFriendFromObject(keyspace, liu, friendObject, function (err, friend) {
+    var hasEmbeddedFriend = !!item.friend_friend;
+    if (hasEmbeddedFriend) {
+      api.friend.getFriendFromObject(keyspace, liu, item, function (err, friend) {
         silentlyDropError(err, friend, cb);
       });
     } else {
@@ -387,15 +387,31 @@ module.exports = function (api) {
         };
 
         async.mapSeries(timeline, function (item, cb) {
-          if (followCache[item.item]) {
-            expand(item, cb);
-          } else {
-            ensureFollowStillActive(keyspace, liu, item, function (err) {
-              if (err) { return cb(); }
-              followCache[item.item] = true;
-              expand(item, cb);
-            });
+
+          if (!item.from_follow) {
+            return expand(item, cb);
           }
+
+          var cachedFollowStatus = followCache[item.from_follow.toString()];
+          if (cachedFollowStatus) {
+            debug('follow cache HIT', item.from_follow.toString());
+            if (cachedFollowStatus === 'active') {
+              return expand(item, cb);
+            } else {
+              return cb();
+            }
+          }
+
+          debug('follow cache MISS', item.from_follow.toString());
+          ensureFollowStillActive(keyspace, liu, item, function (err) {
+            if (err) {
+              followCache[item.from_follow.toString()] = 'not-active';
+              return cb();
+            }
+            followCache[item.from_follow.toString()] = 'active';
+            expand(item, cb);
+          });
+
         }, function (err, results) {
 
           /* Ensure caches clear */
@@ -404,10 +420,10 @@ module.exports = function (api) {
           /* istanbul ignore if */
           if (err || !results) { return next(err); }
 
-          var feed = [], maxTime;
+          var feed = [], maxTime, userCache = {};
 
           // Now go and get the users in one go so we can cache results
-          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, function (err, resultsWithUsers) {
+          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, userCache, function (err, resultsWithUsers) {
 
             if (err) { return next(err); }
 

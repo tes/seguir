@@ -75,6 +75,7 @@ function createClient (config, next) {
     execute: execute,
     deleteCacheItem: noOpCache,
     flushCache: noOpCache,
+    cacheStats: {},
     generateId: generateId,
     generateTimeId: generateTimeId,
     isValidId: isValidId,
