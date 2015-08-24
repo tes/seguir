@@ -304,6 +304,26 @@ databases.forEach(function (db) {
         });
       });
 
+      it('returns null when coercing an empty id', function (done) {
+        auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, undefined, function (err, id) {
+          expect(err).to.be(null);
+          expect(id).to.eql(null);
+          done();
+        });
+      });
+
+      it('can coerce an array of altids to uuids, leaving gaps where empty ids were provided', function (done) {
+        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc9', '9', {}, function (err, user) {
+          expect(err).to.be(null);
+          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, [undefined, '9'], function (err, ids) {
+            expect(err).to.be(null);
+            expect(ids[0]).to.eql(null);
+            expect(ids[1]).to.eql(user.user);
+            done();
+          });
+        });
+      });
+
       it('can check if a request has been signed by a valid client', function (done) {
         var request = {
           headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret), {'x-seguir-user-token': userId})
