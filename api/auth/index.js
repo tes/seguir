@@ -270,10 +270,14 @@ function Auth (api) {
     debug('Coercing %s to uuid', ids);
 
     if (!ids) {
-      return next();
+      return next(null, null);
     }
 
     var coerce = function (id, cb) {
+
+      if (!id) {
+        return cb(null, null);
+      }
 
       if (client.isValidId(id)) {
         debug('Id %s IS already valid uuid', id);
