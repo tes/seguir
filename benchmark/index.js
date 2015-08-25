@@ -50,20 +50,25 @@ function initialise (next) {
     {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
     {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
     {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
+    {key: 'follow-1', type: 'follow', user: 'alfred', user_follower: 'phteven'},
+    {key: 'follow-1', type: 'follow', user: 'phteven', user_follower: 'cliftonc'},
     {key: 'post-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)}
   ];
 
-  var post, like;
+  var post, post2, like;
   // Intersperse likes and posts
   for (var i = 0; i < ITEMS; i++) {
-    post = {key: 'post-public-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'};
+    post = {key: 'post-public-cc-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'};
     post.content = 'Hello there from iteraton number ' + i;
     actions.push(post);
+    post2 = {key: 'post-public-alf-' + i, type: 'post', user: 'alfred', content: 'goodbye', contentType: 'text/html'};
+    post2.content = 'Goodbye there from iteraton number ' + i;
+    actions.push(post2);
     like = {key: 'like-public-' + i, type: 'like', user: 'cliftonc', item: 'http://hello.com/' + i};
     actions.push(like);
   }
 
-  console.log('Initialising feed for cliftonc with two followers, and ' + actions.length + ' actions');
+  console.log('Initialising feed with ' + actions.length + ' actions');
   var start = process.hrtime();
   initialiser.setupGraph(keyspace, api, users, actions, function (err, results) {
     var end = process.hrtime(start);
