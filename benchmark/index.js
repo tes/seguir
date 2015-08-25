@@ -7,7 +7,16 @@ var expect = require('expect.js');
 var initialiser = require('../tests/fixtures/initialiser');
 var _ = require('lodash');
 var async = require('async');
-var config = _.clone(require('../tests/fixtures/cassandra-redis.json'));
+var ss = require('simple-statistics');
+
+// Config
+var DATABASE = process.env.DATABASE || 'cassandra-redis';
+var TIMES = +process.env.TIMES || 500;
+var LIMIT = +process.env.LIMIT || 10;
+var FEED = +process.env.FEED || 50;
+var ITEMS = +process.env.ITEMS || 500;
+
+var config = _.clone(require('../tests/fixtures/' + DATABASE + '.json'));
 config.keyspace = keyspace;
 
 var api, users = {};
@@ -44,12 +53,14 @@ function initialise (next) {
     {key: 'post-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)}
   ];
 
-  var post = {key: 'post-public', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'};
-
-  for (var i = 0; i < 1000; i++) {
-    post.key = 'post-public-' + i;
+  var post, like;
+  // Intersperse likes and posts
+  for (var i = 0; i < ITEMS; i++) {
+    post = {key: 'post-public-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'};
     post.content = 'Hello there from iteraton number ' + i;
     actions.push(post);
+    like = {key: 'like-public-' + i, type: 'like', user: 'cliftonc', item: 'http://hello.com/' + i};
+    actions.push(like);
   }
 
   console.log('Initialising feed for cliftonc with two followers, and ' + actions.length + ' actions');
@@ -63,28 +74,48 @@ function initialise (next) {
 }
 
 function benchmark () {
-  console.log('Starting benchmark ...');
-  async.times(10, function (n, next) {
-    getFeed('phteven', next);
+  console.log('Starting benchmark with TIMES=' + TIMES + ', CONCURRENCY=' + LIMIT + ', FEED=' + FEED + ' ...\n');
+  async.timesLimit(TIMES, LIMIT, function (n, next) {
+    setTimeout(function () {
+      getFeed('phteven', next);
+    }, Math.random() * 100 + 50);
   }, function (err, result) {
+    process.stdout.write(' DONE!\n\n');
     if (err) {
       console.log(err);
       process.exit(1);
     }
-    console.dir(result);
+
+    console.log('Response Times:');
+    console.log('Min: ' + Math.floor(ss.min(result)) + 'ms');
+    console.log('Max: ' + Math.floor(ss.max(result)) + 'ms');
+    console.log('95th: ' + Math.floor(ss.quantile(result, 0.95)) + 'ms');
+    console.log('Std Dev: ' + Math.floor(ss.standardDeviation(result)) + 'ms');
     console.log('\nRedis Cache:');
-    console.dir(api.client.cacheStats);
+
+    var rs = api.client.cacheStats;
+    console.log('Hit Ratio [user]: ' + Math.floor((rs.user.HIT / rs.user.GET) * 100) + '%');
+    console.log('Hit Ratio [post]: ' + Math.floor((rs.post.HIT / rs.post.GET) * 100) + '%');
+    console.log('Hit Ratio [like]: ' + Math.floor((rs.like.HIT / rs.like.GET) * 100) + '%');
+    console.log('Hit Ratio [follow]: ' + Math.floor((rs.follow.HIT / rs.follow.GET) * 100) + '%');
     console.log('\nUser Cache:');
-    console.dir(api.user.userCacheStats);
+
+    var us = api.client.cacheStats;
+    console.log('Hit Ratio [user]: ' + Math.floor((us.user.HIT / us.user.GET) * 100) + '%');
     process.exit(0); // TODO shutdown cleanly
   });
 }
 
 function getFeed (user, next) {
   var start = process.hrtime();
-  api.feed.getFeed(keyspace, users[user].user, users[user].user, null, 50, function (err, feed) {
+  process.stdout.write('.');
+  api.feed.getFeed(keyspace, users[user].user, users[user].user, null, +FEED, function (err, feed) {
     if (err) {
       console.log(err);
+      process.exit(1);
+    }
+    if (feed.length !== +FEED) {
+      console.log('Invalid feed length: ' + feed.length);
       process.exit(1);
     }
     var end = process.hrtime(start);

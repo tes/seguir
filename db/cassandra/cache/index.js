@@ -18,12 +18,16 @@ module.exports = function (config, next) {
   var _stats = {};
   var stats = function (key, action) {
     var keyType = key.split(':')[0];
-    _stats[keyType] = _stats[keyType] || {GET: 0, SET: 0, HIT: 0, MISS: 0, DEL: 0};
+    _stats[keyType] = _stats[keyType] || {};
+    _stats[keyType][action] = _stats[keyType][action] || 0;
     _stats[keyType][action] = _stats[keyType][action] + 1;
+  };
+  var resetStats = function () {
+    _stats = {};
   };
   // Clear each minute to avoid memory leaks
   setInterval(function () {
-    _stats = {};
+    resetStats();
   }, 60000);
 
   var noCache = function (key, value, cb) {

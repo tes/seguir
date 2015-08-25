@@ -155,6 +155,43 @@ The actual code paths that make the shift between in process and out of process 
 
 https://github.com/cliftonc/seguir/blob/master/api/feed/index.js#L136
 
+## Benchmarking
+
+You can run a simple benchmark using the script in /benchmark.
+
+```
+TIMES=1000 CONCURRENCY=5 FEED=20 node benchmark
+```
+
+This has output (as per current version):
+
+```
+Setting up keyspace in cassandra...
+!! Truncating vs recreating tables ...
+Initialising feed for cliftonc with two followers, and 1004 actions
+Setup time (hr): 5s 854.624881ms
+Starting benchmark with TIMES=1000, CONCURRENCY=10, FEED=20 ...
+
+........................ DONE!
+
+Response Times:
+Min: 3ms
+Max: 71ms
+95th: 15ms
+Std Dev: 4ms
+
+Redis Cache:
+Hit Ratio [user]: 99%
+Hit Ratio [post]: 95%
+Hit Ratio [like]: 99%
+Hit Ratio [follow]: 99%
+
+User Cache:
+Hit Ratio [user]: 99%
+```
+
+If you make any major changes please re-run the benchmark and ensure you haven't impacted performance in a negative way.
+
 ## Notifications
 
 You can notify users of things that they have missed, via the component ```seguir-notify```:

@@ -20,13 +20,16 @@ module.exports = function (api) {
   var _userCacheStats = {};
   var userCacheStats = function (key, action) {
     var keyType = key.split(':')[0];
-    _userCacheStats[keyType] = _userCacheStats[keyType] || {GET: 0, SET: 0, HIT: 0, MISS: 0, EMBED: 0, ISUSER: 0};
+    _userCacheStats[keyType] = _userCacheStats[keyType] || {};
+    _userCacheStats[keyType][action] = _userCacheStats[keyType][action] || 0;
     _userCacheStats[keyType][action] = _userCacheStats[keyType][action] + 1;
   };
-
+  var resetStats = function () {
+    _userCacheStats = {};
+  };
   // Clear each minute to avoid memory leaks
   setInterval(function () {
-    _userCacheStats = {};
+    resetStats();
   }, 60000);
 
   /**
