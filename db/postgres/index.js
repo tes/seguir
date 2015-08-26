@@ -63,7 +63,8 @@ function createClient (config, next) {
     return value;
   }
 
-  function noOpCache (key, cb) {
+  function noOpCache (key, value, cb) {
+    if (!cb) { cb = value; value = null; }
     if (!cb) { cb = key; key = null; }
     cb();
   }
@@ -74,6 +75,7 @@ function createClient (config, next) {
     get: get,
     execute: execute,
     deleteCacheItem: noOpCache,
+    setCacheItem: noOpCache,
     flushCache: noOpCache,
     cacheStats: {},
     generateId: generateId,

@@ -5,7 +5,7 @@
  * of most of the elements that are retrieved in the news feed.
  */
 
-var TEN_MINUTES = 60 * 10;
+var TWENTY_FOUR_HOURS = 24 * 3600;
 var redis = require('../../redis');
 var _ = require('lodash');
 var cassandra = require('cassandra-driver');
@@ -24,6 +24,9 @@ module.exports = function (config, next) {
   };
   var resetStats = function () {
     _stats = {};
+  };
+  var getStats = function () {
+    return _stats;
   };
   // Clear each minute to avoid memory leaks
   setInterval(function () {
@@ -94,12 +97,12 @@ module.exports = function (config, next) {
 
   var set = function (key, value, cb) {
     if (!key) { return cb(null, value); }
-    if (!value) { return cb(null); }
+    if (value === undefined || value === null) { return cb(null); }
     debug('SET', key);
     stats(key, 'SET');
     redisClient.multi()
       .hmset(key, to_cache(value))
-      .expire(key, config.redis.ttl || TEN_MINUTES)
+      .expire(key, config.redis.ttl || TWENTY_FOUR_HOURS)
       .exec(function (err) {
         if (err) { /* Purposeful ignore of err */ }
         cb(null, value);
@@ -142,7 +145,8 @@ module.exports = function (config, next) {
     set: set,
     del: del,
     flush: flush,
-    stats: _stats
+    stats: getStats,
+    resetStats: resetStats
   };
 
   next(null, cache);

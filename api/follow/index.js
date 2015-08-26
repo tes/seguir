@@ -60,14 +60,15 @@ module.exports = function (api) {
       var newFollowId = client.generateId();
       var data = [newFollowId, user, user_follower, timestamp, visibility];
       var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], data);
-
       client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
         /* istanbul ignore if */
         if (err) { return next(err); }
         alterFollowerCount(keyspace, user, 1, function () {
           addBidirectionalFeedItem(newFollow, function (err, result) {
             if (err) { return next(err); }
-            backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
+            client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
+              backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
+            });
           });
         });
       });
@@ -77,16 +78,26 @@ module.exports = function (api) {
   }
 
   function alterFollowerCount (keyspace, user, count, next) {
-    next = next || function () {
-      };
+    next = next || function () {};
     var data = [count, user.toString()];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {prepare: true}, next);
+    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {prepare: true, cacheKey: 'count:followers:' + user.toString()}, next);
   }
 
   function followerCount (keyspace, user, next) {
     next = next || function () { };
     var data = [user.toString()];
-    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true}, next);
+    var cacheKey = 'count:followers:' + user.toString();
+    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true, cacheKey: cacheKey}, function (err, count) {
+      if (err) { return next(err); }
+      if (!count) {
+        // Manually set the cache as the default won't set a null
+        client.setCacheItem(cacheKey, {_: 0}, function () {
+          return next(null, 0);
+        });
+      } else {
+        return next(null, count);
+      }
+    });
   }
 
   function removeFollower (keyspace, user, user_follower, next) {
@@ -99,7 +110,9 @@ module.exports = function (api) {
         alterFollowerCount(keyspace, user, -1, function () {
           api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
             if (err) return next(err);
-            next(null, {status: 'removed'});
+            client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
+              next(null, {status: 'removed'});
+            });
           });
         });
       });
@@ -111,11 +124,19 @@ module.exports = function (api) {
     if (user.toString() === user_follower.toString()) {
       return next(null, false, null, {});
     }
-    client.get(q(keyspace, 'isFollower'), [user, user_follower], {prepare: true}, function (err, follow) {
+    var cacheKey = 'follow:' + user + ':' + user_follower;
+    client.get(q(keyspace, 'isFollower'), [user, user_follower], {prepare: true, cacheKey: cacheKey}, function (err, follow) {
       if (err) { return next(null, false, null, {}); }
-      var isFollower = !!(follow && follow.follow);
-      var isFollowerSince = isFollower ? follow.since : null;
-      return next(null, isFollower, isFollowerSince, follow ? follow : null);
+      if (!follow) {
+        // Manually set the cache as the default won't set a null
+        client.setCacheItem(cacheKey, {_: 0}, function () {
+          return next(null, false, null, {});
+        });
+      } else {
+        var isFollower = !!(follow && follow.follow);
+        var isFollowerSince = isFollower ? follow.since : null;
+        return next(null, isFollower, isFollowerSince, follow ? follow : null);
+      }
     });
   }
 
