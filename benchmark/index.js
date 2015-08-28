@@ -121,6 +121,8 @@ function benchmark () {
 
     process.exit(0); // TODO shutdown cleanly
 
+    api.client._client.shutdown();
+
   });
 }
 
