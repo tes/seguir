@@ -38,6 +38,7 @@
     "commander": "^2.8.1",
     "debug": "^2.2.0",
     "handlebars": "^3.0.3",
+    "hiredis": "^0.4.1",
     "inquirer": "^0.8.5",
     "lodash": "^3.10.0",
     "moment": "^2.9.0",
