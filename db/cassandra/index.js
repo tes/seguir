@@ -30,6 +30,10 @@ function createClient (config, next) {
       var cacheKey = options.cacheKey;
       delete options.cacheKey;
 
+      // prepare the statements - this should result in performance gains
+      // http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/threeSimpleRules.html?scroll=three-simple-rules__prepared-statement-section
+      options.prepare = true;
+
       debug('get', query, data);
       cache.get(cacheKey, function (err, cachedResult) {
         if (err) { /* Purposeful ignore of err */ }
@@ -55,6 +59,10 @@ function createClient (config, next) {
       // ensure we don't confuse cassandra.
       var cacheKey = options.cacheKey;
       delete options.cacheKey;
+
+      // prepare the statements - this should result in performance gains
+      // http://docs.datastax.com/en/developer/nodejs-driver/2.2/nodejs-driver/reference/threeSimpleRules.html?scroll=three-simple-rules__prepared-statement-section
+      options.prepare = true;
 
       debug('execute', query, data);
       client.execute(query, data, options, function (err, result) {
