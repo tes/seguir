@@ -22,7 +22,7 @@ module.exports = function (api) {
     var object = _.object(['like', 'user', 'item', 'timestamp', 'visibility'], data);
     object.ispersonal = false;
     object.isprivate = false;
-    client.execute(q(keyspace, 'upsertLike'), data, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'upsertLike'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       alterLikeCount(keyspace, cleanItem, 1, function () {
@@ -38,14 +38,14 @@ module.exports = function (api) {
   function alterLikeCount (keyspace, item, count, next) {
     next = next || function () {};
     var data = [count, item];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'likes'}), data, {prepare: true}, next);
+    client.execute(q(keyspace, 'updateCounter', {TYPE: 'likes'}), data, {}, next);
   }
 
   function likeCount (keyspace, item, next) {
     next = next || function () {};
     var cleanItem = api.common.clean(item);
     var data = [cleanItem];
-    client.get(q(keyspace, 'selectCount', {TYPE: 'likes', ITEM: 'item'}), data, {prepare: true}, next);
+    client.get(q(keyspace, 'selectCount', {TYPE: 'likes', ITEM: 'item'}), data, {}, next);
   }
 
   function addLikeByName (keyspace, username, item, timestamp, next) {
@@ -60,7 +60,7 @@ module.exports = function (api) {
     checkLike(keyspace, user, cleanItem, function (err, like) {
       if (err || !like) { return next(err); }
       var deleteData = [user, cleanItem];
-      client.execute(q(keyspace, 'removeLike'), deleteData, {prepare: true, cacheKey: 'like:' + like}, function (err, result) {
+      client.execute(q(keyspace, 'removeLike'), deleteData, {cacheKey: 'like:' + like}, function (err, result) {
         if (err) return next(err);
         alterLikeCount(keyspace, cleanItem, -1, function () {
           api.feed.removeFeedsForItem(keyspace, like.like, function (err) {

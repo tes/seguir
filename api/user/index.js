@@ -72,7 +72,6 @@ module.exports = function (api) {
       var user = [userid, username, '' + altid, userdata];
 
       client.execute(q(keyspace, 'upsertUser'), user, {
-        prepare: true,
         hints: [null, null, 'map']
       }, function (err, result) {
         if (err) { return next(err); }
@@ -132,7 +131,6 @@ module.exports = function (api) {
       async.map(cachedItems, client.deleteCacheItem, function () {
         var user = [username, '' + altid, userdata, userid];
         client.execute(q(keyspace, 'updateUser'), user, {
-          prepare: true,
           cacheKey: 'user:' + userid,
           hints: [null, null, 'map']
         }, function (err, result) {

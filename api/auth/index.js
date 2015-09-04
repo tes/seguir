@@ -22,7 +22,7 @@ function Auth (api) {
 
       var account = client.generateId();
       var accountData = [account, name, isadmin, enabled];
-      client.execute(q(keyspace, 'upsertAccount'), accountData, {prepare: true}, function (err, result) {
+      client.execute(q(keyspace, 'upsertAccount'), accountData, {}, function (err, result) {
         if (err) { return next(err); }
         next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
       });
@@ -31,21 +31,21 @@ function Auth (api) {
   }
 
   function getAccount (account, next) {
-    client.get(q(keyspace, 'selectAccount'), [account], {prepare: true, cacheKey: 'account:' + account}, function (err, result) {
+    client.get(q(keyspace, 'selectAccount'), [account], {cacheKey: 'account:' + account}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
   }
 
   function checkAccountDuplicate (name, next) {
-    client.get(q(keyspace, 'selectAccountByName'), [name], {prepare: true}, function (err, result) {
+    client.get(q(keyspace, 'selectAccountByName'), [name], {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
   }
 
   function getAccounts (next) {
-    client.execute(q(keyspace, 'selectAccounts'), null, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'selectAccounts'), null, {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -53,7 +53,7 @@ function Auth (api) {
 
   function updateAccount (account, name, isadmin, enabled, next) {
     var accountData = [name, isadmin, enabled, account];
-    client.execute(q(keyspace, 'updateAccount'), accountData, {prepare: true, cacheKey: 'account:' + account}, function (err, result) {
+    client.execute(q(keyspace, 'updateAccount'), accountData, {cacheKey: 'account:' + account}, function (err, result) {
       if (err) { return next(err); }
       next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
     });
@@ -69,7 +69,7 @@ function Auth (api) {
       authUtils.hashPassword(password, function (err, hash) {
         if (err) { return next(err); }
         var userData = [account, username, hash, enabled];
-        client.execute(q(keyspace, 'upsertAccountUser'), userData, {prepare: true}, function (err, result) {
+        client.execute(q(keyspace, 'upsertAccountUser'), userData, {}, function (err, result) {
           if (err) { return next(err); }
           next(null, {account: account, username: username, enabled: enabled});
         });
@@ -78,14 +78,14 @@ function Auth (api) {
   }
 
   function getAccountUserByName (username, next) {
-    client.get(q(keyspace, 'selectAccountUserByName'), [username], {prepare: true}, function (err, result) {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
   }
 
   function loginUser (username, password, next) {
-    client.get(q(keyspace, 'selectAccountUserByName'), [username], {prepare: true}, function (err, result) {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, function (err, result) {
       if (err) { return next(err); }
       var user = result;
       if (!user) { return next(null, false); }
@@ -98,7 +98,7 @@ function Auth (api) {
   }
 
   function getAccountUsers (account, next) {
-    client.execute(q(keyspace, 'selectAccountUsers'), [account], {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'selectAccountUsers'), [account], {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -108,7 +108,7 @@ function Auth (api) {
     authUtils.hashPassword(password, function (err, hash) {
       if (err) { return next(err); }
       var userData = [hash, enabled, account, username];
-      client.execute(q(keyspace, 'updateAccountUser'), userData, {prepare: true}, function (err, result) {
+      client.execute(q(keyspace, 'updateAccountUser'), userData, {}, function (err, result) {
         if (err) { return next(err); }
         next(null, {account: account, username: username, enabled: enabled});
       });
@@ -120,7 +120,7 @@ function Auth (api) {
    */
   function updateApplication (appid, name, enabled, next) {
     var application = [name, enabled, appid];
-    client.execute(q(keyspace, 'updateApplication'), application, {prepare: true, cacheKey: 'application:' + appid}, function (err) {
+    client.execute(q(keyspace, 'updateApplication'), application, {cacheKey: 'application:' + appid}, function (err) {
       next(err, {name: name, appid: appid, enabled: enabled});
     });
   }
@@ -131,7 +131,7 @@ function Auth (api) {
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
     var app = [account, name, appkeyspace, appid, enabled];
-    client.execute(q(keyspace, 'upsertApplication'), app, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'upsertApplication'), app, {}, function (err, result) {
       if (err) { return next(err); }
       setupTenant(client, keyspace + '_' + appkeyspace, function (err) {
         if (err) { return next(err); }
@@ -151,13 +151,13 @@ function Auth (api) {
    *  Application Token API
    */
   function addApplicationToken (appid, appkeyspace, description, tokenid, tokensecret, next) {
-    if (!next) { next = tokensecret; tokensecret = null; };
-    if (!next) { next = tokenid; tokenid = null; };
+    if (!next) { next = tokensecret; tokensecret = null; }
+    if (!next) { next = tokenid; tokenid = null; }
     tokenid = tokenid || client.generateId();
     tokensecret = tokensecret || authUtils.generateSecret(client.generateId());
     var enabled = true;
     var token = [appid, appkeyspace, tokenid, tokensecret, description, enabled];
-    client.execute(q(keyspace, 'upsertApplicationToken'), token, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'upsertApplicationToken'), token, {}, function (err, result) {
       if (err) { return next(err); }
       next(null, {appid: appid, appkeyspace: appkeyspace, tokenid: tokenid, tokensecret: tokensecret, description: description, enabled: enabled});
     });
@@ -165,7 +165,7 @@ function Auth (api) {
 
   function updateApplicationToken (tokenid, enabled, description, next) {
     var token = [enabled, description, tokenid];
-    client.execute(q(keyspace, 'updateApplicationToken'), token, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'updateApplicationToken'), token, {}, function (err) {
       if (err) { return next(err); }
       next(null, {tokenid: tokenid, description: description, enabled: enabled});
     });
@@ -174,14 +174,14 @@ function Auth (api) {
   function updateApplicationTokenSecret (tokenid, next) {
     var tokensecret = authUtils.generateSecret(client.generateId());
     var token = [tokensecret, tokenid];
-    client.execute(q(keyspace, 'updateApplicationTokenSecret'), token, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'updateApplicationTokenSecret'), token, {}, function (err) {
       if (err) { return next(err); }
       next(null, {tokenid: tokenid, tokensecret: tokensecret});
     });
   }
 
   function getApplicationTokens (appid, next) {
-    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -233,7 +233,7 @@ function Auth (api) {
       return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
     var token = [tokenid];
-    client.get(q(keyspace, 'checkApplicationToken'), token, {prepare: true, cacheKey: 'token:' + tokenid}, function (err, result) {
+    client.get(q(keyspace, 'checkApplicationToken'), token, {cacheKey: 'token:' + tokenid}, function (err, result) {
       var token = result;
       if (err) { return next(err); }
       if (!token || !token.enabled) { return next(null, null); }
@@ -242,7 +242,7 @@ function Auth (api) {
   }
 
   function getUserBySeguirId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUser'), [user], {prepare: true, cacheKey: 'user:' + user}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
@@ -250,7 +250,7 @@ function Auth (api) {
   }
 
   function getUserByAltId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {prepare: true, cacheKey: 'useraltid:' + user}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {cacheKey: 'useraltid:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
@@ -258,7 +258,7 @@ function Auth (api) {
   }
 
   function getUserByName (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {prepare: true, cacheKey: 'username:' + user}, function (err, result) {
+    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {cacheKey: 'username:' + user}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);

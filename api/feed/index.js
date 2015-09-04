@@ -31,7 +31,7 @@ module.exports = function (api) {
     // If you the action is personal do not copy out to followers feeds
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
-    client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
+    client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb2) {
@@ -86,7 +86,7 @@ module.exports = function (api) {
 
     var getMentionedNotFollowers = function (mentioned, cb) {
       if (!cb) { return mentioned(); } // no mentioned users
-      client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {prepare: true}, function (err, data) {
+      client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, function (err, data) {
         if (err) { return cb(err); }
         var followers = _.map(_.pluck(data || [], 'user_follower'), function (item) {
           return item.toString();
@@ -203,7 +203,7 @@ module.exports = function (api) {
     var data = [user, item, type, time, visibility, from_follow];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
-    client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {prepare: true}, next);
+    client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
   }
 
   function removeFeedsForItem (keyspace, item, next) {
@@ -214,7 +214,7 @@ module.exports = function (api) {
 
   function _removeFeedsForItemFromTimeline (keyspace, timeline, item, next) {
     var queryData = [item];
-    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {prepare: true}, function (err, data) {
+    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {}, function (err, data) {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, function (row, cb) {
@@ -228,7 +228,7 @@ module.exports = function (api) {
   function _removeFeedItemFromTimeline (keyspace, timeline, user, time, item, next) {
     var deleteData = [user, time];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
-    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {}, function (err, result) {
       if (err) return next(err);
       next(null, {status: 'removed'});
     });
@@ -359,7 +359,7 @@ module.exports = function (api) {
 
     debug(query);
 
-    client.execute(query, data, {prepare: true}, function (err, data) {
+    client.execute(query, data, {}, function (err, data) {
 
       if (err) { return next(err); }
 

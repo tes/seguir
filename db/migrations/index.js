@@ -141,7 +141,7 @@ module.exports = function (api) {
   }
 
   function selectSchemaVersions (keyspace, next) {
-    client.execute(q(keyspace, 'selectSchemaVersions'), [], {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'selectSchemaVersions'), [], {}, function (err, result) {
       if (err) {
         // If we get an error here - we will assume it is because we haven't yet created the 0 migration
         // So we will return no migrations, so the zero migration applies
@@ -152,7 +152,7 @@ module.exports = function (api) {
   }
 
   function insertSchemaVersion (keyspace, version, description, next) {
-    client.execute(q(keyspace, 'insertSchemaVersion'), [version, client.getTimestamp(), description], {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'insertSchemaVersion'), [version, client.getTimestamp(), description], {}, function (err, result) {
       if (err) { return next(err); }
       next(null, result);
     });

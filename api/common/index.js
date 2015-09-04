@@ -13,7 +13,7 @@ module.exports = function (api) {
   }
 
   function get (keyspace, query, data, many, next) {
-    client.execute(q(keyspace, query), data, {prepare: true}, response(query, data, many, next));
+    client.execute(q(keyspace, query), data, {}, response(query, data, many, next));
   }
 
   function response (query, data, many, next) {

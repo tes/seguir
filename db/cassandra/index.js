@@ -25,10 +25,8 @@ function createClient (config, next) {
       if (!next) { next = data; data = null; }
       if (!query) { return next(null); }
 
-      // Send the cache key with the options, but remove to
-      // ensure we don't confuse cassandra.
       var cacheKey = options.cacheKey;
-      delete options.cacheKey;
+      var queryOptions = {prepare: true, hints: options.hints};
 
       debug('get', query, data);
       cache.get(cacheKey, function (err, cachedResult) {
@@ -36,7 +34,7 @@ function createClient (config, next) {
         if (cachedResult) {
           return next(null, cachedResult);
         }
-        client.execute(query, data, options, function (err, result) {
+        client.execute(query, data, queryOptions, function (err, result) {
           if (err) { return next(err); }
           var item = result && result.rows ? result.rows[0] : null;
           if (!item) { return next(); }
@@ -51,13 +49,11 @@ function createClient (config, next) {
       if (!next) { next = data; data = null; }
       if (!query) { return next(null); }
 
-      // Send the cache key with the options, but remove to
-      // ensure we don't confuse cassandra.
       var cacheKey = options.cacheKey;
-      delete options.cacheKey;
+      var queryOptions = {prepare: true, hints: options.hints};
 
       debug('execute', query, data);
-      client.execute(query, data, options, function (err, result) {
+      client.execute(query, data, queryOptions, function (err, result) {
         if (err) {
           if (self.truncate && err.message.indexOf('No secondary indexes on the restricted columns') >= 0) {
             // This error occurs after failures in index creation, so in test / truncate mode

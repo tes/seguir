@@ -60,7 +60,7 @@ module.exports = function (api) {
       var newFollowId = client.generateId();
       var data = [newFollowId, user, user_follower, timestamp, visibility];
       var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], data);
-      client.execute(q(keyspace, 'upsertFollower'), data, {prepare: true}, function (err) {
+      client.execute(q(keyspace, 'upsertFollower'), data, {}, function (err) {
         /* istanbul ignore if */
         if (err) { return next(err); }
         alterFollowerCount(keyspace, user, 1, function () {
@@ -80,14 +80,14 @@ module.exports = function (api) {
   function alterFollowerCount (keyspace, user, count, next) {
     next = next || function () {};
     var data = [count, user.toString()];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {prepare: true, cacheKey: 'count:followers:' + user.toString()}, next);
+    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {cacheKey: 'count:followers:' + user.toString()}, next);
   }
 
   function followerCount (keyspace, user, next) {
     next = next || function () { };
     var data = [user.toString()];
     var cacheKey = 'count:followers:' + user.toString();
-    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {prepare: true, cacheKey: cacheKey}, function (err, count) {
+    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {cacheKey: cacheKey}, function (err, count) {
       if (err) { return next(err); }
       if (!count) {
         // Manually set the cache as the default won't set a null
@@ -105,7 +105,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       if (!isFollower) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
       var deleteData = [user, user_follower];
-      client.execute(q(keyspace, 'removeFollower'), deleteData, {prepare: true, cacheKey: 'follow:' + follow.follow}, function (err, result) {
+      client.execute(q(keyspace, 'removeFollower'), deleteData, {cacheKey: 'follow:' + follow.follow}, function (err, result) {
         if (err) return next(err);
         alterFollowerCount(keyspace, user, -1, function () {
           api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
@@ -125,7 +125,7 @@ module.exports = function (api) {
       return next(null, false, null, {});
     }
     var cacheKey = 'follow:' + user + ':' + user_follower;
-    client.get(q(keyspace, 'isFollower'), [user, user_follower], {prepare: true, cacheKey: cacheKey}, function (err, follow) {
+    client.get(q(keyspace, 'isFollower'), [user, user_follower], {cacheKey: cacheKey}, function (err, follow) {
       if (err) { return next(null, false, null, {}); }
       if (!follow) {
         // Manually set the cache as the default won't set a null
@@ -155,7 +155,7 @@ module.exports = function (api) {
 
   function getFollow (keyspace, liu, follow, expandUser, next) {
     if (!next) { next = expandUser; expandUser = true; }
-    client.get(q(keyspace, 'selectFollow'), [follow], {prepare: true, cacheKey: 'follow:' + follow}, function (err, follower) {
+    client.get(q(keyspace, 'selectFollow'), [follow], {cacheKey: 'follow:' + follow}, function (err, follower) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       if (!follower) { return next({statusCode: 404, message: 'Follow not found'}); }

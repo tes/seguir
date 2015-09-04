@@ -28,7 +28,7 @@ module.exports = function (api) {
     var data = [post, user, convertedContent, content_type, timestamp, visibility, altid];
     var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
 
-    client.execute(q(keyspace, 'upsertPost'), data, {prepare: true}, function (err, result) {
+    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, object, 'post', function (err, result) {
@@ -66,7 +66,7 @@ module.exports = function (api) {
 
     var data = [convertedContent, content_type, visibility, post];
 
-    client.execute(q(keyspace, 'updatePost'), data, {prepare: true, cacheKey: 'post:' + post}, function (err, result) {
+    client.execute(q(keyspace, 'updatePost'), data, {cacheKey: 'post:' + post}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       next(null, {status: 'updated'});
@@ -90,7 +90,7 @@ module.exports = function (api) {
 
   function _removePost (keyspace, post, next) {
     var deleteData = [post];
-    client.execute(q(keyspace, 'removePost'), deleteData, {prepare: true, cacheKey: 'post:' + post}, function (err, result) {
+    client.execute(q(keyspace, 'removePost'), deleteData, {cacheKey: 'post:' + post}, function (err, result) {
       if (err) return next(err);
       api.feed.removeFeedsForItem(keyspace, post, function (err) {
         if (err) return next(err);

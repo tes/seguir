@@ -39,7 +39,7 @@ module.exports = function (api) {
     var data = [friend, user, user_friend, timestamp, api.visibility.PRIVATE];
     var object = _.object(['friend', 'user', 'user_friend', 'timestamp', 'visibility'], data);
     object.visibility = api.visibility.PERSONAL;
-    client.execute(q(keyspace, 'upsertFriend'), data, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'upsertFriend'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       api.feed.addFeedItem(keyspace, user, object, 'friend', next);
@@ -50,7 +50,7 @@ module.exports = function (api) {
     var friend_request = client.generateId();
     var cleanMessage = api.common.clean(message);
     var data = [friend_request, user, user_friend, cleanMessage, timestamp, api.visibility.PRIVATE];
-    client.execute(q(keyspace, 'upsertFriendRequest'), data, {prepare: true}, function (err) {
+    client.execute(q(keyspace, 'upsertFriendRequest'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp, visibility: api.visibility.PRIVATE});
@@ -61,7 +61,7 @@ module.exports = function (api) {
     getFriendRequest(keyspace, user, friend_request_id, function (err, friend_request) {
       if (err) { return next(err); }
       var data = [friend_request_id];
-      client.execute(q(keyspace, 'acceptFriendRequest'), data, {prepare: true}, function (err) {
+      client.execute(q(keyspace, 'acceptFriendRequest'), data, {}, function (err) {
         /* istanbul ignore if */
         if (err) { return next(err); }
         addFriend(keyspace, friend_request.user, friend_request.user_friend, api.client.getTimestamp(), next);
@@ -74,9 +74,9 @@ module.exports = function (api) {
       if (err || !isFriend) { return next(err); }
       var deleteData = [user, user_friend];
       var deleteDataReciprocal = [user_friend, user];
-      client.execute(q(keyspace, 'removeFriend'), deleteData, {prepare: true}, function (err, result) {
+      client.execute(q(keyspace, 'removeFriend'), deleteData, {}, function (err, result) {
         if (err) return next(err);
-        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {prepare: true}, function (err, result) {
+        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {}, function (err, result) {
           if (err) return next(err);
           api.feed.removeFeedsForItem(keyspace, friend.friend, function (err) {
             if (err) return next(err);
@@ -163,13 +163,13 @@ module.exports = function (api) {
     if (liu === user) return next();
     async.parallel([
       function (cb) {
-        client.execute(q(keyspace, 'selectFriends'), [liu], {prepare: true}, function (err, result) {
+        client.execute(q(keyspace, 'selectFriends'), [liu], {}, function (err, result) {
           if (err) return cb(err);
           cb(null, _.pluck(result.rows, 'user_friend'));
         });
       },
       function (cb) {
-        client.execute(q(keyspace, 'selectFriends'), [user], {prepare: true}, function (err, result) {
+        client.execute(q(keyspace, 'selectFriends'), [user], {}, function (err, result) {
           if (err) return cb(err);
           cb(null, _.pluck(result.rows, 'user_friend'));
         });
