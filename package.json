@@ -1,15 +1,12 @@
 {
   "name": "seguir",
-  "version": "0.10.8",
+  "version": "0.11.1",
   "description": "Self-hosted social network backend and API",
   "main": "api/index.js",
   "scripts": {
-    "start": "node server",
-    "worker": "node server/worker",
     "seguir": "node ./bin/seguir",
     "lint": "semistandard",
     "test": "istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
-    "docs": "DATABASE=cassandra mocha -b tests/acceptance/server/server.test.js --write-samples && apidoc -i . -e node_modules\\|client -o doc/server; apidoc -i client -o doc/client;",
     "precommit": "semistandard"
   },
   "keywords": [
