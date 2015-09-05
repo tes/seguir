@@ -12,6 +12,7 @@ module.exports = function (config, next) {
     api.client = client;
     api.config = config;
     api.messaging = messaging;
+    api.urls = require('./urls');
     api.visibility = require('./visibility');
 
     var modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', '../db/migrations'];
