@@ -1,10 +1,10 @@
-# Seguir - Backend for a social network
+  # Seguir - Backend for a social network
 
 [http://cliftonc.github.io/seguir/server](http://cliftonc.github.io/seguir)
 
 [Pronounced: seh-geer]
 
-[![Server API](https://img.shields.io/badge/documentation-server-green.svg)](http://cliftonc.github.io/seguir/server) [![Client API](https://img.shields.io/badge/documentation-client-green.svg)](http://cliftonc.github.io/seguir/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir) [![bitHound Score](https://www.bithound.io/github/cliftonc/seguir/badges/score.svg)](https://www.bithound.io/github/cliftonc/seguir) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
+[![Server API](https://img.shields.io/badge/documentation-server-green.svg)](http://cliftonc.github.io/seguir-server/server) [![Client API](https://img.shields.io/badge/documentation-client-green.svg)](http://cliftonc.github.io/seguir-server/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir) [![bitHound Score](https://www.bithound.io/github/cliftonc/seguir/badges/score.svg)](https://www.bithound.io/github/cliftonc/seguir) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 
 This is a pure API for a simple social network, it contains the following concepts:
 
