@@ -2,6 +2,7 @@ var pg = require('pg');
 var uuid = require('node-uuid');
 var path = require('path');
 var debug = require('debug')('seguir:postgres');
+var async = require('async');
 
 function createClient (config, next) {
 
@@ -12,8 +13,14 @@ function createClient (config, next) {
   }
 
   function get (query, data, options, next) {
-    if (!next) { next = options; options = null; }
-    if (!next) { next = data; data = null; }
+    if (!next) {
+      next = options;
+      options = null;
+    }
+    if (!next) {
+      next = data;
+      data = null;
+    }
     if (!query) { return next(null); }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
@@ -27,8 +34,14 @@ function createClient (config, next) {
   }
 
   function execute (query, data, options, next) {
-    if (!next) { next = options; options = null; }
-    if (!next) { next = data; data = null; }
+    if (!next) {
+      next = options;
+      options = null;
+    }
+    if (!next) {
+      next = data;
+      data = null;
+    }
     if (!query) { return next(null); }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
@@ -39,6 +52,24 @@ function createClient (config, next) {
         next(null, result && result.rows ? result.rows : null);
       });
     });
+  }
+
+  function batch () {
+    var queries = [];
+    return {
+      addQuery: function (query, data) {
+        queries.push({query: query, data: data});
+        return this;
+      },
+      execute: function (next) {
+        async.map(queries, function (query, cb) {
+          execute(query.query, query.data, {}, cb);
+        }, function (err, results) {
+          if (err) { return next(err); }
+          next(null, results);
+        });
+      }
+    };
   }
 
   function generateId (suppliedUuid) {
@@ -64,8 +95,14 @@ function createClient (config, next) {
   }
 
   function noOpCache (key, value, cb) {
-    if (!cb) { cb = value; value = null; }
-    if (!cb) { cb = key; key = null; }
+    if (!cb) {
+      cb = value;
+      value = null;
+    }
+    if (!cb) {
+      cb = key;
+      key = null;
+    }
     cb();
   }
 
@@ -85,7 +122,10 @@ function createClient (config, next) {
     getTimestamp: getTimestamp,
     migrations: path.resolve(__dirname, 'migrations'),
     queries: require('./queries'),
-    setup: require('./setup')
+    setup: require('./setup'),
+    get batch () {
+      return batch();
+    }
   });
 
 }
