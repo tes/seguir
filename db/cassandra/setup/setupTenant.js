@@ -1,5 +1,5 @@
 var async = require('async');
-var schemaVersion = 4;
+var schemaVersion = 5;
 
 function defineTablesAndIndexes (KEYSPACE) {
 
@@ -132,7 +132,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Guid} user The unique guid for the user.
    * @apiParam {Guid} user_follower The unique guid for the user they are following.
    * @apiParam {String} visibility Visibility level of follow
-   * @apiParam {Timestamp} since The date the follow began.
+   * @apiParam {Timeuuid} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.followers_timeline (follow uuid, user uuid, user_follower uuid, visibility text, time timeuuid, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
