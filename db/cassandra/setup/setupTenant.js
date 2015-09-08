@@ -123,6 +123,24 @@ function defineTablesAndIndexes (KEYSPACE) {
   tableIndexes.followers = ['follow'];
 
   /**
+   * @api {table} Follower Timeline
+   * @apiName FollowerData
+   * @apiGroup Data
+   * @apiVersion 1.0.0
+   * @apiDescription Stores follower data from one user to another, this is not necessarily reciprocal, and does not require approval.
+   * @apiParam {Guid} follow The unique guid for the follower relationship.
+   * @apiParam {Guid} user The unique guid for the user.
+   * @apiParam {Guid} user_follower The unique guid for the user they are following.
+   * @apiParam {String} visibility Visibility level of follow
+   * @apiParam {Timestamp} since The date the follow began.
+   * @apiUse ExampleCqlFollows
+   */
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers_timeline (follow uuid, user uuid, user_follower uuid, visibility text, time timeuuid, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(follow)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(user_follower)');
+  tableIndexes.followers_timeline = ['follow', 'user_follower'];
+
+  /**
    * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.counts (item text, type text, count counter, PRIMARY KEY (item, type))');

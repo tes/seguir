@@ -5,6 +5,8 @@ var path = require('path');
 var debug = require('debug')('seguir:cassandra');
 var debugDriver = require('debug')('cassandra:driver');
 var redisCache = require('./cache');
+var async = require('async');
+var _ = require('lodash');
 
 function createClient (config, next) {
 
@@ -21,8 +23,14 @@ function createClient (config, next) {
     });
 
     function get (query, data, options, next) {
-      if (!next) { next = options; options = {}; }
-      if (!next) { next = data; data = null; }
+      if (!next) {
+        next = options;
+        options = {};
+      }
+      if (!next) {
+        next = data;
+        data = null;
+      }
       if (!query) { return next(null); }
 
       var cacheKey = options.cacheKey;
@@ -45,8 +53,14 @@ function createClient (config, next) {
 
     function execute (query, data, options, next) {
       var self = this;
-      if (!next) { next = options; options = {}; }
-      if (!next) { next = data; data = null; }
+      if (!next) {
+        next = options;
+        options = {};
+      }
+      if (!next) {
+        next = data;
+        data = null;
+      }
       if (!query) { return next(null); }
 
       var cacheKey = options.cacheKey;
@@ -78,6 +92,25 @@ function createClient (config, next) {
         });
 
       });
+    }
+
+    // useful only for updates/inserts/delete - thus not returning anything
+    // http://docs.datastax.com/en/cql/3.1/cql/cql_reference/batch_r.html
+    function batch () {
+      var queries = [];
+      return {
+        addQuery: function (query, data, cacheKey) {
+          queries.push({query: {query: query, params: data}, cacheKey: cacheKey});
+          return this;
+        },
+        execute: function (next) {
+          client.batch(_.pluck(queries, 'query'), {prepare: true}, function (err) {
+            if (err) {return next(err);}
+            // Clear the cache on batch if we have a cache key
+            async.each(queries, function (query, cb) { cache.del(query.cacheKey, cb); }, next);
+          });
+        }
+      };
     }
 
     function generateId (uuid) {
@@ -143,7 +176,10 @@ function createClient (config, next) {
         getTimestamp: getTimestamp,
         migrations: path.resolve(__dirname, 'migrations'),
         queries: require('./queries'),
-        setup: require('./setup')
+        setup: require('./setup'),
+        get batch () {
+          return batch();
+        }
       });
     });
 

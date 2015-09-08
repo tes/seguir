@@ -58,20 +58,25 @@ module.exports = function (api) {
       }
 
       var newFollowId = client.generateId();
-      var data = [newFollowId, user, user_follower, timestamp, visibility];
-      var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], data);
-      client.execute(q(keyspace, 'upsertFollower'), data, {}, function (err) {
-        /* istanbul ignore if */
-        if (err) { return next(err); }
-        alterFollowerCount(keyspace, user, 1, function () {
-          addBidirectionalFeedItem(newFollow, function (err, result) {
-            if (err) { return next(err); }
-            client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
-              backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
+      var followerData = [newFollowId, user, user_follower, timestamp, visibility];
+      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), visibility];
+      var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
+
+      client.batch
+        .addQuery(q(keyspace, 'upsertFollower'), followerData)
+        .addQuery(q(keyspace, 'upsertFollowerTimeline'), followerTimelineData)
+        .execute(function (err) {
+          /* istanbul ignore if */
+          if (err) { return next(err); }
+          alterFollowerCount(keyspace, user, 1, function () {
+            addBidirectionalFeedItem(newFollow, function (err, result) {
+              if (err) { return next(err); }
+              client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
+                backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
+              });
             });
           });
         });
-      });
 
     });
 
@@ -87,7 +92,10 @@ module.exports = function (api) {
     next = next || function () { };
     var data = [user.toString()];
     var cacheKey = 'count:followers:' + user.toString();
-    client.get(q(keyspace, 'selectCount', {TYPE: 'followers', ITEM: 'user'}), data, {cacheKey: cacheKey}, function (err, count) {
+    client.get(q(keyspace, 'selectCount', {
+      TYPE: 'followers',
+      ITEM: 'user'
+    }), data, {cacheKey: cacheKey}, function (err, count) {
       if (err) { return next(err); }
       if (!count) {
         // Manually set the cache as the default won't set a null
@@ -101,21 +109,42 @@ module.exports = function (api) {
   }
 
   function removeFollower (keyspace, user, user_follower, next) {
-    isFollower(keyspace, user, user_follower, function (err, isFollower, isFollowerSince, follow) {
+    getFollowerTimeline(keyspace, user, user_follower, function (err, followerTimeline) {
       if (err) { return next(err); }
-      if (!isFollower) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
+      if (!followerTimeline) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
       var deleteData = [user, user_follower];
-      client.execute(q(keyspace, 'removeFollower'), deleteData, {cacheKey: 'follow:' + follow.follow}, function (err, result) {
-        if (err) return next(err);
-        alterFollowerCount(keyspace, user, -1, function () {
-          api.feed.removeFeedsForItem(keyspace, follow.follow, function (err) {
-            if (err) return next(err);
-            client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
-              next(null, {status: 'removed'});
+      var deleteFollowerTimedata = [user, followerTimeline.time];
+
+      client.batch
+        .addQuery(q(keyspace, 'removeFollower'), deleteData, 'follow:' + followerTimeline.follow)
+        .addQuery(q(keyspace, 'removeFollowerTimeline'), deleteFollowerTimedata, 'follower_timeline:' + user + ':' + user_follower)
+        .execute(function (err) {
+          if (err) return next(err);
+          alterFollowerCount(keyspace, user, -1, function () {
+            api.feed.removeFeedsForItem(keyspace, followerTimeline.follow, function (err) {
+              if (err) return next(err);
+              client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
+                next(null, {status: 'removed'});
+              });
             });
           });
         });
-      });
+    });
+  }
+
+  function getFollowerTimeline (keyspace, user, user_follower, next) {
+    if (!user || !user_follower) { return next(null, null); }
+    var cacheKey = 'follower_timeline:' + user + ':' + user_follower;
+    client.get(q(keyspace, 'selectFollowerTimeline'), [user, user_follower], {cacheKey: cacheKey}, function (err, followerTimeline) {
+      if (err) { return next(err); }
+      if (!followerTimeline) {
+        // Manually set the cache as the default won't set a null
+        client.setCacheItem(cacheKey, {_: 0}, function () {
+          return next();
+        });
+      } else {
+        next(null, followerTimeline);
+      }
     });
   }
 
@@ -154,7 +183,10 @@ module.exports = function (api) {
   }
 
   function getFollow (keyspace, liu, follow, expandUser, next) {
-    if (!next) { next = expandUser; expandUser = true; }
+    if (!next) {
+      next = expandUser;
+      expandUser = true;
+    }
     client.get(q(keyspace, 'selectFollow'), [follow], {cacheKey: 'follow:' + follow}, function (err, follower) {
       /* istanbul ignore if */
       if (err) { return next(err); }
