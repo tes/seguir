@@ -59,7 +59,7 @@ module.exports = function (api) {
 
       var newFollowId = client.generateId();
       var followerData = [newFollowId, user, user_follower, timestamp, visibility];
-      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), visibility];
+      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, visibility];
       var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
 
       client.batch

@@ -129,7 +129,7 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, visibility) VALUES(?, ?, ?, ?, ?);';
-queries.upsertFollowerTimeline = 'INSERT INTO {KEYSPACE}.followers_timeline (follow, user, user_follower, time, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.upsertFollowerTimeline = 'INSERT INTO {KEYSPACE}.followers_timeline (follow, user, user_follower, time, since, visibility) VALUES(?, ?, ?, ?, ?, ?);';
 queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
 queries.selectFollowerTimeline = 'SELECT follow, user, user_follower, time, visibility FROM {KEYSPACE}.followers_timeline WHERE user = ? and user_follower = ?';
 queries.selectFollowers = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';

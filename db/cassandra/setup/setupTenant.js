@@ -135,7 +135,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {Timeuuid} since The date the follow began.
    * @apiUse ExampleCqlFollows
    */
-  tables.push('CREATE TABLE ' + KEYSPACE + '.followers_timeline (follow uuid, user uuid, user_follower uuid, visibility text, time timeuuid, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  tables.push('CREATE TABLE ' + KEYSPACE + '.followers_timeline (follow uuid, user uuid, user_follower uuid, visibility text, time timeuuid, since timestamp, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(follow)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(user_follower)');
   tableIndexes.followers_timeline = ['follow', 'user_follower'];
