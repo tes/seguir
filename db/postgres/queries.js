@@ -98,7 +98,7 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
 queries._followSelectFields = 'fl.follow AS {PREFIX}follow, fl."user" AS "{PREFIX}user", fl.user_follower AS {PREFIX}user_follower, fl.since AS {PREFIX}since, fl.visibility AS {PREFIX}visibility';
 queries._followSelectBase = 'SELECT ' + q(null, '_followSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_follower_'}) + ' FROM {KEYSPACE}.followers fl, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fl.user = u.user AND fl.user_follower = uf.user';
 queries.selectFollow = queries._followSelectBase + ' AND fl.follow = $1';
-queries.selectFollowerTimeline = queries._followSelectBase + ' AND fl.user = $1 AND fl.user_follower = $2';
+queries.selectFollowFromTimeline = queries._followSelectBase + ' AND fl.user = $1 AND fl.user_follower = $2';
 queries.selectFollowers = queries._followSelectBase + ' AND fl."user" = $1';
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.upsertFollowerTimeline = null;

@@ -59,7 +59,10 @@ module.exports = function (api) {
 
       var newFollowId = client.generateId();
       var followerData = [newFollowId, user, user_follower, timestamp, visibility];
-      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, visibility];
+      var isPublic = api.visibility.isPublic(visibility);
+      var isPersonal = api.visibility.isPersonal(visibility);
+      var isPrivate = api.visibility.isPrivate(visibility);
+      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, isPrivate, isPersonal, isPublic];
       var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
 
       client.batch
@@ -135,7 +138,7 @@ module.exports = function (api) {
   function getFollowerTimeline (keyspace, user, user_follower, next) {
     if (!user || !user_follower) { return next(null, null); }
     var cacheKey = 'follower_timeline:' + user + ':' + user_follower;
-    client.get(q(keyspace, 'selectFollowerTimeline'), [user, user_follower], {cacheKey: cacheKey}, function (err, followerTimeline) {
+    client.get(q(keyspace, 'selectFollowFromTimeline'), [user, user_follower], {cacheKey: cacheKey}, function (err, followerTimeline) {
       if (err) { return next(err); }
       if (!followerTimeline) {
         // Manually set the cache as the default won't set a null
