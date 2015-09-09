@@ -201,6 +201,27 @@ module.exports = function (api) {
     });
   }
 
+  /**
+   * @callback getFollowersCallback
+   * @param {Error} err
+   * @param followers list of followers
+   * @param pageState pageState for the next page. Should be returned unmodified to fetch the next page.
+   */
+
+  /**
+   * Get the followers of a user sorted DESC by time.  Uses the relationship between the liu and user
+   * to determine what to return.
+   * user === liu - return all followers.
+   * user is friend of liu - return all public and personal followers.
+   * otherwise only return public follows.
+   * @param {String} keyspace The keyspace to select from
+   * @param {uuid} liu Logged in user.  Can be null to indicate a non-logged in user.
+   * @param {uuid} user User to find followers of
+   * @param {{ [pageState]: String, [pageSize]: String }} [options]
+   *    pageState The next page to be rendered. This will be passed into next(err, followers, pageState). To get the next page you should pass in the pageState unmodified.
+   *    pageSize Number of results to return
+   * @param {getFollowersCallback} next
+   */
   // TODO: erk.  This method needs more async love (or promises)
   function getFollowers (keyspace, liu, user, options, next) {
     if (!next) {
