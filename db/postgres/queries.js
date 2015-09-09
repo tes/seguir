@@ -100,6 +100,7 @@ queries._followSelectBase = 'SELECT ' + q(null, '_followSelectFields') + ', ' + 
 queries.selectFollow = queries._followSelectBase + ' AND fl.follow = $1';
 queries.selectFollowFromTimeline = queries._followSelectBase + ' AND fl.user = $1 AND fl.user_follower = $2';
 queries.selectFollowers = queries._followSelectBase + ' AND fl."user" = $1';
+queries.selectFollowersTimeline = queries._followSelectBase + ' AND fl."user" = $1 AND (fl."visibility" = \'{PUBLIC}\' OR fl."visibility" = \'{PERSONAL}\' OR fl."visibility" = \'{PRIVATE}\')';
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.upsertFollowerTimeline = null;
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';

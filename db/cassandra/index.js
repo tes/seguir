@@ -104,6 +104,10 @@ function createClient (config, next) {
           return this;
         },
         execute: function (next) {
+          _.each(queries, function (query) {
+            debug('batch', query.query, query.params);
+          });
+
           client.batch(_.pluck(queries, 'query'), {prepare: true}, function (err) {
             if (err) {return next(err);}
             // Clear the cache on batch if we have a cache key

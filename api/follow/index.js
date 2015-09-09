@@ -202,24 +202,25 @@ module.exports = function (api) {
   }
 
   // TODO: erk.  This method needs more async love (or promises)
-  function getFollowers (keyspace, liu, user, next) {
+  function getFollowers (keyspace, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
 
     var isUser = liu && user && liu.toString() === user.toString();
     api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
       if (err) { return next(err); }
-      api.common.get(keyspace, 'selectFollowers', [user], 'many', function (err, followers) {
-        if (err) { return next(err); }
-        var filteredFollowers = _.filter(followers, function (item) {
-          if (item.visibility === api.visibility.PERSONAL && !isUser) { return false; }
-          if (item.visibility === api.visibility.PRIVATE && !isFriend) { return false; }
-          return true;
-        });
 
-        var sortedFollowers = _.sortByOrder(filteredFollowers, ['since'], ['desc']);
+      var privacyQuery = api.visibility.mapToQuery(isUser, isFriend);
+      // note this is only needed for postgres - remove when(if) postgres goes
+      var visibility = api.visibility.mapToParameters(isUser, isFriend);
+      client.execute(q(keyspace, 'selectFollowersTimeline', _.merge({PRIVACY: privacyQuery}, visibility)), [user], {}, function (err, followers) {
+        if (err) { return next(err); }
 
         // For each follower, check if the liu is following them if we are logged in
         if (liu) {
-          async.map(sortedFollowers, function (follow, cb) {
+          async.map(followers, function (follow, cb) {
             followerCount(keyspace, follow.user_follower, function (err, followerCount) {
               if (err) { return cb(err); }
 
@@ -239,20 +240,20 @@ module.exports = function (api) {
 
             });
 
-          }, function (err, followersWithState) {
+          }, function (err) {
             if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
           });
         } else {
-          async.map(sortedFollowers, function (follow, cb) {
+          async.map(followers, function (follow, cb) {
             followerCount(keyspace, follow.user_follower, function (err, followerCount) {
               if (err) { return cb(err); }
               follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
               cb(null, follow);
             });
-          }, function (err, followersWithState) {
+          }, function (err) {
             if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, sortedFollowers, ['user_follower'], user, next);
+            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
           });
         }
 

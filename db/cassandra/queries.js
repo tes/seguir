@@ -133,6 +133,7 @@ queries.upsertFollowerTimeline = 'INSERT INTO {KEYSPACE}.followers_timeline (fol
 queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
 queries.selectFollowFromTimeline = 'SELECT follow, user, user_follower, time FROM {KEYSPACE}.followers_timeline WHERE user = ? and user_follower = ?';
 queries.selectFollowers = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
+queries.selectFollowersTimeline = 'SELECT follow, user, user_follower, time from {KEYSPACE}.followers_timeline WHERE user = ? and {PRIVACY} = True';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 queries.removeFollowerTimeline = 'DELETE FROM {KEYSPACE}.followers_timeline WHERE user = ? AND time = ?';
 queries.isFollower = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
