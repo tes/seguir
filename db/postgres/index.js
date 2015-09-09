@@ -2,6 +2,7 @@ var pg = require('pg');
 var uuid = require('node-uuid');
 var path = require('path');
 var debug = require('debug')('seguir:postgres');
+var async = require('async');
 
 function createClient (config, next) {
 
@@ -12,8 +13,14 @@ function createClient (config, next) {
   }
 
   function get (query, data, options, next) {
-    if (!next) { next = options; options = null; }
-    if (!next) { next = data; data = null; }
+    if (!next) {
+      next = options;
+      options = null;
+    }
+    if (!next) {
+      next = data;
+      data = null;
+    }
     if (!query) { return next(null); }
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
@@ -27,18 +34,78 @@ function createClient (config, next) {
   }
 
   function execute (query, data, options, next) {
-    if (!next) { next = options; options = null; }
-    if (!next) { next = data; data = null; }
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    if (!next) {
+      next = data;
+      data = null;
+    }
     if (!query) { return next(null); }
+
+    var pageSize = options.pageSize;
+    var pageState = options.pageState;
+    var shouldPaginate = Boolean(pageSize);
+
+    if (shouldPaginate) {
+      if (!query.match(/ORDER BY/)) {
+        return next(new Error('Query (' + query + ') does not have an ORDER BY clause. This will lead to strange ordering behaviour.'));
+      }
+      query = query + generateLimitStatement(pageState, pageSize);
+    }
+
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
       debug('execute', query, data);
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
-        next(null, result && result.rows ? result.rows : null);
+        var rows = result && result.rows ? result.rows : null;
+        var nextPageState = shouldPaginate ? getPageState(rows, pageState, pageSize) : null;
+        if (shouldPaginate && rows.length > pageSize) { rows.pop(); } // remove the extra paging result
+        next(null, rows, nextPageState);
       });
     });
+  }
+
+  function getPageState (rows, pageState, pageSize) {
+    // no pagination - no pagestate
+    // if we didn't get the maximum number of rows
+    if (!rows || rows.length <= pageSize) { return null; }
+
+    return (pageState || 0) + pageSize;
+  }
+
+  function generateLimitStatement (offset, pageSize) {
+    // get one extra one such that we know whether there is another page
+    var limitStatement = ' LIMIT ' + (pageSize + 1);
+    var offsetStatement = ' OFFSET ';
+    if (offset) {
+      offsetStatement = offsetStatement + offset;
+    } else {
+      offsetStatement = offsetStatement + '0';
+    }
+
+    return limitStatement + offsetStatement;
+  }
+
+  function batch () {
+    var queries = [];
+    return {
+      addQuery: function (query, data) {
+        queries.push({query: query, data: data});
+        return this;
+      },
+      execute: function (next) {
+        async.map(queries, function (query, cb) {
+          execute(query.query, query.data, {}, cb);
+        }, function (err, results) {
+          if (err) { return next(err); }
+          next(null, results);
+        });
+      }
+    };
   }
 
   function generateId (suppliedUuid) {
@@ -64,8 +131,14 @@ function createClient (config, next) {
   }
 
   function noOpCache (key, value, cb) {
-    if (!cb) { cb = value; value = null; }
-    if (!cb) { cb = key; key = null; }
+    if (!cb) {
+      cb = value;
+      value = null;
+    }
+    if (!cb) {
+      cb = key;
+      key = null;
+    }
     cb();
   }
 
@@ -85,7 +158,10 @@ function createClient (config, next) {
     getTimestamp: getTimestamp,
     migrations: path.resolve(__dirname, 'migrations'),
     queries: require('./queries'),
-    setup: require('./setup')
+    setup: require('./setup'),
+    get batch () {
+      return batch();
+    }
   });
 
 }

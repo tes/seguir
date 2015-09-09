@@ -6,6 +6,8 @@ var expect = require('expect.js');
 var async = require('async');
 var _ = require('lodash');
 
+var cleaned = false;
+
 function setupApi (keyspace, config, next) {
 
   Api(config, function (err, api) {
@@ -13,10 +15,11 @@ function setupApi (keyspace, config, next) {
     console.log('   Setting up keyspace in ' + api.client.type + '...');
     api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', function (err, migrations) {
       if (err) { return next(err); }
-      var truncate = migrations.length === 0 && !process.env.CLEAN;
+      var truncate = migrations.length === 0 && !process.env.CLEAN && !(process.env.CLEAN_ONCE && !cleaned);
       api.client.truncate = truncate;
       api.client.setup.setupTenant(api.client, keyspace, truncate, function (err) {
         if (err) { return next(err); }
+        if (!truncate) { cleaned = true; }
         next(null, api);
       });
     });

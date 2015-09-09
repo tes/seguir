@@ -119,6 +119,8 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  * @apiDefine ExampleCqlFollows
  * @apiExample {cql} Insert Follow
  *    INSERT INTO seguir.followers (follow, user, user_follower, since) VALUES(?, ?, ?, ?);
+ * @apiExample {cql} Insert Follower Timeline
+ *    INSERT INTO seguir.followers_timeline (follow, user, user_follower, since) VALUES(?, ?, ?, ?);
  * @apiExample {cql} Select Follow
  *    SELECT follow, user, user_follower, since FROM seguir.followers WHERE follow = ?
  * @apiExample {cql} Select Followers
@@ -127,9 +129,13 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  *    DELETE FROM {KEYSPACE}.followers WHERE follow = ?
  */
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, user, user_follower, since, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.upsertFollowerTimeline = 'INSERT INTO {KEYSPACE}.followers_timeline (follow, user, user_follower, time, since, is_private, is_personal, is_public) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
 queries.selectFollow = 'SELECT follow, user, user_follower, since, visibility FROM {KEYSPACE}.followers WHERE follow = ?';
+queries.selectFollowFromTimeline = 'SELECT follow, user, user_follower, time FROM {KEYSPACE}.followers_timeline WHERE user = ? and user_follower = ?';
 queries.selectFollowers = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ?';
+queries.selectFollowersTimeline = 'SELECT follow, user, user_follower, time from {KEYSPACE}.followers_timeline WHERE user = ? and {PRIVACY} = True';
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
+queries.removeFollowerTimeline = 'DELETE FROM {KEYSPACE}.followers_timeline WHERE user = ? AND time = ?';
 queries.isFollower = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
 
 /**

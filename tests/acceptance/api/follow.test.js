@@ -145,8 +145,32 @@ databases.forEach(function (db) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
-          expect(followerIds[1]).to.be(users['phteven'].user.toString());
           expect(followerIds[0]).to.be(users['ted'].user.toString());
+          expect(followerIds[1]).to.be(users['phteven'].user.toString());
+          done();
+        });
+      });
+
+      it('can retrieve a list of followers for a user and paginate through it', function (done) {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1 }, function (err1, followers1, pageState1) {
+          expect(err1).to.be(null);
+          expect(followers1.length).to.be(1);
+          expect(followers1[0].user_follower.user.toString()).to.be(users['ted'].user.toString());
+          expect(pageState1).not.to.be(null);
+          api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState1 }, function (err2, followers2, pageState2) {
+            expect(err2).to.be(null);
+            expect(followers2.length).to.be(1);
+            expect(followers2[0].user_follower.user.toString()).to.be(users['phteven'].user.toString());
+            expect(pageState2).to.be(null);
+            done();
+          });
+        });
+      });
+
+      it('will not blow up with evil pageState', function (done) {
+        var options = { pageSize: 1, pageState: '0;DELETE FROM test_seguir_app_api.followers;' };
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, options, function (err2, followers2, pageState2) {
+          expect(err2).not.to.be(null);
           done();
         });
       });
