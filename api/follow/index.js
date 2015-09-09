@@ -208,6 +208,9 @@ module.exports = function (api) {
       options = {};
     }
 
+    var pageState = options.pageState;
+    var pageSize = options.pageSize || 50;
+
     var isUser = liu && user && liu.toString() === user.toString();
     api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
       if (err) { return next(err); }
@@ -215,7 +218,8 @@ module.exports = function (api) {
       var privacyQuery = api.visibility.mapToQuery(isUser, isFriend);
       // note this is only needed for postgres - remove when(if) postgres goes
       var visibility = api.visibility.mapToParameters(isUser, isFriend);
-      client.execute(q(keyspace, 'selectFollowersTimeline', _.merge({PRIVACY: privacyQuery}, visibility)), [user], {}, function (err, followers) {
+      var selectOptions = {pageState: pageState, pageSize: pageSize};
+      client.execute(q(keyspace, 'selectFollowersTimeline', _.merge({PRIVACY: privacyQuery}, visibility)), [user], selectOptions, function (err, followers, nextPageState) {
         if (err) { return next(err); }
 
         // For each follower, check if the liu is following them if we are logged in
@@ -242,7 +246,10 @@ module.exports = function (api) {
 
           }, function (err) {
             if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
+            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, function (err, mappedFollowers) {
+              if (err) { return next(err); }
+              next(null, mappedFollowers, nextPageState);
+            });
           });
         } else {
           async.map(followers, function (follow, cb) {
@@ -253,7 +260,10 @@ module.exports = function (api) {
             });
           }, function (err) {
             if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, next);
+            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, function (err, mappedFollowers) {
+              if (err) { return next(err); }
+              next(null, mappedFollowers, nextPageState);
+            });
           });
         }
 

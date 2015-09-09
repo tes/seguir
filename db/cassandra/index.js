@@ -64,7 +64,12 @@ function createClient (config, next) {
       if (!query) { return next(null); }
 
       var cacheKey = options.cacheKey;
-      var queryOptions = {prepare: true, hints: options.hints};
+      var queryOptions = {
+        prepare: true,
+        hints: options.hints,
+        fetchSize: options.pageSize,
+        pageState: options.pageState
+      };
 
       debug('execute', query, data);
       client.execute(query, data, queryOptions, function (err, result) {
@@ -88,7 +93,7 @@ function createClient (config, next) {
 
         // Clear the cache on executes if we have a cache key
         cache.del(cacheKey, function () {
-          next(null, resultObject);
+          next(null, resultObject, result && result.pageState);
         });
 
       });

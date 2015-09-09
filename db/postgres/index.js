@@ -36,22 +36,58 @@ function createClient (config, next) {
   function execute (query, data, options, next) {
     if (!next) {
       next = options;
-      options = null;
+      options = {};
     }
     if (!next) {
       next = data;
       data = null;
     }
     if (!query) { return next(null); }
+
+    var pageSize = options.pageSize;
+    var pageState = options.pageState;
+    var shouldPaginate = Boolean(pageSize);
+
+    if (shouldPaginate) {
+      if (!query.match(/ORDER BY/)) {
+        return next(new Error('Query (' + query + ') does not have an ORDER BY clause. This will lead to strange ordering behaviour.'));
+      }
+      query = query + generateLimitStatement(pageState, pageSize);
+    }
+
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
       debug('execute', query, data);
       client.query(query, data, function (err, result) {
         if (err) { return next(err); }
         done();
-        next(null, result && result.rows ? result.rows : null);
+        var rows = result && result.rows ? result.rows : null;
+        var nextPageState = shouldPaginate ? getPageState(rows, pageState, pageSize) : null;
+        if (shouldPaginate && rows.length > pageSize) { rows.pop(); } // remove the extra paging result
+        next(null, rows, nextPageState);
       });
     });
+  }
+
+  function getPageState (rows, pageState, pageSize) {
+    // no pagination - no pagestate
+    // if we didn't get the maximum number of rows
+    if (!rows || rows.length <= pageSize) { return null; }
+
+    return (pageState || 0) + pageSize;
+  }
+
+  function generateLimitStatement (offset, pageSize) {
+    // get one extra one such that we know whether there is another page
+    var limitStatement = ' LIMIT ' + (pageSize + 1);
+    var offsetStatement = ' OFFSET ';
+    if (offset) {
+      offsetStatement = offsetStatement + offset;
+    } else {
+      offsetStatement = offsetStatement + '0';
+    }
+
+    return limitStatement + offsetStatement;
   }
 
   function batch () {
