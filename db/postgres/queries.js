@@ -137,15 +137,13 @@ queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, t
                          'LEFT OUTER JOIN {KEYSPACE}.likes l ON (tl.item = l.like and tl.type = \'like\') ' +
                          'LEFT OUTER JOIN {KEYSPACE}.friends f ON (tl.item = f.friend and tl.type = \'friend\') ' +
                          'LEFT OUTER JOIN {KEYSPACE}.followers fl ON (tl.item = fl.follow and tl.type = \'follow\') ' +
-                         'WHERE tl."user" = $1{timeClause} ' +
-                         'ORDER BY time DESC {limitClause}';
+                         'WHERE tl."user" = $1{TYPEQUERY}' +
+                         'ORDER BY time DESC';
 
 queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} ("user", item, type, time, visibility, from_follow) VALUES($1, $2, $3, $4, $5, $6);';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE "user" = $1 AND time = $2';
 queries.selectAllItems = 'SELECT "user", time FROM {KEYSPACE}.{TIMELINE} WHERE item = $1';
 queries.selectAllFollowItems = 'SELECT "user", time FROM {KEYSPACE}.{TIMELINE} WHERE from_follow = $1';
-queries.timelineLimit = ' LIMIT {limit} OFFSET 0';
-queries.timelineSortReverse = ' AND tl.time > $2';
-queries.timelineSort = ' AND tl.time < $2';
+queries.typeQuery = ' AND tl.type = $2';
 
 module.exports = q;

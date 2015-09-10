@@ -55,7 +55,14 @@ function initialise (next) {
     {key: 'follow-6', type: 'follow', user: 'phteven', user_follower: 'bill'},
     {key: 'follow-7', type: 'follow', user: 'phteven', user_follower: 'alfred'},
     {key: 'follow-8', type: 'follow', user: 'phteven', user_follower: 'jenny'},
-    {key: 'post-old', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html', timestamp: new Date(1280296860145)}
+    {
+      key: 'post-old',
+      type: 'post',
+      user: 'cliftonc',
+      content: 'hello',
+      contentType: 'text/html',
+      timestamp: new Date(1280296860145)
+    }
   ];
 
   var post, post2, like;
@@ -94,7 +101,8 @@ function benchmark () {
   async.timesLimit(TIMES, LIMIT, function (n, next) {
     setTimeout(function () {
       getFollowers('phteven', function (err, followTime) {
-        if (err) {};
+        if (err) {}
+        ;
         getFeed('phteven', function (err, feedTime) {
           next(err, followTime + feedTime);
         });
@@ -143,7 +151,7 @@ function userStats (api) {
 function getFeed (user, next) {
   var start = process.hrtime();
   process.stdout.write('.');
-  api.feed.getFeed(keyspace, users[user].user, users[user].user, null, +FEED, function (err, feed) {
+  api.feed.getFeed(keyspace, users[user].user, users[user].user, {pageSize: 50}, function (err, feed) {
     if (err) {
       console.log(err);
       process.exit(1);

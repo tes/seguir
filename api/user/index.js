@@ -100,7 +100,7 @@ module.exports = function (api) {
   }
 
   function initialiseUserWithFollowers (keyspace, user, follow, next) {
-    var backfill = follow.backfill || '1d';
+    var backfill = follow.backfill || 10;
     api.auth.coerceUserToUuid(keyspace, follow.users, function (err, usersToFollow) {
       if (err) { return next(err); }
       async.map(usersToFollow, function (userToFollow, cb) {

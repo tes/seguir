@@ -247,7 +247,7 @@ databases.forEach(function (db) {
           api.follow.removeFollower(keyspace, users['bill'].user, users['harold'].user, function (err, result) {
             expect(err).to.be(null);
             expect(result.status).to.be('removed');
-            api.feed.getRawFeed(keyspace, users['bill'].user, users['bill'].user, null, 100, function (err, feed) {
+            api.feed.getRawFeed(keyspace, users['bill'].user, users['bill'].user, function (err, feed) {
               expect(err).to.be(null);
               var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
               expect(followerIds).to.not.contain(follow.follow.toString());
@@ -260,7 +260,7 @@ databases.forEach(function (db) {
       it('can see new follows of people you follow in your feed', function (done) {
         api.follow.addFollower(keyspace, users['jenny'].user, users['cliftonc'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
-          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, function (err, feed) {
             expect(err).to.be(null);
             var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
             expect(followerIds).to.contain(follow.follow.toString());
@@ -272,7 +272,7 @@ databases.forEach(function (db) {
       it('can not see when others follow people you follow in your feed, it only appears in their feed', function (done) {
         api.follow.addFollower(keyspace, users['cliftonc'].user, users['jenny'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
-          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, null, 100, function (err, feed) {
+          api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, function (err, feed) {
             expect(err).to.be(null);
             var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
             expect(followerIds).to.not.contain(follow.follow.toString());

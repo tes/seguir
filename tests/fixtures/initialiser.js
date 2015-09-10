@@ -42,7 +42,7 @@ function setupUsers (keyspace, api, users, next) {
 function setupGraph (keyspace, api, users, actions, next) {
 
   function addFollow (follow, cb) {
-    api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, cb);
+    api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, follow.backfill, cb);
   }
 
   function addFriend (friend, cb) {

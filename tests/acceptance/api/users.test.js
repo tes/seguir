@@ -160,7 +160,7 @@ databases.forEach(function (db) {
           userdata: {type: 'sheep'}
         }, function (err, user) {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+          api.feed.getFeed(keyspace, user.user, user.user, function (err, feed) {
             expect(err).to.be(null);
             expect(feed[2].post).to.eql(actionResults['post-public'].post);
             done();
@@ -175,7 +175,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
             expect(err).to.be(null);
-            api.feed.getFeed(keyspace, user.user, user.user, null, 50, function (err, feed) {
+            api.feed.getFeed(keyspace, user.user, user.user, function (err, feed) {
               expect(err).to.be(null);
               expect(feed[0].follow).to.eql(follow.follow);
               expect(feed[1].post).to.eql(actionResults['post-public'].post);
@@ -190,13 +190,13 @@ databases.forEach(function (db) {
 
         api.follow.addFollower(keyspace, users['cliftonc'].user, users['json'].user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, users['json'].user, users['json'].user, null, 50, function (err, feed) {
+          api.feed.getFeed(keyspace, users['json'].user, users['json'].user, function (err, feed) {
             expect(err).to.be(null);
             expect(feed[0].follow).to.eql(follow.follow);
             expect(feed[1].post).to.eql(actionResults['post-public'].post);
             api.follow.removeFollower(keyspace, users['cliftonc'].user, users['json'].user, function (err, result) {
               expect(err).to.be(null);
-              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, null, 50, function (err, feed) {
+              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, function (err, feed) {
                 expect(err).to.be(null);
                 expect(feed.length).to.eql(0);
                 done();
