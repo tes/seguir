@@ -170,10 +170,7 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
  *    DELETE FROM {KEYSPACE}.userline WHERE user = ? AND item = ?
  */
 queries.upsertUserTimeline = 'INSERT INTO {KEYSPACE}.{TIMELINE} (user, item, type, time, visibility, from_follow) VALUES(?, ?, ?, ?, ?, ?);';
-queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ?{timeClause}{limitClause}';
+queries.selectTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ?';
 queries.removeFromTimeline = 'DELETE FROM {KEYSPACE}.{TIMELINE} WHERE user = ? AND time = ?';
 queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE item = ?';
 queries.selectAllFollowItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE from_follow = ?';
-queries.timelineLimit = 'LIMIT {limit}';
-queries.timelineSortReverse = 'AND time > ?';
-queries.timelineSort = 'AND time < ?';

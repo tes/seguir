@@ -162,7 +162,7 @@ databases.forEach(function (db) {
           api.friend.removeFriend(keyspace, users['cliftonc'].user, users['harold'].user, function (err, result) {
             expect(err).to.be(null);
             expect(result.status).to.be('removed');
-            api.feed.getRawFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, null, 100, function (err, feed) {
+            api.feed.getRawFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
               expect(err).to.be(null);
               expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);
               done();

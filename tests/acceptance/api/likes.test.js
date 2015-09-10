@@ -99,7 +99,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.like.removeLike(keyspace, users['jenny'].user, 'http://seguir.calip.so', function (err, result) {
             expect(err).to.be(null);
-            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, null, 100, function (err, feed) {
+            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, function (err, feed) {
               expect(err).to.be(null);
               var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
               expect(ids).to.not.contain(like.like.toString());

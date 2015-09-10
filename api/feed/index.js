@@ -5,7 +5,7 @@ var debug = require('debug')('seguir:feed');
 
 var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
 var FEEDS = ['feed_timeline', 'user_timeline'];
-var DEFAULT_LIMIT = 50;
+var DEFAULT_PAGESIZE = 50;
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -248,21 +248,39 @@ module.exports = function (api) {
     });
   }
 
-  function getUserFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'user_timeline', user, {from: from, limit: limit}, next);
+  function getUserFeed (keyspace, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    _getFeed(keyspace, liu, 'user_timeline', user, options, next);
   }
 
-  function getFeed (keyspace, liu, user, from, limit, next) {
+  function getFeed (keyspace, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
     if (liu && liu.toString() === user.toString()) notify(keyspace, 'feed-view', user, {});
-    _getFeed(keyspace, liu, 'feed_timeline', user, {from: from, limit: limit}, next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
   }
 
-  function getRawFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'feed_timeline', user, {from: from, limit: limit, raw: 'raw'}, next);
+  function getRawFeed (keyspace, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    _.merge(options, {raw: 'raw'});
+    _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
   }
 
-  function getReversedUserFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'user_timeline', user, {from: from, limit: limit, raw: 'raw-reverse'}, next);
+  function getReversedUserFeed (keyspace, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    _.merge(options, {raw: 'raw-reverse'});
+    _getFeed(keyspace, liu, 'user_timeline', user, options, next);
   }
 
   /**
@@ -359,43 +377,16 @@ module.exports = function (api) {
   function _getFeed (keyspace, liu, timeline, user, options, next) {
 
     var raw = options.raw;
-    var limit = options.limit;
-    var from = options.from;
-    var data = [user], timeClause = '', hasMoreResults = false, limitClause = '';
+    var pageState = options.pageState;
+    var pageSize = options.pageSize || DEFAULT_PAGESIZE;
+    var data = [user];
+    var query = q(keyspace, 'selectTimeline', {TIMELINE: timeline});
 
-    if (from) {
-      timeClause = q(keyspace, raw === 'raw-reverse' ? 'timelineSortReverse' : 'timelineSort');
-      data.push(from);
-    }
-
-    // We always increase the limit by one so that
-    // we can figure out if we need to display a 'Show more results link'.
-    // This is removed in the results to keep it consistent with expected results.
-    if (!limit) limit = DEFAULT_LIMIT;
-    limit = limit + 1;
-    limitClause = q(keyspace, 'timelineLimit', {limit: limit});
-
-    var query = q(keyspace, 'selectTimeline', {
-      timeClause: timeClause,
-      limitClause: limitClause,
-      TIMELINE: timeline
-    });
-
-    debug(query);
-
-    client.execute(query, data, {}, function (err, data) {
+    client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
 
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
-
-        // This is where we check if we have more results or
-        // not.
-        if (data.length === limit) {
-          hasMoreResults = true;
-          data.pop();
-        }
-
         if (raw) { return next(null, data); }
 
         var timeline = data, followCache = {}, expandUser = false;
@@ -444,7 +435,7 @@ module.exports = function (api) {
           /* istanbul ignore if */
           if (err || !results) { return next(err); }
 
-          var feed = [], maxTime, userCache = {};
+          var feed = [], userCache = {};
 
           // Now go and get the users in one go so we can cache results
           api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, userCache, function (err, resultsWithUsers) {
@@ -480,16 +471,12 @@ module.exports = function (api) {
                 currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
                 currentResult.isFollower = currentUserIsFollower;
 
-                // To page 'more'
-                maxTime = currentResult.timeuuid;
-
                 feed.push(currentResult);
-
               }
 
             });
 
-            next(null, feed, hasMoreResults ? maxTime : null);
+            next(null, feed, nextPageState);
 
           });
 
@@ -506,13 +493,7 @@ module.exports = function (api) {
 
   function seedFeed (keyspace, user, userFollowing, backfill, follow, next) {
 
-    var backfillMatch = /(\d+)(.*)/.exec(backfill);
-    var duration = backfillMatch[1] || '1';
-    var period = backfillMatch[2] || 'd';
-    var start = moment().subtract(+duration, period);
-    var from = client.generateTimeId(start.toDate());
-
-    getReversedUserFeed(keyspace, user, userFollowing, from, null, function (err, feed) {
+    getReversedUserFeed(keyspace, user, userFollowing, { pageSize: Number(backfill) }, function (err, feed) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
         if (item.type !== 'post' || item.visibility !== api.visibility.PUBLIC) return cb();

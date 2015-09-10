@@ -128,7 +128,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.post.removePost(keyspace, users['jenny'].user, post.post, function (err, result) {
             expect(err).to.be(null);
-            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, null, 100, function (err, feed) {
+            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, function (err, feed) {
               expect(err).to.be(null);
               var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
               expect(ids).to.not.contain(post.post.toString());
@@ -141,7 +141,7 @@ databases.forEach(function (db) {
       it('you can add a completely personal post that only appears in the users feed', function (done) {
         api.post.addPost(keyspace, users['jenny'].user, 'Shh - this is only for me.', 'text/html', api.client.getTimestamp(), api.visibility.PERSONAL, function (err, post) {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, users['harold'].user, users['jenny'].user, null, 100, function (err, feed) {
+          api.feed.getFeed(keyspace, users['harold'].user, users['jenny'].user, function (err, feed) {
             expect(err).to.be(null);
             var ids = _.map(_.pluck(feed, 'post'), function (item) { return item.toString(); });
             expect(ids).to.not.contain(post.post.toString());
@@ -157,7 +157,7 @@ databases.forEach(function (db) {
           api.post.getPost(keyspace, users['json'].user, post.post, function (err, getPost) {
             expect(err).to.be(null);
             expect(getPost.content.hello).to.be('world');
-            api.feed.getFeed(keyspace, users['json'].user, users['json'].user, null, 100, function (err, feed) {
+            api.feed.getFeed(keyspace, users['json'].user, users['json'].user, function (err, feed) {
               expect(err).to.be(null);
               expect(feed[0].content.hello).to.be('world');
               done();
