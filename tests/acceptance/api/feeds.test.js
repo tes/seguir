@@ -40,7 +40,9 @@ databases.forEach(function (db) {
           {username: 'harold', altid: '5'},
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
-          {username: 'json', altid: '8'}
+          {username: 'json', altid: '8'},
+          {username: 'backfill', altid: '9'},
+          {username: 'backfill-follower', altid: '10'}
         ], function (err, userMap) {
           expect(err).to.be(null);
           users = userMap;
@@ -72,6 +74,17 @@ databases.forEach(function (db) {
             user: 'alfred',
             user_follower: 'jenny',
             visibility: api.visibility.PERSONAL
+          },
+          {key: 'post-backfill-1', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
+          {key: 'post-backfill-2', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
+          {key: 'post-backfill-3', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
+          {
+            key: 'follow-backfill',
+            type: 'follow',
+            user: 'backfill',
+            user_follower: 'backfill-follower',
+            visibility: api.visibility.PUBLIC,
+            backfill: 2
           },
           {
             key: 'friend-1',
@@ -161,6 +174,19 @@ databases.forEach(function (db) {
             'follow-2',
             'follow-1',
             'post-old'
+          ];
+          initialiser.assertFeed(feed, actionResults, expected);
+          done();
+        });
+      });
+
+      it('logged in - can get a backfilled feed', function (done) {
+        api.feed.getFeed(keyspace, users['backfill-follower'].user, users['backfill-follower'].user, function (err, feed) {
+          expect(err).to.be(null);
+          var expected = [
+            'follow-backfill',
+            'post-backfill-3',
+            'post-backfill-2'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();

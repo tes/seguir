@@ -1,5 +1,5 @@
 var async = require('async');
-var schemaVersion = 4;
+var schemaVersion = 6;
 
 function defineTablesAndIndexes (KEYSPACE) {
 

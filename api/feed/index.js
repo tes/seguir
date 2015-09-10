@@ -377,10 +377,19 @@ module.exports = function (api) {
   function _getFeed (keyspace, liu, timeline, user, options, next) {
 
     var raw = options.raw;
+    var feedType = options.type;
     var pageState = options.pageState;
     var pageSize = options.pageSize || DEFAULT_PAGESIZE;
+    var typeQuery = '';
     var data = [user];
-    var query = q(keyspace, 'selectTimeline', {TIMELINE: timeline});
+    var query;
+
+    if (feedType) {
+      typeQuery = q(keyspace, 'typeQuery');
+      data.push(feedType);
+    }
+
+    query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery});
 
     client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
 
@@ -493,10 +502,11 @@ module.exports = function (api) {
 
   function seedFeed (keyspace, user, userFollowing, backfill, follow, next) {
 
-    getReversedUserFeed(keyspace, user, userFollowing, { pageSize: Number(backfill) }, function (err, feed) {
+    var feedOptions = {pageSize: Number(backfill), type: 'post'};
+    getReversedUserFeed(keyspace, user, userFollowing, feedOptions, function (err, feed) {
       if (err) { return next(err); }
       async.map(feed, function (item, cb) {
-        if (item.type !== 'post' || item.visibility !== api.visibility.PUBLIC) return cb();
+        if (item.visibility !== api.visibility.PUBLIC) return cb();
         upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, follow.follow, cb);
       }, next);
     });
