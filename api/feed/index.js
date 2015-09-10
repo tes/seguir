@@ -180,9 +180,16 @@ module.exports = function (api) {
             }
             // Do not notify a user about things that they post or where they are the follower
             var isUser = expandedItem.type === 'follow' ?
-                          userObject.user.toString() === expandedItem.user_follower.user.toString() :
-                          userObject.user.toString() === expandedItem.user.user.toString();
-            if (!isUser) { messaging.submit(NOTIFY_Q, {action: action, item: item, user: userObject, data: expandedItem}); }
+            userObject.user.toString() === expandedItem.user_follower.user.toString() :
+            userObject.user.toString() === expandedItem.user.user.toString();
+            if (!isUser) {
+              messaging.submit(NOTIFY_Q, {
+                action: action,
+                item: item,
+                user: userObject,
+                data: expandedItem
+              });
+            }
           });
         });
       }
@@ -202,7 +209,10 @@ module.exports = function (api) {
   }
 
   function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, from_follow, next) {
-    if (!next) { next = from_follow; from_follow = null; }
+    if (!next) {
+      next = from_follow;
+      from_follow = null;
+    }
     visibility = visibility || api.visibility.PUBLIC;
     var data = [user, item, type, time, visibility, from_follow];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
@@ -239,20 +249,20 @@ module.exports = function (api) {
   }
 
   function getUserFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'user_timeline', user, from, limit, next);
+    _getFeed(keyspace, liu, 'user_timeline', user, {from: from, limit: limit}, next);
   }
 
   function getFeed (keyspace, liu, user, from, limit, next) {
     if (liu && liu.toString() === user.toString()) notify(keyspace, 'feed-view', user, {});
-    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, {from: from, limit: limit}, next);
   }
 
   function getRawFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'feed_timeline', user, from, limit, 'raw', next);
+    _getFeed(keyspace, liu, 'feed_timeline', user, {from: from, limit: limit, raw: 'raw'}, next);
   }
 
   function getReversedUserFeed (keyspace, liu, user, from, limit, next) {
-    _getFeed(keyspace, liu, 'user_timeline', user, from, limit, 'raw-reverse', next);
+    _getFeed(keyspace, liu, 'user_timeline', user, {from: from, limit: limit, raw: 'raw-reverse'}, next);
   }
 
   /**
@@ -268,7 +278,10 @@ module.exports = function (api) {
   };
 
   function expandPost (keyspace, liu, item, expandUser, cb) {
-    if (!cb) { cb = expandUser; expandUser = true; }
+    if (!cb) {
+      cb = expandUser;
+      expandUser = true;
+    }
     var hasEmbeddedPost = !!item.post_post;
     if (hasEmbeddedPost) {
       api.post.getPostFromObject(keyspace, liu, item, function (err, post) {
@@ -282,7 +295,10 @@ module.exports = function (api) {
   }
 
   function expandLike (keyspace, liu, item, expandUser, cb) {
-    if (!cb) { cb = expandUser; expandUser = true; }
+    if (!cb) {
+      cb = expandUser;
+      expandUser = true;
+    }
     var hasEmbeddedLike = !!item.like_like;
     if (hasEmbeddedLike) {
       api.like.getLikeFromObject(keyspace, item, cb);
@@ -292,7 +308,10 @@ module.exports = function (api) {
   }
 
   function expandFollow (keyspace, liu, item, expandUser, cb) {
-    if (!cb) { cb = expandUser; expandUser = true; }
+    if (!cb) {
+      cb = expandUser;
+      expandUser = true;
+    }
     var hasEmbeddedFollow = !!item.follow_follow;
     if (hasEmbeddedFollow) {
       api.follow.getFollowFromObject(keyspace, liu, item, function (err, follow) {
@@ -306,7 +325,10 @@ module.exports = function (api) {
   }
 
   function expandFriend (keyspace, liu, item, expandUser, cb) {
-    if (!cb) { cb = expandUser; expandUser = true; }
+    if (!cb) {
+      cb = expandUser;
+      expandUser = true;
+    }
     var hasEmbeddedFriend = !!item.friend_friend;
     if (hasEmbeddedFriend) {
       api.friend.getFriendFromObject(keyspace, liu, item, function (err, friend) {
@@ -334,13 +356,11 @@ module.exports = function (api) {
     'friend': expandFriend
   };
 
-  function _getFeed (keyspace, liu, timeline, user, from, limit, raw, next) {
+  function _getFeed (keyspace, liu, timeline, user, options, next) {
 
-    if (!next) {
-      next = raw;
-      raw = null;
-    }
-
+    var raw = options.raw;
+    var limit = options.limit;
+    var from = options.from;
     var data = [user], timeClause = '', hasMoreResults = false, limitClause = '';
 
     if (from) {
