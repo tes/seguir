@@ -1,5 +1,4 @@
 var async = require('async');
-var _ = require('lodash');
 
 function apply (keyspace, api, next) {
 
@@ -18,14 +17,27 @@ function apply (keyspace, api, next) {
         async.mapSeries(addPostAltidCql, api.client.execute, cb);
       },
       function (cb) {
+        var write = 0;
+        var read = 0;
+        var done = false;
         var selectQuery = 'SELECT follow, user, user_follower, since, visibility FROM ' + keyspace + '.followers;';
-        var insertQuery = 'INSERT INTO ' + keyspace + '.followers_timeline (follow, user, user_follower, time, since, is_private, is_personal, is_public) VALUES(?, ?, ?, ?, ?, ?);';
-        api.client._client.eachRow(selectQuery, [], {autopage: true}, function (index, row) {
+        var insertQuery = 'INSERT INTO ' + keyspace + '.followers_timeline (follow, user, user_follower, time, since, is_private, is_personal, is_public) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
+        api.client._client.eachRow(selectQuery, [], {autoPage: true}, function (index, row) {
+          read++;
           var isPrivate = api.visibility.isPrivate(row.visibility);
           var isPersonal = api.visibility.isPersonal(row.visibility);
           var isPublic = api.visibility.isPublic(row.visibility);
-          api.client._client.execute(insertQuery, [row.follow, row.user, row.user_follower, api.client.generateTimeId(row.since), row.since, isPrivate, isPersonal, isPublic], {prepare: true}, _.noop);
-        }, cb);
+          api.client.execute(insertQuery, [row.follow, row.user, row.user_follower, api.client.generateTimeId(row.since), row.since, isPrivate, isPersonal, isPublic], {prepare: true}, function (err) {
+            if (err) {
+              throw err;
+            }
+            if (read === ++write && done) {
+              cb();
+            }
+          });
+        }, function () {
+          done = true;
+        });
       }
     ], next);
 
