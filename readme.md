@@ -198,6 +198,14 @@ You can notify users of things that they have missed, via the component ```segui
 
 [https://github.com/cliftonc/seguir-notify](https://github.com/cliftonc/seguir-notify)
 
+## Scripted Setup
+
+You can script the creation of seguir and an application using the CLI tool, example configuration and setup files are contained in ```/config```.
+
+```
+./bin/seguir.js -s config/setup.json -c config/index.js
+```
+
 ## Debugging
 
 Use debug environment variables to see what is going on:
