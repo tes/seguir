@@ -16,7 +16,7 @@ program
   .parse(process.argv);
 
 var database = program.database || 'cassandra';
-var defaultConfig = '../server/config/' + database;
+var defaultConfig = '../config/' + database;
 var configFn;
 
 if (program.config) {

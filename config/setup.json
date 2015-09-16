@@ -1,0 +1,10 @@
+{
+  "keyspace":"scripted_seguir",
+  "account":"local",
+  "user":"admin",
+  "password":"password",
+  "admin":true,
+  "application":"scripted_example",
+  "appid":"eaa7cbe0-9c17-418f-9388-cb6c170b3473",
+  "appsecret":"f5a59fb58d5b0533429e67c2ab46d7ef7ff92cbc0ee5b90b948c3abbe61591c0"
+}

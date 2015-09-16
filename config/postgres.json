@@ -1,0 +1,15 @@
+{
+  "logging": true,
+  "port":3000,
+  "keyspace":"seguir",
+  "postgres": {
+    "user": "postgres",
+    "database": "postgres",
+    "host": "127.0.0.1"
+  },
+  "messaging": {
+    "host": "127.0.0.1",
+    "port": 6379,
+    "feed": true
+  }
+}
