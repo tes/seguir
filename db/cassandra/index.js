@@ -51,6 +51,11 @@ function createClient (config, next) {
       });
     }
 
+    function stream (query, data, next) {
+      debug('stream', query, data);
+      return next(null, client.stream(query, data, {prepare: true}));
+    }
+
     function execute (query, data, options, next) {
       var self = this;
       if (!next) {
@@ -188,7 +193,8 @@ function createClient (config, next) {
         setup: require('./setup'),
         get batch () {
           return batch();
-        }
+        },
+        stream: stream
       });
     });
 

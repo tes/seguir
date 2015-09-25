@@ -25,29 +25,51 @@ module.exports = function (api) {
 
   function insertFollowersTimeline (jobData, next) {
 
+    var read = 0;
+    var finished = 0;
+    var done = false;
+
+    function nextIfFinished (doNotIncrement) {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); }
+    }
+
     // If you are the recipient of a follow, do not copy this out to your follow graph - it will appear in your feed only
     if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
 
     // If you the action is personal do not copy out to followers feeds
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
-    client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, function (err, data) {
-      /* istanbul ignore if */
-      if (err || data.length === 0) { return next(err); }
-      async.map(data, function (row, cb2) {
-        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
-        var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
-        // Follow is added to followers feed directly, not via the follow relationship
-        if (followerIsFollower) { return cb2(); }
-        api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
-          if (err) { return cb2(err); }
-          if (!isPrivate || (isPrivate && isFriend)) {
-            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, cb2);
-          } else {
-            cb2();
+    client.stream(q(jobData.keyspace, 'selectFollowers'), [jobData.user], function (err, stream) {
+      if (err) {return next(err);}
+      stream
+        .on('data', function (row) {
+          read++;
+          var isPrivate = jobData.visibility === api.visibility.PRIVATE;
+          var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
+          // Follow is added to followers feed directly, not via the follow relationship
+          if (followerIsFollower) {
+            return nextIfFinished();
           }
+          api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
+            if (err) {
+              console.log('error while fetching is friend (' + row.user + ':' + row.user_follower + ')');
+              return nextIfFinished();
+            }
+            if (!isPrivate || (isPrivate && isFriend)) {
+              upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, nextIfFinished);
+            } else {
+              nextIfFinished();
+            }
+          });
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true);
+        })
+        .on('error', function (err) {
+          next(err);
         });
-      }, next);
     });
   }
 

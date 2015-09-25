@@ -3,6 +3,7 @@ var uuid = require('node-uuid');
 var path = require('path');
 var debug = require('debug')('seguir:postgres');
 var async = require('async');
+var QueryStream = require('pg-query-stream');
 
 function createClient (config, next) {
 
@@ -30,6 +31,17 @@ function createClient (config, next) {
         done();
         next(null, result && result.rows ? result.rows[0] : null);
       });
+    });
+  }
+
+  function stream (query, data, next) {
+    pg.connect(getConnectionString(), function (err, client, done) {
+      if (err) { return next(err); }
+      debug('stream', query, data);
+      var pgQuery = new QueryStream(query, data);
+      var stream = client.query(pgQuery);
+      stream.on('end', done);
+      next(null, stream);
     });
   }
 
@@ -161,7 +173,8 @@ function createClient (config, next) {
     setup: require('./setup'),
     get batch () {
       return batch();
-    }
+    },
+    stream: stream
   });
 
 }
