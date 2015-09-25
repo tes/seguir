@@ -1,6 +1,9 @@
 var path = require('path');
+var consoleLogger = require('./logger');
 
-module.exports = function (config, next) {
+module.exports = function (config, logger, next) {
+
+  if (!next) { next = logger; logger = consoleLogger; }
 
   require('../db')(config, function (err, client) {
 
@@ -9,6 +12,7 @@ module.exports = function (config, next) {
     var messaging = require('../db/messaging')(config);
 
     var api = {};
+    api.logger = logger;
     api.client = client;
     api.config = config;
     api.messaging = messaging;
