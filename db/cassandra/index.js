@@ -53,7 +53,7 @@ function createClient (config, next) {
 
     function stream (query, data, next) {
       debug('stream', query, data);
-      return next(null, client.stream(query, data, {prepare: true}));
+      return next(null, client.stream(query, data, {prepare: true, autoPage: true}));
     }
 
     function execute (query, data, options, next) {
