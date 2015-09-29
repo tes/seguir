@@ -540,6 +540,7 @@ module.exports = function (api) {
     removeFeedsForItem: removeFeedsForItem,
     insertFollowersTimeline: insertFollowersTimeline,
     insertMentionedTimeline: insertMentionedTimeline,
+    upsertTimeline: upsertTimeline,
     getFeed: getFeed,
     getUserFeed: getUserFeed,
     getRawFeed: getRawFeed,
