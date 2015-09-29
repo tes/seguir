@@ -1,13 +1,13 @@
-#cassandra:
-#  image: cassandra
-#  ports:
-#   - "9042:9042"
-#   - "9160:9160"
+cassandra:
+  image: cassandra
+  ports:
+   - "9042:9042"
+   - "9160:9160"
 postgres:
   image: postgres
   ports:
    - "5432:5432"
-#redis:
-#  image: redis
-#  ports:
-#   - "6379:6379"
+redis:
+  image: redis
+  ports:
+   - "6379:6379"
