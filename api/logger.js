@@ -1,9 +1,11 @@
 /**
  * Default console logger
  */
+var debug = require('debug')('seguir:logger');
+
 module.exports = {
-	info: function (msg) { console.log('[info]: ' + msg); },
-	error: function (msg) { console.log('[error]: ' + msg); },
-	warn: function (msg) { console.log('[warn]: ' + msg); },
-	debug: function (msg) { console.log('[debug]: ' + msg); }
+	info: function (msg) { debug('info', msg); },
+	error: function (msg) { debug('error', msg); },
+	warn: function (msg) { debug('warn', msg); },
+	debug: function (msg) { debug('debug', msg); }
 };
