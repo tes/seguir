@@ -1,6 +1,6 @@
   # Seguir - Backend for a social network
 
-[http://engineering.tescloud.com/seguir](http://cliftonc.github.io/seguir)
+[http://engineering.tescloud.com/seguir](http://engineering.tescloud.com/seguir)
 
 [Pronounced: seh-geer]
 
