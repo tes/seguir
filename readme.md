@@ -1,10 +1,10 @@
   # Seguir - Backend for a social network
 
-[http://cliftonc.github.io/seguir/server](http://cliftonc.github.io/seguir)
+[http://engineering.tescloud.com/seguir](http://cliftonc.github.io/seguir)
 
 [Pronounced: seh-geer]
 
-[![Server API](https://img.shields.io/badge/documentation-server-green.svg)](http://cliftonc.github.io/seguir-server/server) [![Client API](https://img.shields.io/badge/documentation-client-green.svg)](http://cliftonc.github.io/seguir-server/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/cliftonc/seguir) [![bitHound Score](https://www.bithound.io/github/cliftonc/seguir/badges/score.svg)](https://www.bithound.io/github/cliftonc/seguir) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
+[![Server API](https://img.shields.io/badge/documentation-server-green.svg)](http://tes.github.io/seguir-server/server) [![Client API](https://img.shields.io/badge/documentation-client-green.svg)](http://tes.github.io/seguir-server/client) [![Build Status](https://travis-ci.org/cliftonc/seguir.svg?style=flat)](https://travis-ci.org/tes/seguir) [![bitHound Score](https://www.bithound.io/github/cliftonc/seguir/badges/score.svg)](https://www.bithound.io/github/tes/seguir) [![js-semistandard-style](https://img.shields.io/badge/code%20style-semistandard-brightgreen.svg?style=flat-square)](https://github.com/Flet/semistandard)
 
 This is a pure API for a simple social network, it contains the following concepts:
 
@@ -35,7 +35,7 @@ If you allow anonymous access, then you simply pass null in as the first paramet
 You need Cassandra or Postgres to be installed for the server to work, then do the following:
 
 ```bash
-git clone git@github.com:cliftonc/seguir.git
+git clone git@github.com:tes/seguir.git
 cd seguir
 npm install
 ```
@@ -124,7 +124,7 @@ You can see this flow with the sample application (uses Passport for authenticat
 
 You can defer costly newsfeed updates (fanouts to followers) to a worker process.  To do this, you need to do two things.  First is add config for the messaging (via Redis) to the configuration.  If you do NOT have this section, it will just process these jobs in context of the current process - if you add it, it will expect a worker to be up and listening.
 
-https://github.com/cliftonc/seguir/blob/master/server/config/cassandra.json#L8
+https://github.com/tes/seguir/blob/master/server/config/cassandra.json#L8
 
 ```json
 {
@@ -149,11 +149,11 @@ node server/worker
 
 It works by using a FIFO queue built on top of a redis list via RSMQ.  For implementation details for the way the messaging drives the workers:
 
-https://github.com/cliftonc/seguir/blob/master/db/messaging/index.js
+https://github.com/tes/seguir/blob/master/db/messaging/index.js
 
 The actual code paths that make the shift between in process and out of process worker use:
 
-https://github.com/cliftonc/seguir/blob/master/api/feed/index.js#L136
+https://github.com/tes/seguir/blob/master/api/feed/index.js#L136
 
 ## Benchmarking
 
@@ -196,7 +196,7 @@ If you make any major changes please re-run the benchmark and ensure you haven't
 
 You can notify users of things that they have missed, via the component ```seguir-notify```:
 
-[https://github.com/cliftonc/seguir-notify](https://github.com/cliftonc/seguir-notify)
+[https://github.com/tes/seguir-notify](https://github.com/tes/seguir-notify)
 
 ## Scripted Setup
 
@@ -232,7 +232,7 @@ Test coverage is slowly increasing, intention is to get it to 100 and then pin p
 
 I'm always looking for people to help out, regardless of what you think you can contribute - please reach out, and for high level contribution guidelines please read:
 
-[Contribution Guide](https://github.com/cliftonc/seguir/blob/master/CONTRIBUTING.md)
+[Contribution Guide](https://github.com/tes/seguir/blob/master/CONTRIBUTING.md)
 
 ### Docs
 
