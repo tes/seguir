@@ -7,9 +7,8 @@ var async = require('async');
 var _ = require('lodash');
 
 module.exports = function (api) {
-
-  var client = api.client,
-      q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function toApply (schemaVersions, migrations) {
     var minimumSchemaVersion = schemaVersions.length ? _.min(schemaVersions) : -1;
@@ -78,18 +77,15 @@ module.exports = function (api) {
   }
 
   function getMigrations (keyspace, type, next) {
-
     var migrationsPath = path.resolve(api.client.migrations, type);
     var migrations = [];
     fs.readdir(migrationsPath, function (err, files) {
       if (err) return next(err);
       files.forEach(function (f) {
-
         var split_f = f.split('_');
         if (split_f.length === 2 && path.extname(f) === '.js') {
-
-          var version = split_f[0],
-              description = split_f[1].split('.')[0];
+          var version = split_f[0];
+          var description = split_f[1].split('.')[0];
 
           migrations.push({
             file: path.resolve(migrationsPath, f),
@@ -98,21 +94,17 @@ module.exports = function (api) {
             version: +version,
             description: description
           });
-
         }
-
       });
-
       next(null, migrations);
     });
   }
 
   function applyMigration (migration, next) {
-
     var migrationFn;
     try {
       migrationFn = require(migration.file);
-    } catch(ex) {
+    } catch (ex) {
       return next(ex);
     }
     console.log('Applying migration: ' + migration.type + ' / ' + migration.file);
@@ -127,7 +119,6 @@ module.exports = function (api) {
         api.migrations.insertSchemaVersion(migration.keyspace, migration.version, migration.description, next);
       }
     });
-
   }
 
   function applyMigrations (migrations, next) {
@@ -166,5 +157,4 @@ module.exports = function (api) {
     applyMigrations: applyMigrations,
     getMigrationsToApplyToKeyspace: getMigrationsToApplyToKeyspace
   };
-
 };

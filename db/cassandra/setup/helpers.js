@@ -8,11 +8,10 @@ var verbose = process.env.SEGUIR_DEBUG;
  *  Setup code follows below
  */
 module.exports = function (client, options) {
-
-  var KEYSPACE = options.KEYSPACE,
-      tables = options.tables || [],
-      indexes = options.indexes || [],
-      tableIndexes = options.tableIndexes || {};
+  var KEYSPACE = options.KEYSPACE;
+  var tables = options.tables || [];
+  var indexes = options.indexes || [];
+  var tableIndexes = options.tableIndexes || {};
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
@@ -53,7 +52,6 @@ module.exports = function (client, options) {
 
   /* istanbul ignore next */
   function createTables (next) {
-
     if (verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
 
     async.map(tables, function (cql, cb) {
@@ -65,12 +63,10 @@ module.exports = function (client, options) {
         return cb(err);
       });
     }, next);
-
   }
 
   /* istanbul ignore next */
   function createSecondaryIndexes (next) {
-
     if (verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
     async.map(indexes, function (cql, cb) {
       client.execute(cql, function (err) {
@@ -80,11 +76,9 @@ module.exports = function (client, options) {
         return cb(err);
       });
     }, next);
-
   }
 
   function assertIndexes (next) {
-
     if (verbose) console.log('Asserting all tables and indexes exist in: ' + KEYSPACE + '...');
 
     async.map(tables, function (cql, cb) {
@@ -103,7 +97,6 @@ module.exports = function (client, options) {
         }
       });
     }, next);
-
   }
 
    /* istanbul ignore next */
@@ -128,5 +121,4 @@ module.exports = function (client, options) {
     truncate: truncate,
     flushCache: flushCache
   };
-
 };

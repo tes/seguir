@@ -2,9 +2,8 @@ var sanitizeHtml = require('sanitize-html');
 var _ = require('lodash');
 
 module.exports = function (api) {
-
-  var client = api.client,
-      q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function error (code, message) {
     var err = new Error(message);
@@ -55,7 +54,7 @@ module.exports = function (api) {
         var json;
         try {
           json = JSON.parse(content);
-        } catch(ex) {
+        } catch (ex) {
           // Return null object on error
         }
         return json;
@@ -65,7 +64,8 @@ module.exports = function (api) {
   }
 
   function expandEmbeddedObject (item, field, test, ignore) {
-    var prefix = field + '_', testField = prefix + test;
+    var prefix = field + '_';
+    var testField = prefix + test;
     if (item[testField]) {
       var embed = {};
       _.forOwn(item, function (value, key) {
@@ -88,5 +88,4 @@ module.exports = function (api) {
     convertContentFromString: convertContentFromString,
     expandEmbeddedObject: expandEmbeddedObject
   };
-
 };

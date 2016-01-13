@@ -1,7 +1,6 @@
 var async = require('async');
 
 function apply (keyspace, api, next) {
-
   var schemaVersionCql = [
     'ALTER TABLE ' + keyspace + '.likes ADD visibility text',
     'ALTER TABLE ' + keyspace + '.friends ADD visibility text',
@@ -21,7 +20,6 @@ function apply (keyspace, api, next) {
   ];
 
   async.mapSeries(schemaVersionCql, api.client.execute, next);
-
 }
 
 function rollback (keyspace, api, next) {

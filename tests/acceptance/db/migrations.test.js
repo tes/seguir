@@ -2,7 +2,7 @@
  * Acceptance test the Cassandra API directly.
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_migrations';
 var Api = require('../../../api');
@@ -12,12 +12,10 @@ var path = require('path');
 var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('Seguir Database Migrations - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
@@ -87,7 +85,5 @@ databases.forEach(function (db) {
         done();
       });
     });
-
   });
-
 });

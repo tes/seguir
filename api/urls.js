@@ -64,4 +64,3 @@ module.exports = function (url, data) {
     return '';
   }
 };
-

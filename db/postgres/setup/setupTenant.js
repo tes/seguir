@@ -2,8 +2,8 @@ var async = require('async');
 var schemaVersion = 6;
 
 function defineTablesAndIndexes (KEYSPACE) {
-
-  var tables = [], indexes = [];
+  var tables = [];
+  var indexes = [];
 
   if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
@@ -149,7 +149,6 @@ function defineTablesAndIndexes (KEYSPACE) {
 }
 
 function setup (client, keyspace, truncateIfExists, next) {
-
   if (!next) { next = truncateIfExists; truncateIfExists = false; }
 
   var options = defineTablesAndIndexes(keyspace);

@@ -2,7 +2,7 @@
  * Friends and Friend Requests
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
@@ -11,16 +11,19 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Friends] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {}, liu, friendId, otherFriendId, friendRequestId;
+    var api;
+    var users = {};
+    var liu;
+    var friendId;
+    var otherFriendId;
+    var friendRequestId;
 
     before(function (done) {
       this.timeout(20000);
@@ -46,7 +49,6 @@ databases.forEach(function (db) {
     });
 
     describe('friend requests', function () {
-
       it('can create a friend request', function (done) {
         api.friend.addFriendRequest(keyspace, users['cliftonc'].user, users['phteven'].user, 'Please be my friend', api.client.getTimestamp(), function (err, friend_request) {
           expect(err).to.be(null);
@@ -110,11 +112,9 @@ databases.forEach(function (db) {
           done();
         });
       });
-
     });
 
     describe('friends', function () {
-
       it('can friend another user', function (done) {
         api.friend.addFriend(keyspace, users['ted'].user, users['bill'].user, api.client.getTimestamp(), function (err, friend) {
           expect(err).to.be(null);
@@ -170,10 +170,6 @@ databases.forEach(function (db) {
           });
         });
       });
-
     });
-
   });
-
 });
-

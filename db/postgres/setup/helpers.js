@@ -8,10 +8,9 @@ var q = require('../queries');
  *  may make sense to refactor this out at some point if postgres takes over.
  */
 module.exports = function (client, options) {
-
-  var KEYSPACE = options.KEYSPACE,
-      tables = options.tables || [],
-      indexes = options.indexes || [];
+  var KEYSPACE = options.KEYSPACE;
+  var tables = options.tables || [];
+  var indexes = options.indexes || [];
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
@@ -65,5 +64,4 @@ module.exports = function (client, options) {
     createSecondaryIndexes: createSecondaryIndexes,
     initialiseSchemaVersion: initialiseSchemaVersion
   };
-
 };

@@ -2,7 +2,7 @@
  * Posts
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
@@ -11,16 +11,17 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Posts] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {}, postId, privatePostId;
+    var api;
+    var users = {};
+    var postId;
+    var privatePostId;
 
     before(function (done) {
       this.timeout(20000);
@@ -45,7 +46,6 @@ databases.forEach(function (db) {
     });
 
     describe('posts', function () {
-
       var timestamp = new Date(1280296860145);
 
       it('can post a message from a user', function (done) {
@@ -214,8 +214,5 @@ databases.forEach(function (db) {
         });
       });
     });
-
   });
-
 });
-

@@ -12,12 +12,10 @@ var async = require('async');
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-    q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function addFollower (keyspace, user, user_follower, timestamp, visibility, backfill, next) {
-
     if (!next) {
       next = backfill;
       backfill = null;
@@ -51,7 +49,6 @@ module.exports = function (api) {
     };
 
     isFollower(keyspace, user, user_follower, function (err, isFollower, followerSince, follow) {
-
       if (err) { return next(err); }
       if (isFollower) {
         return mapFollowResponse(follow);
@@ -80,9 +77,7 @@ module.exports = function (api) {
             });
           });
         });
-
     });
-
   }
 
   function alterFollowerCount (keyspace, user, count, next) {
@@ -167,7 +162,7 @@ module.exports = function (api) {
       } else {
         var isFollower = !!(follow && follow.follow);
         var isFollowerSince = isFollower ? follow.since : null;
-        return next(null, isFollower, isFollowerSince, follow ? follow : null);
+        return next(null, isFollower, isFollowerSince, follow || null);
       }
     });
   }
@@ -262,9 +257,7 @@ module.exports = function (api) {
                 follow.liuIsUser = false;
                 cb(null, follow);
               });
-
             });
-
           }, function (err) {
             if (err) { return next(err); }
             api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, function (err, mappedFollowers) {
@@ -287,7 +280,6 @@ module.exports = function (api) {
             });
           });
         }
-
       });
     });
   }
@@ -301,5 +293,4 @@ module.exports = function (api) {
     isFollower: isFollower,
     followerCount: followerCount
   };
-
 };

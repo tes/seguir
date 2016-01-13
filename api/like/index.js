@@ -11,9 +11,8 @@ var _ = require('lodash');
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-      q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function addLike (keyspace, user, item, timestamp, next) {
     var like = client.generateId();
@@ -120,5 +119,4 @@ module.exports = function (api) {
     checkLike: checkLike,
     likeCount: likeCount
   };
-
 };

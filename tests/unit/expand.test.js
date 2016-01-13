@@ -1,10 +1,9 @@
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var expect = require('expect.js');
 var expand = require('../../api/common')({client: {}}).expandEmbeddedObject;
 
 describe('Embedded object expansion', function () {
-
   it('does nothing if it doesnt find the test field', function (done) {
     expect(expand({'hello': 'world'}, 'a', 'b')).to.be(undefined);
     done();
@@ -25,5 +24,4 @@ describe('Embedded object expansion', function () {
     expect(item).to.eql({post: '1', 'post_ignore': 'bob', another_field: 'value'});
     done();
   });
-
 });

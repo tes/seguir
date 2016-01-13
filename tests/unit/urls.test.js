@@ -1,12 +1,10 @@
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var expect = require('expect.js');
 var u = require('../../api/urls');
 
 describe('Urls', function () {
-
   describe('url parsing', function () {
-
     it('default is it just returns the url pattern', function (done) {
       expect(u('getUserByName')).to.be('/username/:username');
       done();
@@ -23,7 +21,5 @@ describe('Urls', function () {
       expect(u('getUserByName', data)).to.be('/username/cliftonc?type=user');
       done();
     });
-
   });
-
 });

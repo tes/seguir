@@ -1,7 +1,6 @@
 var debug = require('debug')('seguir:db');
 
 module.exports = function (config, next) {
-
   var clientType;
 
   if (config.cassandra) clientType = 'cassandra';
@@ -12,5 +11,4 @@ module.exports = function (config, next) {
 
   debug('Using %s', clientType);
   require('./' + clientType)(config, next);
-
 };

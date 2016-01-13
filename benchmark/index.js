@@ -19,7 +19,8 @@ var ITEMS = +process.env.ITEMS || 500;
 var config = _.clone(require('../tests/fixtures/' + DATABASE + '.json'));
 config.keyspace = keyspace;
 
-var api, users = {};
+var api;
+var users = {};
 
 initialiser.setupApi(keyspace, config, function (err, seguirApi) {
   expect(err).to.be(null);
@@ -102,7 +103,6 @@ function benchmark () {
     setTimeout(function () {
       getFollowers('phteven', function (err, followTime) {
         if (err) {}
-        ;
         getFeed('phteven', function (err, feedTime) {
           next(err, followTime + feedTime);
         });
@@ -130,7 +130,6 @@ function benchmark () {
     process.exit(0); // TODO shutdown cleanly
 
     api.client._client.shutdown();
-
   });
 }
 
@@ -173,4 +172,3 @@ function getFollowers (user, next) {
     next(null, end[1] / 1000000);
   });
 }
-

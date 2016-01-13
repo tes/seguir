@@ -11,12 +11,10 @@ var _ = require('lodash');
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-      q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function addPost (keyspace, user, content, content_type, timestamp, visibility, altid, next) {
-
     if (!next) { next = altid; altid = null; }
 
     var post = client.generateId();
@@ -59,7 +57,6 @@ module.exports = function (api) {
   }
 
   function _updatePost (keyspace, post, content, content_type, visibility, next) {
-
     var convertedContent = api.common.convertContentToString(content, content_type);
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not updated.')); }
@@ -71,7 +68,6 @@ module.exports = function (api) {
       if (err) { return next(err); }
       next(null, {status: 'updated'});
     });
-
   }
 
   function removePost (keyspace, user, post, next) {
@@ -145,5 +141,4 @@ module.exports = function (api) {
     updatePost: updatePost,
     updatePostByAltid: updatePostByAltid
   };
-
 };

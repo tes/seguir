@@ -5,7 +5,6 @@ var async = require('async');
 var schemaVersion = 1;
 
 function setup (client, keyspace, next) {
-
   var tables = [
     'CREATE TABLE ' + keyspace + '.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))',
     'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',

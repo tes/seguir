@@ -5,7 +5,6 @@ var RSMQWorker = require('rsmq-worker');
 var clients = [];
 
 module.exports = function (config) {
-
   if (!config || !config.messaging) {
     return { enabled: false };
   }
@@ -91,11 +90,9 @@ module.exports = function (config) {
     enabled: true,
     feed: config.messaging.feed
   };
-
 };
 
 function client (config) {
-
   var redisConfig = config && config.messaging ? config.messaging : {};
   var redisClient = redis(redisConfig);
 
@@ -103,5 +100,4 @@ function client (config) {
   clients.push(redisClient);
 
   return redisClient;
-
 }
