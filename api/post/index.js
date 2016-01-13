@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var async = require('async');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -84,6 +85,17 @@ module.exports = function (api) {
     });
   }
 
+  function removePostsByAltid (keyspace, user, altid, next) {
+    getPostsByAltid(keyspace, user, altid, function (errGet, posts) {
+      if (errGet) { return next(errGet); }
+      async.map(posts, function (postItem, cb) {
+        _removePost(keyspace, postItem.post, cb);
+      }, function (errRemove, status) {
+        next(errRemove, status && status.length ? status[0] : status);
+      });
+    });
+  }
+
   function _removePost (keyspace, post, next) {
     var deleteData = [post];
     client.execute(q(keyspace, 'removePost'), deleteData, {cacheKey: 'post:' + post}, function (err, result) {
@@ -120,14 +132,27 @@ module.exports = function (api) {
     });
   }
 
+  function _validatePost (keyspace, liu, post, next) {
+    post.content = api.common.convertContentFromString(post.content, post.content_type);
+    api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+      if (err) { return next(err); }
+      api.user.mapUserIdToUser(keyspace, post, ['user'], liu, next);
+    });
+  }
+
   function getPostByAltid (keyspace, liu, altid, next) {
     api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, post) {
       if (err) { return next(err); }
-      post.content = api.common.convertContentFromString(post.content, post.content_type);
-      api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
-        if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, post, ['user'], liu, next);
-      });
+      _validatePost(keyspace, liu, post, next);
+    });
+  }
+
+  function getPostsByAltid (keyspace, liu, altid, next) {
+    api.common.get(keyspace, 'selectPostByAltid', [altid], 'many', function (err, posts) {
+      if (err) { return next(err); }
+      async.map(posts, function (post, cb) {
+        _validatePost(keyspace, liu, post, cb);
+      }, next);
     });
   }
 
@@ -135,8 +160,10 @@ module.exports = function (api) {
     addPost: addPost,
     removePost: removePost,
     removePostByAltid: removePostByAltid,
+    removePostsByAltid: removePostsByAltid,
     getPost: getPost,
     getPostByAltid: getPostByAltid,
+    getPostsByAltid: getPostsByAltid,
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
     updatePostByAltid: updatePostByAltid
