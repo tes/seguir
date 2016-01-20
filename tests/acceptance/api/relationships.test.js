@@ -2,7 +2,7 @@
  * Relationships
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
@@ -11,16 +11,15 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Relationships] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {};
+    var api;
+    var users = {};
 
     before(function (done) {
       this.timeout(20000);
@@ -45,7 +44,6 @@ databases.forEach(function (db) {
     });
 
     describe('relationships', function () {
-
       var actions = [
         {type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
         {type: 'follow', user: 'cliftonc', user_follower: 'ted'},
@@ -111,10 +109,6 @@ databases.forEach(function (db) {
           done();
         });
       });
-
     });
-
   });
-
 });
-

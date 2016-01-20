@@ -12,9 +12,8 @@ var async = require('async');
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-      q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   function addFriend (keyspace, user, user_friend, timestamp, next) {
     var friend = client.generateId();
@@ -88,7 +87,6 @@ module.exports = function (api) {
   }
 
   function userCanSeeItem (keyspace, user, item, user_properties, next) {
-
     // Check if the item provided is one that privacy controls apply to
     var privacyCheckRequired = item.friend || item.friend_request || item.visibility !== api.visibility.PUBLIC;
     if (!privacyCheckRequired) return next();
@@ -119,7 +117,6 @@ module.exports = function (api) {
       // Otherwise they can't see it
       next({statusCode: 403, message: 'You are not allowed to see this item.'});
     }
-
   }
 
   function getFriendFromObject (keyspace, liu, item, next) {
@@ -223,7 +220,7 @@ module.exports = function (api) {
       if (err) { return next(null, false, null, null); }
       var isFriend = !!(friend && !!friend.friend);
       var isFriendSince = isFriend ? friend.since : null;
-      return next(null, isFriend, isFriendSince, friend ? friend : null);
+      return next(null, isFriend, isFriendSince, friend || null);
     });
   }
 
@@ -262,5 +259,4 @@ module.exports = function (api) {
     isFriendRequestPending: isFriendRequestPending,
     friendsInCommon: friendsInCommon
   };
-
 };

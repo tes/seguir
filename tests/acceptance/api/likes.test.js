@@ -2,7 +2,7 @@
  * Likes
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
@@ -11,16 +11,16 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Likes] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {}, likeId;
+    var api;
+    var users = {};
+    var likeId;
 
     before(function (done) {
       this.timeout(20000);
@@ -45,7 +45,6 @@ databases.forEach(function (db) {
     });
 
     describe('likes', function () {
-
       it('can like an item from a user', function (done) {
         api.like.addLike(keyspace, users['cliftonc'].user, 'http://github.com', api.client.getTimestamp(), function (err, like) {
           expect(err).to.be(null);
@@ -108,10 +107,6 @@ databases.forEach(function (db) {
           });
         });
       });
-
     });
-
   });
-
 });
-

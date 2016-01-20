@@ -9,7 +9,6 @@ var _ = require('lodash');
 var cleaned = false;
 
 function setupApi (keyspace, config, next) {
-
   Api(config, function (err, api) {
     if (err) { return next(err); }
     console.log('   Setting up keyspace in ' + api.client.type + '...');
@@ -40,7 +39,6 @@ function setupUsers (keyspace, api, users, next) {
 }
 
 function setupGraph (keyspace, api, users, actions, next) {
-
   function addFollow (follow, cb) {
     api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, follow.backfill, cb);
   }
@@ -69,14 +67,13 @@ function setupGraph (keyspace, api, users, actions, next) {
     // We need to add pseudo items for reciprocal friendships
     _.mapKeys(actions, function (result, key) {
       if (result.reciprocal) {
-        var reciprocal = actionResults[result.key].reciprocal,
-          reciprocalKey = result.reciprocal;
+        var reciprocal = actionResults[result.key].reciprocal;
+        var reciprocalKey = result.reciprocal;
         actionResults[reciprocalKey] = {friend: reciprocal};
       }
     });
     next(null, actionResults);
   });
-
 }
 
 function assertFeed (feed, actionResults, expected) {

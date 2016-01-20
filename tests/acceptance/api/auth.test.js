@@ -1,8 +1,7 @@
 /**
  * Acceptance test of the authentication API
  */
-
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var expect = require('expect.js');
 var Api = require('../../../api');
@@ -12,12 +11,10 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var keyspace = 'test_seguir_auth';
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Account and Application] - ' + db, function () {
-
     var api, auth, accountId, userId, appId, tokenId;
 
     this.timeout(10000);
@@ -33,7 +30,6 @@ databases.forEach(function (db) {
     });
 
     describe('Accounts', function () {
-
       it('can create accounts', function (done) {
         auth.addAccount('test', false, true, function (err, account) {
           expect(err).to.be(null);
@@ -65,11 +61,9 @@ databases.forEach(function (db) {
           });
         });
       });
-
     });
 
     describe('Account Users', function () {
-
       it('can create account users', function (done) {
         auth.addAccountUser(accountId, 'test', 'password', false, function (err, user) {
           expect(err).to.be(null);
@@ -129,11 +123,9 @@ databases.forEach(function (db) {
           done();
         });
       });
-
     });
 
     describe('Account Applications', function () {
-
       it('can create account applications', function (done) {
         auth.addApplication(accountId, 'Fancy Application', null, function (err, application) {
           expect(err).to.be(null);
@@ -188,11 +180,9 @@ databases.forEach(function (db) {
           done();
         });
       });
-
     });
 
     describe('Server access checks', function () {
-
       var application, token;
 
       before(function (done) {
@@ -372,9 +362,6 @@ databases.forEach(function (db) {
           done();
         });
       });
-
     });
-
   });
-
 });

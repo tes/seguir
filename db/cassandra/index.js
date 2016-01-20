@@ -9,9 +9,7 @@ var async = require('async');
 var _ = require('lodash');
 
 function createClient (config, next) {
-
   redisCache(config, function (err, cache) {
-
     if (err) {
       /* Purposeful ignore of err - never sent */
     }
@@ -100,7 +98,6 @@ function createClient (config, next) {
         cache.del(cacheKey, function () {
           next(null, resultObject, result && result.pageState);
         });
-
       });
     }
 
@@ -119,7 +116,7 @@ function createClient (config, next) {
           });
 
           client.batch(_.pluck(queries, 'query'), {prepare: true}, function (err) {
-            if (err) {return next(err);}
+            if (err) { return next(err); }
             // Clear the cache on batch if we have a cache key
             async.each(queries, function (query, cb) { cache.del(query.cacheKey, cb); }, next);
           });
@@ -197,9 +194,7 @@ function createClient (config, next) {
         stream: stream
       });
     });
-
   });
-
 }
 
 module.exports = createClient;

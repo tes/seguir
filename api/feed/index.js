@@ -18,13 +18,11 @@ var DEFAULT_PAGESIZE = 50;
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-    messaging = api.messaging,
-    q = client.queries;
+  var client = api.client;
+  var messaging = api.messaging;
+  var q = client.queries;
 
   function insertFollowersTimeline (jobData, next) {
-
     var read = 0;
     var finished = 0;
     var done = false;
@@ -41,7 +39,7 @@ module.exports = function (api) {
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
     client.stream(q(jobData.keyspace, 'selectFollowers'), [jobData.user], function (err, stream) {
-      if (err) {return next(err);}
+      if (err) { return next(err); }
       stream
         .on('data', function (row) {
           read++;
@@ -74,7 +72,6 @@ module.exports = function (api) {
   }
 
   function insertMentionedTimeline (jobData, next) {
-
     var getPost = function (cb) {
       api.post.getPost(jobData.keyspace, jobData.user, jobData.id, function (err, post) {
         if (err || !post || post.content_type !== 'text/html') return cb();
@@ -138,11 +135,9 @@ module.exports = function (api) {
       getMentionedNotFollowers,
       insertMentioned
     ], next);
-
   }
 
   function addFeedItem (keyspace, user, object, type, next) {
-
     var jobData = {
       keyspace: keyspace,
       user: user,
@@ -183,7 +178,6 @@ module.exports = function (api) {
       _insertFollowersTimeline,
       _insertMentionedTimeline
     ], next);
-
   }
 
   function notify (keyspace, action, user, item) {
@@ -201,9 +195,9 @@ module.exports = function (api) {
               return;
             }
             // Do not notify a user about things that they post or where they are the follower
-            var isUser = expandedItem.type === 'follow' ?
-            userObject.user.toString() === expandedItem.user_follower.user.toString() :
-            userObject.user.toString() === expandedItem.user.user.toString();
+            var isUser = expandedItem.type === 'follow'
+            ? userObject.user.toString() === expandedItem.user_follower.user.toString()
+            : userObject.user.toString() === expandedItem.user.user.toString();
             if (!isUser) {
               messaging.submit(NOTIFY_Q, {
                 action: action,
@@ -397,7 +391,6 @@ module.exports = function (api) {
   };
 
   function _getFeed (keyspace, liu, timeline, user, options, next) {
-
     var raw = options.raw;
     var feedType = options.type;
     var pageState = options.pageState;
@@ -414,13 +407,14 @@ module.exports = function (api) {
     query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery});
 
     client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
-
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
         if (raw) { return next(null, data); }
 
-        var timeline = data, followCache = {}, expandUser = false;
+        var timeline = data;
+        var followCache = {};
+        var expandUser = false;
 
         var expand = function (item, cb) {
           var expander = feedExpanders[item.type];
@@ -433,7 +427,6 @@ module.exports = function (api) {
         };
 
         async.mapSeries(timeline, function (item, cb) {
-
           if (!item.from_follow) {
             return expand(item, cb);
           }
@@ -457,26 +450,22 @@ module.exports = function (api) {
             followCache[item.from_follow.toString()] = 'active';
             expand(item, cb);
           });
-
         }, function (err, results) {
-
           /* Ensure caches clear */
           followCache = null;
 
           /* istanbul ignore if */
           if (err || !results) { return next(err); }
 
-          var feed = [], userCache = {};
+          var feed = [];
+          var userCache = {};
 
           // Now go and get the users in one go so we can cache results
           api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, userCache, function (err, resultsWithUsers) {
-
             if (err) { return next(err); }
 
             resultsWithUsers.forEach(function (result, index) {
-
               if (result) {
-
                 var currentResult = result;
 
                 // Copy elements from feed
@@ -504,26 +493,19 @@ module.exports = function (api) {
 
                 feed.push(currentResult);
               }
-
             });
 
             next(null, feed, nextPageState);
-
           });
-
         });
-
       } else {
         if (err) { return next(err); }
         next(null, []);
       }
-
     });
-
   }
 
   function seedFeed (keyspace, user, userFollowing, backfill, follow, next) {
-
     var feedOptions = {pageSize: Number(backfill), type: 'post'};
     getReversedUserFeed(keyspace, user, userFollowing, feedOptions, function (err, feed) {
       if (err) { return next(err); }
@@ -532,7 +514,6 @@ module.exports = function (api) {
         upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, follow.follow, cb);
       }, next);
     });
-
   }
 
   return {
@@ -546,5 +527,4 @@ module.exports = function (api) {
     getRawFeed: getRawFeed,
     seedFeed: seedFeed
   };
-
 };

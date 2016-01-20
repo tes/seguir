@@ -2,7 +2,7 @@
  * Users
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
 var initialiser = require('../../fixtures/initialiser');
@@ -10,16 +10,15 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Users] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {};
+    var api;
+    var users = {};
 
     before(function (done) {
       this.timeout(20000);
@@ -31,7 +30,6 @@ databases.forEach(function (db) {
     });
 
     describe('users', function () {
-
       it('can create users', function (done) {
         initialiser.setupUsers(keyspace, api, [
           {username: 'cliftonc', altid: '1'},
@@ -125,11 +123,9 @@ databases.forEach(function (db) {
           });
         });
       });
-
     });
 
     describe('initialising users and follows', function () {
-
       var actions = [
         {key: 'post-public', type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'},
         {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
@@ -145,7 +141,6 @@ databases.forEach(function (db) {
       });
 
       it('can optionally initialise a user with a follow relationship and automatically populate their feed', function (done) {
-
         var initialise = {
           follow: {
             users: [users['cliftonc'].username, users['phteven'].username],
@@ -166,11 +161,9 @@ databases.forEach(function (db) {
             done();
           });
         });
-
       });
 
       it('can optionally backfill a follow relationship and automatically populate their feed', function (done) {
-
         api.user.addUser(keyspace, 'bitzer', 'woof', {userdata: {type: 'dog'}}, function (err, user) {
           expect(err).to.be(null);
           api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
@@ -183,11 +176,9 @@ databases.forEach(function (db) {
             });
           });
         });
-
       });
 
       it('if I unfollow a user who I backfilled I no longer see their items in my feed', function (done) {
-
         api.follow.addFollower(keyspace, users['cliftonc'].user, users['json'].user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', function (err, follow) {
           expect(err).to.be(null);
           api.feed.getFeed(keyspace, users['json'].user, users['json'].user, function (err, feed) {
@@ -204,12 +195,7 @@ databases.forEach(function (db) {
             });
           });
         });
-
       });
-
     });
-
   });
-
 });
-

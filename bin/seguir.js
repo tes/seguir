@@ -23,7 +23,7 @@ if (program.config) {
   var configFile = path.resolve('.', program.config);
   try {
     configFn = require(configFile);
-  } catch(ex) {
+  } catch (ex) {
     console.log('Cant open config: ' + ex.message);
     process.exit(1);
   }
@@ -41,24 +41,21 @@ function error (err) {
 
 // Async load config
 configFn(function (err, config) {
-
   if (err) return error(err);
 
   require('../api')(config, function (err, api) {
-
     if (err) { return process.exit(0); }
 
     var setupFile = program.setup;
 
     if (setupFile) {
-
       var setup;
 
       setupFile = path.resolve('.', setupFile);
 
       try {
         setup = require(setupFile);
-      } catch(ex) {
+      } catch (ex) {
         console.log('Cant open setup file: ' + ex.message);
         process.exit(1);
       }
@@ -79,9 +76,7 @@ configFn(function (err, config) {
           });
         });
       });
-
     } else {
-
       var tasks = {
         '[setup]   Check current setup': checkSetup,
         '[setup]   Initialise a new database instance': coreSetup,
@@ -107,7 +102,6 @@ configFn(function (err, config) {
       ], function (answer) {
         tasks[answer.task]();
       });
-
     }
 
     function checkSetup () {
@@ -225,7 +219,6 @@ configFn(function (err, config) {
               process.exit();
             });
           });
-
         });
       });
     }
@@ -532,7 +525,5 @@ configFn(function (err, config) {
         next();
       });
     }
-
   });
-
 });

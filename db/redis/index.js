@@ -6,7 +6,6 @@ var _ = require('lodash');
 var redis = require('redis');
 
 module.exports = function client (config) {
-
   var redisConfig = _.defaults(config || {}, { host: 'localhost', port: 6379, options: { } });
   redisConfig.options.retry_max_delay = redisConfig.options.retry_max_delay || 10000;
 
@@ -19,5 +18,4 @@ module.exports = function client (config) {
   redisClient.select(redisConfig.db || 0);
 
   return redisClient;
-
 };

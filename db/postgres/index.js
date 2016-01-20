@@ -6,7 +6,6 @@ var async = require('async');
 var QueryStream = require('pg-query-stream');
 
 function createClient (config, next) {
-
   var pgConfig = config.postgres;
 
   function getConnectionString () {
@@ -176,7 +175,6 @@ function createClient (config, next) {
     },
     stream: stream
   });
-
 }
 
 module.exports = createClient;

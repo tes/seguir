@@ -7,7 +7,7 @@
  * - assertFeed = check that the feed you get is what you expect it to be.
  */
 
-/*eslint-env node, mocha */
+/* eslint-env node, mocha */
 
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
@@ -16,16 +16,15 @@ var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'ca
 var _ = require('lodash');
 
 databases.forEach(function (db) {
-
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Feeds] - ' + db, function () {
-
     this.timeout(10000);
     this.slow(5000);
 
-    var api, users = {};
+    var api;
+    var users = {};
 
     before(function (done) {
       this.timeout(20000);
@@ -52,11 +51,9 @@ databases.forEach(function (db) {
     });
 
     describe('feeds', function () {
-
       var actionResults = {};
 
       before(function (done) {
-
         var actions = [
           {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
           {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
@@ -422,9 +419,6 @@ databases.forEach(function (db) {
           });
         });
       });
-
     });
-
   });
-
 });

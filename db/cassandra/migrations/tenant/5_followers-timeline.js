@@ -1,7 +1,6 @@
 var async = require('async');
 
 function apply (keyspace, api, next) {
-
   var addPostAltidCql = [
     'CREATE TABLE ' + keyspace + '.followers_timeline (follow uuid, user uuid, user_follower uuid, is_private boolean, is_personal boolean, is_public boolean, time timeuuid, since timestamp, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)',
     'CREATE INDEX ON ' + keyspace + '.followers_timeline(follow)',
@@ -40,7 +39,6 @@ function apply (keyspace, api, next) {
         });
       }
     ], next);
-
 }
 
 function rollback (keyspace, api, next) {

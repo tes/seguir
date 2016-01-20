@@ -6,11 +6,10 @@ var anonyomousUser = {user: null, username: 'Not logged in.'};
 var debug = require('debug')('seguir:auth');
 
 function Auth (api) {
-
-  var client = api.client,
-      q = client.queries,
-      keyspace = api.config.keyspace,
-      setupTenant = client.setup.setupTenant;
+  var client = api.client;
+  var q = client.queries;
+  var keyspace = api.config.keyspace;
+  var setupTenant = client.setup.setupTenant;
 
   /**
    * Core account API
@@ -26,7 +25,6 @@ function Auth (api) {
         if (err) { return next(err); }
         next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
       });
-
     });
   }
 
@@ -126,7 +124,7 @@ function Auth (api) {
   }
 
   function addApplication (account, name, appid, next) {
-    if (!next) { next = appid; appid = null; };
+    if (!next) { next = appid; appid = null; }
     appid = appid || client.generateId();
     var appkeyspace = generateKeyspaceFromName(name);
     var enabled = true;
@@ -191,14 +189,13 @@ function Auth (api) {
    * Checks incoming headers for the application and logged in user tokens.
    */
   function checkRequest (req, res, next) {
-
     // TODO: Cleaner way of excluding some paths from the auth check
     if (req.url === '/status') {
       return next(null);
     }
 
-    var appAuthorization = req.headers.authorization,
-        user = req.headers[userHeader];
+    var appAuthorization = req.headers.authorization;
+    var user = req.headers[userHeader];
 
     if (!appAuthorization) {
       return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
@@ -207,7 +204,6 @@ function Auth (api) {
     var appId = appAuthorization.split(':')[0].split(' ')[1];
 
     checkApplicationToken(appId, function (err, token) {
-
       if (err) { return next(err); }
       if (!token) {
         return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
@@ -223,9 +219,7 @@ function Auth (api) {
       } else {
         return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
       }
-
     });
-
   }
 
   function checkApplicationToken (tokenid, next) {
@@ -266,7 +260,6 @@ function Auth (api) {
   }
 
   function coerceUserToUuid (user_keyspace, ids, next) {
-
     debug('Coercing %s to uuid', ids);
 
     if (!ids) {
@@ -274,7 +267,6 @@ function Auth (api) {
     }
 
     var coerce = function (id, cb) {
-
       if (!id) {
         return cb(null, null);
       }
@@ -300,7 +292,6 @@ function Auth (api) {
           return cb(err, user && user.user);
         }
       });
-
     };
 
     if (!Array.isArray(ids)) {
@@ -311,11 +302,9 @@ function Auth (api) {
         next(null, uuids);
       });
     }
-
   }
 
   function checkUser (user_keyspace, id, next) {
-
     debug('Checking user %s', id);
 
     if (!id) {
@@ -344,7 +333,6 @@ function Auth (api) {
         return next(null, user);
       });
     }
-
   }
 
   return {
@@ -369,7 +357,6 @@ function Auth (api) {
     checkUser: checkUser,
     coerceUserToUuid: coerceUserToUuid
   };
-
 }
 
 function generateKeyspaceFromName (str) {
@@ -384,4 +371,3 @@ Auth.headerNames = {
 };
 
 module.exports = Auth;
-

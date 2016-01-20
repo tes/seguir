@@ -14,7 +14,6 @@ var debug = require('debug')('seguir:cassandra:cache');
 var UUID_COLUMNS = ['post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like'];
 
 module.exports = function (config, next) {
-
   var _stats = {};
   var stats = function (key, action) {
     var keyType = key.split(':')[0];
@@ -56,7 +55,6 @@ module.exports = function (config, next) {
    * Then we do the reverse on the way back
    */
   var to_cache = function (object) {
-
     if (!object) return;
 
     // Convert all of the Cassandra IDs
@@ -73,11 +71,9 @@ module.exports = function (config, next) {
     if (clone.posted) { clone.posted = clone.posted.toISOString(); }
 
     return clone;
-
   };
 
   var from_cache = function (clone) {
-
     if (!clone) return;
 
     // Convert all of the Cassandra IDs back
@@ -150,6 +146,4 @@ module.exports = function (config, next) {
   };
 
   next(null, cache);
-
 };
-

@@ -13,9 +13,8 @@ var debug = require('debug')('seguir:user');
  *
  */
 module.exports = function (api) {
-
-  var client = api.client,
-    q = client.queries;
+  var client = api.client;
+  var q = client.queries;
 
   var _userCacheStats = {};
   var userCacheStats = function (key, action) {
@@ -44,7 +43,6 @@ module.exports = function (api) {
    * @param next
    */
   function addUser (keyspace, username, altid, options, next) {
-
     if (!next) {
       next = options;
       options = {};
@@ -60,7 +58,6 @@ module.exports = function (api) {
 
     // Check user doesn't exist as per issue #36
     getUserByAltId(keyspace, altid, function (err, existingUser) {
-
       if (err && err.statusCode !== 404) { return next(err); }
       if (existingUser) {
         return next({
@@ -84,7 +81,6 @@ module.exports = function (api) {
         }
       });
     });
-
   }
 
   function initialiseUserWith (keyspace, user, initialise, next) {
@@ -96,7 +92,6 @@ module.exports = function (api) {
       if (err) { return next(err); }
       next(null, user);
     });
-
   }
 
   function initialiseUserWithFollowers (keyspace, user, follow, next) {
@@ -166,7 +161,6 @@ module.exports = function (api) {
   }
 
   function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, expandUser, userCache, next) {
-
     // expandUser and userCache optional
     if (!next) { next = userCache; userCache = {}; }
     if (!next) { next = expandUser; expandUser = true; }
@@ -176,15 +170,13 @@ module.exports = function (api) {
     }
 
     var getUsersForFields = function (item, cb) {
-
       if (!item) { return cb(); }
 
       // Always replace the longest embedded field to
       // ensure user_ and user_friend not replaced twice
-      fields.sort(function (a, b) {return b.length - a.length; });
+      fields.sort(function (a, b) { return b.length - a.length; });
 
       async.mapSeries(fields, function (field, eachCb) {
-
         if (!item[field]) { return eachCb(null); }
 
         // If the item is already expanded lets just move on
@@ -217,7 +209,6 @@ module.exports = function (api) {
             eachCb(err);
           });
         }
-
       }, function (err) {
         if (err) {
           return cb(err);
@@ -237,11 +228,9 @@ module.exports = function (api) {
     } else {
       getUsersForFields(itemOrItems, next);
     }
-
   }
 
   function getUserRelationship (keyspace, user, other_user, next) {
-
     async.parallel({
       friend: async.apply(api.friend.isFriend, keyspace, user, other_user),
       friendRequest: async.apply(api.friend.isFriendRequestPending, keyspace, user, other_user),
@@ -250,7 +239,6 @@ module.exports = function (api) {
       inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user),
       followerCount: async.apply(api.follow.followerCount, keyspace, other_user)
     }, function (err, result) {
-
       if (err) { return next(err); }
 
       var relationship = {
@@ -273,9 +261,7 @@ module.exports = function (api) {
       };
 
       next(null, relationship);
-
     });
-
   }
 
   return {
@@ -288,5 +274,4 @@ module.exports = function (api) {
     getUserRelationship: getUserRelationship,
     userCacheStats: _userCacheStats
   };
-
 };

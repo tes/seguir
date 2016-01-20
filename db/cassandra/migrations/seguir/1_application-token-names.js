@@ -8,7 +8,6 @@ var async = require('async');
  * clients, then removing the old.
  */
 function apply (keyspace, api, next) {
-
   var addDescription = 'ALTER TABLE ' + keyspace + '.application_tokens ADD description text';
   var getApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM ' + keyspace + '.applications';
   var insertApplicationToken = 'INSERT INTO ' + keyspace + '.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES(?, ?, ?, ?, ?, ?)';

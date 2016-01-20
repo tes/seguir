@@ -1,7 +1,6 @@
 var async = require('async');
 
 function apply (keyspace, api, next) {
-
   var addPostAltidCql = [
     'CREATE INDEX ON ' + keyspace + '.user_timeline(type)',
     'CREATE INDEX ON ' + keyspace + '.feed_timeline(type)'
