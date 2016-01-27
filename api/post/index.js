@@ -150,9 +150,24 @@ module.exports = function (api) {
   function getPostsByAltid (keyspace, liu, altid, next) {
     api.common.get(keyspace, 'selectPostByAltid', [altid], 'many', function (err, posts) {
       if (err) { return next(err); }
+      var userCanSeeItems = [];
+      var userCanSeeItemError = null;
       async.map(posts, function (post, cb) {
-        _validatePost(keyspace, liu, post, cb);
-      }, next);
+        _validatePost(keyspace, liu, post, function (err2, item) {
+          if (err2) {
+            userCanSeeItemError = err2;
+          } else {
+            userCanSeeItems.push(item);
+          }
+          cb(null);
+        });
+      }, function () {
+        // in the above loop, if _validatePost return error for 1 of item,
+        // all the unerrored posts will be ignored in this callback
+        // so we need to error only when _validatePost error for all items
+        if (userCanSeeItems.length === 0) { return next(userCanSeeItemError); }
+        next(null, userCanSeeItems);
+      });
     });
   }
 
