@@ -218,19 +218,19 @@ databases.forEach(function (db) {
         api.post.addPost(keyspace, users['json'].user, '{"hello":"world"}', 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', function (err, post) {
           expect(err).to.be(null);
           expect(post.altid).to.be('P-1234');
-          api.post.addPost(keyspace, users['json'].user, '{"hello":"world"}', 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', function (err, post) {
+          api.post.addPost(keyspace, users['json'].user, '{"hello":"world"}', 'application/json', api.client.getTimestamp(), api.visibility.PERSONAL, 'P-1234', function (err, post) {
             expect(err).to.be(null);
             expect(post.altid).to.be('P-1234');
             api.post.getPostsByAltid(keyspace, users['json'].user, 'P-1234', function (err, retrievedPosts) {
               expect(err).to.be(null);
               expect(retrievedPosts[0].altid).to.be('P-1234');
               expect(retrievedPosts[1].altid).to.be('P-1234');
-              api.post.removePostsByAltid(keyspace, users['json'].user, 'P-1234', function (err, status) {
+              api.post.removePostsByAltid(keyspace, users['cliftonc'].user, 'P-1234', function (err, status) {
                 expect(err).to.be(null);
                 expect(status.status).to.be('removed');
                 api.post.getPostsByAltid(keyspace, users['json'].user, 'P-1234', function (err, retrievedPosts) {
                   expect(err).to.be(null);
-                  expect(retrievedPosts).to.be.empty;
+                  expect(retrievedPosts.length).to.be(1);
                   done();
                 });
               });
