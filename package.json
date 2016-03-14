@@ -44,17 +44,17 @@
     "pg-query-stream": "^1.0.0",
     "redis": "^2.4.2",
     "restify": "^4.0.3",
-    "rsmq": "^0.4.0",
+    "rsmq": "^0.6.0",
     "rsmq-worker": "^0.3.5",
     "sanitize-html": "^1.5.3",
     "string-template": "^1.0.0"
   },
   "devDependencies": {
-    "apidoc": "^0.13.0",
+    "apidoc": "^0.15.1",
     "casual": "^1.4.7",
     "expect.js": "^0.3.1",
-    "husky": "^0.8.1",
-    "istanbul": "^0.3.14",
+    "husky": "^0.11.3",
+    "istanbul": "^0.4.2",
     "mocha": "^2.2.5",
     "semistandard": "^7.0.4",
     "simple-statistics": "^1.0.0"
