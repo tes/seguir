@@ -164,7 +164,7 @@ databases.forEach(function (db) {
             expect(result.status).to.be('removed');
             api.feed.getRawFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
               expect(err).to.be(null);
-              expect(_.pluck(feed, 'item')).to.not.contain(friend.friend);
+              expect(_.map(feed, 'item')).to.not.contain(friend.friend);
               done();
             });
           });

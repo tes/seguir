@@ -69,7 +69,7 @@ module.exports = function (api) {
     if (item[testField]) {
       var embed = {};
       _.forOwn(item, function (value, key) {
-        if (key.indexOf(prefix) === 0 && !_.contains(ignore, key)) {
+        if (key.indexOf(prefix) === 0 && !_.includes(ignore, key)) {
           var embedKey = key.replace(prefix, '');
           embed[embedKey] = value;
           delete item[key];

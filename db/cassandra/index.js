@@ -115,7 +115,7 @@ function createClient (config, next) {
             debug('batch', query.query, query.params);
           });
 
-          client.batch(_.pluck(queries, 'query'), {prepare: true}, function (err) {
+          client.batch(_.map(queries, 'query'), {prepare: true}, function (err) {
             if (err) { return next(err); }
             // Clear the cache on batch if we have a cache key
             async.each(queries, function (query, cb) { cache.del(query.cacheKey, cb); }, next);

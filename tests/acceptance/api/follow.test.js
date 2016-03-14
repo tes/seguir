@@ -145,7 +145,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user and get it in the right order', function (done) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds[0]).to.be(users['ted'].user.toString());
           expect(followerIds[1]).to.be(users['phteven'].user.toString());
           done();
@@ -162,8 +162,15 @@ databases.forEach(function (db) {
             expect(err2).to.be(null);
             expect(followers2.length).to.be(1);
             expect(followers2[0].user_follower.user.toString()).to.be(users['phteven'].user.toString());
-            expect(pageState2).to.be(null);
-            done();
+            if (pageState2) {
+              // Cassandra specific: Cassandra returns a page state unless there are zero results
+              api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState2 }, function (err3, followers3, pageState3) {
+                expect(pageState3).to.be(null);
+                done();
+              });
+            } else {
+              done();
+            }
           });
         });
       });
@@ -179,7 +186,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user when not logged in', function (done) {
         api.follow.getFollowers(keyspace, null, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.contain(users['phteven'].user.toString());
           expect(followerIds).to.contain(users['ted'].user.toString());
           done();
@@ -197,7 +204,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user but will show personal if one of the two users', function (done) {
         api.follow.getFollowers(keyspace, users['alfred'].user, users['alfred'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.contain(users['jenny'].user.toString());
           done();
         });
@@ -206,7 +213,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user but will show private if one of the two users', function (done) {
         api.follow.getFollowers(keyspace, users['harold'].user, users['harold'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.contain(users['jenny'].user.toString());
           done();
         });
@@ -215,7 +222,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user but will not show private if not a friend', function (done) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.not.contain(users['jenny'].user.toString());
           done();
         });
@@ -224,7 +231,7 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user but will not show private if not logged in', function (done) {
         api.follow.getFollowers(keyspace, null, users['harold'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.not.contain(users['jenny'].user.toString());
           done();
         });
@@ -235,7 +242,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, function (err, followers) {
             expect(err).to.be(null);
-            var followerIds = _.map(_.pluck(followers, 'user_follower'), function (item) { return item.user.toString(); });
+            var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
             expect(followerIds).to.contain(users['jenny'].user.toString());
             done();
           });
@@ -250,7 +257,7 @@ databases.forEach(function (db) {
             expect(result.status).to.be('removed');
             api.feed.getRawFeed(keyspace, users['bill'].user, users['bill'].user, function (err, feed) {
               expect(err).to.be(null);
-              var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+              var followerIds = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
               expect(followerIds).to.not.contain(follow.follow.toString());
               done();
             });
@@ -263,7 +270,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, function (err, feed) {
             expect(err).to.be(null);
-            var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            var followerIds = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
             expect(followerIds).to.contain(follow.follow.toString());
             done();
           });
@@ -275,7 +282,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.feed.getRawFeed(keyspace, users['ted'].user, users['ted'].user, function (err, feed) {
             expect(err).to.be(null);
-            var followerIds = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+            var followerIds = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
             expect(followerIds).to.not.contain(follow.follow.toString());
             done();
           });

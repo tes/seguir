@@ -36,7 +36,7 @@ module.exports = function (api) {
 
   function addFriendOneWay (keyspace, friend, user, user_friend, timestamp, next) {
     var data = [friend, user, user_friend, timestamp, api.visibility.PRIVATE];
-    var object = _.object(['friend', 'user', 'user_friend', 'timestamp', 'visibility'], data);
+    var object = _.zipObject(['friend', 'user', 'user_friend', 'timestamp', 'visibility'], data);
     object.visibility = api.visibility.PERSONAL;
     client.execute(q(keyspace, 'upsertFriend'), data, {}, function (err) {
       /* istanbul ignore if */
@@ -162,13 +162,13 @@ module.exports = function (api) {
       function (cb) {
         client.execute(q(keyspace, 'selectFriends'), [liu], {}, function (err, result) {
           if (err) return cb(err);
-          cb(null, _.pluck(result.rows, 'user_friend'));
+          cb(null, _.map(result.rows, 'user_friend'));
         });
       },
       function (cb) {
         client.execute(q(keyspace, 'selectFriends'), [user], {}, function (err, result) {
           if (err) return cb(err);
-          cb(null, _.pluck(result.rows, 'user_friend'));
+          cb(null, _.map(result.rows, 'user_friend'));
         });
       }
     ], function (err, results) {

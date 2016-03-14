@@ -130,7 +130,7 @@ databases.forEach(function (db) {
             expect(err).to.be(null);
             api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, function (err, feed) {
               expect(err).to.be(null);
-              var ids = _.map(_.pluck(feed, 'item'), function (item) { return item.toString(); });
+              var ids = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
               expect(ids).to.not.contain(post.post.toString());
               done();
             });
@@ -143,7 +143,7 @@ databases.forEach(function (db) {
           expect(err).to.be(null);
           api.feed.getFeed(keyspace, users['harold'].user, users['jenny'].user, function (err, feed) {
             expect(err).to.be(null);
-            var ids = _.map(_.pluck(feed, 'post'), function (item) { return item.toString(); });
+            var ids = _.map(_.map(feed, 'post'), function (item) { return item.toString(); });
             expect(ids).to.not.contain(post.post.toString());
             done();
           });
