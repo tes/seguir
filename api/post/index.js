@@ -42,6 +42,7 @@ module.exports = function (api) {
           altid: altid
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
+        api.metrics.increment('post.add');
       });
     });
   }
@@ -67,6 +68,7 @@ module.exports = function (api) {
     client.execute(q(keyspace, 'updatePost'), data, {cacheKey: 'post:' + post}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
+      api.metrics.increment('post.update');
       next(null, {status: 'updated'});
     });
   }
@@ -102,6 +104,7 @@ module.exports = function (api) {
       if (err) return next(err);
       api.feed.removeFeedsForItem(keyspace, post, function (err) {
         if (err) return next(err);
+        api.metrics.increment('post.remove');
         next(null, {status: 'removed'});
       });
     });
