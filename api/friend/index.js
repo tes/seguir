@@ -32,6 +32,7 @@ module.exports = function (api) {
         api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], user, next);
       });
     });
+    api.metrics.increment('friend.add');
   }
 
   function addFriendOneWay (keyspace, friend, user, user_friend, timestamp, next) {
@@ -54,6 +55,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp, visibility: api.visibility.PRIVATE});
     });
+    api.metrics.increment('friend_request.add');
   }
 
   function acceptFriendRequest (keyspace, user, friend_request_id, next) {
@@ -66,6 +68,7 @@ module.exports = function (api) {
         addFriend(keyspace, friend_request.user, friend_request.user_friend, api.client.getTimestamp(), next);
       });
     });
+    api.metrics.increment('friend_request.accept');
   }
 
   function removeFriend (keyspace, user, user_friend, next) {

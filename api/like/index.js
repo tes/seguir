@@ -32,6 +32,7 @@ module.exports = function (api) {
         });
       });
     });
+    api.metrics.increment('like.add');
   }
 
   function alterLikeCount (keyspace, item, count, next) {
@@ -71,6 +72,7 @@ module.exports = function (api) {
         });
       });
     });
+    api.metrics.increment('like.remove');
   }
 
   function getLikeFromObject (keyspace, item, next) {
@@ -108,6 +110,7 @@ module.exports = function (api) {
         api.user.mapUserIdToUser(keyspace, like, ['user'], user, next);
       });
     });
+    api.metrics.increment('like.check');
   }
 
   return {

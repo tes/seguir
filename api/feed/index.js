@@ -407,6 +407,8 @@ module.exports = function (api) {
 
     query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery});
 
+    api.metrics.increment('feed.' + timeline + '.list');
+
     client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
       if (err) { return next(err); }
 
