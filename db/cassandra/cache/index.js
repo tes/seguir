@@ -7,11 +7,10 @@
 
 var TWENTY_FOUR_HOURS = 24 * 3600;
 var redis = require('../../redis');
-var _ = require('lodash');
 var cassandra = require('cassandra-driver');
 var Uuid = cassandra.types.Uuid;
 var debug = require('debug')('seguir:cassandra:cache');
-var UUID_COLUMNS = ['post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like'];
+var UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'time'];
 
 module.exports = function (config, next) {
   var _stats = {};
@@ -57,8 +56,13 @@ module.exports = function (config, next) {
   var to_cache = function (object) {
     if (!object) return;
 
-    // Convert all of the Cassandra IDs
-    var clone = _.clone(object);
+    // Clone via stringify / parse
+    // The cassandra object is a Row, that has additional functions attached
+    // https://github.com/datastax/nodejs-driver/blob/master/lib/types/row.js
+    // We do not want to persist these into the cache
+    // May be a more performant way to do this later
+    var clone = JSON.parse(JSON.stringify(object));
+
     UUID_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
@@ -66,10 +70,10 @@ module.exports = function (config, next) {
     // Convert any embedded object to JSON
     if (clone.userdata) { clone.userdata = JSON.stringify(clone.userdata); }
 
-    // Convert any timestamps to ISO strings
-    if (clone.since) { clone.since = clone.since.toISOString(); }
-    if (clone.posted) { clone.posted = clone.posted.toISOString(); }
-
+    // Trim any null properties
+    for (var p in clone) {
+      if (!clone[p]) delete clone[p];
+    }
     return clone;
   };
 

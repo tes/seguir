@@ -7,8 +7,6 @@ var redis = require('redis');
 
 module.exports = function client (config) {
   var redisConfig = _.defaults(config || {}, { host: 'localhost', port: 6379, options: { } });
-  redisConfig.options.retry_max_delay = redisConfig.options.retry_max_delay || 10000;
-
   var redisClient = redis.createClient(redisConfig.port, redisConfig.host, redisConfig.options);
 
   redisClient.on('error', function (err) {

@@ -76,7 +76,7 @@ module.exports = function (config) {
   function shutdown () {
     clients.forEach(function (client) {
       client.unsubscribe();
-      client.end();
+      client.quit();
     });
   }
 
