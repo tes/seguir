@@ -262,6 +262,7 @@ module.exports = function (api) {
 
       next(null, relationship);
     });
+    api.metrics.increment('user.relationship');
   }
 
   return {

@@ -1,7 +1,9 @@
 var path = require('path');
 var consoleLogger = require('./logger');
+var _ = require('lodash');
 
-module.exports = function (config, logger, next) {
+module.exports = function (config, logger, metrics, next) {
+  if (!next) { next = metrics; metrics = { increment: _.noop }; }
   if (!next) { next = logger; logger = consoleLogger; }
 
   require('../db')(config, function (err, client) {
@@ -11,6 +13,7 @@ module.exports = function (config, logger, next) {
 
     var api = {};
     api.logger = logger;
+    api.metrics = metrics;
     api.client = client;
     api.config = config;
     api.messaging = messaging;

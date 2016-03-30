@@ -77,6 +77,7 @@ module.exports = function (api) {
             });
           });
         });
+      api.metrics.increment('follower.add');
     });
   }
 
@@ -127,6 +128,7 @@ module.exports = function (api) {
             });
           });
         });
+      api.metrics.increment('follower.remove');
     });
   }
 
@@ -282,6 +284,7 @@ module.exports = function (api) {
         }
       });
     });
+    api.metrics.increment('follower.list');
   }
 
   return {

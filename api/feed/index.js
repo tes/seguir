@@ -234,6 +234,7 @@ module.exports = function (api) {
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
+    api.metrics.increment('feed.' + timeline + '.' + type);
   }
 
   function removeFeedsForItem (keyspace, item, next) {
@@ -405,6 +406,8 @@ module.exports = function (api) {
     }
 
     query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery});
+
+    api.metrics.increment('feed.' + timeline + '.list');
 
     client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
       if (err) { return next(err); }
