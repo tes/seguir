@@ -25,7 +25,7 @@ module.exports = function (api) {
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
     var data = [post, user, convertedContent, content_type, timestamp, visibility, altid];
-    var object = _.object(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+    var object = _.zipObject(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
 
     client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
       /* istanbul ignore if */

@@ -12,9 +12,9 @@ module.exports = function (api) {
 
   function toApply (schemaVersions, migrations) {
     var minimumSchemaVersion = schemaVersions.length ? _.min(schemaVersions) : -1;
-    var migrationVersions = _.filter(_.pluck(migrations, 'version'), function (version) { if (version >= minimumSchemaVersion) return true; });
+    var migrationVersions = _.filter(_.map(migrations, 'version'), function (version) { if (version >= minimumSchemaVersion) return true; });
     var toApplyVersions = _.difference(migrationVersions, schemaVersions);
-    var migrationsToApply = _.filter(migrations, function (item) { return _.contains(toApplyVersions, item.version); });
+    var migrationsToApply = _.filter(migrations, function (item) { return _.includes(toApplyVersions, item.version); });
     return migrationsToApply;
   }
 
@@ -70,7 +70,7 @@ module.exports = function (api) {
     ], function (err, results) {
       if (err) return next(err);
       // Have to convert the schema version to an integer from cassandra Integer type
-      var schemaVersions = _.map(_.pluck(results[0], 'version'), function (v) { return +v.toString(); });
+      var schemaVersions = _.map(_.map(results[0], 'version'), function (v) { return +v.toString(); });
       var migrations = results[1];
       next(null, toApply(schemaVersions, migrations));
     });

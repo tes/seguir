@@ -60,7 +60,7 @@ module.exports = function (api) {
       var isPersonal = api.visibility.isPersonal(visibility);
       var isPrivate = api.visibility.isPrivate(visibility);
       var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, isPrivate, isPersonal, isPublic];
-      var newFollow = _.object(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
+      var newFollow = _.zipObject(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
 
       client.batch
         .addQuery(q(keyspace, 'upsertFollower'), followerData)

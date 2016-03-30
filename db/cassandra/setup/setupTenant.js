@@ -197,8 +197,7 @@ function setup (client, keyspace, truncateIfExists, next) {
     helpers.createTables,
     helpers.createSecondaryIndexes,
     helpers.flushCache,
-    async.apply(helpers.initialiseSchemaVersion, schemaVersion),
-    async.retry(5, helpers.assertIndexes.bind(helpers.assertIndexes))
+    async.apply(helpers.initialiseSchemaVersion, schemaVersion)
   ], function (err, data) {
     /* istanbul ignore if */
     if (err) return next(err);

@@ -18,7 +18,7 @@ module.exports = function (api) {
     var like = client.generateId();
     var cleanItem = api.common.clean(item);
     var data = [like, user, cleanItem, timestamp, api.visibility.PUBLIC];
-    var object = _.object(['like', 'user', 'item', 'timestamp', 'visibility'], data);
+    var object = _.zipObject(['like', 'user', 'item', 'timestamp', 'visibility'], data);
     object.ispersonal = false;
     object.isprivate = false;
     client.execute(q(keyspace, 'upsertLike'), data, {}, function (err) {
