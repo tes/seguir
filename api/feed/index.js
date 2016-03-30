@@ -107,11 +107,11 @@ module.exports = function (api) {
       if (!cb) { return mentioned(); } // no mentioned users
       client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, function (err, data) {
         if (err) { return cb(err); }
-        var followers = _.map(_.pluck(data || [], 'user_follower'), function (item) {
+        var followers = _.map(_.map(data || [], 'user_follower'), function (item) {
           return item.toString();
         });
         var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
-          return !(_.contains(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === jobData.user.toString());
+          return !(_.includes(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === jobData.user.toString());
         });
         cb(null, mentionedNotFollowers);
       });

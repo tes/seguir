@@ -10,7 +10,7 @@ module.exports = function (config) {
   }
 
   var redisClient = client(config);
-  var rsmq = new RSMQ({host: redisClient.connectionOption.host, port: redisClient.connectionOption.port, ns: 'rsmq'});
+  var rsmq = new RSMQ({host: config.messaging.host, port: config.messaging.port, ns: 'rsmq'});
 
   /**
    * Create queues on demand on first use
@@ -18,7 +18,7 @@ module.exports = function (config) {
   function createOrSelectQueue (name, next) {
     rsmq.listQueues(function (err, queues) {
       if (err) { return next(err); }
-      if (_.contains(queues, name)) { return next(); }
+      if (_.includes(queues, name)) { return next(); }
       rsmq.createQueue({qname: name}, function (err) {
         next(err);
       });

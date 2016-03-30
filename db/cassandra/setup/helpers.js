@@ -1,6 +1,5 @@
 var cassandra = require('cassandra-driver');
 var async = require('async');
-var _ = require('lodash');
 var q = require('../queries');
 var verbose = process.env.SEGUIR_DEBUG;
 
@@ -11,7 +10,6 @@ module.exports = function (client, options) {
   var KEYSPACE = options.KEYSPACE;
   var tables = options.tables || [];
   var indexes = options.indexes || [];
-  var tableIndexes = options.tableIndexes || {};
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
@@ -78,27 +76,6 @@ module.exports = function (client, options) {
     }, next);
   }
 
-  function assertIndexes (next) {
-    if (verbose) console.log('Asserting all tables and indexes exist in: ' + KEYSPACE + '...');
-
-    async.map(tables, function (cql, cb) {
-      var keyspaceTable = cql.split(' ')[2].split('.');
-      if (verbose) console.log('Checking ' + keyspaceTable[0] + ' ' + keyspaceTable[1] + ' ...');
-      var selectColumns = ['SELECT * FROM system.schema_columns WHERE keyspace_name=\'', keyspaceTable[0], '\' AND columnfamily_name=\'', keyspaceTable[1], '\''].join('');
-      client.execute(selectColumns, function (err, data) {
-        if (err) return cb(err);
-        var indexes = _.map(_.without(_.pluck(data.rows, 'index_name'), null), function (item) {
-          return item.replace(keyspaceTable[1] + '_', '').split('_idx')[0];
-        });
-        if (_.difference(indexes, tableIndexes[keyspaceTable[1]]).length === 0) {
-          cb();
-        } else {
-          cb('Missing indexes');
-        }
-      });
-    }, next);
-  }
-
    /* istanbul ignore next */
   function initialiseSchemaVersion (version, next) {
     client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(version), new Date(), 'Initial version'], function () {
@@ -116,7 +93,6 @@ module.exports = function (client, options) {
     createKeyspace: createKeyspace,
     createTables: createTables,
     createSecondaryIndexes: createSecondaryIndexes,
-    assertIndexes: assertIndexes,
     initialiseSchemaVersion: initialiseSchemaVersion,
     truncate: truncate,
     flushCache: flushCache

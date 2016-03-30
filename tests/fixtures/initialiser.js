@@ -63,7 +63,7 @@ function setupGraph (keyspace, api, users, actions, next) {
     return cb(null);
   }, function (err, results) {
     if (err) return next(err);
-    var actionResults = _.zipObject(_.pluck(actions, 'key'), results);
+    var actionResults = _.zipObject(_.map(actions, 'key'), results);
     // We need to add pseudo items for reciprocal friendships
     _.mapKeys(actions, function (result, key) {
       if (result.reciprocal) {
