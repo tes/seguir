@@ -87,6 +87,7 @@ module.exports = function (api) {
         });
       });
     });
+    api.metrics.increment('friend.remove');
   }
 
   function userCanSeeItem (keyspace, user, item, user_properties, next) {
