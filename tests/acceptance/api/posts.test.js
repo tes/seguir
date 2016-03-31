@@ -92,7 +92,7 @@ databases.forEach(function (db) {
             expect(err).to.be(null);
             expect(post.content).to.be('Hello, this is a private post');
             expect(post.user).to.eql(users['cliftonc']);
-            expect(post.posted).to.eql(timestamp);
+            expect(post.posted.toString()).to.eql(timestamp.toString());
             done();
           });
         });

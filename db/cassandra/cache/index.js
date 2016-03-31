@@ -7,10 +7,15 @@
 
 var TWENTY_FOUR_HOURS = 24 * 3600;
 var redis = require('../../redis');
+var _ = require('lodash');
 var cassandra = require('cassandra-driver');
 var Uuid = cassandra.types.Uuid;
+var Timeuuid = cassandra.types.Timeuuid;
+var Long = cassandra.types.Long;
 var debug = require('debug')('seguir:cassandra:cache');
 var UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'time'];
+var TIMEUUID_COLUMNS = ['time'];
+var LONG_COLUMNS = ['count'];
 
 module.exports = function (config, next) {
   var _stats = {};
@@ -57,20 +62,21 @@ module.exports = function (config, next) {
     if (!object) return;
 
     // Clone via stringify / parse
-    // The cassandra object is a Row, that has additional functions attached
+    // The cassandra object is a Row, that has additional enumerable functions attached
     // https://github.com/datastax/nodejs-driver/blob/master/lib/types/row.js
     // We do not want to persist these into the cache
     // May be a more performant way to do this later
-    var clone = JSON.parse(JSON.stringify(object));
+    var clone = Object.assign({}, object);
 
-    UUID_COLUMNS.forEach(function (item) {
+    var CONVERTABLE_COLUMNS = _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS);
+    CONVERTABLE_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
 
     // Convert any embedded object to JSON
     if (clone.userdata) { clone.userdata = JSON.stringify(clone.userdata); }
 
-    // Trim any null properties
+    // Trim any null properties as redis doesn't allow them in HMSET
     for (var p in clone) {
       if (!clone[p]) delete clone[p];
     }
@@ -83,6 +89,14 @@ module.exports = function (config, next) {
     // Convert all of the Cassandra IDs back
     UUID_COLUMNS.forEach(function (item) {
       if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
+    });
+
+    TIMEUUID_COLUMNS.forEach(function (item) {
+      if (clone[item]) { clone[item] = Timeuuid.fromString(clone[item]); }
+    });
+
+    LONG_COLUMNS.forEach(function (item) {
+      if (clone[item]) { clone[item] = Long.fromString(clone[item]); }
     });
 
     // Convert any embedded object from JSON
