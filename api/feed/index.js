@@ -256,6 +256,22 @@ module.exports = function (api) {
     });
   }
 
+  function removeFeedsOlderThan (keyspace, user, time, next) {
+    async.map(FEEDS, function (timeline, cb) {
+      _removeFeedsOlderThanFromTimeline(keyspace, timeline, user, time, cb);
+    }, next);
+  }
+
+  function _removeFeedsOlderThanFromTimeline (keyspace, timeline, user, time, next) {
+    var options = {raw: true, olderThan: client.generateTimeId(time), pageSize: 1000};
+    _getFeed(keyspace, user, timeline, user, options, function (err, feed) {
+      if (err) return next(err);
+      async.map(feed, function (row, cb) {
+        _removeFeedItemFromTimeline(keyspace, timeline, user, row.time, row.item, cb);
+      }, next);
+    });
+  }
+
   function _removeFeedItemFromTimeline (keyspace, timeline, user, time, item, next) {
     var deleteData = [user, time];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
@@ -394,9 +410,11 @@ module.exports = function (api) {
   function _getFeed (keyspace, liu, timeline, user, options, next) {
     var raw = options.raw;
     var feedType = options.type;
+    var feedOlder = options.olderThan;
     var pageState = options.pageState;
     var pageSize = options.pageSize || DEFAULT_PAGESIZE;
     var typeQuery = '';
+    var olderThanQuery = '';
     var data = [user];
     var query;
 
@@ -405,7 +423,13 @@ module.exports = function (api) {
       data.push(feedType);
     }
 
-    query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery});
+    if (feedOlder && !feedType) {
+      // Only allow one optional filter due to issue with postgres param numbering
+      olderThanQuery = q(keyspace, 'olderThanQuery');
+      data.push(feedOlder);
+    }
+
+    query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
 
     api.metrics.increment('feed.' + timeline + '.list');
 
@@ -522,6 +546,7 @@ module.exports = function (api) {
   return {
     addFeedItem: addFeedItem,
     removeFeedsForItem: removeFeedsForItem,
+    removeFeedsOlderThan: removeFeedsOlderThan,
     insertFollowersTimeline: insertFollowersTimeline,
     insertMentionedTimeline: insertMentionedTimeline,
     upsertTimeline: upsertTimeline,

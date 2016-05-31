@@ -419,6 +419,21 @@ databases.forEach(function (db) {
           });
         });
       });
+
+      it('can remove feed items older than a specific time', function (done) {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
+          expect(err).to.be(null);
+          var feedLength = feed.length;
+          api.feed.removeFeedsOlderThan(keyspace, users['cliftonc'].user, new Date(2015, 10, 1), function (err) {
+            expect(err).to.be(null);
+            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
+              expect(err).to.be(null);
+              expect(feed.length).to.be(feedLength - 1);
+              done();
+            });
+          });
+        });
+      });
     });
   });
 });
