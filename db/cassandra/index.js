@@ -15,6 +15,11 @@ function createClient (config, next) {
     }
 
     var cassandraConfig = config && config.cassandra;
+
+    if (cassandraConfig && cassandraConfig.authUsername && cassandraConfig.authPassword) {
+      cassandraConfig.authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraConfig.authUsername, cassandraConfig.authPassword);
+    }
+
     var client = new cassandra.Client(cassandraConfig);
     client.on('log', function (level, className, message, furtherInfo) {
       debugDriver('log event: %s -- %s', level, message);
