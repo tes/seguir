@@ -257,3 +257,7 @@ This will push any documentation changes to gh-pages.
 ## Requires
 
 This uses Node, Restify for the API server with Cassandra as a backend, and if using background workers requires Redis to manage the worker scheduling.
+
+### Production Use
+
+Seguir is in use in production at https://www.tes.com, create an account and take a look.
