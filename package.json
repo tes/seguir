@@ -30,7 +30,7 @@
   "dependencies": {
     "async": "^1.5.2",
     "bcrypt": "^0.8.5",
-    "cassandra-driver": "^3.0.1",
+    "cassandra-driver": "^3.1.1",
     "debug": "^2.2.0",
     "lodash": "^4.6.1",
     "moment": "^2.12.0",
@@ -39,8 +39,8 @@
     "pg-query-stream": "^1.0.0",
     "redis": "^2.6.0-0",
     "restify": "^4.0.3",
-    "rsmq": "^0.7.0",
-    "rsmq-worker": "^0.3.5",
+    "rsmq": "^0.7.1",
+    "rsmq-worker": "^0.5.0",
     "sanitize-html": "^1.11.4",
     "string-template": "^1.0.0"
   },
@@ -53,7 +53,7 @@
     "inquirer": "^0.12.0",
     "istanbul": "^0.4.2",
     "mocha": "^2.2.5",
-    "semistandard": "^7.0.4",
+    "semistandard": "^7.0.1",
     "simple-statistics": "^1.0.0"
   },
   "semistandard": {
