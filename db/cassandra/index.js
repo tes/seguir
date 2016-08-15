@@ -173,7 +173,8 @@ function createClient (config, next) {
       return value ? new Date(value) : new Date();
     }
 
-    client.connect(function () {
+    client.connect(function (err) {
+      if (err) { return next(err); }
       next(null, {
         type: 'cassandra',
         config: cassandraConfig,
