@@ -20,10 +20,36 @@ function setup (client, keyspace, next) {
     'CREATE INDEX ON ' + keyspace + '.application_tokens(appid)'
   ];
 
+  var tableIndexes = [
+    'accounts.account',
+    'accounts.name',
+    'accounts.enabled',
+    'accounts.isadmin',
+    'account_users.account',
+    'account_users.username',
+    'account_users.password',
+    'account_users.enabled',
+    'applications.appid',
+    'applications.name',
+    'applications.appkeyspace',
+    'application_tokens.appid',
+    'application_tokens.appkeyspace',
+    'application_tokens.tokenid',
+    'application_tokens.description',
+    'application_tokens.enabled',
+    'application_tokens.tokensecret',
+    'schema_version.version',
+    'schema_version.applied',
+    'schema_version.description',
+    'applications.account',
+    'applications.enabled'
+  ];
+
   var helpers = require('./helpers')(client, {
     KEYSPACE: keyspace,
     tables: tables,
-    indexes: indexes
+    indexes: indexes,
+    tableIndexes: tableIndexes
   });
 
   async.series([
@@ -31,6 +57,7 @@ function setup (client, keyspace, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes,
+    helpers.waitForIndexes,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion)
   ], function (err, data) {
     /* istanbul ignore if */

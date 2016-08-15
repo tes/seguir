@@ -1,10 +1,11 @@
 var async = require('async');
+var _ = require('lodash');
 var schemaVersion = 6;
 
 function defineTablesAndIndexes (KEYSPACE) {
   var tables = [];
   var indexes = [];
-  var tableIndexes = {};
+  var tableIndexes = [];
 
   if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
@@ -17,6 +18,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * this documentation, please read the 'parameters' reflects the columns in the tables.
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)');
+  tableIndexes = _.concat(tableIndexes, ['schema_version.description', 'schema_version.version', 'schema_version.applied']);
 
   /**
    * @api {table} Users Users
@@ -31,7 +33,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   tables.push('CREATE TABLE ' + KEYSPACE + '.users (user uuid PRIMARY KEY, username text, altid text, userdata map<text,text>)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(username)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.users(altid)');
-  tableIndexes.users = ['altid', 'username'];
+  tableIndexes = _.concat(tableIndexes, ['users.altid', 'users.userdata', 'users.user', 'users.username', 'users.username']);
 
   /**
    * @api {table} Posts Posts
@@ -51,7 +53,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   tables.push('CREATE TABLE ' + KEYSPACE + '.posts (post uuid PRIMARY KEY, user uuid, type text, content text, content_type text, visibility text, posted timestamp, altid text)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(user)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.posts(altid)');
-  tableIndexes.posts = ['user'];
+  tableIndexes = _.concat(tableIndexes, ['posts.content', 'posts.content_type', 'posts.posted', 'posts.type', 'posts.visibility', 'posts.post', 'posts.user', 'posts.altid']);
 
   /**
    * @api {table} Friends Friends
@@ -67,7 +69,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.friends (friend uuid, user uuid, user_friend uuid, since timestamp, visibility text, PRIMARY KEY (user, user_friend))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friends(friend)');
-  tableIndexes.friends = ['friend'];
+  tableIndexes = _.concat(tableIndexes, ['friends.since', 'friends.visibility', 'friends.user', 'friends.user_friend', 'friends.friend']);
 
   /**
    * @api {table} FriendRequests Friend Requests
@@ -85,7 +87,7 @@ function defineTablesAndIndexes (KEYSPACE) {
   tables.push('CREATE TABLE ' + KEYSPACE + '.friend_request (friend_request uuid, user uuid, user_friend uuid, message text, since timestamp, visibility text, PRIMARY KEY (friend_request))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user_friend)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.friend_request(user)');
-  tableIndexes.friend_request = ['user', 'user_friend'];
+  tableIndexes = _.concat(tableIndexes, ['friend_request.message', 'friend_request.since', 'friend_request.visibility', 'friend_request.friend_request', 'friend_request.user', 'friend_request.user_friend']);
 
   /**
    * @api {table} Likes Likes
@@ -104,7 +106,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.likes (like uuid, user uuid, item text, since timestamp, visibility text, PRIMARY KEY (user, item))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.likes(like)');
-  tableIndexes.likes = ['like'];
+  tableIndexes = _.concat(tableIndexes, ['likes.since', 'likes.visibility', 'likes.like', 'likes.user', 'likes.item']);
 
   /**
    * @api {table} Follower Follower
@@ -121,7 +123,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.followers (follow uuid, user uuid, user_follower uuid, visibility text, since timestamp, PRIMARY KEY (user, user_follower))');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers(follow)');
-  tableIndexes.followers = ['follow'];
+  tableIndexes = _.concat(tableIndexes, ['followers.follow', 'followers.since', 'followers.visibility', 'followers.followers', 'followers.user', 'followers.user_follower']);
 
   /**
    * @api {table} Follower Timeline
@@ -142,12 +144,13 @@ function defineTablesAndIndexes (KEYSPACE) {
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(is_private)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(is_public)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(is_personal)');
-  tableIndexes.followers_timeline = ['follow', 'user_follower'];
+  tableIndexes = _.concat(tableIndexes, ['followers_timeline.since', 'followers_timeline.user', 'followers_timeline.time', 'followers_timeline.follow', 'followers_timeline.user_follower', 'followers_timeline.is_private', 'followers_timeline.is_public', 'followers_timeline.is_personal']);
 
   /**
    * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.
    */
   tables.push('CREATE TABLE ' + KEYSPACE + '.counts (item text, type text, count counter, PRIMARY KEY (item, type))');
+  tableIndexes = _.concat(tableIndexes, ['counts.item', 'counts.type', 'counts.count']);
 
   /**
    * @api {table} Userline Newsfeed
@@ -169,7 +172,7 @@ function defineTablesAndIndexes (KEYSPACE) {
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(from_follow)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(type)');
-    tableIndexes[table] = ['item'];
+    tableIndexes = _.concat(tableIndexes, [table + '.item', table + '.type', table + '.from_follow', table + '.visibility', table + '.user', table + '.time']);
   });
 
   return {
@@ -197,6 +200,7 @@ function setup (client, keyspace, truncateIfExists, next) {
     helpers.createTables,
     helpers.createSecondaryIndexes,
     helpers.flushCache,
+    helpers.waitForIndexes,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion)
   ], function (err, data) {
     /* istanbul ignore if */

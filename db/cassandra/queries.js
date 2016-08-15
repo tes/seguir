@@ -176,3 +176,8 @@ queries.selectAllItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE ite
 queries.selectAllFollowItems = 'SELECT user, time FROM {KEYSPACE}.{TIMELINE} WHERE from_follow = ?';
 queries.typeQuery = 'AND type = ?';
 queries.olderThanQuery = 'AND time <= ?';
+
+/**
+ * Get indexes
+ */
+queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, index_options, index_type, component_index FROM system.schema_columns WHERE keyspace_name = ?';

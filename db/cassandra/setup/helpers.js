@@ -2,6 +2,7 @@ var cassandra = require('cassandra-driver');
 var async = require('async');
 var q = require('../queries');
 var verbose = process.env.SEGUIR_DEBUG;
+var _ = require('lodash');
 
 /**
  *  Setup code follows below
@@ -10,6 +11,7 @@ module.exports = function (client, options) {
   var KEYSPACE = options.KEYSPACE;
   var tables = options.tables || [];
   var indexes = options.indexes || [];
+  var indexList = options.tableIndexes || [];
 
   /* istanbul ignore next */
   function dropKeyspace (next) {
@@ -88,6 +90,28 @@ module.exports = function (client, options) {
     client.flushCache(next);
   }
 
+  function waitForIndexes (next) {
+    var checkCount = 0;
+    var checkLimit = 10;
+    var checkIndexes = function () {
+      checkCount++;
+      if (checkCount > checkLimit) {
+        return next(new Error('Unable to validate indexes in cassandra after ' + checkLimit + ' attempts!'));
+      }
+      client.execute(q(KEYSPACE, 'retrieveIndexes'), [KEYSPACE], function (err, results) {
+        if (err) { return next(err); }
+        var indexes = _.compact(_.map(results, function (i) {
+          return i.columnfamily_name + '.' + i.column_name;
+        }));
+        var difference = _.difference(indexes, indexList);
+        if (difference.length === 0) { return next(); }
+        setTimeout(checkIndexes, 200);
+      });
+    };
+
+    checkIndexes();
+  }
+
   return {
     dropKeyspace: dropKeyspace,
     createKeyspace: createKeyspace,
@@ -95,6 +119,7 @@ module.exports = function (client, options) {
     createSecondaryIndexes: createSecondaryIndexes,
     initialiseSchemaVersion: initialiseSchemaVersion,
     truncate: truncate,
-    flushCache: flushCache
+    flushCache: flushCache,
+    waitForIndexes: waitForIndexes
   };
 };
