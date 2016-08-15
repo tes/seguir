@@ -17,7 +17,7 @@ databases.forEach(function (db) {
   describe('API [Account and Application] - ' + db, function () {
     var api, auth, accountId, userId, appId, tokenId;
 
-    this.timeout(10000);
+    this.timeout(20000);
     this.slow(5000);
 
     before(function (done) {

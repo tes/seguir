@@ -14,7 +14,7 @@ databases.forEach(function (db) {
   config.keyspace = keyspace;
 
   describe('API [Users] - ' + db, function () {
-    this.timeout(10000);
+    this.timeout(20000);
     this.slow(5000);
 
     var api;
