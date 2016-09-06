@@ -38,11 +38,22 @@ databases.forEach(function (db) {
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
           {username: 'json', altid: '8'},
-          {username: 'aamir', altid: '9'}
+          {username: 'aamir', altid: '9'},
+          {username: 'paul', altid: '10'}
         ], function (err, userMap) {
           expect(err).to.be(null);
           users = userMap;
-          done();
+
+          var actions = [
+            {type: 'follow', user: 'json', user_follower: 'aamir'},
+            {type: 'follow', user: 'bill', user_follower: 'aamir'},
+            {type: 'follow', user: 'bill', user_follower: 'paul', visibility: api.visibility.PERSONAL},
+            {type: 'follow', user: 'json', user_follower: 'paul', visibility: api.visibility.PRIVATE}
+          ];
+          initialiser.setupGraph(keyspace, api, users, actions, function (err) {
+            expect(err).to.be(null);
+            done();
+          });
         });
       });
     });
@@ -145,15 +156,27 @@ databases.forEach(function (db) {
       it('can retrieve a list of followers for a user and get it in the right order', function (done) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
-          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
+          var followerIds = _.map(_.map(followers, 'user_follower'), function (item) {
+            return item.user.toString();
+          });
           expect(followerIds[0]).to.be(users['ted'].user.toString());
           expect(followerIds[1]).to.be(users['phteven'].user.toString());
           done();
         });
       });
 
+      it('can retrieve a list of following for a user and get it in the right order', function (done) {
+        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) { return item.user.toString(); });
+          expect(followingIds[0]).to.be(users['bill'].user.toString());
+          expect(followingIds[1]).to.be(users['json'].user.toString());
+          done();
+        });
+      });
+
       it('can retrieve a list of followers for a user and paginate through it', function (done) {
-        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1 }, function (err1, followers1, pageState1) {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, {pageSize: 1}, function (err1, followers1, pageState1) {
           expect(err1).to.be(null);
           expect(followers1.length).to.be(1);
           expect(followers1[0].user_follower.user.toString()).to.be(users['ted'].user.toString());
@@ -175,9 +198,36 @@ databases.forEach(function (db) {
         });
       });
 
-      it('will not blow up with evil pageState', function (done) {
-        var options = { pageSize: 1, pageState: '0;DELETE FROM test_seguir_app_api.followers;' };
+      it('can retrieve a list of following for a user and paginate through it', function (done) {
+        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, {pageSize: 1}, function (err1, following1, pageState1) {
+          expect(err1).to.be(null);
+          expect(following1.length).to.be(1);
+          expect(following1[0].user.username.toString()).to.be(users['bill'].username.toString());
+          expect(pageState1).not.to.be(null);
+          api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, {
+            pageSize: 2,
+            pageState: pageState1
+          }, function (err2, following2, pageState2) {
+            expect(err2).to.be(null);
+            expect(following2.length).to.be(1);
+            expect(following2[0].user.username.toString()).to.be(users['json'].username.toString());
+            expect(pageState2).to.be(null);
+            done();
+          });
+        });
+      });
+
+      it('will not blow up with evil pageState when getting list of followers', function (done) {
+        var options = {pageSize: 1, pageState: '0;DELETE FROM test_seguir_app_api.followers;'};
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, options, function (err2, followers2, pageState2) {
+          expect(err2).not.to.be(null);
+          done();
+        });
+      });
+
+      it('will not blow up with evil pageState when getting list of following', function (done) {
+        var options = {pageSize: 1, pageState: '0;DELETE FROM test_seguir_app_api.followers;'};
+        api.follow.getFollowing(keyspace, users['ted'].user, users['ted'].user, options, function (err2) {
           expect(err2).not.to.be(null);
           done();
         });
@@ -193,10 +243,31 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a list of following for a user when not logged in', function (done) {
+        api.follow.getFollowing(keyspace, null, users['aamir'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) {
+            return item.user.toString();
+          });
+          expect(followingIds).to.contain(users['json'].user.toString());
+          expect(followingIds).to.contain(users['bill'].user.toString());
+          done();
+        });
+      });
+
       it('can retrieve a list of followers for a user but will not show personal if not the user', function (done) {
         api.follow.getFollowers(keyspace, users['cliftonc'].user, users['alfred'].user, function (err, followers) {
           expect(err).to.be(null);
           expect(followers.length).to.be(0);
+          done();
+        });
+      });
+
+      it('can retrieve a list of following for a user but will not show personal if not the user', function (done) {
+        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) { return item.user.toString(); });
+          expect(followingIds).to.not.contain(users['bill'].user.toString());
           done();
         });
       });
@@ -210,11 +281,33 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a list of following for a user but will show personal if one of the two users', function (done) {
+        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) {
+            return item.user.toString();
+          });
+          expect(followingIds).to.contain(users['bill'].user.toString());
+          done();
+        });
+      });
+
       it('can retrieve a list of followers for a user but will show private if one of the two users', function (done) {
         api.follow.getFollowers(keyspace, users['harold'].user, users['harold'].user, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.contain(users['jenny'].user.toString());
+          done();
+        });
+      });
+
+      it('can retrieve a list of following for a user but will show private if one of the two users', function (done) {
+        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) {
+            return item.user.toString();
+          });
+          expect(followingIds).to.contain(users['json'].user.toString());
           done();
         });
       });
@@ -228,11 +321,33 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a list of following for a user but will not show private if not a friend', function (done) {
+        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) {
+            return item.user.toString();
+          });
+          expect(followingIds).to.not.contain(users['json'].user.toString());
+          done();
+        });
+      });
+
       it('can retrieve a list of followers for a user but will not show private if not logged in', function (done) {
         api.follow.getFollowers(keyspace, null, users['harold'].user, function (err, followers) {
           expect(err).to.be(null);
           var followerIds = _.map(_.map(followers, 'user_follower'), function (item) { return item.user.toString(); });
           expect(followerIds).to.not.contain(users['jenny'].user.toString());
+          done();
+        });
+      });
+
+      it('can retrieve a list of following for a user but will not show private if not logged in', function (done) {
+        api.follow.getFollowing(keyspace, null, users['paul'].user, function (err, following) {
+          expect(err).to.be(null);
+          var followingIds = _.map(_.map(following, 'user'), function (item) {
+            return item.user.toString();
+          });
+          expect(followingIds).to.not.contain(users['json'].user.toString());
           done();
         });
       });
@@ -249,6 +364,20 @@ databases.forEach(function (db) {
         });
       });
 
+      it('can retrieve a list of following for a user but will show private if a friend', function (done) {
+        api.friend.addFriend(keyspace, users['cliftonc'].user, users['jenny'].user, api.client.getTimestamp(), function (err, friend) {
+          expect(err).to.be(null);
+          api.follow.getFollowing(keyspace, users['cliftonc'].user, users['jenny'].user, function (err, following) {
+            expect(err).to.be(null);
+            var followingIds = _.map(_.map(following, 'user'), function (item) {
+              return item.user.toString();
+            });
+            expect(followingIds).to.contain(users['harold'].user.toString());
+            done();
+          });
+        });
+      });
+
       it('can remove a follow', function (done) {
         api.follow.addFollower(keyspace, users['bill'].user, users['harold'].user, api.client.getTimestamp(), api.visibility.PUBLIC, function (err, follow) {
           expect(err).to.be(null);
@@ -260,6 +389,12 @@ databases.forEach(function (db) {
               var followerIds = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
               expect(followerIds).to.not.contain(follow.follow.toString());
               done();
+            });
+
+            api.follow.getFollowing(keyspace, users['harold'].user, users['harold'].user, function (err, following) {
+              expect(err).to.be(null);
+              var followingIds = _.map(_.map(following, 'user'), function (item) { return item.user.toString(); });
+              expect(followingIds).to.not.contain(users['bill'].user.toString());
             });
           });
         });
