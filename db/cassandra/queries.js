@@ -140,6 +140,7 @@ queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE user = ? AND us
 queries.removeFollowerTimeline = 'DELETE FROM {KEYSPACE}.followers_timeline WHERE user = ? AND time = ?';
 queries.removeFollowingTimeline = 'DELETE FROM {KEYSPACE}.following_timeline WHERE user_follower = ? AND time = ?';
 queries.isFollower = 'SELECT follow, user, user_follower, since, visibility from {KEYSPACE}.followers WHERE user = ? AND user_follower = ?';
+queries.selectFollowsCount = 'SELECT count FROM {KEYSPACE}.counts WHERE item = ? AND type = \'{TYPE}\'';
 
 /**
  * @apiDefine ExampleCqlCounts

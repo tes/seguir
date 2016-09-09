@@ -430,23 +430,42 @@ databases.forEach(function (db) {
           api.follow.getFollowers(keyspace, users['phteven'].user, users['cliftonc'].user, function (err, followers) {
             expect(err).to.be(null);
             expect(followers[0].liuIsFollowing).to.be(true);
+            expect(followers[0].liuIsUser).to.be(false);
             expect(followers[0].followerCount).to.be(2);
+            expect(followers[0].followingCount).to.be(3);
             expect(followers[1].liuIsFollowing).to.be(false);
+            expect(followers[1].liuIsUser).to.be(false);
             expect(followers[1].followerCount).to.be(0);
+            expect(followers[1].followingCount).to.be(1);
             expect(followers[2].liuIsFollowing).to.be(true);
             expect(followers[2].liuIsUser).to.be(true);
             expect(followers[2].followerCount).to.be(0);
+            expect(followers[2].followingCount).to.be(2);
             done();
           });
         });
       });
 
-      it('can see the followerCounts for non-logged in users', function (done) {
+      it('can see the follower and following Counts for non-logged in followers', function (done) {
         api.follow.getFollowers(keyspace, null, users['cliftonc'].user, function (err, followers) {
           expect(err).to.be(null);
           expect(followers[0].followerCount).to.be(2);
+          expect(followers[0].followingCount).to.be(3);
           expect(followers[1].followerCount).to.be(0);
+          expect(followers[1].followingCount).to.be(1);
           expect(followers[2].followerCount).to.be(0);
+          expect(followers[2].followingCount).to.be(2);
+          done();
+        });
+      });
+
+      it('can see the follower and following Counts for non-logged in following', function (done) {
+        api.follow.getFollowing(keyspace, null, users['cliftonc'].user, function (err, following) {
+          expect(err).to.be(null);
+          expect(following[0].followerCount).to.be(2);
+          expect(following[0].followingCount).to.be(3);
+          expect(following[1].followerCount).to.be(1);
+          expect(following[1].followingCount).to.be(2);
           done();
         });
       });

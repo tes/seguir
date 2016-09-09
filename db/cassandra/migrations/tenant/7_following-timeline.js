@@ -5,7 +5,7 @@ function apply (keyspace, api, next) {
     'CREATE TABLE ' + keyspace + '.following_timeline (follow uuid, user_follower uuid, user uuid, is_private boolean, is_personal boolean, is_public boolean, time timeuuid, since timestamp, PRIMARY KEY (user_follower, time)) WITH CLUSTERING ORDER BY (time DESC)',
     'CREATE INDEX ON ' + keyspace + '.following_timeline(follow)',
     'CREATE INDEX ON ' + keyspace + '.following_timeline(user)',
-    'CREATE INDEX ON ' + keyspace + '.followers_timeline(is_private)',
+    'CREATE INDEX ON ' + keyspace + '.following_timeline(is_private)',
     'CREATE INDEX ON ' + keyspace + '.following_timeline(is_personal)',
     'CREATE INDEX ON ' + keyspace + '.following_timeline(is_public)'
   ];

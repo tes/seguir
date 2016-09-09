@@ -109,6 +109,7 @@ queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND
 queries.removeFollowerTimeline = null;
 queries.removeFollowingTimeline = null;
 queries.isFollower = 'SELECT follow, "user", user_follower, since, visibility from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
+queries.selectFollowsCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.followers WHERE "{ITEM}" = $1';
 
 /**
  * @apiDefine ExamplePostgresCounts

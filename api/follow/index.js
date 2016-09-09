@@ -69,7 +69,7 @@ module.exports = function (api) {
         .execute(function (err) {
           /* istanbul ignore if */
           if (err) { return next(err); }
-          alterFollowerCount(keyspace, user, 1, function () {
+          alterFollowCounts(keyspace, user, user_follower, 1, function () {
             addBidirectionalFeedItem(newFollow, function (err, result) {
               if (err) { return next(err); }
               client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
@@ -82,21 +82,51 @@ module.exports = function (api) {
     });
   }
 
-  function alterFollowerCount (keyspace, user, count, next) {
-    next = next || function () {};
-    var data = [count, user.toString()];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {cacheKey: 'count:followers:' + user.toString()}, next);
+  function alterFollowCounts (keyspace, user, user_follower, count, next) {
+    var alterCount = function (type, item, cb) {
+      var data = [count, item.toString()];
+      client.execute(q(keyspace, 'updateCounter', {TYPE: type}), data, {cacheKey: 'count:' + type + ':' + item.toString()}, cb);
+    };
+
+    async.parallel([
+      function (cb) { alterCount('followers', user, cb); },
+      function (cb) { alterCount('following', user_follower, cb); }
+    ], next);
   }
 
   function followerCount (keyspace, user, next) {
+    count('followers', keyspace, user, next);
+  }
+
+  function followingCount (keyspace, user, next) {
+    count('following', keyspace, user, next);
+  }
+
+  function followCounts (keyspace, user, next) {
+    async.parallel(
+      [
+        function (cb) { followerCount(keyspace, user, cb); },
+        function (cb) { followingCount(keyspace, user, cb); }
+      ],
+      function (err, results) {
+        next(err, {
+          followers: results[0] && results[0].count ? +results[0].count.toString() : 0,
+          following: results[1] && results[1].count ? +results[1].count.toString() : 0
+        });
+      });
+  }
+
+  function count (followType, keyspace, user, next) {
     next = next || function () { };
     var data = [user.toString()];
-    var cacheKey = 'count:followers:' + user.toString();
-    client.get(q(keyspace, 'selectCount', {
-      TYPE: 'followers',
-      ITEM: 'user'
+    var cacheKey = 'count:' + followType + ':' + user.toString();
+    client.get(q(keyspace, 'selectFollowsCount', {
+      TYPE: followType,
+      ITEM: followType === 'followers' ? 'user' : 'user_follower'
     }), data, {cacheKey: cacheKey}, function (err, count) {
-      if (err) { return next(err); }
+      if (err) {
+        return next(err);
+      }
       if (!count) {
         // Manually set the cache as the default won't set a null
         client.setCacheItem(cacheKey, {_: 0}, function () {
@@ -122,7 +152,7 @@ module.exports = function (api) {
         .addQuery(q(keyspace, 'removeFollowingTimeline'), deleteFollowingTimedata, 'follower_timeline:' + user + ':' + user_follower)
         .execute(function (err) {
           if (err) return next(err);
-          alterFollowerCount(keyspace, user, -1, function () {
+          alterFollowCounts(keyspace, user, user_follower, -1, function () {
             api.feed.removeFeedsForItem(keyspace, followerTimeline.follow, function (err) {
               if (err) return next(err);
               client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
@@ -221,20 +251,22 @@ module.exports = function (api) {
       // note this is only needed for postgres - remove when(if) postgres goes
       var visibility = api.visibility.mapToParameters(isUser, isFriend);
       var selectOptions = {pageState: pageState, pageSize: pageSize};
-      client.execute(q(keyspace, query.name, _.merge({PRIVACY: privacyQuery}, visibility)), [user], selectOptions, function (err, followers, nextPageState) {
+
+      client.execute(q(keyspace, query.name, _.merge({PRIVACY: privacyQuery}, visibility)), [user], selectOptions, function (err, follows, nextPageState) {
         if (err) {
           return next(err);
         }
 
-        // For each follower, check if the liu is following them if we are logged in
+        // For each follow, check if the liu is following them or being following by tem if we are logged in
         if (liu) {
-          async.map(followers, function (follow, cb) {
-            followerCount(keyspace, follow[queryField], function (err, followerCount) {
+          async.map(follows, function (follow, cb) {
+            followCounts(keyspace, follow[queryField], function (err, counts) {
               if (err) {
                 return cb(err);
               }
 
-              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
+              follow.followerCount = counts && counts.followers ? counts.followers : 0;
+              follow.followingCount = counts && counts.following ? counts.following : 0;
               if (follow[queryField].toString() === liu.toString()) {
                 follow.liuIsFollowing = true;
                 follow.liuIsUser = true;
@@ -251,30 +283,27 @@ module.exports = function (api) {
               });
             });
           }, function (err) {
-            if (err) {
-              return next(err);
-            }
-            api.user.mapUserIdToUser(keyspace, followers, [queryField], user, function (err, mappedFollowers) {
-              if (err) {
-                return next(err);
-              }
+            if (err) { return next(err); }
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
+              if (err) { return next(err); }
               next(null, mappedFollowers, nextPageState);
             });
           });
         } else {
-          async.map(followers, function (follow, cb) {
-            followerCount(keyspace, follow.user_follower, function (err, followerCount) {
+          async.map(follows, function (follow, cb) {
+            followCounts(keyspace, follow[queryField], function (err, followCount) {
               if (err) {
                 return cb(err);
               }
-              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
+              follow.followerCount = followCount && followCount.followers ? followCount.followers : 0;
+              follow.followingCount = followCount && followCount.following ? followCount.following : 0;
               cb(null, follow);
             });
           }, function (err) {
             if (err) {
               return next(err);
             }
-            api.user.mapUserIdToUser(keyspace, followers, [queryField], user, function (err, mappedFollowers) {
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
               if (err) {
                 return next(err);
               }
@@ -345,10 +374,11 @@ module.exports = function (api) {
     addFollower: addFollower,
     removeFollower: removeFollower,
     getFollowers: getFollowers,
+    getFollowing: getFollowing,
     getFollow: getFollow,
     getFollowFromObject: getFollowFromObject,
     isFollower: isFollower,
     followerCount: followerCount,
-    getFollowing: getFollowing
+    followingCount: followingCount
   };
 };
