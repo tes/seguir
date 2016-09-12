@@ -94,14 +94,6 @@ module.exports = function (api) {
     ], next);
   }
 
-  function followerCount (keyspace, user, next) {
-    count('followers', keyspace, user, next);
-  }
-
-  function followingCount (keyspace, user, next) {
-    count('following', keyspace, user, next);
-  }
-
   function followCounts (keyspace, user, next) {
     async.parallel(
       [
@@ -116,14 +108,20 @@ module.exports = function (api) {
       });
   }
 
+  function followerCount (keyspace, user, next) {
+    count('followers', keyspace, user, next);
+  }
+
+  function followingCount (keyspace, user, next) {
+    count('following', keyspace, user, next);
+  }
+
   function count (followType, keyspace, user, next) {
     next = next || function () { };
     var data = [user.toString()];
     var cacheKey = 'count:' + followType + ':' + user.toString();
-    client.get(q(keyspace, 'selectFollowsCount', {
-      TYPE: followType,
-      ITEM: followType === 'followers' ? 'user' : 'user_follower'
-    }), data, {cacheKey: cacheKey}, function (err, count) {
+    var queryName = followType === 'followers' ? 'selectFollowersCount' : 'selectFollowingCount';
+    client.get(q(keyspace, queryName, {}), data, {cacheKey: cacheKey}, function (err, count) {
       if (err) {
         return next(err);
       }
