@@ -62,6 +62,7 @@ databases.forEach(function (db) {
           expect(relationship.youFollow).to.be(false);
           expect(relationship.theyFollow).to.be(false);
           expect(relationship.followerCount).to.be(2);
+          expect(relationship.followingCount).to.be(0);
           done();
         });
       });
@@ -73,6 +74,7 @@ databases.forEach(function (db) {
           expect(relationship.youFollow).to.be(false);
           expect(relationship.theyFollow).to.be(true);
           expect(relationship.followerCount).to.be(0);
+          expect(relationship.followingCount).to.be(1);
           done();
         });
       });
@@ -84,6 +86,7 @@ databases.forEach(function (db) {
           expect(relationship.youFollow).to.be(true);
           expect(relationship.theyFollow).to.be(false);
           expect(relationship.followerCount).to.be(2);
+          expect(relationship.followingCount).to.be(0);
           done();
         });
       });
@@ -95,6 +98,7 @@ databases.forEach(function (db) {
           expect(relationship.youFollow).to.be(false);
           expect(relationship.theyFollow).to.be(false);
           expect(relationship.followerCount).to.be(0);
+          expect(relationship.followingCount).to.be(0);
           done();
         });
       });
@@ -106,6 +110,7 @@ databases.forEach(function (db) {
           expect(relationship.youFollow).to.be(false);
           expect(relationship.theyFollow).to.be(false);
           expect(relationship.followerCount).to.be(2);
+          expect(relationship.followingCount).to.be(0);
           done();
         });
       });

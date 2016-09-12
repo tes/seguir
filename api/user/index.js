@@ -237,7 +237,8 @@ module.exports = function (api) {
       follow: async.apply(api.follow.isFollower, keyspace, other_user, user),
       followBack: async.apply(api.follow.isFollower, keyspace, user, other_user),
       inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user),
-      followerCount: async.apply(api.follow.followerCount, keyspace, other_user)
+      followerCount: async.apply(api.follow.followerCount, keyspace, other_user),
+      followingCount: async.apply(api.follow.followingCount, keyspace, other_user)
     }, function (err, result) {
       if (err) { return next(err); }
 
@@ -257,7 +258,8 @@ module.exports = function (api) {
         theyFollowPrivate: result.followBack[2] ? result.followBack[2].visibility === api.visibility.PRIVATE : null,
         theyFollowPersonal: result.followBack[2] ? result.followBack[2].visibility === api.visibility.PERSONAL : null,
         inCommon: result.inCommon,
-        followerCount: result.followerCount && result.followerCount.count ? +result.followerCount.count.toString() : 0
+        followerCount: result.followerCount && result.followerCount.count ? +result.followerCount.count.toString() : 0,
+        followingCount: result.followingCount && result.followingCount.count ? +result.followingCount.count.toString() : 0
       };
 
       next(null, relationship);
