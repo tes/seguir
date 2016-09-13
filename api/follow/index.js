@@ -59,16 +59,17 @@ module.exports = function (api) {
       var isPublic = api.visibility.isPublic(visibility);
       var isPersonal = api.visibility.isPersonal(visibility);
       var isPrivate = api.visibility.isPrivate(visibility);
-      var followerTimelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, isPrivate, isPersonal, isPublic];
+      var timelineData = [newFollowId, user, user_follower, client.generateTimeId(timestamp), timestamp, isPrivate, isPersonal, isPublic];
       var newFollow = _.zipObject(['follow', 'user', 'user_follower', 'since', 'visibility'], followerData);
 
       client.batch
         .addQuery(q(keyspace, 'upsertFollower'), followerData)
-        .addQuery(q(keyspace, 'upsertFollowerTimeline'), followerTimelineData)
+        .addQuery(q(keyspace, 'upsertFollowerTimeline'), timelineData)
+        .addQuery(q(keyspace, 'upsertFollowingTimeline'), timelineData)
         .execute(function (err) {
           /* istanbul ignore if */
           if (err) { return next(err); }
-          alterFollowerCount(keyspace, user, 1, function () {
+          alterFollowCounts(keyspace, user, user_follower, 1, function () {
             addBidirectionalFeedItem(newFollow, function (err, result) {
               if (err) { return next(err); }
               client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
@@ -81,21 +82,49 @@ module.exports = function (api) {
     });
   }
 
-  function alterFollowerCount (keyspace, user, count, next) {
-    next = next || function () {};
-    var data = [count, user.toString()];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'followers'}), data, {cacheKey: 'count:followers:' + user.toString()}, next);
+  function alterFollowCounts (keyspace, user, user_follower, count, next) {
+    var alterCount = function (type, item, cb) {
+      var data = [count, item.toString()];
+      client.execute(q(keyspace, 'updateCounter', {TYPE: type}), data, {cacheKey: 'count:' + type + ':' + item.toString()}, cb);
+    };
+
+    async.parallel([
+      function (cb) { alterCount('followers', user, cb); },
+      function (cb) { alterCount('following', user_follower, cb); }
+    ], next);
+  }
+
+  function followCounts (keyspace, user, next) {
+    async.parallel(
+      [
+        function (cb) { followerCount(keyspace, user, cb); },
+        function (cb) { followingCount(keyspace, user, cb); }
+      ],
+      function (err, results) {
+        next(err, {
+          followers: results[0] && results[0].count ? +results[0].count.toString() : 0,
+          following: results[1] && results[1].count ? +results[1].count.toString() : 0
+        });
+      });
   }
 
   function followerCount (keyspace, user, next) {
+    count('followers', keyspace, user, next);
+  }
+
+  function followingCount (keyspace, user, next) {
+    count('following', keyspace, user, next);
+  }
+
+  function count (followType, keyspace, user, next) {
     next = next || function () { };
     var data = [user.toString()];
-    var cacheKey = 'count:followers:' + user.toString();
-    client.get(q(keyspace, 'selectCount', {
-      TYPE: 'followers',
-      ITEM: 'user'
-    }), data, {cacheKey: cacheKey}, function (err, count) {
-      if (err) { return next(err); }
+    var cacheKey = 'count:' + followType + ':' + user.toString();
+    var queryName = followType === 'followers' ? 'selectFollowersCount' : 'selectFollowingCount';
+    client.get(q(keyspace, queryName, {}), data, {cacheKey: cacheKey}, function (err, count) {
+      if (err) {
+        return next(err);
+      }
       if (!count) {
         // Manually set the cache as the default won't set a null
         client.setCacheItem(cacheKey, {_: 0}, function () {
@@ -113,13 +142,15 @@ module.exports = function (api) {
       if (!followerTimeline) { return next({statusCode: 404, message: 'Cant unfollow a user you dont follow'}); }
       var deleteData = [user, user_follower];
       var deleteFollowerTimedata = [user, followerTimeline.time];
+      var deleteFollowingTimedata = [user_follower, followerTimeline.time];
 
       client.batch
         .addQuery(q(keyspace, 'removeFollower'), deleteData, 'follow:' + followerTimeline.follow)
         .addQuery(q(keyspace, 'removeFollowerTimeline'), deleteFollowerTimedata, 'follower_timeline:' + user + ':' + user_follower)
+        .addQuery(q(keyspace, 'removeFollowingTimeline'), deleteFollowingTimedata, 'follower_timeline:' + user + ':' + user_follower)
         .execute(function (err) {
           if (err) return next(err);
-          alterFollowerCount(keyspace, user, -1, function () {
+          alterFollowCounts(keyspace, user, user_follower, -1, function () {
             api.feed.removeFeedsForItem(keyspace, followerTimeline.follow, function (err) {
               if (err) return next(err);
               client.deleteCacheItem('follow:' + user + ':' + user_follower, function () {
@@ -198,6 +229,90 @@ module.exports = function (api) {
     });
   }
 
+  function getFollows (keyspace, query, liu, user, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+
+    var pageState = options.pageState;
+    var pageSize = options.pageSize || 50;
+    var queryField = query.field;
+
+    var isUser = liu && user && liu.toString() === user.toString();
+    api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
+      if (err) {
+        return next(err);
+      }
+
+      var privacyQuery = api.visibility.mapToQuery(isUser, isFriend);
+      // note this is only needed for postgres - remove when(if) postgres goes
+      var visibility = api.visibility.mapToParameters(isUser, isFriend);
+      var selectOptions = {pageState: pageState, pageSize: pageSize};
+
+      client.execute(q(keyspace, query.name, _.merge({PRIVACY: privacyQuery}, visibility)), [user], selectOptions, function (err, follows, nextPageState) {
+        if (err) {
+          return next(err);
+        }
+
+        // For each follow, check if the liu is following them or being following by tem if we are logged in
+        if (liu) {
+          async.map(follows, function (follow, cb) {
+            followCounts(keyspace, follow[queryField], function (err, counts) {
+              if (err) {
+                return cb(err);
+              }
+
+              follow.followerCount = counts && counts.followers ? counts.followers : 0;
+              follow.followingCount = counts && counts.following ? counts.following : 0;
+              if (follow[queryField].toString() === liu.toString()) {
+                follow.liuIsFollowing = true;
+                follow.liuIsUser = true;
+                return cb(null, follow);
+              }
+
+              isFollower(keyspace, follow[queryField], liu, function (err, isFollower) {
+                if (err) {
+                  return cb(err);
+                }
+                follow.liuIsFollowing = isFollower;
+                follow.liuIsUser = false;
+                cb(null, follow);
+              });
+            });
+          }, function (err) {
+            if (err) { return next(err); }
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
+              if (err) { return next(err); }
+              next(null, mappedFollowers, nextPageState);
+            });
+          });
+        } else {
+          async.map(follows, function (follow, cb) {
+            followCounts(keyspace, follow[queryField], function (err, followCount) {
+              if (err) {
+                return cb(err);
+              }
+              follow.followerCount = followCount && followCount.followers ? followCount.followers : 0;
+              follow.followingCount = followCount && followCount.following ? followCount.following : 0;
+              cb(null, follow);
+            });
+          }, function (err) {
+            if (err) {
+              return next(err);
+            }
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
+              if (err) {
+                return next(err);
+              }
+              next(null, mappedFollowers, nextPageState);
+            });
+          });
+        }
+      });
+    });
+  }
+
   /**
    * @callback getFollowersCallback
    * @param {Error} err
@@ -221,79 +336,47 @@ module.exports = function (api) {
    */
   // TODO: erk.  This method needs more async love (or promises)
   function getFollowers (keyspace, liu, user, options, next) {
-    if (!next) {
-      next = options;
-      options = {};
-    }
+    const query = {name: 'selectFollowersTimeline', field: 'user_follower'};
+    getFollows(keyspace, query, liu, user, options, next);
+    api.metrics.increment('follower.listFollowers');
+  }
 
-    var pageState = options.pageState;
-    var pageSize = options.pageSize || 50;
+  /**
+   * @callback getFollowingCallback
+   * @param {Error} err
+   * @param following list of following
+   * @param pageState pageState for the next page. Should be returned unmodified to fetch the next page.
+   */
 
-    var isUser = liu && user && liu.toString() === user.toString();
-    api.friend.isFriend(keyspace, liu, user, function (err, isFriend) {
-      if (err) { return next(err); }
-
-      var privacyQuery = api.visibility.mapToQuery(isUser, isFriend);
-      // note this is only needed for postgres - remove when(if) postgres goes
-      var visibility = api.visibility.mapToParameters(isUser, isFriend);
-      var selectOptions = {pageState: pageState, pageSize: pageSize};
-      client.execute(q(keyspace, 'selectFollowersTimeline', _.merge({PRIVACY: privacyQuery}, visibility)), [user], selectOptions, function (err, followers, nextPageState) {
-        if (err) { return next(err); }
-
-        // For each follower, check if the liu is following them if we are logged in
-        if (liu) {
-          async.map(followers, function (follow, cb) {
-            followerCount(keyspace, follow.user_follower, function (err, followerCount) {
-              if (err) { return cb(err); }
-
-              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
-              if (follow.user_follower.toString() === liu.toString()) {
-                follow.liuIsFollowing = true;
-                follow.liuIsUser = true;
-                return cb(null, follow);
-              }
-
-              isFollower(keyspace, follow.user_follower, liu, function (err, isFollower) {
-                if (err) { return cb(err); }
-                follow.liuIsFollowing = isFollower;
-                follow.liuIsUser = false;
-                cb(null, follow);
-              });
-            });
-          }, function (err) {
-            if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, function (err, mappedFollowers) {
-              if (err) { return next(err); }
-              next(null, mappedFollowers, nextPageState);
-            });
-          });
-        } else {
-          async.map(followers, function (follow, cb) {
-            followerCount(keyspace, follow.user_follower, function (err, followerCount) {
-              if (err) { return cb(err); }
-              follow.followerCount = followerCount && followerCount.count ? +followerCount.count.toString() : 0;
-              cb(null, follow);
-            });
-          }, function (err) {
-            if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, followers, ['user_follower'], user, function (err, mappedFollowers) {
-              if (err) { return next(err); }
-              next(null, mappedFollowers, nextPageState);
-            });
-          });
-        }
-      });
-    });
-    api.metrics.increment('follower.list');
+  /**
+   * Get the following of a user sorted DESC by time.  Uses the relationship between the liu and user
+   * to determine what to return.
+   * user === liu - return all following.
+   * user is friend of liu - return all public and personal following.
+   * otherwise only return public follows.
+   * @param {String} keyspace The keyspace to select from
+   * @param {uuid} liu Logged in user.  Can be null to indicate a non-logged in user.
+   * @param {uuid} user User to find following of
+   * @param {{ [pageState]: String, [pageSize]: String }} [options]
+   *    pageState The next page to be rendered. This will be passed into next(err, following, pageState). To get the next page you should pass in the pageState unmodified.
+   *    pageSize Number of results to return
+   * @param {getFollowingCallback} next
+   */
+  function getFollowing (keyspace, liu, user, options, next) {
+    const query = {name: 'selectFollowingTimeline', field: 'user'};
+    getFollows(keyspace, query, liu, user, options, next);
+    api.metrics.increment('follower.listFollowing');
   }
 
   return {
     addFollower: addFollower,
     removeFollower: removeFollower,
     getFollowers: getFollowers,
+    getFollowing: getFollowing,
     getFollow: getFollow,
     getFollowFromObject: getFollowFromObject,
     isFollower: isFollower,
-    followerCount: followerCount
+    followerCount: followerCount,
+    followingCount: followingCount
   };
 };

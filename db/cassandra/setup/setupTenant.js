@@ -1,6 +1,6 @@
 var async = require('async');
 var _ = require('lodash');
-var schemaVersion = 6;
+var schemaVersion = 7;
 
 function defineTablesAndIndexes (KEYSPACE) {
   var tables = [];
@@ -116,7 +116,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiDescription Stores follower data from one user to another, this is not necessarily reciprocal, and does not require approval.
    * @apiParam {Guid} follow The unique guid for the follower relationship.
    * @apiParam {Guid} user The unique guid for the user.
-   * @apiParam {Guid} user_follower The unique guid for the user they are following.
+   * @apiParam {Guid} user_follower The unique guid for the user following.
    * @apiParam {String} visibility Visibility level of follow
    * @apiParam {Timestamp} since The date the follow began.
    * @apiUse ExampleCqlFollows
@@ -133,7 +133,7 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiDescription Stores follower data from one user to another, this is not necessarily reciprocal, and does not require approval.
    * @apiParam {Guid} follow The unique guid for the follower relationship.
    * @apiParam {Guid} user The unique guid for the user.
-   * @apiParam {Guid} user_follower The unique guid for the user they are following.
+   * @apiParam {Guid} user_follower The unique guid for the user following.
    * @apiParam {String} visibility Visibility level of follow
    * @apiParam {Timeuuid} since The date the follow began.
    * @apiUse ExampleCqlFollows
@@ -145,6 +145,27 @@ function defineTablesAndIndexes (KEYSPACE) {
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(is_public)');
   indexes.push('CREATE INDEX ON ' + KEYSPACE + '.followers_timeline(is_personal)');
   tableIndexes = _.concat(tableIndexes, ['followers_timeline.since', 'followers_timeline.user', 'followers_timeline.time', 'followers_timeline.follow', 'followers_timeline.user_follower', 'followers_timeline.is_private', 'followers_timeline.is_public', 'followers_timeline.is_personal']);
+
+  /**
+   * @api {table} Following Timeline
+   * @apiName FollowingData
+   * @apiGroup Data
+   * @apiVersion 1.0.0
+   * @apiDescription Stores following data from one user to another, this is not necessarily reciprocal, and does not require approval.
+   * @apiParam {Guid} follow The unique guid for the following relationship.
+   * @apiParam {Guid} user_follower The unique guid for the user following.
+   * @apiParam {Guid} user The unique guid for the user.
+   * @apiParam {String} visibility Visibility level of follow
+   * @apiParam {Timeuuid} since The date the follow began.
+   * @apiUse ExampleCqlFollows
+   */
+  tables.push('CREATE TABLE ' + KEYSPACE + '.following_timeline (follow uuid, user_follower uuid, user uuid, is_private boolean, is_personal boolean, is_public boolean, time timeuuid, since timestamp, PRIMARY KEY (user_follower, time)) WITH CLUSTERING ORDER BY (time DESC)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.following_timeline(follow)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.following_timeline(user)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.following_timeline(is_private)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.following_timeline(is_public)');
+  indexes.push('CREATE INDEX ON ' + KEYSPACE + '.following_timeline(is_personal)');
+  tableIndexes = _.concat(tableIndexes, ['following_timeline.since', 'following_timeline.user', 'following_timeline.time', 'following_timeline.follow', 'following_timeline.user_follower', 'following_timeline.is_private', 'following_timeline.is_public', 'following_timeline.is_personal']);
 
   /**
    * Counts are stored in a separate table and incremented / decremented when events occur - this is to avoid counting queries.

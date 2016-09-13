@@ -101,11 +101,16 @@ queries.selectFollow = queries._followSelectBase + ' AND fl.follow = $1';
 queries.selectFollowFromTimeline = queries._followSelectBase + ' AND fl.user = $1 AND fl.user_follower = $2';
 queries.selectFollowers = queries._followSelectBase + ' AND fl."user" = $1';
 queries.selectFollowersTimeline = queries._followSelectBase + ' AND fl."user" = $1 AND (fl."visibility" = \'{PUBLIC}\' OR fl."visibility" = \'{PERSONAL}\' OR fl."visibility" = \'{PRIVATE}\') ORDER BY since DESC';
+queries.selectFollowingTimeline = queries._followSelectBase + ' AND fl."user_follower" = $1 AND (fl."visibility" = \'{PUBLIC}\' OR fl."visibility" = \'{PERSONAL}\' OR fl."visibility" = \'{PRIVATE}\') ORDER BY since DESC';
 queries.upsertFollower = 'INSERT INTO {KEYSPACE}.followers (follow, "user", user_follower, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.upsertFollowerTimeline = null;
+queries.upsertFollowingTimeline = null;
 queries.removeFollower = 'DELETE FROM {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
 queries.removeFollowerTimeline = null;
+queries.removeFollowingTimeline = null;
 queries.isFollower = 'SELECT follow, "user", user_follower, since, visibility from {KEYSPACE}.followers WHERE "user" = $1 AND user_follower = $2';
+queries.selectFollowersCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.followers WHERE "user" = $1';
+queries.selectFollowingCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.followers WHERE "user_follower" = $1';
 
 /**
  * @apiDefine ExamplePostgresCounts
