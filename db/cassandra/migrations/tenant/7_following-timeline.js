@@ -19,14 +19,12 @@ function apply (keyspace, api, next) {
         var write = 0;
         var read = 0;
         var done = false;
-        var selectQuery = 'SELECT follow, user, user_follower, since, visibility FROM ' + keyspace + '.followers;';
+        var selectQuery = 'SELECT follow, user, user_follower, time, since, is_private, is_personal, is_public FROM ' + keyspace + '.followers_timeline;';
         var insertQuery = 'INSERT INTO ' + keyspace + '.following_timeline (follow, user_follower, user, time, since, is_private, is_personal, is_public) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
         api.client._client.eachRow(selectQuery, [], {autoPage: true}, function (index, row) {
           read++;
-          var isPrivate = api.visibility.isPrivate(row.visibility);
-          var isPersonal = api.visibility.isPersonal(row.visibility);
-          var isPublic = api.visibility.isPublic(row.visibility);
-          api.client.execute(insertQuery, [row.follow, row.user_follower, row.user, api.client.generateTimeId(row.since), row.since, isPrivate, isPersonal, isPublic], {prepare: true}, function (err) {
+
+          api.client.execute(insertQuery, [row.follow, row.user_follower, row.user, row.time, row.since, row.is_private, row.is_personal, row.is_public], {prepare: true}, function (err) {
             if (err) {
               throw err;
             }
