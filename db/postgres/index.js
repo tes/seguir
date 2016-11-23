@@ -1,5 +1,5 @@
 var pg = require('pg');
-var uuid = require('node-uuid');
+var uuid = require('uuid');
 var path = require('path');
 var debug = require('debug')('seguir:postgres');
 var async = require('async');
