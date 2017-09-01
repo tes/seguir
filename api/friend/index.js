@@ -246,7 +246,20 @@ module.exports = function (api) {
     });
   }
 
+  function removeAllFriendsByUser (keyspace, user, next) {
+    getFriends(keyspace, user, user, function (err, friends) {
+      if (err) { return next(err); }
+      async.map(friends, function (friend, cb) {
+        removeFriend(keyspace, user, friend.user_friend.user, cb);
+      }, function (err) {
+        if (err) { return next(err); }
+        return next(null);
+      });
+    });
+  }
+
   return {
+    removeAllFriendsByUser: removeAllFriendsByUser,
     addFriend: addFriend,
     addFriendRequest: addFriendRequest,
     removeFriend: removeFriend,
