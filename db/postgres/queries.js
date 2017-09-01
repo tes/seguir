@@ -58,6 +58,7 @@ queries.selectUser = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u
 queries.selectUserByUsername = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u'}) + ' FROM {KEYSPACE}.users u WHERE u.username = $1';
 queries.selectUserByAltId = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u'}) + ' FROM {KEYSPACE}.users u WHERE u.altid = $1';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, userdata = $3 WHERE "user" = $4';
+queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE "user" = $1';
 
 /**
  * @apiDefine ExamplePostgresPosts
