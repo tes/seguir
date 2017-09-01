@@ -368,7 +368,36 @@ module.exports = function (api) {
     api.metrics.increment('follower.listFollowing');
   }
 
+  // can't use pageState as per usual, as we are removing values. simply use it as indicator of more records
+  function removeAllFollowersByUser (keyspace, user, next) {
+    getFollowers(keyspace, user, user, {}, function (err, followers, pageState) {
+      if (err) { return next(err); }
+      async.map(followers, function (follower, cb) {
+        removeFollower(keyspace, user, follower.user_follower.user, cb);
+      }, function (err) {
+        if (err) { return next(err); }
+        if (pageState) { return removeAllFollowersByUser(keyspace, user, next); }
+        return next(null);
+      });
+    });
+  }
+
+  function removeAllFollowingByUser (keyspace, user, next) {
+    getFollowing(keyspace, user, user, {}, function (err, followings, pageState) {
+      if (err) { return next(err); }
+      async.map(followings, function (following, cb) {
+        removeFollower(keyspace, following.user.user, user, cb);
+      }, function (err) {
+        if (err) { return next(err); }
+        if (pageState) { return removeAllFollowingByUser(keyspace, user, next); }
+        return next(null);
+      });
+    });
+  }
+
   return {
+    removeAllFollowersByUser: removeAllFollowersByUser,
+    removeAllFollowingByUser: removeAllFollowingByUser,
     addFollower: addFollower,
     removeFollower: removeFollower,
     getFollowers: getFollowers,

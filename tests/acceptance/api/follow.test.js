@@ -4,6 +4,7 @@
 
 /* eslint-env node, mocha */
 
+var async = require('async');
 var keyspace = 'test_seguir_app_api';
 var expect = require('expect.js');
 var initialiser = require('../../fixtures/initialiser');
@@ -467,6 +468,84 @@ databases.forEach(function (db) {
           expect(following[1].followerCount).to.be(1);
           expect(following[1].followingCount).to.be(2);
           done();
+        });
+      });
+
+      describe('removing all', function () {
+        var removeAllUsers = {};
+        var dennis;
+
+        before(function (done) {
+          this.timeout(20000);
+
+          var allUsers = [{username: 'dennis', altid: '20'}];
+          for (var i = 0; i < 175; i++) {
+            allUsers.push({username: 'user' + i, altid: '' + i * 100});
+          }
+
+          initialiser.setupUsers(keyspace, api, allUsers, function (err, userMap) {
+            expect(err).to.be(null);
+            removeAllUsers = userMap;
+            dennis = userMap['dennis'].user;
+
+            var getVisibility = function (index) {
+              return [api.visibility.PUBLIC, api.visibility.PRIVATE, api.visibility.PERSONAL][index % 3];
+            };
+
+            var actions = [];
+            var j = 0;
+            _.map(Object.keys(removeAllUsers), function (user) {
+              var username = removeAllUsers[user].username;
+              if (username !== 'dennis') {
+                actions.push({ type: 'follow', user: 'dennis', user_follower: username, visibility: getVisibility(j++) });
+                actions.push({ type: 'follow', user: username, user_follower: 'dennis', visibility: getVisibility(j++) });
+              }
+            });
+
+            initialiser.setupGraph(keyspace, api, removeAllUsers, actions, function (err) {
+              expect(err).to.be(null);
+              done();
+            });
+          });
+        });
+
+        it('can remove all followers and following (of all visibilities) for a user', function (done) {
+          async.parallel({
+            followerCount: async.apply(api.follow.followerCount, keyspace, dennis),
+            followingCount: async.apply(api.follow.followingCount, keyspace, dennis)
+          }, function (err, result) {
+            expect(err).to.be(null);
+            expect(result.followerCount.count.toString()).to.be('175');
+            expect(result.followingCount.count.toString()).to.be('175');
+
+            api.follow.removeAllFollowersByUser(keyspace, dennis, function (err) {
+              expect(err).to.be(null);
+
+              async.parallel({
+                followerCount: async.apply(api.follow.followerCount, keyspace, dennis),
+                followingCount: async.apply(api.follow.followingCount, keyspace, dennis)
+              }, function (err, result) {
+                expect(err).to.be(null);
+                expect(result.followerCount.count.toString()).to.be('0');
+                expect(result.followingCount.count.toString()).to.be('175');
+
+                api.follow.removeAllFollowingByUser(keyspace, dennis, function (err) {
+                  expect(err).to.be(null);
+
+                  async.parallel({
+                    followerCount: async.apply(api.follow.followerCount, keyspace, dennis),
+                    followingCount: async.apply(api.follow.followingCount, keyspace, dennis)
+                  }, function (err, result) {
+                    expect(err).to.be(null);
+                    expect(result.followerCount.count.toString()).to.be('0');
+                    expect(result.followingCount.count.toString()).to.be('0');
+
+                    done();
+                  });
+                });
+              });
+            });
+          });
         });
       });
     });
