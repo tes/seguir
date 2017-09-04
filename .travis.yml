@@ -21,3 +21,6 @@ notifications:
   hipchat:
     rooms:
       secure: cwunRMkBq13vx1AOgbyqVzgRyWoFIGcH4+kKcEtWL754EZd3T/qC4bpa7V2BGibD/YhY0d4+mB9kbMm9SQoJX7E5BGGRsEhw1OcBdCkHiInbdES5CCt4N2QCQFOmdd2Vt/NlSLXmYNXIJa55STOJ+OZzibCgApRfjGrlxISOZ1Q=
+before_install:
+  - sudo rm -rf /var/lib/cassandra/*
+  - wget http://www.us.apache.org/dist/cassandra/2.2.10/apache-cassandra-2.2.10-bin.tar.gz && tar -xvzf apache-cassandra-2.2.10-bin.tar.gz && sudo sh apache-cassandra-2.2.10/bin/cassandra
