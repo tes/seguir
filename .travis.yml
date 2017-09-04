@@ -7,7 +7,6 @@ node_js:
   - '6'
 services:
   - redis-server
-  - cassandra
 env:
   - CXX=g++-4.8
 addons:
