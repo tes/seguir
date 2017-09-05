@@ -1,10 +1,11 @@
 language: node_js
+dist: trusty
+sudo: required
 node_js:
   - '4'
   - '5'
   - '6'
 services:
-  - cassandra
   - redis-server
 env:
   - CXX=g++-4.8
@@ -19,3 +20,6 @@ notifications:
   hipchat:
     rooms:
       secure: cwunRMkBq13vx1AOgbyqVzgRyWoFIGcH4+kKcEtWL754EZd3T/qC4bpa7V2BGibD/YhY0d4+mB9kbMm9SQoJX7E5BGGRsEhw1OcBdCkHiInbdES5CCt4N2QCQFOmdd2Vt/NlSLXmYNXIJa55STOJ+OZzibCgApRfjGrlxISOZ1Q=
+before_install:
+  - sudo rm -rf /var/lib/cassandra/*
+  - wget https://archive.apache.org/dist/cassandra/2.2.5/apache-cassandra-2.2.5-bin.tar.gz && tar -xvzf apache-cassandra-2.2.5-bin.tar.gz && sudo sh apache-cassandra-2.2.5/bin/cassandra

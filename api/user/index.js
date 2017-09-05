@@ -267,6 +267,31 @@ module.exports = function (api) {
     api.metrics.increment('user.relationship');
   }
 
+  function removeUser (keyspace, userid, next) {
+    getUser(keyspace, userid, function (err, user) {
+      if (err) { return next(err); }
+      async.parallel({
+        feed: async.apply(api.feed.removeFeedsForItem, keyspace, user.user),
+        followers: async.apply(api.follow.removeAllFollowersByUser, keyspace, user.user),
+        following: async.apply(api.follow.removeAllFollowingByUser, keyspace, user.user),
+        friend: async.apply(api.friend.removeAllFriendsByUser, keyspace, user.user)
+      }, function (err) {
+        console.log('err', err);
+        if (err) { return next(err); }
+
+        var cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+        async.map(cachedItems, client.deleteCacheItem, function (err) {
+          if (err) return next(err);
+
+          client.execute(q(keyspace, 'removeUser'), [user.user], function (err) {
+            if (err) return next(err);
+            next(null, { status: 'removed' });
+          });
+        });
+      });
+    });
+  }
+
   return {
     addUser: addUser,
     updateUser: updateUser,
@@ -275,6 +300,7 @@ module.exports = function (api) {
     getUserByAltId: getUserByAltId,
     mapUserIdToUser: mapUserIdToUser,
     getUserRelationship: getUserRelationship,
+    removeUser: removeUser,
     userCacheStats: _userCacheStats
   };
 };

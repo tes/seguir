@@ -123,6 +123,25 @@ databases.forEach(function (db) {
           });
         });
       });
+
+      it('can remove a user', function (done) { // test should put something in timeline and check that it is gone
+        api.user.addUser(keyspace, 'shortLivedUser', 1234, function (err, user) {
+          expect(err).to.be(null);
+          expect(user.altid).to.be('1234');
+          api.user.getUserByAltId(keyspace, 1234, function (err, user) {
+            expect(err).to.be(null);
+            expect(user.altid).to.be('1234');
+            api.user.removeUser(keyspace, user.user, function (err, status) {
+              expect(err).to.be(null);
+              expect(status.status).to.be('removed');
+              api.user.getUserByAltId(keyspace, 1234, function (err) {
+                expect(err.statusCode).to.be(404);
+                done();
+              });
+            });
+          });
+        });
+      });
     });
 
     describe('initialising users and follows', function () {

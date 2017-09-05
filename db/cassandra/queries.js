@@ -71,6 +71,7 @@ queries.selectUser = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.use
 queries.selectUserByUsername = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE username = ?';
 queries.selectUserByAltId = 'SELECT user, username, altid, userdata FROM {KEYSPACE}.users WHERE altid = ?';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = ?, altid = ?, userdata = ? WHERE user = ?';
+queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
 
 /**
  * @apiDefine ExampleCqlPosts

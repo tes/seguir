@@ -170,6 +170,57 @@ databases.forEach(function (db) {
           });
         });
       });
+
+      describe('removing all', function () {
+        var removeAllUsers = {};
+        var dennis;
+
+        before(function (done) {
+          this.timeout(20000);
+
+          var allUsers = [{username: 'dennis', altid: '20'}];
+          for (var i = 0; i < 175; i++) {
+            allUsers.push({username: 'user' + i, altid: '' + i * 100});
+          }
+
+          initialiser.setupUsers(keyspace, api, allUsers, function (err, userMap) {
+            expect(err).to.be(null);
+            removeAllUsers = userMap;
+            dennis = userMap['dennis'].user;
+
+            var actions = [];
+            _.map(Object.keys(removeAllUsers), function (user) {
+              var username = removeAllUsers[user].username;
+              if (username !== 'dennis') {
+                actions.push({ type: 'friend', user: 'dennis', user_friend: username });
+              }
+            });
+
+            initialiser.setupGraph(keyspace, api, removeAllUsers, actions, function (err) {
+              expect(err).to.be(null);
+              done();
+            });
+          });
+        });
+
+        it('can remove all friends and friend requests for a user', function (done) {
+          api.friend.getFriends(keyspace, dennis, dennis, function (err, result) {
+            expect(err).to.be(null);
+            expect(result.length).to.be(175);
+
+            api.friend.removeAllFriendsByUser(keyspace, dennis, function (err) {
+              expect(err).to.be(null);
+
+              api.friend.getFriends(keyspace, dennis, dennis, function (err, result) {
+                expect(err).to.be(null);
+                expect(result.length).to.be(0);
+
+                done();
+              });
+            });
+          });
+        });
+      });
     });
   });
 });
