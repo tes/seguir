@@ -1,6 +1,7 @@
 var moment = require('moment');
 var async = require('async');
 var _ = require('lodash');
+var pressure = require('pressure-stream');
 var debug = require('debug')('seguir:feed');
 
 var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
@@ -27,9 +28,11 @@ module.exports = function (api) {
     var finished = 0;
     var done = false;
 
-    function nextIfFinished (doNotIncrement) {
+    function nextIfFinished (doNotIncrement, cb) {
       if (!doNotIncrement) { finished++; }
-      if (read === finished && done) { next(); }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
     }
 
     // If you are the recipient of a follow, do not copy this out to your follow graph - it will appear in your feed only
@@ -40,34 +43,39 @@ module.exports = function (api) {
 
     client.stream(q(jobData.keyspace, 'selectFollowers'), [jobData.user], function (err, stream) {
       if (err) { return next(err); }
-      stream
-        .on('data', function (row) {
-          read++;
-          var isPrivate = jobData.visibility === api.visibility.PRIVATE;
-          var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
-          // Follow is added to followers feed directly, not via the follow relationship
-          if (followerIsFollower) {
-            return nextIfFinished();
+
+      function processRow (row, cb) {
+        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
+        var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
+        // Follow is added to followers feed directly, not via the follow relationship
+        if (followerIsFollower) {
+          return nextIfFinished(false, cb);
+        }
+        api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
+          if (err) {
+            console.log('error while fetching is friend (' + row.user + ':' + row.user_follower + ')');
+            return nextIfFinished(false, cb);
           }
-          api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
-            if (err) {
-              console.log('error while fetching is friend (' + row.user + ':' + row.user_follower + ')');
-              return nextIfFinished();
-            }
-            if (!isPrivate || (isPrivate && isFriend)) {
-              upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, nextIfFinished);
-            } else {
-              nextIfFinished();
-            }
-          });
-        })
-        .on('end', function () {
-          done = true;
-          nextIfFinished(true);
-        })
-        .on('error', function (err) {
-          next(err);
+          if (!isPrivate || (isPrivate && isFriend)) {
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, function () { nextIfFinished(false, cb); });
+          } else {
+            nextIfFinished(false, cb);
+          }
         });
+      }
+
+      stream
+          .pipe(pressure(function (row, cb) { processRow(row, cb); }, { high: 10, low: 5, max: 20 }))
+          .on('data', function () {
+            read++;
+          })
+          .on('end', function () {
+            done = true;
+            nextIfFinished(true, function () {});
+          })
+          .on('error', function (err) {
+            next(err);
+          });
     });
   }
 

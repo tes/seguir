@@ -37,6 +37,7 @@
     "node-uuid": "^1.4.7",
     "pg": "^4.5.2",
     "pg-query-stream": "^1.0.0",
+    "pressure-stream": "^1.0.0",
     "redis": "^2.6.0-0",
     "restify": "^4.0.3",
     "rsmq": "^0.7.1",
