@@ -476,7 +476,7 @@ databases.forEach(function (db) {
         var dennis;
 
         before(function (done) {
-          this.timeout(20000);
+          this.timeout(30000);
 
           var allUsers = [{username: 'dennis', altid: '20'}];
           for (var i = 0; i < 175; i++) {
