@@ -47,6 +47,7 @@ module.exports = function (api) {
       function processRow (row, cb) {
         var isPrivate = jobData.visibility === api.visibility.PRIVATE;
         var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
+
         // Follow is added to followers feed directly, not via the follow relationship
         if (followerIsFollower) {
           return nextIfFinished(false, cb);
@@ -65,7 +66,9 @@ module.exports = function (api) {
       }
 
       stream
-          .pipe(pressure(function (row, cb) { processRow(row, cb); }, { high: 10, low: 5, max: 20 }))
+          .pipe(pressure(processRow, { high: 100, low: 10, max: 100 }));
+
+      stream
           .on('data', function () {
             read++;
           })
