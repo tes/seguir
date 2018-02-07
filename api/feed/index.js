@@ -66,7 +66,7 @@ module.exports = function (api) {
       }
 
       stream
-          .pipe(pressure(processRow, { high: 100, low: 10, max: 100 }));
+          .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
           .on('data', function () {
