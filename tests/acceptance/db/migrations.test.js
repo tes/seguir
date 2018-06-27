@@ -9,7 +9,7 @@ var Api = require('../../../api');
 var _ = require('lodash');
 var expect = require('expect.js');
 var path = require('path');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra'];
 
 databases.forEach(function (db) {
   var config = _.clone(require('../../fixtures/' + db + '.json'));

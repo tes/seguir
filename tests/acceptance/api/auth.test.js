@@ -7,7 +7,7 @@ var expect = require('expect.js');
 var Api = require('../../../api');
 var authUtils = require('../../../api/auth/utils');
 var _ = require('lodash');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['postgres', 'cassandra-redis'];
+var databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
 var keyspace = 'test_seguir_auth';
 
 databases.forEach(function (db) {
