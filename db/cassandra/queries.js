@@ -191,7 +191,9 @@ queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, in
 /**
  * Groups
  */
-queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?';
+queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupname, supergroupid) VALUES(?, ?, ?, ?);';
+queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
+queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ?;';
 queries.selectMembersForGroup = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?';
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
