@@ -61,8 +61,21 @@ module.exports = function (api) {
     });
   }
 
+  function updateGroup (keyspace, group, groupName, supergroupId, groupData, next) {
+    groupData = _mapValues(groupData, function (value) {
+      return value.toString();
+    }); // Always ensure our groupData is <text,text>
+
+    var groupValues = [groupName, supergroupId, groupData, group];
+    client.execute(q(keyspace, 'updateGroup'), groupValues, {}, function (err, value) {
+      if (err) { return next(err); }
+      next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
+    });
+  }
+
   return {
     addGroup: addGroup,
-    getGroup: getGroup
+    getGroup: getGroup,
+    updateGroup: updateGroup
   };
 };
