@@ -14,7 +14,9 @@ function apply (keyspace, api, next) {
 
     'CREATE TABLE ' + keyspace + '.group_timeline (group uuid, time timeuuid, item uuid, type text, PRIMARY KEY (group, time)) WITH CLUSTERING ORDER BY (time DESC)',
     'CREATE INDEX ON ' + keyspace + '.group_timeline (item)',
-    'CREATE INDEX ON ' + keyspace + '.group_timeline (type)'
+    'CREATE INDEX ON ' + keyspace + '.group_timeline (type)',
+
+    'ALTER TABLE ' + keyspace + '.feed_timeline ADD from_group uuid'
   ];
   async.mapSeries(cqls, api.client.execute, next);
 }
