@@ -1,3 +1,4 @@
+var async = require('async');
 var _mapValues = require('lodash/mapValues');
 var _zipObject = require('lodash/zipObject');
 
@@ -73,9 +74,38 @@ module.exports = function (api) {
     });
   }
 
+  function removeGroup (keyspace, group, next) {
+    getGroup(keyspace, group, function (err, result) {
+      if (err) { return next(err); }
+      async.parallel({
+        feed: async.apply(api.feed.removeFeedsForItem, keyspace, group) // ToDo: group is not indexed yet, feed_timeline, user_timeline, group_timeline
+      }, function (err) {
+        if (err) { return next(err); }
+
+        var removeMembers = function (cb) {
+          client.execute(q(keyspace, 'removeMembers'), [group], function (err) {
+            if (err) return cb(err);
+            cb(null, { status: 'removed' });
+          });
+        };
+        var _removeGroup = function (cb) {
+          client.execute(q(keyspace, 'removeGroup'), [group], function (err) {
+            if (err) return cb(err);
+            cb(null, { status: 'removed' });
+          });
+        };
+        async.series([
+          removeMembers,
+          _removeGroup
+        ], next);
+      });
+    });
+  }
+
   return {
     addGroup: addGroup,
     getGroup: getGroup,
-    updateGroup: updateGroup
+    updateGroup: updateGroup,
+    removeGroup: removeGroup
   };
 };

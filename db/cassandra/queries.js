@@ -193,6 +193,8 @@ queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, in
  */
 queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupname, supergroupid) VALUES(?, ?, ?, ?);';
 queries.updateGroup = 'UPDATE {KEYSPACE}.groups SET groupname = ?, supergroupid = ?, groupdata = ? WHERE group = ?';
+queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?';
+queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?';
 queries.selectGroupById = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE group = ?;';
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
 queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ?;';
