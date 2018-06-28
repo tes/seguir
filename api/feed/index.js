@@ -124,6 +124,46 @@ module.exports = function (api) {
     });
   }
 
+  function insertGroupTimeline (jobData, next) {
+    upsertGroupTimeline(jobData.keyspace, jobData.group, jobData.id, jobData.type, jobData.timestamp, next);
+  }
+
+  function insertMembersTimeline (jobData, next) {
+    var read = 0;
+    var finished = 0;
+    var done = false;
+
+    function nextIfFinished (doNotIncrement, cb) {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
+    }
+
+    function processRow (row, cb) {
+      upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, function () { nextIfFinished(false, cb); });
+    }
+
+    client.stream(q(jobData.keyspace, 'selectMembersForGroup'), [jobData.group], function (err, stream) {
+      if (err) { return next(err); }
+
+      stream
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+
+      stream
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
+    });
+  }
+
   function insertMentionedTimeline (jobData, next) {
     var getPost = function (cb) {
       api.post.getPost(jobData.keyspace, jobData.user, jobData.id, function (err, post) {
@@ -242,6 +282,50 @@ module.exports = function (api) {
     ], next);
   }
 
+  function addFeedItemToGroup (keyspace, group, user, object, type, next) {
+    var jobData = {
+      keyspace: keyspace,
+      group: group,
+      user: user,
+      object: object,
+      id: object[type],
+      type: type,
+      timestamp: client.generateTimeId(object.timestamp),
+      visibility: object.visibility
+    };
+
+    debug('Adding feed item to group', group, user, object, type);
+
+    var _insertGroupTimeline = function (cb) {
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-group', jobData, cb);
+      } else {
+        insertGroupTimeline(jobData, cb);
+      }
+    };
+
+    var _insertMembersTimeline = function (cb) {
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-members', jobData, cb);
+      } else {
+        insertMembersTimeline(jobData, cb);
+      }
+    };
+
+    var insertUserTimelines = function (cb) {
+      async.parallel([
+        function (cb2) { upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2); },
+        function (cb2) { upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2); }
+      ], cb);
+    };
+
+    async.series([
+      insertUserTimelines,
+      _insertGroupTimeline,
+      _insertMembersTimeline
+    ], next);
+  }
+
   function notify (keyspace, action, user, item) {
     var NOTIFY_Q = 'seguir-notify';
     if (!messaging.enabled || !messaging.feed) { return; }
@@ -299,9 +383,26 @@ module.exports = function (api) {
     api.metrics.increment('feed.' + timeline + '.' + type);
   }
 
+  function upsertFeedTimelineFromGroup (keyspace, user, item, type, time, from_group, next) {
+    var visibility = api.visibility.PERSONAL;
+    var data = [user, item, type, time, visibility, from_group];
+    notify(keyspace, 'feed-add', user, {item: item, type: type});
+    debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility, from_group);
+    client.execute(q(keyspace, 'upsertFeedTimelineFromGroup'), data, {}, next);
+    api.metrics.increment('feed.feed_timeline.' + type);
+  }
+
+  function upsertUserTimelineFromGroup (keyspace, user, item, type, time, next) {
+    var visibility = api.visibility.PERSONAL;
+    var data = [user, item, type, time, visibility];
+    debug('Upsert into timeline: ', 'user_timeline', user, item, type, time, visibility);
+    client.execute(q(keyspace, 'upsertUserTimelineFromGroup'), data, {}, next);
+    api.metrics.increment('feed.user_timeline.' + type);
+  }
+
   function upsertGroupTimeline (keyspace, group, item, type, time, next) {
     var data = [group, item, type, time];
-    debug('Upsert into group timeline: ', group, item, type, time);
+    debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
     api.metrics.increment('feed.group_timeline.' + type);
   }
@@ -614,8 +715,12 @@ module.exports = function (api) {
 
   return {
     addFeedItem: addFeedItem,
+    addFeedItemToGroup: addFeedItemToGroup,
     removeFeedsForItem: removeFeedsForItem,
     removeFeedsOlderThan: removeFeedsOlderThan,
+    insertGroupsTimeline: insertGroupsTimeline,
+    insertGroupTimeline: insertGroupTimeline,
+    insertMembersTimeline: insertMembersTimeline,
     insertFollowersTimeline: insertFollowersTimeline,
     insertMentionedTimeline: insertMentionedTimeline,
     upsertTimeline: upsertTimeline,

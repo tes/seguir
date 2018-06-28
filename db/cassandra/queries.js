@@ -82,7 +82,7 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
  */
 queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
 queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?);';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, group, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid=?';
 queries.updatePost = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE post = ?';
@@ -192,4 +192,7 @@ queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, in
  * Groups
  */
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?';
+queries.selectMembersForGroup = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?';
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
+queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
+queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';

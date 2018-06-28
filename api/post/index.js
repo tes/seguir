@@ -18,14 +18,15 @@ module.exports = function (api) {
   function addPost (keyspace, user, content, content_type, timestamp, visibility, altid, next) {
     if (!next) { next = altid; altid = null; }
 
+    var group = null;
     var post = client.generateId();
 
     var convertedContent = api.common.convertContentToString(content, content_type);
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
-    var data = [post, user, convertedContent, content_type, timestamp, visibility, altid];
-    var object = _.zipObject(['post', 'user', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+    var data = [post, user, group, convertedContent, content_type, timestamp, visibility, altid];
+    var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
 
     client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
       /* istanbul ignore if */
@@ -35,6 +36,7 @@ module.exports = function (api) {
         var tempPost = {
           post: post,
           user: user,
+          group: group,
           content: originalContent,
           content_type: content_type,
           posted: timestamp,
@@ -43,6 +45,39 @@ module.exports = function (api) {
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
         api.metrics.increment('post.add');
+      });
+    });
+  }
+
+  function addPostToGroup (keyspace, group, user, content, content_type, timestamp, visibility, altid, next) {
+    if (!next) { next = altid; altid = null; }
+
+    var post = client.generateId();
+
+    var convertedContent = api.common.convertContentToString(content, content_type);
+    var originalContent = api.common.convertContentFromString(convertedContent, content_type);
+    if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
+
+    var data = [post, user, group, convertedContent, content_type, timestamp, visibility, altid];
+    var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+
+    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
+      /* istanbul ignore if */
+      if (err) { return next(err); }
+      api.feed.addFeedItemToGroup(keyspace, group, user, object, 'post', function (err, result) {
+        if (err) { return next(err); }
+        var tempPost = {
+          post: post,
+          user: user,
+          group: group,
+          content: originalContent,
+          content_type: content_type,
+          posted: timestamp,
+          visibility: visibility,
+          altid: altid
+        };
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
+        api.metrics.increment('post.toGroup.add');
       });
     });
   }
@@ -176,6 +211,7 @@ module.exports = function (api) {
 
   return {
     addPost: addPost,
+    addPostToGroup: addPostToGroup,
     removePost: removePost,
     removePostByAltid: removePostByAltid,
     removePostsByAltid: removePostsByAltid,
