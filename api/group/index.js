@@ -53,7 +53,16 @@ module.exports = function (api) {
     });
   }
 
+  function getGroup (keyspace, group, next) {
+    client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find group by id: ' + group)); }
+      next(null, result);
+    });
+  }
+
   return {
-    addGroup: addGroup
+    addGroup: addGroup,
+    getGroup: getGroup
   };
 };
