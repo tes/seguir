@@ -66,19 +66,61 @@ module.exports = function (api) {
       }
 
       stream
-          .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
-          .on('data', function () {
-            read++;
-          })
-          .on('end', function () {
-            done = true;
-            nextIfFinished(true, function () {});
-          })
-          .on('error', function (err) {
-            next(err);
-          });
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
+    });
+  }
+
+  function insertGroupsTimeline (jobData, next) {
+    var read = 0;
+    var finished = 0;
+    var done = false;
+
+    function nextIfFinished (doNotIncrement, cb) {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
+    }
+
+    // If you are the recipient of a follow, do not copy this out to your groups graph - it will appear in your feed only
+    if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
+
+    // If the action is personal do not copy out to groups feeds
+    if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
+
+    function processRow (row, cb) {
+      upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, function () { nextIfFinished(false, cb); });
+    }
+
+    client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], function (err, stream) {
+      if (err) { return next(err); }
+
+      stream
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+
+      stream
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
     });
   }
 
@@ -169,6 +211,14 @@ module.exports = function (api) {
       }
     };
 
+    var _insertGroupsTimeline = function (cb) {
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-groups', jobData, cb);
+      } else {
+        insertGroupsTimeline(jobData, cb);
+      }
+    };
+
     var _insertMentionedTimeline = function (cb) {
       if (type !== 'post' || jobData.ispersonal) { return cb(); }
       if (messaging.enabled) {
@@ -187,6 +237,7 @@ module.exports = function (api) {
     async.series([
       insertUserTimelines,
       _insertFollowersTimeline,
+      _insertGroupsTimeline,
       _insertMentionedTimeline
     ], next);
   }
@@ -246,6 +297,13 @@ module.exports = function (api) {
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
     api.metrics.increment('feed.' + timeline + '.' + type);
+  }
+
+  function upsertGroupTimeline (keyspace, group, item, type, time, next) {
+    var data = [group, item, type, time];
+    debug('Upsert into group timeline: ', group, item, type, time);
+    client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
+    api.metrics.increment('feed.group_timeline.' + type);
   }
 
   function removeFeedsForItem (keyspace, item, next) {

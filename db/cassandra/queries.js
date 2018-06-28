@@ -187,3 +187,9 @@ queries.olderThanQuery = 'AND time <= ?';
  * Get indexes
  */
 queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, index_options, index_type, component_index FROM system.schema_columns WHERE keyspace_name = ?';
+
+/**
+ * Groups
+ */
+queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?';
+queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
