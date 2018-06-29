@@ -124,10 +124,6 @@ module.exports = function (api) {
     });
   }
 
-  function insertGroupTimeline (jobData, next) {
-    upsertGroupTimeline(jobData.keyspace, jobData.group, jobData.id, jobData.type, jobData.timestamp, next);
-  }
-
   function insertMembersTimeline (jobData, next) {
     var read = 0;
     var finished = 0;
@@ -296,12 +292,15 @@ module.exports = function (api) {
 
     debug('Adding feed item to group', group, user, object, type);
 
-    var _insertGroupTimeline = function (cb) {
-      if (messaging.enabled) {
-        messaging.submit('seguir-publish-to-group', jobData, cb);
-      } else {
-        insertGroupTimeline(jobData, cb);
-      }
+    var insertUserTimelines = function (cb) {
+      async.parallel([
+        function (cb2) { upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2); },
+        function (cb2) { upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2); }
+      ], cb);
+    };
+
+    var insertGroupTimeline = function (cb) {
+      upsertGroupTimeline(jobData.keyspace, jobData.group, jobData.id, jobData.type, jobData.timestamp, cb);
     };
 
     var _insertMembersTimeline = function (cb) {
@@ -312,16 +311,9 @@ module.exports = function (api) {
       }
     };
 
-    var insertUserTimelines = function (cb) {
-      async.parallel([
-        function (cb2) { upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2); },
-        function (cb2) { upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2); }
-      ], cb);
-    };
-
     async.series([
       insertUserTimelines,
-      _insertGroupTimeline,
+      insertGroupTimeline,
       _insertMembersTimeline
     ], next);
   }
@@ -740,7 +732,6 @@ module.exports = function (api) {
     removeFeedsForItem: removeFeedsForItem,
     removeFeedsOlderThan: removeFeedsOlderThan,
     insertGroupsTimeline: insertGroupsTimeline,
-    insertGroupTimeline: insertGroupTimeline,
     insertMembersTimeline: insertMembersTimeline,
     insertFollowersTimeline: insertFollowersTimeline,
     insertMentionedTimeline: insertMentionedTimeline,
