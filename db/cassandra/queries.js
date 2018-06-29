@@ -203,6 +203,8 @@ queries.selectGroupsBySupergroupId = 'SELECT group, groupdata, groupname, superg
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
 queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ?;';
 queries.selectMembersForGroup = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?;';
+queries.selectMemberByUserAndGroup = 'SELECT group, user, since from {KEYSPACE}.members WHERE user = ? AND group = ?;';
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
 queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.selectGroupTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ? {TYPEQUERY} {OLDERTHANQUERY}';

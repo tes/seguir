@@ -468,6 +468,25 @@ module.exports = function (api) {
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
   }
 
+  function isUserGroupMember (keyspace, user, group, next) {
+    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
+      next(null, result);
+    });
+  }
+
+  function getGroupFeed (keyspace, liu, group, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    isUserGroupMember(keyspace, liu, group, function (err) {
+      if (err) { return next(err); }
+      _getFeed(keyspace, liu, 'group_timeline', group, options, next);
+    });
+  }
+
   function getRawFeed (keyspace, liu, user, options, next) {
     if (!next) {
       next = options;
@@ -577,7 +596,7 @@ module.exports = function (api) {
     'friend': expandFriend
   };
 
-  function _getFeed (keyspace, liu, timeline, user, options, next) {
+  function _getFeed (keyspace, liu, timeline, userOrGroup, options, next) {
     var raw = options.raw;
     var feedType = options.type;
     var feedOlder = options.olderThan;
@@ -585,7 +604,7 @@ module.exports = function (api) {
     var pageSize = options.pageSize || DEFAULT_PAGESIZE;
     var typeQuery = '';
     var olderThanQuery = '';
-    var data = [user];
+    var data = [userOrGroup];
     var query;
 
     if (feedType) {
@@ -599,7 +618,9 @@ module.exports = function (api) {
       data.push(feedOlder);
     }
 
-    query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
+    let queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
+
+    query = q(keyspace, queryName, {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
 
     api.metrics.increment('feed.' + timeline + '.list');
 
@@ -677,7 +698,7 @@ module.exports = function (api) {
                 currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
 
                 // Calculated fields to make rendering easier
-                currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== user.toString();
+                currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== userOrGroup.toString();
                 currentResult.isLike = currentResult.type === 'like';
                 currentResult.isPost = currentResult.type === 'post';
                 currentResult.isFollow = currentResult.type === 'follow';
@@ -725,6 +746,7 @@ module.exports = function (api) {
     insertMentionedTimeline: insertMentionedTimeline,
     upsertTimeline: upsertTimeline,
     getFeed: getFeed,
+    getGroupFeed: getGroupFeed,
     getUserFeed: getUserFeed,
     getRawFeed: getRawFeed,
     seedFeed: seedFeed
