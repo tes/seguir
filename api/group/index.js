@@ -12,6 +12,7 @@ var _zipObject = require('lodash/zipObject');
  */
 module.exports = function (api) {
   var client = api.client;
+  var messaging = api.messaging;
   var q = client.queries;
 
   function addGroup (keyspace, groupName, supergroupId, options, next) {
@@ -74,31 +75,38 @@ module.exports = function (api) {
     });
   }
 
+  function removeMembers (keyspace, group, cb) {
+    client.execute(q(keyspace, 'removeMembers'), [group], function (err) {
+      if (err) return cb(err);
+      cb(null, { status: 'removed' });
+    });
+  }
+
   function removeGroup (keyspace, group, next) {
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
-      async.parallel({
-        feed: async.apply(api.feed.removeFeedsForItem, keyspace, group) // ToDo: group is not indexed yet, feed_timeline, user_timeline, group_timeline
-      }, function (err) {
-        if (err) { return next(err); }
+      var jobData = {
+        keyspace: keyspace,
+        group: group
+      };
 
-        var removeMembers = function (cb) {
-          client.execute(q(keyspace, 'removeMembers'), [group], function (err) {
-            if (err) return cb(err);
-            cb(null, { status: 'removed' });
-          });
-        };
-        var _removeGroup = function (cb) {
-          client.execute(q(keyspace, 'removeGroup'), [group], function (err) {
-            if (err) return cb(err);
-            cb(null, { status: 'removed' });
-          });
-        };
-        async.series([
-          removeMembers,
-          _removeGroup
-        ], next);
-      });
+      var _removeMembers = function (cb) {
+        if (messaging.enabled) {
+          messaging.submit('seguir-remove-members', jobData, cb);
+        } else {
+          removeMembers(keyspace, jobData.group, cb);
+        }
+      };
+      var _removeGroup = function (cb) {
+        client.execute(q(keyspace, 'removeGroup'), [group], function (err) {
+          if (err) return cb(err);
+          cb(null, { status: 'removed' });
+        });
+      };
+      async.series([
+        _removeMembers,
+        _removeGroup
+      ], next);
     });
   }
 
@@ -106,6 +114,7 @@ module.exports = function (api) {
     addGroup: addGroup,
     getGroup: getGroup,
     updateGroup: updateGroup,
-    removeGroup: removeGroup
+    removeGroup: removeGroup,
+    removeMembers: removeMembers
   };
 };
