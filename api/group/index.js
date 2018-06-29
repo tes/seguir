@@ -126,9 +126,18 @@ module.exports = function (api) {
     });
   }
 
+  function joinGroup (keyspace, group, user, timestamp, cb) {
+    var memberValues = [group, user, timestamp];
+    client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
+      if (err) return cb(err);
+      cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+    });
+  }
+
   return {
     addGroup: addGroup,
     getGroup: getGroup,
+    joinGroup: joinGroup,
     updateGroup: updateGroup,
     removeGroup: removeGroup,
     removeMembers: removeMembers,
