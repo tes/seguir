@@ -195,6 +195,7 @@ queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupnam
 queries.updateGroup = 'UPDATE {KEYSPACE}.groups SET groupname = ?, supergroupid = ?, groupdata = ? WHERE group = ?;';
 queries.upsertMember = 'INSERT {KEYSPACE}.members (group, user, since) VALUES(?, ?, ?);';
 queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?;';
+queries.removeMember = 'DELETE FROM {KEYSPACE}.members WHERE group = ? AND user = ?;';
 queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?;';
 queries.selectGroupById = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE group = ?;';
 queries.selectGroupMembers = 'SELECT member, since from {KEYSPACE}.members WHERE group = ?;';

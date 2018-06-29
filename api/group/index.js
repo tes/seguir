@@ -134,10 +134,19 @@ module.exports = function (api) {
     });
   }
 
+  function leaveGroup (keyspace, group, user, cb) {
+    var memberValues = [group, user];
+    client.execute(q(keyspace, 'removeMember'), memberValues, function (err) {
+      if (err) return cb(err);
+      cb(null, { status: 'removed' });
+    });
+  }
+
   return {
     addGroup: addGroup,
     getGroup: getGroup,
     joinGroup: joinGroup,
+    leaveGroup: leaveGroup,
     updateGroup: updateGroup,
     removeGroup: removeGroup,
     removeMembers: removeMembers,
