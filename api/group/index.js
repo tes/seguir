@@ -86,18 +86,20 @@ module.exports = function (api) {
     });
   }
 
-  function removeMembers (keyspace, group, cb) {
-    client.execute(q(keyspace, 'removeMembers'), [group], function (err) {
+  function removeMembers (jobData, cb) {
+    client.execute(q(jobData.keyspace, 'removeMembers'), [jobData.group], function (err) {
       if (err) return cb(err);
       cb(null, { status: 'removed' });
     });
   }
 
-  function removeGroup (keyspace, group, next) {
+  function removeGroup (keyspace, user, group, next) {
+    // TODO use the user value to add a check that the group is only removed by the creator, or at least a member, or something.
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
       var jobData = {
         keyspace: keyspace,
+        user: user,
         group: group
       };
 
@@ -105,7 +107,7 @@ module.exports = function (api) {
         if (messaging.enabled) {
           messaging.submit('seguir-remove-members', jobData, cb);
         } else {
-          removeMembers(keyspace, jobData.group, cb);
+          removeMembers(jobData, cb);
         }
       };
       var _removeGroup = function (cb) {
