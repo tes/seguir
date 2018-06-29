@@ -15,7 +15,15 @@ module.exports = function (api) {
   var messaging = api.messaging;
   var q = client.queries;
 
-  function addGroup (keyspace, groupName, supergroupId, options, next) {
+  function joinGroup (keyspace, group, user, timestamp, cb) {
+    var memberValues = [group, user, timestamp];
+    client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
+      if (err) return cb(err);
+      cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+    });
+  }
+
+  function addGroup (keyspace, groupName, supergroupId, user, timestamp, options, next) {
     if (!next) {
       next = options;
       options = {};
@@ -42,7 +50,10 @@ module.exports = function (api) {
 
       client.execute(q(keyspace, 'upsertGroup'), groupValues, {}, function (err, result) {
         if (err) { return next(err); }
-        next(null, _zipObject(['group', 'groupData', 'groupName', 'supergroupId'], groupValues));
+        joinGroup(keyspace, group, user, timestamp, function (err, result) {
+          if (err) { return next(err); }
+          next(null, _zipObject(['group', 'groupData', 'groupName', 'supergroupId'], groupValues));
+        });
       });
     });
   }
@@ -123,14 +134,6 @@ module.exports = function (api) {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find group members: ' + group)); }
       next(null, result);
-    });
-  }
-
-  function joinGroup (keyspace, group, user, timestamp, cb) {
-    var memberValues = [group, user, timestamp];
-    client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
-      if (err) return cb(err);
-      cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
     });
   }
 
