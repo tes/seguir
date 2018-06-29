@@ -19,7 +19,10 @@ function setupApi (keyspace, config, next) {
       api.client.setup.setupTenant(api.client, keyspace, truncate, function (err) {
         if (err) { return next(err); }
         if (!truncate) { cleaned = true; }
-        next(null, api);
+        api.migrations.applyMigrations(migrations, function (err) {
+          if (err) { return next(err); }
+          next(null, api);
+        });
       });
     });
   });

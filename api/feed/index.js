@@ -66,19 +66,97 @@ module.exports = function (api) {
       }
 
       stream
-          .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
-          .on('data', function () {
-            read++;
-          })
-          .on('end', function () {
-            done = true;
-            nextIfFinished(true, function () {});
-          })
-          .on('error', function (err) {
-            next(err);
-          });
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
+    });
+  }
+
+  function insertGroupsTimeline (jobData, next) {
+    var read = 0;
+    var finished = 0;
+    var done = false;
+
+    function nextIfFinished (doNotIncrement, cb) {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
+    }
+
+    // If you are the recipient of a follow, do not copy this out to your groups graph - it will appear in your feed only
+    if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
+
+    // If the action is personal do not copy out to groups feeds
+    if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
+
+    function processRow (row, cb) {
+      upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, function () { nextIfFinished(false, cb); });
+    }
+
+    client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], function (err, stream) {
+      if (err) { return next(err); }
+
+      stream
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+
+      stream
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
+    });
+  }
+
+  function insertMembersTimeline (jobData, next) {
+    var read = 0;
+    var finished = 0;
+    var done = false;
+
+    function nextIfFinished (doNotIncrement, cb) {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
+    }
+
+    function processRow (row, cb) {
+      upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, function () { nextIfFinished(false, cb); });
+    }
+
+    client.stream(q(jobData.keyspace, 'selectMembersForGroup'), [jobData.group], function (err, stream) {
+      if (err) { return next(err); }
+
+      stream
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+
+      stream
+        .on('data', function () {
+          read++;
+        })
+        .on('end', function () {
+          done = true;
+          nextIfFinished(true, function () {});
+        })
+        .on('error', function (err) {
+          next(err);
+        });
     });
   }
 
@@ -169,6 +247,14 @@ module.exports = function (api) {
       }
     };
 
+    var _insertGroupsTimeline = function (cb) {
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-groups', jobData, cb);
+      } else {
+        insertGroupsTimeline(jobData, cb);
+      }
+    };
+
     var _insertMentionedTimeline = function (cb) {
       if (type !== 'post' || jobData.ispersonal) { return cb(); }
       if (messaging.enabled) {
@@ -187,7 +273,48 @@ module.exports = function (api) {
     async.series([
       insertUserTimelines,
       _insertFollowersTimeline,
+      _insertGroupsTimeline,
       _insertMentionedTimeline
+    ], next);
+  }
+
+  function addFeedItemToGroup (keyspace, group, user, object, type, next) {
+    var jobData = {
+      keyspace: keyspace,
+      group: group,
+      user: user,
+      object: object,
+      id: object[type],
+      type: type,
+      timestamp: client.generateTimeId(object.timestamp),
+      visibility: object.visibility
+    };
+
+    debug('Adding feed item to group', group, user, object, type);
+
+    var insertUserTimelines = function (cb) {
+      async.parallel([
+        function (cb2) { upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2); },
+        function (cb2) { upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2); }
+      ], cb);
+    };
+
+    var insertGroupTimeline = function (cb) {
+      upsertGroupTimeline(jobData.keyspace, jobData.group, jobData.id, jobData.type, jobData.timestamp, cb);
+    };
+
+    var _insertMembersTimeline = function (cb) {
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-members', jobData, cb);
+      } else {
+        insertMembersTimeline(jobData, cb);
+      }
+    };
+
+    async.series([
+      insertUserTimelines,
+      insertGroupTimeline,
+      _insertMembersTimeline
     ], next);
   }
 
@@ -246,6 +373,30 @@ module.exports = function (api) {
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
     api.metrics.increment('feed.' + timeline + '.' + type);
+  }
+
+  function upsertFeedTimelineFromGroup (keyspace, user, item, type, time, from_group, next) {
+    var visibility = api.visibility.PERSONAL;
+    var data = [user, item, type, time, visibility, from_group];
+    notify(keyspace, 'feed-add', user, {item: item, type: type});
+    debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility, from_group);
+    client.execute(q(keyspace, 'upsertFeedTimelineFromGroup'), data, {}, next);
+    api.metrics.increment('feed.feed_timeline.' + type);
+  }
+
+  function upsertUserTimelineFromGroup (keyspace, user, item, type, time, next) {
+    var visibility = api.visibility.PERSONAL;
+    var data = [user, item, type, time, visibility];
+    debug('Upsert into timeline: ', 'user_timeline', user, item, type, time, visibility);
+    client.execute(q(keyspace, 'upsertUserTimelineFromGroup'), data, {}, next);
+    api.metrics.increment('feed.user_timeline.' + type);
+  }
+
+  function upsertGroupTimeline (keyspace, group, item, type, time, next) {
+    var data = [group, item, type, time];
+    debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
+    client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
+    api.metrics.increment('feed.group_timeline.' + type);
   }
 
   function removeFeedsForItem (keyspace, item, next) {
@@ -307,6 +458,25 @@ module.exports = function (api) {
     }
     if (liu && liu.toString() === user.toString()) notify(keyspace, 'feed-view', user, {});
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
+  }
+
+  function isUserGroupMember (keyspace, user, group, next) {
+    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
+      next(null, result);
+    });
+  }
+
+  function getGroupFeed (keyspace, liu, group, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    isUserGroupMember(keyspace, liu, group, function (err) {
+      if (err) { return next(err); }
+      _getFeed(keyspace, liu, 'group_timeline', group, options, next);
+    });
   }
 
   function getRawFeed (keyspace, liu, user, options, next) {
@@ -418,7 +588,7 @@ module.exports = function (api) {
     'friend': expandFriend
   };
 
-  function _getFeed (keyspace, liu, timeline, user, options, next) {
+  function _getFeed (keyspace, liu, timeline, userOrGroup, options, next) {
     var raw = options.raw;
     var feedType = options.type;
     var feedOlder = options.olderThan;
@@ -426,7 +596,7 @@ module.exports = function (api) {
     var pageSize = options.pageSize || DEFAULT_PAGESIZE;
     var typeQuery = '';
     var olderThanQuery = '';
-    var data = [user];
+    var data = [userOrGroup];
     var query;
 
     if (feedType) {
@@ -440,7 +610,9 @@ module.exports = function (api) {
       data.push(feedOlder);
     }
 
-    query = q(keyspace, 'selectTimeline', {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
+    let queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
+
+    query = q(keyspace, queryName, {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
 
     api.metrics.increment('feed.' + timeline + '.list');
 
@@ -518,7 +690,7 @@ module.exports = function (api) {
                 currentResult.isPublic = currentResult.visibility === api.visibility.PUBLIC;
 
                 // Calculated fields to make rendering easier
-                currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== user.toString();
+                currentResult.fromSomeoneYouFollow = currentResult.user.user.toString() !== userOrGroup.toString();
                 currentResult.isLike = currentResult.type === 'like';
                 currentResult.isPost = currentResult.type === 'post';
                 currentResult.isFollow = currentResult.type === 'follow';
@@ -556,12 +728,16 @@ module.exports = function (api) {
 
   return {
     addFeedItem: addFeedItem,
+    addFeedItemToGroup: addFeedItemToGroup,
     removeFeedsForItem: removeFeedsForItem,
     removeFeedsOlderThan: removeFeedsOlderThan,
+    insertGroupsTimeline: insertGroupsTimeline,
+    insertMembersTimeline: insertMembersTimeline,
     insertFollowersTimeline: insertFollowersTimeline,
     insertMentionedTimeline: insertMentionedTimeline,
     upsertTimeline: upsertTimeline,
     getFeed: getFeed,
+    getGroupFeed: getGroupFeed,
     getUserFeed: getUserFeed,
     getRawFeed: getRawFeed,
     seedFeed: seedFeed

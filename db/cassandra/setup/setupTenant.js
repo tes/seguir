@@ -1,6 +1,6 @@
 var async = require('async');
 var _ = require('lodash');
-var schemaVersion = 7;
+var schemaVersion = 8;
 
 function defineTablesAndIndexes (KEYSPACE) {
   var tables = [];

@@ -82,7 +82,7 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
  */
 queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
 queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
-queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?);';
+queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, group, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid=?';
 queries.updatePost = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE post = ?';
@@ -187,3 +187,24 @@ queries.olderThanQuery = 'AND time <= ?';
  * Get indexes
  */
 queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, index_options, index_type, component_index FROM system.schema_columns WHERE keyspace_name = ?';
+
+/**
+ * Groups
+ */
+queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupname, supergroupid) VALUES(?, ?, ?, ?);';
+queries.updateGroup = 'UPDATE {KEYSPACE}.groups SET groupname = ?, supergroupid = ?, groupdata = ? WHERE group = ?;';
+queries.upsertMember = 'INSERT {KEYSPACE}.members (group, user, since) VALUES(?, ?, ?);';
+queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?;';
+queries.removeMember = 'DELETE FROM {KEYSPACE}.members WHERE group = ? AND user = ?;';
+queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?;';
+queries.selectGroupById = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE group = ?;';
+queries.selectGroupMembers = 'SELECT member, since from {KEYSPACE}.members WHERE group = ?;';
+queries.selectGroupsBySupergroupId = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE supergroupid = ?;';
+queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
+queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ?;';
+queries.selectMembersForGroup = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?;';
+queries.selectMemberByUserAndGroup = 'SELECT group, user, since from {KEYSPACE}.members WHERE user = ? AND group = ?;';
+queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
+queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
+queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
+queries.selectGroupTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ? {TYPEQUERY} {OLDERTHANQUERY}';
