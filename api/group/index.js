@@ -110,11 +110,29 @@ module.exports = function (api) {
     });
   }
 
+  function getBySupergroupId (keyspace, supergroupId, next) {
+    client.get(q(keyspace, 'selectGroupsBySupergroupId'), [supergroupId], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find groups by supergroupId: ' + supergroupId)); }
+      next(null, result);
+    });
+  }
+
+  function getGroupMembers (keyspace, group, next) {
+    client.get(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Unable to find group members: ' + group)); }
+      next(null, result);
+    });
+  }
+
   return {
     addGroup: addGroup,
     getGroup: getGroup,
     updateGroup: updateGroup,
     removeGroup: removeGroup,
-    removeMembers: removeMembers
+    removeMembers: removeMembers,
+    getBySupergroupId: getBySupergroupId,
+    getGroupMembers: getGroupMembers
   };
 };
