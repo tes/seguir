@@ -193,7 +193,7 @@ queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, in
  */
 queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupname, supergroupid) VALUES(?, ?, ?, ?);';
 queries.updateGroup = 'UPDATE {KEYSPACE}.groups SET groupname = ?, supergroupid = ?, groupdata = ? WHERE group = ?;';
-queries.upsertMember = 'INSERT {KEYSPACE}.members (group, user, since) VALUES(?, ?, ?);';
+queries.upsertMember = 'INSERT INTO {KEYSPACE}.members (group, user, since) VALUES(?, ?, ?);';
 queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?;';
 queries.removeMember = 'DELETE FROM {KEYSPACE}.members WHERE group = ? AND user = ?;';
 queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?;';
@@ -201,7 +201,7 @@ queries.selectGroupById = 'SELECT group, groupdata, groupname, supergroupid from
 queries.selectGroupMembers = 'SELECT member, since from {KEYSPACE}.members WHERE group = ?;';
 queries.selectGroupsBySupergroupId = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE supergroupid = ?;';
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
-queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ?;';
+queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ? ALLOW FILTERING;';
 queries.selectMembersForGroup = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?;';
 queries.selectMemberByUserAndGroup = 'SELECT group, user, since from {KEYSPACE}.members WHERE user = ? AND group = ?;';
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
