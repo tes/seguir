@@ -610,7 +610,7 @@ module.exports = function (api) {
       data.push(feedOlder);
     }
 
-    let queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
+    var queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
 
     query = q(keyspace, queryName, {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
 
