@@ -207,4 +207,4 @@ queries.selectMemberByUserAndGroup = 'SELECT group, user, since from {KEYSPACE}.
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
 queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
-queries.selectGroupTimeline = 'SELECT user, time, dateOf(time) AS date, item, type, visibility, from_follow FROM {KEYSPACE}.{TIMELINE} WHERE user = ? {TYPEQUERY} {OLDERTHANQUERY}';
+queries.selectGroupTimeline = 'SELECT group, time, dateOf(time) AS date, item, type FROM {KEYSPACE}.{TIMELINE} WHERE group = ? {TYPEQUERY} {OLDERTHANQUERY}';
