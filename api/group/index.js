@@ -125,7 +125,7 @@ module.exports = function (api) {
     });
   }
 
-  function getBySupergroupId (keyspace, supergroupId, options, next) {
+  function getGroupsBySupergroupId (keyspace, supergroupId, options, next) {
     if (!next) {
       next = options;
       options = {};
@@ -168,7 +168,7 @@ module.exports = function (api) {
     updateGroup: updateGroup,
     removeGroup: removeGroup,
     removeMembers: removeMembers,
-    getBySupergroupId: getBySupergroupId,
+    getGroupsBySupergroupId: getGroupsBySupergroupId,
     getGroupMembers: getGroupMembers
   };
 };
