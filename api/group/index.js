@@ -2,6 +2,8 @@ var async = require('async');
 var _mapValues = require('lodash/mapValues');
 var _zipObject = require('lodash/zipObject');
 
+var DEFAULT_PAGESIZE = 50;
+
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
  *
@@ -123,11 +125,22 @@ module.exports = function (api) {
     });
   }
 
-  function getBySupergroupId (keyspace, supergroupId, next) {
-    client.get(q(keyspace, 'selectGroupsBySupergroupId'), [supergroupId], {}, function (err, result) {
+  function getGroupsBySupergroupId (keyspace, supergroupId, options, next) {
+    if (!next) {
+      next = options;
+      options = {};
+    }
+    var pageState = options.pageState;
+    var pageSize = options.pageSize || DEFAULT_PAGESIZE;
+
+    client.execute(q(keyspace, 'selectGroupsBySupergroupId'), [supergroupId], {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find groups by supergroupId: ' + supergroupId)); }
-      next(null, result);
+
+      if (data && data.length > 0) {
+        next(null, data, nextPageState);
+      } else {
+        next(null, []);
+      }
     });
   }
 
@@ -155,7 +168,7 @@ module.exports = function (api) {
     updateGroup: updateGroup,
     removeGroup: removeGroup,
     removeMembers: removeMembers,
-    getBySupergroupId: getBySupergroupId,
+    getGroupsBySupergroupId: getGroupsBySupergroupId,
     getGroupMembers: getGroupMembers
   };
 };
