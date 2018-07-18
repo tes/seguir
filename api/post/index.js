@@ -43,8 +43,11 @@ module.exports = function (api) {
           visibility: visibility,
           altid: altid
         };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
-        api.metrics.increment('post.add');
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, function (err, result) {
+          if (err) { return next(err); }
+          api.metrics.increment('post.add');
+          next(null, { status: 'added', post });
+        });
       });
     });
   }
@@ -76,8 +79,11 @@ module.exports = function (api) {
           visibility: visibility,
           altid: altid
         };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
-        api.metrics.increment('post.toGroup.add');
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, function (err, result) {
+          if (err) { return next(err); }
+          api.metrics.increment('post.toGroup.add');
+          next(null, { status: 'added', post });
+        });
       });
     });
   }
