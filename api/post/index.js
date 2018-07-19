@@ -126,6 +126,9 @@ module.exports = function (api) {
   function removePost (keyspace, user, post, next) {
     getPost(keyspace, user, post, function (err, postItem) {
       if (err) { return next(err); }
+      if (postItem.user.user.toString() === user.toString()) {
+        return next(new Error('Unable to remove the post, only author can remove it.'));
+      }
       _removePost(keyspace, postItem.post, next);
     });
   }
