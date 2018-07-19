@@ -97,8 +97,14 @@ module.exports = function (api) {
     });
   }
 
-  function updatePost (keyspace, post, content, content_type, visibility, next) {
-    _updatePost(keyspace, post, content, content_type, visibility, next);
+  function updatePost (keyspace, user, post, content, content_type, visibility, next) {
+    getPost(keyspace, user, post, function (err, postItem) {
+      if (err) { return next(err); }
+      if (postItem.user.user.toString() !== user.toString()) {
+        return next(new Error('Unable to update the post, only author can update it.'));
+      }
+      _updatePost(keyspace, post, content, content_type, visibility, next);
+    });
   }
 
   function updatePostByAltid (keyspace, altid, content, content_type, visibility, next) {
@@ -126,7 +132,7 @@ module.exports = function (api) {
   function removePost (keyspace, user, post, next) {
     getPost(keyspace, user, post, function (err, postItem) {
       if (err) { return next(err); }
-      if (postItem.user.user.toString() === user.toString()) {
+      if (postItem.user.user.toString() !== user.toString()) {
         return next(new Error('Unable to remove the post, only author can remove it.'));
       }
       _removePost(keyspace, postItem.post, next);
