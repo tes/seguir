@@ -49,9 +49,7 @@ module.exports = function (api) {
     });
   }
 
-  function addPostToGroup (keyspace, group, user, content, content_type, timestamp, visibility, altid, next) {
-    if (!next) { next = altid; altid = null; }
-
+  function _addPostToGroup (keyspace, group, user, content, content_type, timestamp, visibility, altid, next) {
     var post = client.generateId();
 
     var convertedContent = api.common.convertContentToString(content, content_type);
@@ -79,6 +77,23 @@ module.exports = function (api) {
         api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
         api.metrics.increment('post.toGroup.add');
       });
+    });
+  }
+
+  function isUserGroupMember (keyspace, user, group, next) {
+    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
+      next(null, result);
+    });
+  }
+
+  function addPostToGroup (keyspace, group, user, content, content_type, timestamp, visibility, altid, next) {
+    if (!next) { next = altid; altid = null; }
+
+    isUserGroupMember(keyspace, user, group, function (err) {
+      if (err) { return next(err); }
+      _addPostToGroup(keyspace, group, user, content, content_type, timestamp, visibility, altid, next);
     });
   }
 
