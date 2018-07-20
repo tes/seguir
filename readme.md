@@ -30,6 +30,18 @@ This approach allows users to modify any of their metadata (username, display na
 
 If you allow anonymous access, then you simply pass null in as the first parameter (e.g. not logged in).
 
+## Groups and its members
+
+When a post is created by a user, then it appears in
+1. feed of the user
+2. feed of users who follows the user
+3. feed of every groups which the user is a member of
+
+when a post is created in the context of a group, then it appears in
+1. feed of the user
+2. feed of the group
+3. feed of the every members of the group
+
 ## Running the Server
 
 You need Cassandra or Postgres to be installed for the server to work, then do the following:
