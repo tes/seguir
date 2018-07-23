@@ -96,7 +96,9 @@ module.exports = function (api) {
           });
         }
       });
-      next(null, migrations);
+      next(null, migrations.sort(function (thisMigration, thatMigration) {
+        return thisMigration.version - thatMigration.version;
+      }));
     });
   }
 
