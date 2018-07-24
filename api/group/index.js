@@ -21,7 +21,23 @@ module.exports = function (api) {
     var memberValues = [group, user, timestamp];
     client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
       if (err) return cb(err);
-      cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+      getGroup(keyspace, group, function (err, result) {
+        if (err) return cb(err);
+        var joinGroupContent = {
+          category: 'social-group',
+          type: 'new-member',
+          data: {
+            group: {
+              id: group,
+              name: result.groupname
+            }
+          }
+        };
+        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', Date.now(), 'public', function (err, result) {
+          if (err) return cb(err);
+          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+        });
+      });
     });
   }
 

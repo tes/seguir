@@ -106,7 +106,6 @@ module.exports = function (api) {
 
     client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], function (err, stream) {
       if (err) { return next(err); }
-
       stream
         .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
