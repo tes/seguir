@@ -41,7 +41,12 @@ module.exports = function (api) {
           content_type: content_type,
           posted: timestamp,
           visibility: visibility,
-          altid: altid
+          altid: altid,
+          comments: {
+            total: 0,
+            comments: [],
+            nextPageState: null
+          }
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
         api.metrics.increment('post.add');
@@ -72,7 +77,12 @@ module.exports = function (api) {
           content_type: content_type,
           posted: timestamp,
           visibility: visibility,
-          altid: altid
+          altid: altid,
+          comments: {
+            total: 0,
+            comments: [],
+            nextPageState: null
+          }
         };
         api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
         api.metrics.increment('post.toGroup.add');
@@ -181,31 +191,33 @@ module.exports = function (api) {
     });
   }
 
-  function getPost (keyspace, liu, post, expandUser, next) {
-    if (!next) { next = expandUser; expandUser = true; }
-    client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, post) {
+  function _validatePost (keyspace, liu, post, expandUser, next) {
+    post.content = api.common.convertContentFromString(post.content, post.content_type);
+    api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
       if (err) { return next(err); }
-      if (!post) { return next({statusCode: 404, message: 'Post not found'}); }
-      post.content = api.common.convertContentFromString(post.content, post.content_type);
-      api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+
+      api.comment.getComments(keyspace, post.post, function (err, comments) {
         if (err) { return next(err); }
+
+        post.comments = comments;
         api.user.mapUserIdToUser(keyspace, post, ['user'], liu, expandUser, next);
       });
     });
   }
 
-  function _validatePost (keyspace, liu, post, next) {
-    post.content = api.common.convertContentFromString(post.content, post.content_type);
-    api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
+  function getPost (keyspace, liu, post, expandUser, next) {
+    if (!next) { next = expandUser; expandUser = true; }
+    client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, post) {
       if (err) { return next(err); }
-      api.user.mapUserIdToUser(keyspace, post, ['user'], liu, next);
+      if (!post) { return next({statusCode: 404, message: 'Post not found'}); }
+      _validatePost(keyspace, liu, post, expandUser, next);
     });
   }
 
   function getPostByAltid (keyspace, liu, altid, next) {
     api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, post) {
       if (err) { return next(err); }
-      _validatePost(keyspace, liu, post, next);
+      _validatePost(keyspace, liu, post, true, next);
     });
   }
 
@@ -215,7 +227,7 @@ module.exports = function (api) {
       var userCanSeeItems = [];
       var userCanSeeItemError = null;
       async.map(posts, function (post, cb) {
-        _validatePost(keyspace, liu, post, function (err2, item) {
+        _validatePost(keyspace, liu, post, true, function (err2, item) {
           if (err2) {
             userCanSeeItemError = err2;
           } else {
