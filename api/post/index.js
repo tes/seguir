@@ -179,18 +179,6 @@ module.exports = function (api) {
     });
   }
 
-  function getPostFromObject (keyspace, liu, item, next) {
-    var postObject = api.common.expandEmbeddedObject(item, 'post', 'post');
-    api.friend.userCanSeeItem(keyspace, liu, postObject, ['user'], function (err) {
-      if (err) { return next(err); }
-      postObject.content = api.common.convertContentFromString(postObject.content, postObject.content_type);
-      api.user.mapUserIdToUser(keyspace, item, ['user'], liu, true, function (err, objectWithUsers) {
-        postObject.user = objectWithUsers.user;
-        next(err, postObject);
-      });
-    });
-  }
-
   function _validatePost (keyspace, liu, post, expandUser, next) {
     post.content = api.common.convertContentFromString(post.content, post.content_type);
     api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
@@ -203,6 +191,12 @@ module.exports = function (api) {
         api.user.mapUserIdToUser(keyspace, post, ['user'], liu, expandUser, next);
       });
     });
+  }
+
+  function getPostFromObject (keyspace, liu, item, next) {
+    var post = api.common.expandEmbeddedObject(item, 'post', 'post');
+    post.user = item.user;
+    _validatePost(keyspace, liu, post, true, next);
   }
 
   function getPost (keyspace, liu, post, expandUser, next) {
