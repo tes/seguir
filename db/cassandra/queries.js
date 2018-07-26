@@ -208,3 +208,8 @@ queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, ite
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
 queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
 queries.selectGroupTimeline = 'SELECT group, time, dateOf(time) AS date, item, type FROM {KEYSPACE}.{TIMELINE} WHERE group = ? {TYPEQUERY} {OLDERTHANQUERY}';
+
+queries.insertComment = 'INSERT INTO {KEYSPACE}.comments (comment, user, post, commented, commentdata) VALUES(?, ?, ?, ?, ?);';
+queries.selectComment = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE comment = ?';
+queries.insertCommentsTimeline = 'INSERT INTO {KEYSPACE}.comments_timeline (post, time, comment) VALUES(?, ?, ?);';
+queries.selectCommentsTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comments_timeline WHERE post = ?;';

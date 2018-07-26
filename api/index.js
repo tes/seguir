@@ -20,7 +20,7 @@ module.exports = function (config, logger, metrics, next) {
     api.urls = require('./urls');
     api.visibility = require('./visibility');
 
-    var modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', '../db/migrations'];
+    var modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', '../db/migrations'];
     modules.forEach(function (module) {
       var moduleName = path.basename(module);
       api[moduleName] = require(path.resolve(__dirname, module))(api);
