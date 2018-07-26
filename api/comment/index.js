@@ -15,8 +15,8 @@ module.exports = function (api) {
       if (err) { return next(err); }
 
       var newCommentTimelineRow = [post, client.generateTimeId(commented), comment];
-      debug('insert into comment timeline:', 'comment_timeline', newCommentTimelineRow);
-      client.execute(q(keyspace, 'insertCommentTimeline'), newCommentTimelineRow, {}, function (err, result) {
+      debug('insert into comments timeline:', 'comments_timeline', newCommentTimelineRow);
+      client.execute(q(keyspace, 'insertCommentsTimeline'), newCommentTimelineRow, {}, function (err, result) {
         if (err) { return next(err); }
 
         var countUpdate = [1, post.toString()];
@@ -45,13 +45,14 @@ module.exports = function (api) {
         var pageState = options.pageState;
         var pageSize = +result.count; // options.pageSize || 5; once we have pagination for comments
 
-        api.metrics.increment('comment_timeline.list');
-        client.execute(q(keyspace, 'selectCommentTimeline'), [post], {pageState: pageState, pageSize: pageSize}, function (err, timeline, nextPageState) {
+        api.metrics.increment('comments_timeline.list');
+        debug('select comments timeline:', 'comments_timeline', [post]);
+        client.execute(q(keyspace, 'selectCommentsTimeline'), [post], {pageState: pageState, pageSize: pageSize}, function (err, timeline, nextPageState) {
           if (err) { return next(err); }
-          debug('selecting comment timeline', err);
 
           async.mapSeries(timeline, function (timelineEntry, cb) {
-            client.get(q(keyspace, 'getComment'), [timelineEntry.comment], {cacheKey: 'comment:' + timelineEntry.comment}, function (err, comment) {
+            debug('select comment:', 'comments', [timelineEntry.comment]);
+            client.get(q(keyspace, 'selectComment'), [timelineEntry.comment], {cacheKey: 'comment:' + timelineEntry.comment}, function (err, comment) {
               if (err) { return cb(err); }
               cb(null, comment);
             });

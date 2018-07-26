@@ -210,6 +210,6 @@ queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (use
 queries.selectGroupTimeline = 'SELECT group, time, dateOf(time) AS date, item, type FROM {KEYSPACE}.{TIMELINE} WHERE group = ? {TYPEQUERY} {OLDERTHANQUERY}';
 
 queries.insertComment = 'INSERT INTO {KEYSPACE}.comments (comment, user, post, commented, commentdata) VALUES(?, ?, ?, ?, ?);';
-queries.getComment = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE comment = ?';
-queries.insertCommentTimeline = 'INSERT INTO {KEYSPACE}.comment_timeline (post, time, comment) VALUES(?, ?, ?);';
-queries.selectCommentTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comment_timeline WHERE post = ?;';
+queries.selectComment = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE comment = ?';
+queries.insertCommentsTimeline = 'INSERT INTO {KEYSPACE}.comments_timeline (post, time, comment) VALUES(?, ?, ?);';
+queries.selectCommentsTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comments_timeline WHERE post = ?;';

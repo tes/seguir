@@ -42,7 +42,7 @@ module.exports = function (api) {
           posted: timestamp,
           visibility: visibility,
           altid: altid,
-          comments: {
+          commentsTimeline: {
             total: 0,
             comments: [],
             nextPageState: null
@@ -78,7 +78,7 @@ module.exports = function (api) {
           posted: timestamp,
           visibility: visibility,
           altid: altid,
-          comments: {
+          commentsTimeline: {
             total: 0,
             comments: [],
             nextPageState: null
@@ -184,10 +184,10 @@ module.exports = function (api) {
     api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
       if (err) { return next(err); }
 
-      api.comment.getComments(keyspace, post.post, function (err, comments) {
+      api.comment.getComments(keyspace, post.post, function (err, commentsTimeline) {
         if (err) { return next(err); }
 
-        post.comments = comments;
+        post.commentsTimeline = commentsTimeline;
         api.user.mapUserIdToUser(keyspace, post, ['user'], liu, expandUser, next);
       });
     });
