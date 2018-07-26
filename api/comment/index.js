@@ -6,7 +6,7 @@ module.exports = function (api) {
   var client = api.client;
   var q = client.queries;
 
-  function addComment (keyspace, user, post, commented, commentdata, next) {
+  function createComment (keyspace, user, post, commented, commentdata, next) {
     var comment = client.generateId();
     var newCommentRow = [comment, user, post, commented, commentdata];
 
@@ -81,7 +81,7 @@ module.exports = function (api) {
   }
 
   return {
-    addComment: addComment,
+    createComment: createComment,
     getComments: getComments
   };
 };
