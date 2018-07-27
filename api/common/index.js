@@ -79,6 +79,14 @@ module.exports = function (api) {
     }
   }
 
+  function isUserGroupMember (keyspace, user, group, next) {
+    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
+      next(null, result);
+    });
+  }
+
   return {
     error: error,
     get: get,
@@ -86,6 +94,7 @@ module.exports = function (api) {
     clean: clean,
     convertContentToString: convertContentToString,
     convertContentFromString: convertContentFromString,
-    expandEmbeddedObject: expandEmbeddedObject
+    expandEmbeddedObject: expandEmbeddedObject,
+    isUserGroupMember: isUserGroupMember
   };
 };

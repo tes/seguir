@@ -459,20 +459,12 @@ module.exports = function (api) {
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
   }
 
-  function isUserGroupMember (keyspace, user, group, next) {
-    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
-      if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
-      next(null, result);
-    });
-  }
-
   function getGroupFeed (keyspace, liu, group, options, next) {
     if (!next) {
       next = options;
       options = {};
     }
-    isUserGroupMember(keyspace, liu, group, function (err) {
+    api.common.isUserGroupMember(keyspace, liu, group, function (err) {
       if (err) { return next(err); }
       _getFeed(keyspace, liu, 'group_timeline', group, options, next);
     });

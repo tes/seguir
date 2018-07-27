@@ -141,7 +141,7 @@ module.exports = function (api) {
     });
   }
 
-  function getGroupsBySupergroupId (keyspace, supergroupId, options, next) {
+  function getGroupsBySupergroupId (keyspace, supergroupId, liu, options, next) {
     if (!next) {
       next = options;
       options = {};
@@ -153,7 +153,16 @@ module.exports = function (api) {
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
-        next(null, data, nextPageState);
+        async.map(data, function (item, cb) {
+          api.common.isUserGroupMember(keyspace, liu, item.group, function (err) {
+            if (!err) {
+              item.isMember = true;
+            }
+            cb();
+          });
+        }, function () {
+          next(null, data, nextPageState);
+        });
       } else {
         next(null, []);
       }
