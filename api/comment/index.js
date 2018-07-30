@@ -45,6 +45,7 @@ module.exports = function (api) {
         return next(new Error('Unable to update comment created by user ' + commentRecord.user));
       }
 
+      commentRecord.commentdata = commentdata;
       async.parallel([
         function (cb) {
           api.user.mapUserIdToUser(keyspace, commentRecord, ['user'], null, cb);
@@ -57,7 +58,6 @@ module.exports = function (api) {
       ], function (err, results) {
         if (err) { return next(err); }
 
-        results[0].commentdata = commentdata;
         next(null, results[0]);
       });
     });
