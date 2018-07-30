@@ -32,6 +32,41 @@ module.exports = function (api) {
     });
   }
 
+  function updateComment (keyspace, comment, commentdata, next) {
+    var commentUpdate = [commentdata, comment];
+    debug('update comment:', 'comments', commentUpdate);
+    client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, function (err, result) {
+      if (err) { return next(err); }
+
+      debug('select comment:', 'comments', [comment]);
+      client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, comment) {
+        if (err) { return next(err); }
+
+        api.user.mapUserIdToUser(keyspace, comment, ['user'], null, next);
+      });
+    });
+  }
+
+  function deleteComment (keyspace, comment, next) {
+    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, result) {
+      if (err) { return next(err); }
+
+      var countUpdate = [-1, result.post.toString()];
+      debug('update comment counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + result.post}, function (err, result) {
+        if (err) { return next(err); }
+
+        var commentDeletion = [comment];
+        debug('delete comment:', 'comments', commentDeletion);
+        client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment}, function (err, result) {
+          if (err) { return next(err); }
+
+          next();
+        });
+      });
+    });
+  }
+
   // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
   function getComments (keyspace, post, options, next) {
     if (!next) {
@@ -80,6 +115,8 @@ module.exports = function (api) {
 
   return {
     createComment: createComment,
-    getComments: getComments
+    getComments: getComments,
+    updateComment: updateComment,
+    deleteComment: deleteComment
   };
 };
