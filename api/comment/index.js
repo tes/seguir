@@ -32,6 +32,7 @@ module.exports = function (api) {
     });
   }
 
+  // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
   function getComments (keyspace, post, options, next) {
     if (!next) {
       next = options;
@@ -41,13 +42,10 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectCount', {TYPE: 'comment'}), [post.toString()], {cacheKey: 'count:comment:' + post}, function (err, result) {
       if (err) { return next(err); }
 
-      if (result && result.count) {
-        var pageState = options.pageState;
-        var pageSize = +result.count; // options.pageSize || 5; once we have pagination for comments
-
+      if (result && +result.count > 0) {
         api.metrics.increment('comments_timeline.list');
         debug('select comments timeline:', 'comments_timeline', [post]);
-        client.execute(q(keyspace, 'selectCommentsTimeline'), [post], {pageState: pageState, pageSize: pageSize}, function (err, timeline, nextPageState) {
+        client.execute(q(keyspace, 'selectCommentsTimeline'), [post], {}, function (err, timeline, nextPageState) {
           if (err) { return next(err); }
 
           async.mapSeries(timeline, function (timelineEntry, cb) {
@@ -59,7 +57,7 @@ module.exports = function (api) {
           }, function (err, comments) {
             if (err) { return next(err); }
 
-            api.user.mapUserIdToUser(keyspace, comments, ['user'], null, true, {}, function (err, commentsWithUser) {
+            api.user.mapUserIdToUser(keyspace, comments.filter(_.identity), ['user'], null, true, {}, function (err, commentsWithUser) {
               if (err) { return next(err); }
 
               next(null, {
