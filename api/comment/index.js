@@ -32,6 +32,42 @@ module.exports = function (api) {
     });
   }
 
+  function updateComment (keyspace, comment, commentdata, next) {
+    var commentUpdate = [commentdata, comment];
+    debug('update comment:', 'comments', commentUpdate);
+    client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, function (err, result) {
+      if (err) { return next(err); }
+
+      debug('select comment:', 'comments', [comment]);
+      client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, comment) {
+        if (err) { return next(err); }
+
+        api.user.mapUserIdToUser(keyspace, comment, ['user'], null, next);
+      });
+    });
+  }
+
+  function deleteComment (keyspace, comment, next) {
+    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, result) {
+      if (err) { return next(err); }
+
+      var countUpdate = [-1, result.post.toString()];
+      debug('update comment counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + result.post}, function (err, result) {
+        if (err) { return next(err); }
+
+        var commentDeletion = [comment];
+        debug('delete comment:', 'comments', commentDeletion);
+        client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment}, function (err, result) {
+          if (err) { return next(err); }
+
+          next();
+        });
+      });
+    });
+  }
+
+  // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
   function getComments (keyspace, post, options, next) {
     if (!next) {
       next = options;
@@ -41,13 +77,10 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectCount', {TYPE: 'comment'}), [post.toString()], {cacheKey: 'count:comment:' + post}, function (err, result) {
       if (err) { return next(err); }
 
-      if (result && result.count) {
-        var pageState = options.pageState;
-        var pageSize = +result.count; // options.pageSize || 5; once we have pagination for comments
-
+      if (result && +result.count > 0) {
         api.metrics.increment('comments_timeline.list');
         debug('select comments timeline:', 'comments_timeline', [post]);
-        client.execute(q(keyspace, 'selectCommentsTimeline'), [post], {pageState: pageState, pageSize: pageSize}, function (err, timeline, nextPageState) {
+        client.execute(q(keyspace, 'selectCommentsTimeline'), [post], {}, function (err, timeline, nextPageState) {
           if (err) { return next(err); }
 
           async.mapSeries(timeline, function (timelineEntry, cb) {
@@ -59,7 +92,7 @@ module.exports = function (api) {
           }, function (err, comments) {
             if (err) { return next(err); }
 
-            api.user.mapUserIdToUser(keyspace, comments, ['user'], null, true, {}, function (err, commentsWithUser) {
+            api.user.mapUserIdToUser(keyspace, comments.filter(_.identity), ['user'], null, true, {}, function (err, commentsWithUser) {
               if (err) { return next(err); }
 
               next(null, {
@@ -82,6 +115,8 @@ module.exports = function (api) {
 
   return {
     createComment: createComment,
-    getComments: getComments
+    getComments: getComments,
+    updateComment: updateComment,
+    deleteComment: deleteComment
   };
 };
