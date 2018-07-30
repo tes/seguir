@@ -7,62 +7,77 @@ module.exports = function (api) {
   var q = client.queries;
 
   function createComment (keyspace, user, post, commented, commentdata, next) {
-    var comment = client.generateId();
-    var newCommentRow = [comment, user, post, commented, commentdata];
+    var newCommentRow = [client.generateId(), user, post, commented, commentdata];
+    var newComment = _.zipObject(['comment', 'user', 'post', 'commented', 'commentdata'], newCommentRow);
 
-    debug('insert into comments:', 'comments', newCommentRow);
-    client.execute(q(keyspace, 'insertComment'), newCommentRow, {}, function (err, result) {
+    async.parallel([
+      function getNewComment (cb) {
+        api.user.mapUserIdToUser(keyspace, newComment, ['user'], null, cb);
+      },
+      function insertComment (cb) {
+        debug('insert into comments:', 'comments', newCommentRow);
+        client.execute(q(keyspace, 'insertComment'), newCommentRow, {}, cb);
+      },
+      function insertCommentsTimeline (cb) {
+        var newCommentTimelineRow = [post, client.generateTimeId(commented), newComment.comment];
+        debug('insert into comments timeline:', 'comments_timeline', newCommentTimelineRow);
+        client.execute(q(keyspace, 'insertCommentsTimeline'), newCommentTimelineRow, {}, cb);
+      }
+    ], function (err, results) {
       if (err) { return next(err); }
 
-      var newCommentTimelineRow = [post, client.generateTimeId(commented), comment];
-      debug('insert into comments timeline:', 'comments_timeline', newCommentTimelineRow);
-      client.execute(q(keyspace, 'insertCommentsTimeline'), newCommentTimelineRow, {}, function (err, result) {
-        if (err) { return next(err); }
-
-        var countUpdate = [1, post.toString()];
-        debug('update comment counts:', 'counts', countUpdate);
-        client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + post}, function (err, result) {
-          if (err) { return next(err); }
-
-          var newComment = _.zipObject(['comment', 'user', 'post', 'commented', 'commentdata'], newCommentRow);
-          api.metrics.increment('comment.add');
-          api.user.mapUserIdToUser(keyspace, newComment, ['user'], null, next);
-        });
-      });
-    });
-  }
-
-  function updateComment (keyspace, comment, commentdata, next) {
-    var commentUpdate = [commentdata, comment];
-    debug('update comment:', 'comments', commentUpdate);
-    client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, function (err, result) {
-      if (err) { return next(err); }
-
-      debug('select comment:', 'comments', [comment]);
-      client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, comment) {
-        if (err) { return next(err); }
-
-        api.user.mapUserIdToUser(keyspace, comment, ['user'], null, next);
-      });
-    });
-  }
-
-  function deleteComment (keyspace, comment, next) {
-    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, result) {
-      if (err) { return next(err); }
-
-      var countUpdate = [-1, result.post.toString()];
+      var countUpdate = [1, post.toString()];
       debug('update comment counts:', 'counts', countUpdate);
-      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + result.post}, function (err, result) {
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + post}, function (err) {
         if (err) { return next(err); }
 
-        var commentDeletion = [comment];
-        debug('delete comment:', 'comments', commentDeletion);
-        client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment}, function (err, result) {
-          if (err) { return next(err); }
+        api.metrics.increment('comment.add');
+        next(null, results[0]);
+      });
+    });
+  }
 
-          next();
-        });
+  function updateComment (keyspace, user, comment, commentdata, next) {
+    debug('select comment:', 'comments', [comment]);
+    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, commentRecord) {
+      if (err) { return next(err); }
+      if (commentRecord.user.toString() !== user.toString()) {
+        return next(new Error('Unable to update comment created by user ' + commentRecord.user));
+      }
+
+      async.parallel([
+        function (cb) {
+          api.user.mapUserIdToUser(keyspace, commentRecord, ['user'], null, cb);
+        },
+        function (cb) {
+          var commentUpdate = [commentdata, comment];
+          debug('update comment:', 'comments', commentUpdate);
+          client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, cb);
+        }
+      ], function (err, results) {
+        if (err) { return next(err); }
+
+        results[0].commentdata = commentdata;
+        next(null, results[0]);
+      });
+    });
+  }
+
+  function deleteComment (keyspace, user, comment, next) {
+    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, commentRecord) {
+      if (err) { return next(err); }
+      if (commentRecord.user.toString() !== user.toString()) {
+        return next(new Error('Unable to delete comment created by user ' + commentRecord.user));
+      }
+
+      var commentDeletion = [comment];
+      debug('delete comment:', 'comments', commentDeletion);
+      client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment}, function (err) {
+        if (err) { return next(err); }
+
+        var countUpdate = [-1, commentRecord.post.toString()];
+        debug('update comment counts:', 'counts', countUpdate);
+        client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + commentRecord.post}, next);
       });
     });
   }
