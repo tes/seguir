@@ -139,7 +139,7 @@ module.exports = function (api) {
       upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, function () { nextIfFinished(false, cb); });
     }
 
-    client.stream(q(jobData.keyspace, 'selectMembersForGroup'), [jobData.group], function (err, stream) {
+    client.stream(q(jobData.keyspace, 'selectGroupMembers'), [jobData.group], function (err, stream) {
       if (err) { return next(err); }
 
       stream
