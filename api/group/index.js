@@ -170,19 +170,13 @@ module.exports = function (api) {
   }
 
   function getGroupMembers (keyspace, group, next) {
-    client.execute(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, result) {
+    client.execute(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, groupMembers) {
       if (err) { return next(err); }
-      if (result && result.length > 0) {
-        async.mapSeries(result, function (member, cb) {
-          api.user.mapUserIdToUser(keyspace, member, ['user'], null, function (err, memberWithUser) {
-            if (err) { return cb(err); }
-            cb(null, memberWithUser);
-          });
-        }, function (err, membersWithUser) {
-          if (err) { return next(err); }
-          next(null, membersWithUser);
-        });
-      } else { return next(api.common.error(404, 'Unable to find group members: ' + group)); }
+      if (groupMembers && groupMembers.length > 0) {
+        async.mapSeries(groupMembers, function (member, cb) {
+          api.user.mapUserIdToUser(keyspace, member, ['user'], null, cb);
+        }, next);
+      } else { return next(new Error('Unable to find group members: ' + group)); }
     });
   }
 
