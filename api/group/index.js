@@ -172,11 +172,10 @@ module.exports = function (api) {
   function getGroupMembers (keyspace, group, next) {
     client.execute(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, groupMembers) {
       if (err) { return next(err); }
-      if (groupMembers && groupMembers.length > 0) {
-        async.mapSeries(groupMembers, function (member, cb) {
-          api.user.mapUserIdToUser(keyspace, member, ['user'], null, cb);
-        }, next);
-      } else { return next(new Error('Unable to find group members: ' + group)); }
+
+      async.mapSeries(groupMembers, function (member, cb) {
+        api.user.mapUserIdToUser(keyspace, member, ['user'], null, cb);
+      }, next);
     });
   }
 
