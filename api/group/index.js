@@ -170,10 +170,13 @@ module.exports = function (api) {
   }
 
   function getGroupMembers (keyspace, group, next) {
-    client.get(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, result) {
+    client.execute(q(keyspace, 'selectGroupMembers'), [group], {}, function (err, groupMembers) {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find group members: ' + group)); }
-      next(null, result);
+      if (groupMembers && groupMembers.length > 0) {
+        async.mapSeries(groupMembers, function (member, cb) {
+          api.user.mapUserIdToUser(keyspace, member, ['user'], null, cb);
+        }, next);
+      } else { return next(new Error('Unable to find group members: ' + group)); }
     });
   }
 
