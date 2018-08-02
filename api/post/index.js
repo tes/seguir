@@ -113,14 +113,14 @@ module.exports = function (api) {
       if (postItem.user.user.toString() !== user.toString()) {
         return next(new Error('Unable to update the post, only author can update it.'));
       }
-      _updatePost(keyspace, post, content, content_type, visibility, next);
+      _updatePost(keyspace, postItem, content, content_type, visibility, next);
     });
   }
 
   function updatePostByAltid (keyspace, altid, content, content_type, visibility, next) {
-    api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, post) {
+    api.common.get(keyspace, 'selectPostByAltid', [altid], 'one', function (err, postItem) {
       if (err) { return next(err); }
-      _updatePost(keyspace, post.post, content, content_type, visibility, next);
+      _updatePost(keyspace, postItem, content, content_type, visibility, next);
     });
   }
 
@@ -129,13 +129,17 @@ module.exports = function (api) {
     var originalContent = api.common.convertContentFromString(convertedContent, content_type);
     if (!originalContent) { return next(new Error('Unable to parse input content, post not updated.')); }
 
-    var data = [convertedContent, content_type, visibility, post];
+    var data = [convertedContent, content_type, visibility, post.post];
 
-    client.execute(q(keyspace, 'updatePost'), data, {cacheKey: 'post:' + post}, function (err, result) {
+    client.execute(q(keyspace, 'updatePost'), data, {cacheKey: 'post:' + post.post}, function (err, result) {
       /* istanbul ignore if */
       if (err) { return next(err); }
       api.metrics.increment('post.update');
-      next(null, {status: 'updated'});
+      next(null, Object.assign({}, post, {
+        content: originalContent,
+        conent_type: content_type,
+        visibility: visibility
+      }));
     });
   }
 
