@@ -12,7 +12,7 @@ module.exports = function (api) {
 
     async.parallel([
       function getNewComment (cb) {
-        api.user.mapUserIdToUser(keyspace, newComment, ['user'], null, cb);
+        api.user.mapUserIdToUser(keyspace, newComment, ['user'], cb);
       },
       function insertComment (cb) {
         debug('insert into comments:', 'comments', newCommentRow);
@@ -48,7 +48,7 @@ module.exports = function (api) {
       commentRecord.commentdata = commentdata;
       async.parallel([
         function (cb) {
-          api.user.mapUserIdToUser(keyspace, commentRecord, ['user'], null, cb);
+          api.user.mapUserIdToUser(keyspace, commentRecord, ['user'], cb);
         },
         function (cb) {
           var commentUpdate = [commentdata, comment];
@@ -107,7 +107,7 @@ module.exports = function (api) {
           }, function (err, comments) {
             if (err) { return next(err); }
 
-            api.user.mapUserIdToUser(keyspace, comments.filter(_.identity), ['user'], null, true, {}, function (err, commentsWithUser) {
+            api.user.mapUserIdToUser(keyspace, comments.filter(_.identity), ['user'], function (err, commentsWithUser) {
               if (err) { return next(err); }
 
               next(null, {

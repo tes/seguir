@@ -29,7 +29,7 @@ module.exports = function (api) {
           user_friend: user_friend,
           since: timestamp
         };
-        api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], user, next);
+        api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], next);
       });
     });
     api.metrics.increment('friend.add');
@@ -127,7 +127,7 @@ module.exports = function (api) {
     var friendObject = api.common.expandEmbeddedObject(item, 'friend', 'friend');
     api.friend.userCanSeeItem(keyspace, liu, friendObject, ['user', 'user_friend'], function (err) {
       if (err) { return next(err); }
-      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_friend'], liu, true, function (err, objectWithUsers) {
+      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_friend'], function (err, objectWithUsers) {
         if (err) { return next(err); }
         friendObject.user = objectWithUsers.user;
         friendObject.user_friend = objectWithUsers.user_friend;
@@ -143,7 +143,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
       userCanSeeItem(keyspace, liu, friendship, ['user', 'user_friend'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], liu, expandUser, next);
+        api.user.mapUserIdToUser(keyspace, friendship, ['user', 'user_friend'], expandUser, next);
       });
     });
   }
@@ -154,7 +154,7 @@ module.exports = function (api) {
       if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
       api.common.get(keyspace, 'selectFriends', [user], 'many', function (err, friends) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], user, next);
+        api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], next);
       });
     });
   }
@@ -195,7 +195,7 @@ module.exports = function (api) {
     api.common.get(keyspace, 'selectIncomingFriendRequests', [liu], 'many', function (err, friendRequests) {
       if (err) { return next(err); }
       // Now, go and get user details for all the non own posts
-      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], liu, next);
+      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], next);
     });
   }
 
@@ -203,7 +203,7 @@ module.exports = function (api) {
     api.common.get(keyspace, 'selectOutgoingFriendRequests', [liu], 'many', function (err, friendRequests) {
       if (err) { return next(err); }
       // Now, go and get user details for all the non own posts
-      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], liu, next);
+      api.user.mapUserIdToUser(keyspace, friendRequests, ['user', 'user_friend'], next);
     });
   }
 

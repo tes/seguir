@@ -160,7 +160,7 @@ module.exports = function (api) {
     });
   }
 
-  function mapUserIdToUser (keyspace, itemOrItems, fields, currentUser, expandUser, userCache, next) {
+  function mapUserIdToUser (keyspace, itemOrItems, fields, expandUser, userCache, next) {
     // expandUser and userCache optional
     if (!next) { next = userCache; userCache = {}; }
     if (!next) { next = expandUser; expandUser = true; }

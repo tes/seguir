@@ -25,7 +25,7 @@ module.exports = function (api) {
     }
 
     var mapFollowResponse = function (follower) {
-      api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], user, function (err, follow) {
+      api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], function (err, follow) {
         if (err) return next(err);
         return next(null, follow);
       });
@@ -204,7 +204,7 @@ module.exports = function (api) {
     var followObject = api.common.expandEmbeddedObject(item, 'follow', 'follow');
     api.friend.userCanSeeItem(keyspace, liu, followObject, ['user', 'user_follower'], function (err) {
       if (err) { return next(err); }
-      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_follower'], liu, true, function (err, objectWithUsers) {
+      api.user.mapUserIdToUser(keyspace, item, ['user', 'user_follower'], function (err, objectWithUsers) {
         if (err) { return next(err); }
         followObject.user = objectWithUsers.user;
         followObject.user_follower = objectWithUsers.user_follower;
@@ -224,7 +224,7 @@ module.exports = function (api) {
       if (!follower) { return next({statusCode: 404, message: 'Follow not found'}); }
       api.friend.userCanSeeItem(keyspace, liu, follower, ['user', 'user_follower'], function (err) {
         if (err) { return next(err); }
-        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], liu, expandUser, next);
+        api.user.mapUserIdToUser(keyspace, follower, ['user', 'user_follower'], expandUser, next);
       });
     });
   }
@@ -282,7 +282,7 @@ module.exports = function (api) {
             });
           }, function (err) {
             if (err) { return next(err); }
-            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], function (err, mappedFollowers) {
               if (err) { return next(err); }
               next(null, mappedFollowers, nextPageState);
             });
@@ -301,7 +301,7 @@ module.exports = function (api) {
             if (err) {
               return next(err);
             }
-            api.user.mapUserIdToUser(keyspace, follows, [queryField], user, function (err, mappedFollowers) {
+            api.user.mapUserIdToUser(keyspace, follows, [queryField], function (err, mappedFollowers) {
               if (err) {
                 return next(err);
               }

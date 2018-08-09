@@ -48,7 +48,7 @@ module.exports = function (api) {
             nextPageState: null
           }
         };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], next);
         api.metrics.increment('post.add');
       });
     });
@@ -84,7 +84,7 @@ module.exports = function (api) {
             nextPageState: null
           }
         };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], user, next);
+        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], next);
         api.metrics.increment('post.toGroup.add');
       });
     });
@@ -192,7 +192,7 @@ module.exports = function (api) {
         if (err) { return next(err); }
 
         post.commentsTimeline = commentsTimeline;
-        api.user.mapUserIdToUser(keyspace, post, ['user'], liu, expandUser, next);
+        api.user.mapUserIdToUser(keyspace, post, ['user'], expandUser, next);
       });
     });
   }

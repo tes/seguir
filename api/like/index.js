@@ -28,7 +28,7 @@ module.exports = function (api) {
         api.feed.addFeedItem(keyspace, user, object, 'like', function (err, result) {
           if (err) { return next(err); }
           var tempLike = {like: like, user: user, item: item, since: timestamp, visibility: api.visibility.PUBLIC};
-          api.user.mapUserIdToUser(keyspace, tempLike, ['user'], user, next);
+          api.user.mapUserIdToUser(keyspace, tempLike, ['user'], next);
         });
       });
     });
@@ -77,7 +77,7 @@ module.exports = function (api) {
 
   function getLikeFromObject (keyspace, item, next) {
     var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
-    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], undefined, true, function (err, objectWithUsers) {
+    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], function (err, objectWithUsers) {
       if (err) { return next(err); }
       likeObject.user = objectWithUsers.user;
       next(null, likeObject);
@@ -89,7 +89,7 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectLike'), [like], {cacheKey: 'like:' + like}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next({statusCode: 404, message: 'Like not found'}); }
-      api.user.mapUserIdToUser(keyspace, result, ['user'], undefined, expandUser, next);
+      api.user.mapUserIdToUser(keyspace, result, ['user'], expandUser, next);
     });
   }
 
@@ -107,7 +107,7 @@ module.exports = function (api) {
       likeCount(keyspace, cleanItem, function (err, count) {
         if (err || !count) { count = { count: 0 }; }
         like.count = +count.count.toString();
-        api.user.mapUserIdToUser(keyspace, like, ['user'], user, next);
+        api.user.mapUserIdToUser(keyspace, like, ['user'], next);
       });
     });
     api.metrics.increment('like.check');

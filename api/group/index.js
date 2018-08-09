@@ -174,7 +174,7 @@ module.exports = function (api) {
       if (err) { return next(err); }
 
       async.mapSeries(groupMembers, function (member, cb) {
-        api.user.mapUserIdToUser(keyspace, member, ['user'], null, cb);
+        api.user.mapUserIdToUser(keyspace, member, ['user'], cb);
       }, next);
     });
   }

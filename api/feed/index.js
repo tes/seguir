@@ -670,7 +670,7 @@ module.exports = function (api) {
           var userCache = {};
 
           // Now go and get the users in one go so we can cache results
-          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], liu, true, userCache, function (err, resultsWithUsers) {
+          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], true, userCache, function (err, resultsWithUsers) {
             if (err) { return next(err); }
 
             resultsWithUsers.forEach(function (result, index) {
