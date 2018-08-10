@@ -1,4 +1,4 @@
-var _ = require('lodash');
+var debug = require('debug')('seguir:like');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -14,60 +14,43 @@ module.exports = function (api) {
   var client = api.client;
   var q = client.queries;
 
-  function addLike (keyspace, user, item, timestamp, next) {
+  function alterLikeCount (keyspace, item, count, next) {
+    var data = [count, item.toString()];
+    debug('updateCounter', data);
+    client.execute(q(keyspace, 'updateCounter', {TYPE: 'likes'}), data, {cacheKey: 'count:like:' + item}, next);
+  }
+
+  function likeCount (keyspace, item, next) {
+    var data = [item.toString()];
+    debug('selectCount', data);
+    client.get(q(keyspace, 'selectCount', {TYPE: 'likes'}), data, {cacheKey: 'count:like:' + item}, next);
+  }
+
+  function createLike (keyspace, user, item, timestamp, next) {
     var like = client.generateId();
-    var cleanItem = api.common.clean(item);
-    var data = [like, user, cleanItem, timestamp, api.visibility.PUBLIC];
-    var object = _.zipObject(['like', 'user', 'item', 'timestamp', 'visibility'], data);
-    object.ispersonal = false;
-    object.isprivate = false;
+    var data = [like, user, item, timestamp];
+    debug('upsertLike', data);
     client.execute(q(keyspace, 'upsertLike'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      alterLikeCount(keyspace, cleanItem, 1, function () {
-        api.feed.addFeedItem(keyspace, user, object, 'like', function (err, result) {
-          if (err) { return next(err); }
-          var tempLike = {like: like, user: user, item: item, since: timestamp, visibility: api.visibility.PUBLIC};
-          api.user.mapUserIdToUser(keyspace, tempLike, ['user'], next);
-        });
+      alterLikeCount(keyspace, item, 1, function (err) {
+        if (err) { return next(err); }
+        checkLike(keyspace, user, item, next);
       });
     });
     api.metrics.increment('like.add');
   }
 
-  function alterLikeCount (keyspace, item, count, next) {
-    next = next || function () {};
-    var data = [count, item];
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'likes'}), data, {}, next);
-  }
-
-  function likeCount (keyspace, item, next) {
-    next = next || function () {};
-    var cleanItem = api.common.clean(item);
-    var data = [cleanItem];
-    client.get(q(keyspace, 'selectCount', {TYPE: 'likes', ITEM: 'item'}), data, {}, next);
-  }
-
-  function addLikeByName (keyspace, username, item, timestamp, next) {
-    api.user.getUserByName(keyspace, username, function (err, user) {
-      if (err || !user) { return next(err); }
-      addLike(keyspace, user.user, item, timestamp, next);
-    });
-  }
-
-  function removeLike (keyspace, user, item, next) {
-    var cleanItem = api.common.clean(item);
-    checkLike(keyspace, user, cleanItem, function (err, like) {
-      if (err || !like) { return next(err); }
-      var deleteData = [user, cleanItem];
-      client.execute(q(keyspace, 'removeLike'), deleteData, {cacheKey: 'like:' + like}, function (err, result) {
+  function deleteLike (keyspace, user, item, next) {
+    checkLike(keyspace, user, item, function (err, like) {
+      if (err || !like.userLiked) { return next(err); }
+      var data = [user, item];
+      debug('removeLike', data);
+      client.execute(q(keyspace, 'removeLike'), data, {cacheKey: 'like:' + like}, function (err) {
         if (err) return next(err);
-        alterLikeCount(keyspace, cleanItem, -1, function () {
-          api.feed.removeFeedsForItem(keyspace, like.like, function (err) {
-            if (err) return next(err);
-            client.deleteCacheItem('like:' + user + ':' + cleanItem, function () {
-              next(null, {status: 'removed'});
-            });
+        alterLikeCount(keyspace, item, -1, function () {
+          client.deleteCacheItem('like:' + user + ':' + item, function () {
+            checkLike(keyspace, user, item, next);
           });
         });
       });
@@ -77,15 +60,10 @@ module.exports = function (api) {
 
   function getLikeFromObject (keyspace, item, next) {
     var likeObject = api.common.expandEmbeddedObject(item, 'like', 'like');
-    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], function (err, objectWithUsers) {
-      if (err) { return next(err); }
-      likeObject.user = objectWithUsers.user;
-      next(null, likeObject);
-    });
+    api.user.mapUserIdToUser(keyspace, likeObject, ['user'], next);
   }
 
   function getLike (keyspace, like, expandUser, next) {
-    if (!next) { next = expandUser; expandUser = true; }
     client.get(q(keyspace, 'selectLike'), [like], {cacheKey: 'like:' + like}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next({statusCode: 404, message: 'Like not found'}); }
@@ -94,32 +72,34 @@ module.exports = function (api) {
   }
 
   function checkLike (keyspace, user, item, next) {
-    var cleanItem = api.common.clean(item);
-    client.get(q(keyspace, 'checkLike'), [user, cleanItem], {cacheKey: 'like:' + user + ':' + cleanItem}, function (err, like) {
-      if (err || !like) {
-        like = {
-          userLikes: false,
-          user: user
-        };
-      } else {
-        like.userLikes = true;
+    likeCount(keyspace, item, function (err, count) {
+      if (err) { return next(err); }
+      if (!user) {
+        return next(null, {
+          userLiked: false,
+          likedTotal: count ? +count.count : 0
+        });
       }
-      likeCount(keyspace, cleanItem, function (err, count) {
-        if (err || !count) { count = { count: 0 }; }
-        like.count = +count.count.toString();
-        api.user.mapUserIdToUser(keyspace, like, ['user'], next);
+
+      var data = [user, item];
+      debug('checkLike', [user, item]);
+      client.get(q(keyspace, 'checkLike'), data, {cacheKey: 'like:' + user + ':' + item}, function (err, like) {
+        if (err) { return next(err); }
+
+        next(null, {
+          userLiked: !!like,
+          likedTotal: count ? +count.count : 0
+        });
       });
     });
     api.metrics.increment('like.check');
   }
 
   return {
-    addLike: addLike,
-    addLikeByName: addLikeByName,
-    removeLike: removeLike,
+    createLike: createLike,
+    deleteLike: deleteLike,
     getLike: getLike,
     getLikeFromObject: getLikeFromObject,
-    checkLike: checkLike,
-    likeCount: likeCount
+    checkLike: checkLike
   };
 };

@@ -188,11 +188,17 @@ module.exports = function (api) {
     api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
       if (err) { return next(err); }
 
-      api.comment.getComments(keyspace, post.post, function (err, commentsTimeline) {
+      api.like.checkLike(keyspace, liu, post.post, function (err, likeStatus) {
         if (err) { return next(err); }
 
-        post.commentsTimeline = commentsTimeline;
-        api.user.mapUserIdToUser(keyspace, post, ['user'], expandUser, next);
+        post.userLiked = likeStatus.userLiked;
+        post.likedTotal = likeStatus.likedTotal;
+        api.comment.getComments(keyspace, post.post, function (err, commentsTimeline) {
+          if (err) { return next(err); }
+
+          post.commentsTimeline = commentsTimeline;
+          api.user.mapUserIdToUser(keyspace, post, ['user'], expandUser, next);
+        });
       });
     });
   }

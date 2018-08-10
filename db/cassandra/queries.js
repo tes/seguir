@@ -161,9 +161,9 @@ queries.selectCount = 'SELECT count FROM {KEYSPACE}.counts WHERE item = ? AND ty
  * @apiExample {cql} Remove Like
  *    DELETE FROM {KEYSPACE}.likes WHERE like = ?
  */
-queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since, visibility) VALUES(?, ?, ?, ?, ?);';
-queries.selectLike = 'SELECT like, item, user, since, visibility FROM {KEYSPACE}.likes WHERE like = ?';
-queries.checkLike = 'SELECT like, user, since, visibility FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
+queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
+queries.checkLike = 'SELECT like, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
 
 /**
