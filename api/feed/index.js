@@ -470,12 +470,8 @@ module.exports = function (api) {
     });
   }
 
-  function getGroupPreview (keyspace, group, options, next) {
-    if (!next) {
-      next = options;
-      options = {};
-    }
-    _getFeed(keyspace, '', 'group_timeline', group, { pageSize: 3 }, next);
+  function getGroupPreview (keyspace, group, next) {
+    _getFeed(keyspace, null, 'group_timeline', group, { pageSize: 3 }, next);
   }
 
   function getRawFeed (keyspace, liu, user, options, next) {
