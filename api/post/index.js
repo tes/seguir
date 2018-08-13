@@ -193,7 +193,7 @@ module.exports = function (api) {
 
         post.userLiked = likeStatus.userLiked;
         post.likedTotal = likeStatus.likedTotal;
-        api.comment.getComments(keyspace, post.post, function (err, commentsTimeline) {
+        api.comment.getComments(keyspace, liu, post.post, function (err, commentsTimeline) {
           if (err) { return next(err); }
 
           post.commentsTimeline = commentsTimeline;
