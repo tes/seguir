@@ -83,12 +83,7 @@ module.exports = function (api) {
   }
 
   // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
-  function getComments (keyspace, post, options, next) {
-    if (!next) {
-      next = options;
-      options = {};
-    }
-
+  function getComments (keyspace, liu, post, next) {
     client.get(q(keyspace, 'selectCount', {TYPE: 'comment'}), [post.toString()], {cacheKey: 'count:comment:' + post}, function (err, result) {
       if (err) { return next(err); }
 
@@ -101,8 +96,15 @@ module.exports = function (api) {
           async.mapSeries(timeline, function (timelineEntry, cb) {
             debug('select comment:', 'comments', [timelineEntry.comment]);
             client.get(q(keyspace, 'selectComment'), [timelineEntry.comment], {cacheKey: 'comment:' + timelineEntry.comment}, function (err, comment) {
-              if (err) { return cb(err); }
-              cb(null, comment);
+              if (err || !comment) { return cb(err); }
+
+              api.like.checkLike(keyspace, liu, comment.comment, function (err, likeStatus) {
+                if (err) { return cb(err); }
+
+                comment.userLiked = likeStatus.userLiked;
+                comment.likedTotal = likeStatus.likedTotal;
+                cb(null, comment);
+              });
             });
           }, function (err, comments) {
             if (err) { return next(err); }
