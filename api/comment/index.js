@@ -6,20 +6,32 @@ module.exports = function (api) {
   var client = api.client;
   var q = client.queries;
 
+  function getComment (keyspace, liu, comment, next) {
+    debug('select comment:', 'comments', [comment]);
+    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, result) {
+      if (err || !result) { return next(err); }
+
+      api.like.checkLike(keyspace, liu, comment, function (err, likeStatus) {
+        if (err) { return next(err); }
+
+        result.userLiked = likeStatus.userLiked;
+        result.likedTotal = likeStatus.likedTotal;
+        next(null, result);
+      });
+    });
+  }
+
   function createComment (keyspace, user, post, commented, commentdata, next) {
-    var newCommentRow = [client.generateId(), user, post, commented, commentdata];
-    var newComment = _.zipObject(['comment', 'user', 'post', 'commented', 'commentdata'], newCommentRow);
+    var comment = client.generateId();
+    var newCommentRow = [comment, user, post, commented, commentdata];
 
     async.parallel([
-      function getNewComment (cb) {
-        api.user.mapUserIdToUser(keyspace, newComment, ['user'], cb);
-      },
       function insertComment (cb) {
         debug('insert into comments:', 'comments', newCommentRow);
         client.execute(q(keyspace, 'insertComment'), newCommentRow, {}, cb);
       },
       function insertCommentsTimeline (cb) {
-        var newCommentTimelineRow = [post, client.generateTimeId(commented), newComment.comment];
+        var newCommentTimelineRow = [post, client.generateTimeId(commented), comment];
         debug('insert into comments timeline:', 'comments_timeline', newCommentTimelineRow);
         client.execute(q(keyspace, 'insertCommentsTimeline'), newCommentTimelineRow, {}, cb);
       }
@@ -32,7 +44,10 @@ module.exports = function (api) {
         if (err) { return next(err); }
 
         api.metrics.increment('comment.add');
-        next(null, results[0]);
+        getComment(keyspace, user, comment, function (err, newComment) {
+          if (err) { return next(err); }
+          api.user.mapUserIdToUser(keyspace, newComment, ['user'], next);
+        });
       });
     });
   }
@@ -45,20 +60,15 @@ module.exports = function (api) {
         return next(new Error('Unable to update comment created by user ' + commentRecord.user));
       }
 
-      commentRecord.commentdata = commentdata;
-      async.parallel([
-        function (cb) {
-          api.user.mapUserIdToUser(keyspace, commentRecord, ['user'], cb);
-        },
-        function (cb) {
-          var commentUpdate = [commentdata, comment];
-          debug('update comment:', 'comments', commentUpdate);
-          client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, cb);
-        }
-      ], function (err, results) {
+      var commentUpdate = [commentdata, comment];
+      debug('update comment:', 'comments', commentUpdate);
+      client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, function (err) {
         if (err) { return next(err); }
 
-        next(null, results[0]);
+        getComment(keyspace, user, comment, function (err, updatedComment) {
+          if (err) { return next(err); }
+          api.user.mapUserIdToUser(keyspace, updatedComment, ['user'], next);
+        });
       });
     });
   }
@@ -94,18 +104,7 @@ module.exports = function (api) {
           if (err) { return next(err); }
 
           async.mapSeries(timeline, function (timelineEntry, cb) {
-            debug('select comment:', 'comments', [timelineEntry.comment]);
-            client.get(q(keyspace, 'selectComment'), [timelineEntry.comment], {cacheKey: 'comment:' + timelineEntry.comment}, function (err, comment) {
-              if (err || !comment) { return cb(err); }
-
-              api.like.checkLike(keyspace, liu, comment.comment, function (err, likeStatus) {
-                if (err) { return cb(err); }
-
-                comment.userLiked = likeStatus.userLiked;
-                comment.likedTotal = likeStatus.likedTotal;
-                cb(null, comment);
-              });
-            });
+            getComment(keyspace, liu, timelineEntry.comment, cb);
           }, function (err, comments) {
             if (err) { return next(err); }
 
