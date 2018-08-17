@@ -471,7 +471,7 @@ module.exports = function (api) {
   }
 
   function getGroupPreview (keyspace, group, next) {
-    _getFeed(keyspace, null, 'group_timeline', group, { pageSize: 3 }, next);
+    _getFeed(keyspace, null, 'group_timeline', group, {}, next);
   }
 
   function getRawFeed (keyspace, liu, user, options, next) {
