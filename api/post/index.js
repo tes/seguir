@@ -26,29 +26,14 @@ module.exports = function (api) {
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
     var data = [post, user, group, convertedContent, content_type, timestamp, visibility, altid];
-    var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
-
-    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
+    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItem(keyspace, user, object, 'post', function (err, result) {
+
+      var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+      api.feed.addFeedItem(keyspace, user, object, 'post', function (err) {
         if (err) { return next(err); }
-        var tempPost = {
-          post: post,
-          user: user,
-          group: group,
-          content: originalContent,
-          content_type: content_type,
-          posted: timestamp,
-          visibility: visibility,
-          altid: altid,
-          commentsTimeline: {
-            total: 0,
-            comments: [],
-            nextPageState: null
-          }
-        };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], next);
+        getPost(keyspace, user, post, true, next);
         api.metrics.increment('post.add');
       });
     });
@@ -62,29 +47,14 @@ module.exports = function (api) {
     if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
 
     var data = [post, user, group, convertedContent, content_type, timestamp, visibility, altid];
-    var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
-
-    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err, result) {
+    client.execute(q(keyspace, 'upsertPost'), data, {}, function (err) {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      api.feed.addFeedItemToGroup(keyspace, group, user, object, 'post', function (err, result) {
+
+      var object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+      api.feed.addFeedItemToGroup(keyspace, group, user, object, 'post', function (err) {
         if (err) { return next(err); }
-        var tempPost = {
-          post: post,
-          user: user,
-          group: group,
-          content: originalContent,
-          content_type: content_type,
-          posted: timestamp,
-          visibility: visibility,
-          altid: altid,
-          commentsTimeline: {
-            total: 0,
-            comments: [],
-            nextPageState: null
-          }
-        };
-        api.user.mapUserIdToUser(keyspace, tempPost, ['user'], next);
+        getPost(keyspace, user, post, true, next);
         api.metrics.increment('post.toGroup.add');
       });
     });
