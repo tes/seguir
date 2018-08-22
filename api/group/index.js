@@ -122,7 +122,7 @@ module.exports = function (api) {
   function removeGroup (keyspace, userAltid, user, group, next) {
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
-      if (userAltid.toString() === result.groupdata.admin) {
+      if (userAltid.toString() !== result.groupdata.admin) {
         return next(new Error('Unable to remove the group, only admin can remove it.'));
       }
       var jobData = {
