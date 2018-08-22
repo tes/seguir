@@ -115,10 +115,13 @@ module.exports = function (api) {
     });
   }
 
-  function removeGroup (keyspace, user, group, next) {
+  function removeGroup (keyspace, userAltid, user, group, next) {
     // TODO use the user value to add a check that the group is only removed by the creator, or at least a member, or something.
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
+      if (userAltid.toString() === result.groupdata.admin) {
+        return next(new Error('Unable to remove the group, only admin can remove it.'));
+      }
       var jobData = {
         keyspace: keyspace,
         user: user,
