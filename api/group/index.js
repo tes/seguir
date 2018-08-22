@@ -93,13 +93,17 @@ module.exports = function (api) {
   }
 
   function updateGroup (keyspace, userAltid, group, groupName, supergroupId, groupData, next) {
+    getGroup(keyspace, group, function (err, result) {
+      if (err) { return next(err); }
+
+      if (userAltid.toString() !== result.groupdata.admin) {
+        return next(new Error('Unable to update the group, only admin can update it.'));
+      }
+    });
+
     groupData = _mapValues(groupData, function (value) {
       return value.toString();
     }); // Always ensure our groupData is <text,text>
-
-    if (userAltid.toString() !== groupData.admin) {
-      return next(new Error('Unable to update the group, only admin can update it.'));
-    }
 
     var groupValues = [groupName, supergroupId, groupData, group];
     client.execute(q(keyspace, 'updateGroup'), groupValues, {}, function (err, value) {
