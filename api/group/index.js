@@ -92,15 +92,23 @@ module.exports = function (api) {
     });
   }
 
-  function updateGroup (keyspace, group, groupName, supergroupId, groupData, next) {
-    groupData = _mapValues(groupData, function (value) {
-      return value.toString();
-    }); // Always ensure our groupData is <text,text>
-
-    var groupValues = [groupName, supergroupId, groupData, group];
-    client.execute(q(keyspace, 'updateGroup'), groupValues, {}, function (err, value) {
+  function updateGroup (keyspace, userAltid, group, groupName, supergroupId, groupData, next) {
+    getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
-      next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
+
+      if (userAltid.toString() !== result.groupdata.admin) {
+        return next(new Error('Unable to update the group, only admin can update it.'));
+      }
+
+      groupData = _mapValues(groupData, function (value) {
+        return value.toString();
+      }); // Always ensure our groupData is <text,text>
+
+      var groupValues = [groupName, supergroupId, groupData, group];
+      client.execute(q(keyspace, 'updateGroup'), groupValues, {}, function (err, value) {
+        if (err) { return next(err); }
+        next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
+      });
     });
   }
 
@@ -111,10 +119,12 @@ module.exports = function (api) {
     });
   }
 
-  function removeGroup (keyspace, user, group, next) {
-    // TODO use the user value to add a check that the group is only removed by the creator, or at least a member, or something.
+  function removeGroup (keyspace, userAltid, user, group, next) {
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
+      if (userAltid.toString() === result.groupdata.admin) {
+        return next(new Error('Unable to remove the group, only admin can remove it.'));
+      }
       var jobData = {
         keyspace: keyspace,
         user: user,
