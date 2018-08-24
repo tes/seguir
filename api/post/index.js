@@ -141,6 +141,15 @@ module.exports = function (api) {
     });
   }
 
+  function removePostsByUser (keyspace, user, next) {
+    client.execute(q(keyspace, 'selectPostsByUser'), [user], function (err, results) {
+      if (err) { return next(err); }
+      async.each(results, function (post, cb) {
+        _removePost(keyspace, post.post, cb);
+      }, next);
+    });
+  }
+
   function _removePost (keyspace, post, next) {
     var deleteData = [post];
     client.execute(q(keyspace, 'removePost'), deleteData, {cacheKey: 'post:' + post}, function (err, result) {
@@ -225,6 +234,7 @@ module.exports = function (api) {
     removePost: removePost,
     removePostByAltid: removePostByAltid,
     removePostsByAltid: removePostsByAltid,
+    removePostsByUser: removePostsByUser,
     getPost: getPost,
     getPostByAltid: getPostByAltid,
     getPostsByAltid: getPostsByAltid,

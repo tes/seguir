@@ -82,6 +82,7 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
  */
 queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
 queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
+queries.selectPostsByUser = 'SELECT post FROM {KEYSPACE}.posts WHERE user = ?';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, group, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid=?';
@@ -164,7 +165,9 @@ queries.selectCount = 'SELECT count FROM {KEYSPACE}.counts WHERE item = ? AND ty
 queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes (like, user, item, since) VALUES(?, ?, ?, ?);';
 queries.selectLike = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE like = ?';
 queries.checkLike = 'SELECT like, since FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.likesByUser = 'SELECT like, item, user, since FROM {KEYSPACE}.likes WHERE user = ?';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE user = ? AND item = ?';
+queries.removeLikesByUser = 'DELETE FROM {KEYSPACE}.likes WHERE user = ?';
 
 /**
  * @apiDefine ExampleCqlFeed
@@ -214,3 +217,4 @@ queries.deleteComment = 'DELETE FROM {KEYSPACE}.comments WHERE comment = ?';
 queries.selectComment = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE comment = ?';
 queries.insertCommentsTimeline = 'INSERT INTO {KEYSPACE}.comments_timeline (post, time, comment) VALUES(?, ?, ?);';
 queries.selectCommentsTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comments_timeline WHERE post = ?;';
+queries.selectCommentsByUser = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE user = ?;';

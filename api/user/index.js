@@ -274,7 +274,11 @@ module.exports = function (api) {
         feed: async.apply(api.feed.removeFeedsForItem, keyspace, user.user),
         followers: async.apply(api.follow.removeAllFollowersByUser, keyspace, user.user),
         following: async.apply(api.follow.removeAllFollowingByUser, keyspace, user.user),
-        friend: async.apply(api.friend.removeAllFriendsByUser, keyspace, user.user)
+        friend: async.apply(api.friend.removeAllFriendsByUser, keyspace, user.user),
+        members: async.apply(api.group.removeMembersByUser, keyspace, user.user),
+        posts: async.apply(api.post.removePostsByUser, keyspace, user.user),
+        comments: async.apply(api.comment.deleteCommentsByUser, keyspace, user.user),
+        likes: async.apply(api.like.deleteLikesByUser, keyspace, user.user)
       }, function (err) {
         console.log('err', err);
         if (err) { return next(err); }
