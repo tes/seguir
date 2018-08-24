@@ -119,6 +119,15 @@ module.exports = function (api) {
     });
   }
 
+  function removeMembersByUser (keyspace, user, next) {
+    client.execute(q(keyspace, 'selectGroupsForUser'), [user], function (err, results) {
+      if (err) return next(err);
+      async.each(results, function (member, cb) {
+        client.execute(q(keyspace, 'removeMember'), [member.group, user], cb);
+      }, next);
+    });
+  }
+
   function removeGroup (keyspace, userAltid, user, group, next) {
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
@@ -206,6 +215,7 @@ module.exports = function (api) {
     removeGroup: removeGroup,
     removeMembers: removeMembers,
     getGroupsBySupergroupId: getGroupsBySupergroupId,
-    getGroupMembers: getGroupMembers
+    getGroupMembers: getGroupMembers,
+    removeMembersByUser: removeMembersByUser
   };
 };

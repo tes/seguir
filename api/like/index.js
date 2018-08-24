@@ -1,3 +1,4 @@
+var async = require('async');
 var debug = require('debug')('seguir:like');
 
 /**
@@ -46,7 +47,7 @@ module.exports = function (api) {
       if (err || !like.userLiked) { return next(err); }
       var data = [user, item];
       debug('removeLike', data);
-      client.execute(q(keyspace, 'removeLike'), data, {cacheKey: 'like:' + like}, function (err) {
+      client.execute(q(keyspace, 'removeLike'), data, {cacheKey: 'like:' + like.like}, function (err) {
         if (err) return next(err);
         alterLikeCount(keyspace, item, -1, function () {
           client.deleteCacheItem('like:' + user + ':' + item, function () {
@@ -56,6 +57,22 @@ module.exports = function (api) {
       });
     });
     api.metrics.increment('like.remove');
+  }
+
+  function deleteLikesByUser (keyspace, user, next) {
+    client.execute(q(keyspace, 'likesByUser'), [user], function (err, results) {
+      if (err) return next(err);
+      async.each(results, function (like, cb) {
+        client.execute(q(keyspace, 'removeLike'), [user, like.item], {cacheKey: 'like:' + like.like}, function (err) {
+          if (err) return cb(err);
+          alterLikeCount(keyspace, like.item, -1, function () {
+            client.deleteCacheItem('like:' + user + ':' + like.item, function () {
+              cb();
+            });
+          });
+        });
+      }, next);
+    });
   }
 
   function getLikeFromObject (keyspace, item, next) {
@@ -77,6 +94,7 @@ module.exports = function (api) {
       if (!user) {
         return next(null, {
           userLiked: false,
+          like: null,
           likedTotal: count ? +count.count : 0
         });
       }
@@ -88,6 +106,7 @@ module.exports = function (api) {
 
         next(null, {
           userLiked: !!like,
+          like: like && like.like,
           likedTotal: count ? +count.count : 0
         });
       });
@@ -98,6 +117,7 @@ module.exports = function (api) {
   return {
     createLike: createLike,
     deleteLike: deleteLike,
+    deleteLikesByUser: deleteLikesByUser,
     getLike: getLike,
     getLikeFromObject: getLikeFromObject,
     checkLike: checkLike

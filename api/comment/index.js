@@ -73,22 +73,34 @@ module.exports = function (api) {
     });
   }
 
+  function _deleteComment (keyspace, comment, next) {
+    var commentDeletion = [comment.comment];
+    debug('delete comment:', 'comments', commentDeletion);
+    client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment.comment}, function (err) {
+      if (err) { return next(err); }
+
+      var countUpdate = [-1, comment.post.toString()];
+      debug('update comment counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + comment.post}, next);
+    });
+  }
+
   function deleteComment (keyspace, user, comment, next) {
     client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, commentRecord) {
       if (err) { return next(err); }
       if (commentRecord.user.toString() !== user.toString()) {
         return next(new Error('Unable to delete comment created by user ' + commentRecord.user));
       }
+      _deleteComment(keyspace, commentRecord, next);
+    });
+  }
 
-      var commentDeletion = [comment];
-      debug('delete comment:', 'comments', commentDeletion);
-      client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment}, function (err) {
-        if (err) { return next(err); }
-
-        var countUpdate = [-1, commentRecord.post.toString()];
-        debug('update comment counts:', 'counts', countUpdate);
-        client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + commentRecord.post}, next);
-      });
+  function deleteCommentsByUser (keyspace, user, next) {
+    client.execute(q(keyspace, 'selectCommentsByUser'), [user], function (err, results) {
+      if (err) { return next(err); }
+      async.each(results, function (comment, cb) {
+        _deleteComment(keyspace, comment, cb);
+      }, next);
     });
   }
 
@@ -133,6 +145,7 @@ module.exports = function (api) {
     createComment: createComment,
     getComments: getComments,
     updateComment: updateComment,
-    deleteComment: deleteComment
+    deleteComment: deleteComment,
+    deleteCommentsByUser: deleteCommentsByUser
   };
 };
