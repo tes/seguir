@@ -160,6 +160,27 @@ module.exports = function (api) {
     });
   }
 
+  function getGroupsByUser (keyspace, user, next) {
+    client.execute(q(keyspace, 'selectGroupsForUser'), [user], function (err, results) {
+      if (err) return next(err);
+
+      if (results && results.length > 0) {
+        async.map(results, function (group, cb) {
+          getGroup(keyspace, group.group, function (err, result) {
+            if (!err) {
+              group.group = result;
+            }
+            cb();
+          });
+        }, function () {
+          next(null, results);
+        });
+      } else {
+        next(null, []);
+      }
+    });
+  }
+
   function getGroupsBySupergroupId (keyspace, supergroupId, liu, options, next) {
     if (!next) {
       next = options;
@@ -214,6 +235,7 @@ module.exports = function (api) {
     updateGroup: updateGroup,
     removeGroup: removeGroup,
     removeMembers: removeMembers,
+    getGroupsByUser: getGroupsByUser,
     getGroupsBySupergroupId: getGroupsBySupergroupId,
     getGroupMembers: getGroupMembers,
     removeMembersByUser: removeMembersByUser
