@@ -92,6 +92,15 @@ module.exports = function (api) {
     });
   }
 
+  function getGroups (keyspace, groups, next) {
+    async.map(groups, function (group, cb) {
+      getGroup(keyspace, group, function (err, result) {
+        if (err) return cb();
+        cb(null, result);
+      });
+    }, next);
+  }
+
   function updateGroup (keyspace, userAltid, group, groupName, supergroupId, groupData, next) {
     getGroup(keyspace, group, function (err, result) {
       if (err) { return next(err); }
@@ -228,6 +237,7 @@ module.exports = function (api) {
   return {
     addGroup: addGroup,
     getGroup: getGroup,
+    getGroups: getGroups,
     joinGroup: joinGroup,
     leaveGroup: leaveGroup,
     updateGroup: updateGroup,

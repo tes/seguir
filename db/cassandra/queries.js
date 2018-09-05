@@ -80,7 +80,7 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
+queries.selectPost = 'SELECT post, content, content_type, user, group, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
 queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
 queries.selectPostsByUser = 'SELECT post FROM {KEYSPACE}.posts WHERE user = ?';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, group, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
