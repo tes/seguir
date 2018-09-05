@@ -167,14 +167,12 @@ module.exports = function (api) {
       if (results && results.length > 0) {
         async.map(results, function (group, cb) {
           getGroup(keyspace, group.group, function (err, result) {
-            if (!err) {
-              group.group = result;
+            if (err) {
+              return cb(err);
             }
-            cb();
+            cb(null, result);
           });
-        }, function () {
-          next(null, results);
-        });
+        }, next);
       } else {
         next(null, []);
       }
