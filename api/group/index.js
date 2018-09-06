@@ -1,6 +1,7 @@
 var async = require('async');
 var _mapValues = require('lodash/mapValues');
 var _zipObject = require('lodash/zipObject');
+var _filter = require('lodash/filter');
 
 var DEFAULT_PAGESIZE = 50;
 
@@ -177,11 +178,17 @@ module.exports = function (api) {
         async.map(results, function (group, cb) {
           getGroup(keyspace, group.group, function (err, result) {
             if (err) {
-              return cb(err);
+              return cb(null, null);
             }
             cb(null, result);
           });
-        }, next);
+        }, function (err, groups) {
+          if (err) { return next(err); }
+          var existingGroups = _filter(groups, function (group) {
+            return group !== null;
+          });
+          next(null, existingGroups);
+        });
       } else {
         next(null, []);
       }
