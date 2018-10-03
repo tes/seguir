@@ -22,7 +22,7 @@ module.exports = function (api) {
     var memberValues = [group, user, timestamp];
     client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
       if (err) return cb(err);
-      getGroup(keyspace, group, function (err, result) {
+      getGroup(keyspace, group, null, function (err, result) {
         if (err) return cb(err);
         var joinGroupContent = {
           category: 'social-group',
@@ -110,7 +110,7 @@ module.exports = function (api) {
 
   function getGroups (keyspace, groups, next) {
     async.map(groups, function (group, cb) {
-      getGroup(keyspace, group, function (err, result) {
+      getGroup(keyspace, group, null, function (err, result) {
         if (err) return cb();
         cb(null, result);
       });
@@ -118,7 +118,7 @@ module.exports = function (api) {
   }
 
   function updateGroup (keyspace, userAltid, group, groupName, supergroupId, groupData, next) {
-    getGroup(keyspace, group, function (err, result) {
+    getGroup(keyspace, group, null, function (err, result) {
       if (err) { return next(err); }
 
       if (userAltid.toString() !== result.groupdata.admin) {
@@ -154,7 +154,7 @@ module.exports = function (api) {
   }
 
   function removeGroup (keyspace, userAltid, user, group, next) {
-    getGroup(keyspace, group, function (err, result) {
+    getGroup(keyspace, group, null, function (err, result) {
       if (err) { return next(err); }
       if (userAltid.toString() !== result.groupdata.admin) {
         return next(new Error('Unable to remove the group, only admin can remove it.'));
@@ -191,7 +191,7 @@ module.exports = function (api) {
 
       if (results && results.length > 0) {
         async.map(results, function (group, cb) {
-          getGroup(keyspace, group.group, function (err, result) {
+          getGroup(keyspace, group.group, user, function (err, result) {
             if (err) {
               return cb(null, null);
             }
