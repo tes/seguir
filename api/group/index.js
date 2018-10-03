@@ -85,11 +85,26 @@ module.exports = function (api) {
     });
   }
 
-  function getGroup (keyspace, group, next) {
+  function getGroup (keyspace, group, liu, next) {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
-      if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find group by id: ' + group)); }
-      next(null, result);
+      if (err) {
+        next(err);
+        return;
+      }
+      if (!result) {
+        next(api.common.error(404, 'Unable to find group by id: ' + group));
+        return;
+      }
+      if (!liu) {
+        next(null, result);
+        return;
+      }
+      api.common.isUserGroupMember(keyspace, liu, group, function (err) {
+        if (!err) {
+          result.isMember = true;
+        }
+        next(null, result);
+      });
     });
   }
 
