@@ -1,22 +1,16 @@
-var PUBLIC = 'public';
-var PRIVATE = 'private';
-var PERSONAL = 'personal';
-var QUERY_PREFIX = 'is_';
+const PUBLIC = 'public';
+const PRIVATE = 'private';
+const PERSONAL = 'personal';
+const QUERY_PREFIX = 'is_';
 
 module.exports = {
-  PUBLIC: PUBLIC,
-  PRIVATE: PRIVATE,
-  PERSONAL: PERSONAL,
-  isPrivate: function (visibility) {
-    return visibility === PRIVATE || visibility === PUBLIC;
-  },
-  isPersonal: function (visibility) {
-    return true;
-  },
-  isPublic: function (visibility) {
-    return visibility === PUBLIC;
-  },
-  mapToQuery: function (isUser, isFriend) {
+  PUBLIC,
+  PRIVATE,
+  PERSONAL,
+  isPrivate: visibility => visibility === PRIVATE || visibility === PUBLIC,
+  isPersonal: visibility => true,
+  isPublic: visibility => visibility === PUBLIC,
+  mapToQuery: (isUser, isFriend) => {
     if (isUser) {
       return QUERY_PREFIX + PERSONAL;
     }

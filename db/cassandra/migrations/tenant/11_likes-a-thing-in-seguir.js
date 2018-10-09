@@ -1,7 +1,7 @@
-var async = require('async');
+const async = require('async');
 
-function apply (keyspace, api, next) {
-  var cqls = [
+const apply = (keyspace, api, next) => {
+  const cqls = [
     'DROP TABLE ' + keyspace + '.likes',
 
     'CREATE TABLE ' + keyspace + '.likes (like uuid, user uuid, item uuid, since timestamp, PRIMARY KEY (user, item))',
@@ -9,13 +9,13 @@ function apply (keyspace, api, next) {
     'CREATE INDEX ON ' + keyspace + '.likes(like)'
   ];
   async.mapSeries(cqls, api.client.execute, next);
-}
+};
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
-}
+};
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback
 };

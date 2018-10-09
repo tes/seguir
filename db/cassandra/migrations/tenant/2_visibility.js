@@ -1,7 +1,7 @@
-var async = require('async');
+const async = require('async');
 
-function apply (keyspace, api, next) {
-  var schemaVersionCql = [
+const apply = (keyspace, api, next) => {
+  const schemaVersionCql = [
     'ALTER TABLE ' + keyspace + '.likes ADD visibility text',
     'ALTER TABLE ' + keyspace + '.friends ADD visibility text',
     'ALTER TABLE ' + keyspace + '.friend_request ADD visibility text',
@@ -20,13 +20,13 @@ function apply (keyspace, api, next) {
   ];
 
   async.mapSeries(schemaVersionCql, api.client.execute, next);
-}
+};
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
-}
+};
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback
 };

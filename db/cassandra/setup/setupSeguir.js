@@ -1,11 +1,11 @@
 /**
  * Sets up the core
  */
-var async = require('async');
-var schemaVersion = 1;
+const async = require('async');
+const schemaVersion = 1;
 
-function setup (client, keyspace, next) {
-  var tables = [
+const setup = (client, keyspace, next) => {
+  const tables = [
     'CREATE TABLE ' + keyspace + '.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))',
     'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',
     'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, account uuid, enabled boolean, PRIMARY KEY (appid))',
@@ -13,14 +13,14 @@ function setup (client, keyspace, next) {
     'CREATE TABLE ' + keyspace + '.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)'
   ];
 
-  var indexes = [
+  const indexes = [
     'CREATE INDEX ON ' + keyspace + '.accounts(name)',
     'CREATE INDEX ON ' + keyspace + '.applications(account)',
     'CREATE INDEX ON ' + keyspace + '.account_users(username)',
     'CREATE INDEX ON ' + keyspace + '.application_tokens(appid)'
   ];
 
-  var tableIndexes = [
+  const tableIndexes = [
     'accounts.account',
     'accounts.name',
     'accounts.enabled',
@@ -45,11 +45,11 @@ function setup (client, keyspace, next) {
     'applications.enabled'
   ];
 
-  var helpers = require('./helpers')(client, {
+  const helpers = require('./helpers')(client, {
     KEYSPACE: keyspace,
-    tables: tables,
-    indexes: indexes,
-    tableIndexes: tableIndexes
+    tables,
+    indexes,
+    tableIndexes
   });
 
   async.series([
@@ -59,11 +59,11 @@ function setup (client, keyspace, next) {
     helpers.createSecondaryIndexes,
     helpers.waitForIndexes,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion)
-  ], function (err, data) {
+  ], (err, data) => {
     /* istanbul ignore if */
     if (err) console.dir(err);
     next();
   });
-}
+};
 
 module.exports = setup;

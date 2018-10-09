@@ -1,31 +1,31 @@
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
-var TimeUuid = cassandra.types.TimeUuid;
-var path = require('path');
-var debug = require('debug')('seguir:cassandra');
-var debugDriver = require('debug')('cassandra:driver');
-var redisCache = require('./cache');
-var async = require('async');
-var _ = require('lodash');
+const cassandra = require('cassandra-driver');
+const Uuid = cassandra.types.Uuid;
+const TimeUuid = cassandra.types.TimeUuid;
+const path = require('path');
+const debug = require('debug')('seguir:cassandra');
+const debugDriver = require('debug')('cassandra:driver');
+const redisCache = require('./cache');
+const async = require('async');
+const _ = require('lodash');
 
 function createClient (config, next) {
-  redisCache(config, function (err, cache) {
+  redisCache(config, (err, cache) => {
     if (err) {
       /* Purposeful ignore of err - never sent */
     }
 
-    var cassandraConfig = config && config.cassandra;
+    const cassandraConfig = config && config.cassandra;
 
     if (cassandraConfig && cassandraConfig.authUsername && cassandraConfig.authPassword) {
       cassandraConfig.authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraConfig.authUsername, cassandraConfig.authPassword);
     }
 
-    var client = new cassandra.Client(cassandraConfig);
-    client.on('log', function (level, className, message, furtherInfo) {
+    const client = new cassandra.Client(cassandraConfig);
+    client.on('log', function (level, className, message) {
       debugDriver('log event: %s -- %s', level, message);
     });
 
-    function get (query, data, options, next) {
+    const get = (query, data, options, next) => {
       if (!next) {
         next = options;
         options = {};
@@ -36,31 +36,31 @@ function createClient (config, next) {
       }
       if (!query) { return next(null); }
 
-      var cacheKey = options.cacheKey;
-      var queryOptions = {prepare: true, hints: options.hints};
+      const cacheKey = options.cacheKey;
+      const queryOptions = { prepare: true, hints: options.hints };
 
       debug('get', query, data);
-      cache.get(cacheKey, function (err, cachedResult) {
+      cache.get(cacheKey, (err, cachedResult) => {
         if (err) { /* Purposeful ignore of err */ }
         if (cachedResult) {
           return next(null, cachedResult);
         }
-        client.execute(query, data, queryOptions, function (err, result) {
+        client.execute(query, data, queryOptions, (err, result) => {
           if (err) { return next(err); }
-          var item = result && result.rows ? result.rows[0] : null;
+          const item = result && result.rows ? result.rows[0] : null;
           if (!item) { return next(); }
           cache.set(cacheKey, item, next);
         });
       });
-    }
+    };
 
-    function stream (query, data, next) {
+    const stream = (query, data, next) => {
       debug('stream', query, data);
       return next(null, client.stream(query, data, {prepare: true, autoPage: true, fetchSize: 1000}));
-    }
+    };
 
-    function execute (query, data, options, next) {
-      var self = this;
+    const execute = (query, data, options, next) => {
+      const self = this;
       if (!next) {
         next = options;
         options = {};
@@ -71,8 +71,8 @@ function createClient (config, next) {
       }
       if (!query) { return next(null); }
 
-      var cacheKey = options.cacheKey;
-      var queryOptions = {
+      const cacheKey = options.cacheKey;
+      const queryOptions = {
         prepare: true,
         hints: options.hints,
         fetchSize: options.pageSize,
@@ -80,16 +80,16 @@ function createClient (config, next) {
       };
 
       debug('execute', query, data);
-      client.execute(query, data, queryOptions, function (err, result) {
+      client.execute(query, data, queryOptions, (err, result) => {
         if (err) {
           if (self.truncate && err.message.indexOf('No secondary indexes on the restricted columns') >= 0) {
             // This error occurs after failures in index creation, so in test / truncate mode
             // we need to trigger that the tests rebuild the DB on next go around
             // See https://github.com/cliftonc/seguir/issues/15
-            var keyspace = query.split('FROM ')[1].split('.')[0];
+            const keyspace = query.split('FROM ')[1].split('.')[0];
             if (keyspace) {
               console.log('Truncating schema version to recover from index failure ...');
-              return execute('TRUNCATE ' + keyspace + '.schema_version;', function () {
+              return execute('TRUNCATE ' + keyspace + '.schema_version;', () => {
                 next(err);
               });
             }
@@ -97,39 +97,39 @@ function createClient (config, next) {
           return next(err);
         }
 
-        var resultObject = result && result.rows ? result.rows : null;
+        const resultObject = result && result.rows ? result.rows : null;
 
         // Clear the cache on executes if we have a cache key
-        cache.del(cacheKey, function () {
+        cache.del(cacheKey, () => {
           next(null, resultObject, result && result.pageState);
         });
       });
-    }
+    };
 
     // useful only for updates/inserts/delete - thus not returning anything
     // http://docs.datastax.com/en/cql/3.1/cql/cql_reference/batch_r.html
-    function batch () {
-      var queries = [];
+    const batch = () => {
+      const queries = [];
       return {
-        addQuery: function (query, data, cacheKey) {
+        addQuery (query, data, cacheKey) {
           queries.push({query: {query: query, params: data}, cacheKey: cacheKey});
           return this;
         },
-        execute: function (next) {
-          _.each(queries, function (query) {
+        execute (next) {
+          _.each(queries, (query) => {
             debug('batch', query.query, query.params);
           });
 
-          client.batch(_.map(queries, 'query'), {prepare: true}, function (err) {
+          client.batch(_.map(queries, 'query'), {prepare: true}, (err) => {
             if (err) { return next(err); }
             // Clear the cache on batch if we have a cache key
             async.each(queries, function (query, cb) { cache.del(query.cacheKey, cb); }, next);
           });
         }
       };
-    }
+    };
 
-    function generateId (uuid) {
+    const generateId = uuid => {
       if (uuid) {
         if (isUuid(uuid)) {
           return uuid;
@@ -139,48 +139,28 @@ function createClient (config, next) {
       } else {
         return Uuid.random();
       }
-    }
+    };
 
-    function generateTimeId (timestamp) {
-      if (timestamp) {
-        return TimeUuid.fromDate(timestamp);
-      } else {
-        return TimeUuid.now();
-      }
-    }
+    const generateTimeId = timestamp => timestamp ? TimeUuid.fromDate(timestamp) : TimeUuid.now();
 
-    function isUuid (value) {
-      return value instanceof Uuid;
-    }
+    const isUuid = value => value instanceof Uuid;
 
-    function isStringUuid (value) {
-      return (typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4);
-    }
+    const isStringUuid = value => typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4;
 
-    function isValidId (value) {
-      return isUuid(value) || isStringUuid(value);
-    }
+    const isValidId = value => isUuid(value) || isStringUuid(value);
 
-    function formatId (value) {
-      if (isUuid(value)) {
-        return value;
-      } else {
-        return generateId(value);
-      }
-    }
+    const formatId = value => isUuid(value) ? value : generateId(value);
 
-    function getTimestamp (value) {
-      return value ? new Date(value) : new Date();
-    }
+    const getTimestamp = value => value ? new Date(value) : new Date();
 
-    client.connect(function (err) {
+    client.connect((err) => {
       if (err) { return next(err); }
       next(null, {
         type: 'cassandra',
         config: cassandraConfig,
         _client: client,
-        get: get,
-        execute: execute,
+        get,
+        execute,
         setCacheItem: cache.set,
         deleteCacheItem: cache.del,
         flushCache: cache.flush,
@@ -188,16 +168,16 @@ function createClient (config, next) {
         resetStats: cache.resetStats,
         generateId: generateId,
         generateTimeId: generateTimeId,
-        isValidId: isValidId,
-        formatId: formatId,
-        getTimestamp: getTimestamp,
+        isValidId,
+        formatId,
+        getTimestamp,
         migrations: path.resolve(__dirname, 'migrations'),
         queries: require('./queries'),
         setup: require('./setup'),
         get batch () {
           return batch();
         },
-        stream: stream
+        stream
       });
     });
   });

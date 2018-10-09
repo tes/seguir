@@ -1,28 +1,32 @@
-var path = require('path');
-var consoleLogger = require('./logger');
-var _ = require('lodash');
+const path = require('path');
+const consoleLogger = require('./logger');
+const _ = require('lodash');
 
-module.exports = function (config, logger, metrics, next) {
+module.exports = (config, logger, metrics, next) => {
   if (!next) { next = metrics; metrics = { increment: _.noop }; }
   if (!next) { next = logger; logger = consoleLogger; }
 
-  require('../db')(config, function (err, client) {
+  require('../db')(config, (err, client) => {
     if (err) { return next(err); }
 
-    var messaging = require('../db/messaging')(config);
+    const messaging = require('../db/messaging')(config);
 
-    var api = {};
-    api.logger = logger;
-    api.metrics = metrics;
-    api.client = client;
-    api.config = config;
-    api.messaging = messaging;
-    api.urls = require('./urls');
-    api.visibility = require('./visibility');
+    const urls = require('./urls');
+    const visibility = require('./visibility');
 
-    var modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', '../db/migrations'];
-    modules.forEach(function (module) {
-      var moduleName = path.basename(module);
+    const api = {
+      logger,
+      metrics,
+      client,
+      config,
+      messaging,
+      urls,
+      visibility
+    };
+
+    const modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', '../db/migrations'];
+    modules.forEach((module) => {
+      const moduleName = path.basename(module);
       api[moduleName] = require(path.resolve(__dirname, module))(api);
     });
 

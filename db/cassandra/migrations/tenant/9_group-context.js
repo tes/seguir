@@ -1,7 +1,7 @@
-var async = require('async');
+const async = require('async');
 
-function apply (keyspace, api, next) {
-  var cqls = [
+const apply = (keyspace, api, next) => {
+  const cqls = [
     'CREATE TABLE ' + keyspace + '.groups (group uuid PRIMARY KEY, supergroupid text, groupdata map<text,text>, groupname text)',
     'CREATE INDEX ON ' + keyspace + '.groups(supergroupid)',
     'CREATE INDEX ON ' + keyspace + '.groups(groupname)',
@@ -19,13 +19,13 @@ function apply (keyspace, api, next) {
     'ALTER TABLE ' + keyspace + '.feed_timeline ADD from_group uuid'
   ];
   async.mapSeries(cqls, api.client.execute, next);
-}
+};
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
-}
+};
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback
 };

@@ -1,11 +1,11 @@
-var async = require('async');
-var _ = require('lodash');
-var schemaVersion = 8;
+const async = require('async');
+const _ = require('lodash');
+const schemaVersion = 8;
 
-function defineTablesAndIndexes (KEYSPACE) {
-  var tables = [];
-  var indexes = [];
-  var tableIndexes = [];
+const defineTablesAndIndexes = (KEYSPACE) => {
+  const tables = [];
+  const indexes = [];
+  let tableIndexes = [];
 
   if (!KEYSPACE) {
     console.log('You must specify a keyspace, abandoning keyspace creation.');
@@ -186,9 +186,9 @@ function defineTablesAndIndexes (KEYSPACE) {
    * @apiParam {String} visibility The visibility level of the item
    * @apiUse ExampleCqlFeed
    */
-  var feedTables = ['feed_timeline', 'user_timeline'];
+  const feedTables = ['feed_timeline', 'user_timeline'];
 
-  feedTables.forEach(function (table) {
+  feedTables.forEach(table => {
     tables.push('CREATE TABLE ' + KEYSPACE + '.' + table + ' (user uuid, time timeuuid, item uuid, type text, visibility text, from_follow uuid, PRIMARY KEY (user, time)) WITH CLUSTERING ORDER BY (time DESC)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(item)');
     indexes.push('CREATE INDEX ON ' + KEYSPACE + '.' + table + '(from_follow)');
@@ -197,19 +197,19 @@ function defineTablesAndIndexes (KEYSPACE) {
   });
 
   return {
-    tables: tables,
-    indexes: indexes,
-    tableIndexes: tableIndexes
+    tables,
+    indexes,
+    tableIndexes
   };
-}
+};
 
-function setup (client, keyspace, truncateIfExists, next) {
+const setup = (client, keyspace, truncateIfExists, next) => {
   if (!next) { next = truncateIfExists; truncateIfExists = false; }
 
-  var options = defineTablesAndIndexes(keyspace);
+  const options = defineTablesAndIndexes(keyspace);
   options.KEYSPACE = keyspace;
 
-  var helpers = require('./helpers')(client, options);
+  const helpers = require('./helpers')(client, options);
 
   if (truncateIfExists) {
     return helpers.truncate(next);
@@ -223,11 +223,11 @@ function setup (client, keyspace, truncateIfExists, next) {
     helpers.flushCache,
     helpers.waitForIndexes,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion)
-  ], function (err, data) {
+  ], (err, data) => {
     /* istanbul ignore if */
     if (err) return next(err);
     next();
   });
-}
+};
 
 module.exports = setup;
