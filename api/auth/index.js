@@ -1,209 +1,209 @@
-var restify = require('restify');
-var async = require('async');
-var userHeader = 'x-seguir-user-token';
-var authUtils = require('./utils');
-var anonyomousUser = {user: null, username: 'Not logged in.'};
-var debug = require('debug')('seguir:auth');
+const restify = require('restify');
+const async = require('async');
+const userHeader = 'x-seguir-user-token';
+const authUtils = require('./utils');
+const anonyomousUser = { user: null, username: 'Not logged in.' };
+const debug = require('debug')('seguir:auth');
 
-function Auth (api) {
-  var client = api.client;
-  var q = client.queries;
-  var keyspace = api.config.keyspace;
-  var setupTenant = client.setup.setupTenant;
+const Auth = (api) => {
+  const client = api.client;
+  const q = client.queries;
+  const keyspace = api.config.keyspace;
+  const setupTenant = client.setup.setupTenant;
 
   /**
    * Core account API
    */
-  function addAccount (name, isadmin, enabled, next) {
-    checkAccountDuplicate(name, function (err, checkAccount) {
+  const addAccount = (name, isadmin, enabled, next) => {
+    checkAccountDuplicate(name, (err, checkAccount) => {
       if (err) { return next(err); }
       if (checkAccount) { return next(new Error('An account with that name already exists!')); }
 
-      var account = client.generateId();
-      var accountData = [account, name, isadmin, enabled];
-      client.execute(q(keyspace, 'upsertAccount'), accountData, {}, function (err, result) {
+      const account = client.generateId();
+      const accountData = [account, name, isadmin, enabled];
+      client.execute(q(keyspace, 'upsertAccount'), accountData, {}, err => {
         if (err) { return next(err); }
         next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
       });
     });
-  }
+  };
 
-  function getAccount (account, next) {
-    client.get(q(keyspace, 'selectAccount'), [account], {cacheKey: 'account:' + account}, function (err, result) {
+  const getAccount = (account, next) => {
+    client.get(q(keyspace, 'selectAccount'), [account], {cacheKey: 'account:' + account}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
-  function checkAccountDuplicate (name, next) {
-    client.get(q(keyspace, 'selectAccountByName'), [name], {}, function (err, result) {
+  const checkAccountDuplicate = (name, next) => {
+    client.get(q(keyspace, 'selectAccountByName'), [name], {}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
-  function getAccounts (next) {
-    client.execute(q(keyspace, 'selectAccounts'), null, {}, function (err, result) {
+  const getAccounts = (next) => {
+    client.execute(q(keyspace, 'selectAccounts'), null, {}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
-  function updateAccount (account, name, isadmin, enabled, next) {
-    var accountData = [name, isadmin, enabled, account];
-    client.execute(q(keyspace, 'updateAccount'), accountData, {cacheKey: 'account:' + account}, function (err, result) {
+  const updateAccount = (account, name, isadmin, enabled, next) => {
+    const accountData = [name, isadmin, enabled, account];
+    client.execute(q(keyspace, 'updateAccount'), accountData, {cacheKey: 'account:' + account}, err => {
       if (err) { return next(err); }
       next(null, {account: account, name: name, isadmin: isadmin, enabled: enabled});
     });
-  }
+  };
 
   /**
    * Core account user API
    */
-  function addAccountUser (account, username, password, enabled, next) {
-    getAccountUserByName(username, function (err, checkUser) {
+  const addAccountUser = (account, username, password, enabled, next) => {
+    getAccountUserByName(username, (err, checkUser) => {
       if (err) { return next(err); }
       if (checkUser) { return next(new Error('An user with that username already exists.')); }
-      authUtils.hashPassword(password, function (err, hash) {
+      authUtils.hashPassword(password, (err, hash) => {
         if (err) { return next(err); }
-        var userData = [account, username, hash, enabled];
-        client.execute(q(keyspace, 'upsertAccountUser'), userData, {}, function (err, result) {
+        const userData = [account, username, hash, enabled];
+        client.execute(q(keyspace, 'upsertAccountUser'), userData, {}, err => {
           if (err) { return next(err); }
           next(null, {account: account, username: username, enabled: enabled});
         });
       });
     });
-  }
+  };
 
-  function getAccountUserByName (username, next) {
-    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, function (err, result) {
+  const getAccountUserByName = (username, next) => {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
-  function loginUser (username, password, next) {
-    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, function (err, result) {
+  const loginUser = (username, password, next) => {
+    client.get(q(keyspace, 'selectAccountUserByName'), [username], {}, (err, result) => {
       if (err) { return next(err); }
-      var user = result;
+      const user = result;
       if (!user) { return next(null, false); }
       if (!user.enabled) { return next(null, false); }
-      authUtils.checkPassword(password, user.password, function (err, valid) {
+      authUtils.checkPassword(password, user.password, (err, valid) => {
         if (err) { return next(err); }
         next(null, valid);
       });
     });
-  }
+  };
 
-  function getAccountUsers (account, next) {
-    client.execute(q(keyspace, 'selectAccountUsers'), [account], {}, function (err, result) {
+  const getAccountUsers = (account, next) => {
+    client.execute(q(keyspace, 'selectAccountUsers'), [account], {}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
-  function updateAccountUser (account, username, password, enabled, next) {
-    authUtils.hashPassword(password, function (err, hash) {
+  const updateAccountUser = (account, username, password, enabled, next) => {
+    authUtils.hashPassword(password, (err, hash) => {
       if (err) { return next(err); }
-      var userData = [hash, enabled, account, username];
-      client.execute(q(keyspace, 'updateAccountUser'), userData, {}, function (err, result) {
+      const userData = [hash, enabled, account, username];
+      client.execute(q(keyspace, 'updateAccountUser'), userData, {}, err => {
         if (err) { return next(err); }
         next(null, {account: account, username: username, enabled: enabled});
       });
     });
-  }
+  };
 
   /**
    *  Application API
    */
-  function updateApplication (appid, name, enabled, next) {
-    var application = [name, enabled, appid];
-    client.execute(q(keyspace, 'updateApplication'), application, {cacheKey: 'application:' + appid}, function (err) {
+  const updateApplication = (appid, name, enabled, next) => {
+    const application = [name, enabled, appid];
+    client.execute(q(keyspace, 'updateApplication'), application, {cacheKey: 'application:' + appid}, err => {
       next(err, {name: name, appid: appid, enabled: enabled});
     });
-  }
+  };
 
-  function addApplication (account, name, appid, next) {
+  const addApplication = (account, name, appid, next) => {
     if (!next) { next = appid; appid = null; }
     appid = appid || client.generateId();
-    var appkeyspace = generateKeyspaceFromName(name);
-    var enabled = true;
-    var app = [account, name, appkeyspace, appid, enabled];
-    client.execute(q(keyspace, 'upsertApplication'), app, {}, function (err, result) {
+    const appkeyspace = generateKeyspaceFromName(name);
+    const enabled = true;
+    const app = [account, name, appkeyspace, appid, enabled];
+    client.execute(q(keyspace, 'upsertApplication'), app, {}, err => {
       if (err) { return next(err); }
-      setupTenant(client, keyspace + '_' + appkeyspace, function (err) {
+      setupTenant(client, keyspace + '_' + appkeyspace, err => {
         if (err) { return next(err); }
         next(null, {account: account, name: name, appkeyspace: appkeyspace, appid: appid, enabled: enabled});
       });
     });
-  }
+  };
 
-  function getApplications (account, next) {
-    client.execute(q(keyspace, 'selectApplications'), [account], function (err, result) {
+  const getApplications = (account, next) => {
+    client.execute(q(keyspace, 'selectApplications'), [account], (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
   /**
    *  Application Token API
    */
-  function addApplicationToken (appid, appkeyspace, description, tokenid, tokensecret, next) {
+  const addApplicationToken = (appid, appkeyspace, description, tokenid, tokensecret, next) => {
     if (!next) { next = tokensecret; tokensecret = null; }
     if (!next) { next = tokenid; tokenid = null; }
     tokenid = tokenid || client.generateId();
     tokensecret = tokensecret || authUtils.generateSecret(client.generateId());
-    var enabled = true;
-    var token = [appid, appkeyspace, tokenid, tokensecret, description, enabled];
-    client.execute(q(keyspace, 'upsertApplicationToken'), token, {}, function (err, result) {
+    const enabled = true;
+    const token = [appid, appkeyspace, tokenid, tokensecret, description, enabled];
+    client.execute(q(keyspace, 'upsertApplicationToken'), token, {}, err => {
       if (err) { return next(err); }
       next(null, {appid: appid, appkeyspace: appkeyspace, tokenid: tokenid, tokensecret: tokensecret, description: description, enabled: enabled});
     });
-  }
+  };
 
-  function updateApplicationToken (tokenid, enabled, description, next) {
-    var token = [enabled, description, tokenid];
-    client.execute(q(keyspace, 'updateApplicationToken'), token, {}, function (err) {
+  const updateApplicationToken = (tokenid, enabled, description, next) => {
+    const token = [enabled, description, tokenid];
+    client.execute(q(keyspace, 'updateApplicationToken'), token, {}, err => {
       if (err) { return next(err); }
       next(null, {tokenid: tokenid, description: description, enabled: enabled});
     });
-  }
+  };
 
-  function updateApplicationTokenSecret (tokenid, next) {
-    var tokensecret = authUtils.generateSecret(client.generateId());
-    var token = [tokensecret, tokenid];
-    client.execute(q(keyspace, 'updateApplicationTokenSecret'), token, {}, function (err) {
+  const updateApplicationTokenSecret = (tokenid, next) => {
+    const tokensecret = authUtils.generateSecret(client.generateId());
+    const token = [tokensecret, tokenid];
+    client.execute(q(keyspace, 'updateApplicationTokenSecret'), token, {}, err => {
       if (err) { return next(err); }
       next(null, {tokenid: tokenid, tokensecret: tokensecret});
     });
-  }
+  };
 
-  function getApplicationTokens (appid, next) {
-    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {}, function (err, result) {
+  const getApplicationTokens = (appid, next) => {
+    client.execute(q(keyspace, 'selectApplicationTokens'), [appid], {}, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
-  }
+  };
 
   /**
    * Checks incoming headers for the application and logged in user tokens.
    */
-  function checkRequest (req, res, next) {
+  const checkRequest = (req, res, next) => {
     // TODO: Cleaner way of excluding some paths from the auth check
     if (req.url === '/status') {
       return next(null);
     }
 
-    var appAuthorization = req.headers.authorization;
-    var user = req.headers[userHeader];
+    let appAuthorization = req.headers.authorization;
+    const user = req.headers[userHeader];
 
     if (!appAuthorization) {
       return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
     }
 
-    var appId = appAuthorization.split(':')[0].split(' ')[1];
+    const appId = appAuthorization.split(':')[0].split(' ')[1];
 
-    checkApplicationToken(appId, function (err, token) {
+    checkApplicationToken(appId, (err, token) => {
       if (err) { return next(err); }
       if (!token) {
         return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
@@ -211,7 +211,7 @@ function Auth (api) {
 
       if (authUtils.validateAuthorization(req.headers, token.tokenid, token.tokensecret)) {
         req.keyspace = keyspace + '_' + token.appkeyspace;
-        checkUser(req.keyspace, user, function (err, user) {
+        checkUser(req.keyspace, user, (err, user) => {
           if (err) { return next(err); }
           req.liu = user;
           next(null);
@@ -220,53 +220,53 @@ function Auth (api) {
         return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
       }
     });
-  }
+  };
 
-  function checkApplicationToken (tokenid, next) {
+  const checkApplicationToken = (tokenid, next) => {
     if (!tokenid) {
       return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
-    var token = [tokenid];
-    client.get(q(keyspace, 'checkApplicationToken'), token, {cacheKey: 'token:' + tokenid}, function (err, result) {
-      var token = result;
+    const token = [tokenid];
+    client.get(q(keyspace, 'checkApplicationToken'), token, {cacheKey: 'token:' + tokenid}, (err, result) => {
+      let token = result;
       if (err) { return next(err); }
       if (!token || !token.enabled) { return next(null, null); }
       next(null, token);
     });
-  }
+  };
 
-  function getUserBySeguirId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, function (err, result) {
+  const getUserBySeguirId = (user_keyspace, user, next) => {
+    client.get(q(user_keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
     });
-  }
+  };
 
-  function getUserByAltId (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {cacheKey: 'useraltid:' + user}, function (err, result) {
+  const getUserByAltId = (user_keyspace, user, next) => {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], {cacheKey: 'useraltid:' + user}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
     });
-  }
+  };
 
-  function getUserByName (user_keyspace, user, next) {
-    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {cacheKey: 'username:' + user}, function (err, result) {
+  const getUserByName = (user_keyspace, user, next) => {
+    client.get(q(user_keyspace, 'selectUserByUsername'), [user], {cacheKey: 'username:' + user}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
       next(null, result);
     });
-  }
+  };
 
-  function coerceUserToUuid (user_keyspace, ids, next) {
+  const coerceUserToUuid = (user_keyspace, ids, next) => {
     debug('Coercing %s to uuid', ids);
 
     if (!ids) {
       return next(null, null);
     }
 
-    var coerce = function (id, cb) {
+    const coerce = (id, cb) => {
       if (!id) {
         return cb(null, null);
       }
@@ -279,11 +279,13 @@ function Auth (api) {
       // Assume altid first, then try name
       id = '' + id; // Ensure it is a string
       debug('Trying %s as altid', id);
-      getUserByAltId(user_keyspace, id, function (err, user) {
+      getUserByAltId(user_keyspace, id, (err, user) => {
         if (err) {
           debug('Trying %s as username', id);
-          getUserByName(user_keyspace, id, function (err, user) {
-            if (err) { return next(err); }
+          getUserByName(user_keyspace, id, (err, user) => {
+            if (err) {
+              return next(err);
+            }
             debug('%s is username, uuid is %s', id, user && user.user);
             return cb(err, user && user.user);
           });
@@ -297,14 +299,14 @@ function Auth (api) {
     if (!Array.isArray(ids)) {
       coerce(ids, next);
     } else {
-      async.map(ids, coerce, function (err, uuids) {
+      async.map(ids, coerce, (err, uuids) => {
         if (err) { return next(err); }
         next(null, uuids);
       });
     }
-  }
+  };
 
-  function checkUser (user_keyspace, id, next) {
+  const checkUser = (user_keyspace, id, next) => {
     debug('Checking user %s', id);
 
     if (!id) {
@@ -314,7 +316,7 @@ function Auth (api) {
     if (client.isValidId(id)) {
       debug('User %s is uuid', id);
       // If user is supplied as a uuid, assume it is a Seguir ID, default back to altid
-      getUserBySeguirId(user_keyspace, id, function (err, user) {
+      getUserBySeguirId(user_keyspace, id, (err, user) => {
         if (err) {
           // If missed, lets check to see if it is the altid
           // This does mean a performance hit for altids that look like guids!
@@ -325,7 +327,7 @@ function Auth (api) {
     } else {
       debug('User %s is NOT uuid, trying altid', id);
       // Assume altid first, then try name
-      getUserByAltId(user_keyspace, id, function (err, user) {
+      getUserByAltId(user_keyspace, id, (err, user) => {
         if (err) {
           debug('User %s is NOT altid, trying username', id);
           return getUserByName(user_keyspace, id, next);
@@ -333,38 +335,38 @@ function Auth (api) {
         return next(null, user);
       });
     }
-  }
+  };
 
   return {
-    addAccount: addAccount,
-    getAccount: getAccount,
-    getAccounts: getAccounts,
-    updateAccount: updateAccount,
-    addAccountUser: addAccountUser,
-    getAccountUsers: getAccountUsers,
-    getAccountUserByName: getAccountUserByName,
-    loginUser: loginUser,
-    updateAccountUser: updateAccountUser,
-    addApplication: addApplication,
-    getApplications: getApplications,
-    updateApplication: updateApplication,
-    addApplicationToken: addApplicationToken,
-    updateApplicationToken: updateApplicationToken,
-    updateApplicationTokenSecret: updateApplicationTokenSecret,
-    getApplicationTokens: getApplicationTokens,
-    checkRequest: checkRequest,
-    checkApplicationToken: checkApplicationToken,
-    checkUser: checkUser,
-    coerceUserToUuid: coerceUserToUuid
+    addAccount,
+    getAccount,
+    getAccounts,
+    updateAccount,
+    addAccountUser,
+    getAccountUsers,
+    getAccountUserByName,
+    loginUser,
+    updateAccountUser,
+    addApplication,
+    getApplications,
+    updateApplication,
+    addApplicationToken,
+    updateApplicationToken,
+    updateApplicationTokenSecret,
+    getApplicationTokens,
+    checkRequest,
+    checkApplicationToken,
+    checkUser,
+    coerceUserToUuid
   };
-}
+};
 
-function generateKeyspaceFromName (str) {
+const generateKeyspaceFromName = (str) => {
   str = str.toLowerCase();
   str = str.replace(/[^a-z0-9]+/g, '_');
   str = str.replace(/^-|-$/g, '');
   return str;
-}
+};
 
 Auth.headerNames = {
   userHeader: userHeader
