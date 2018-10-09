@@ -1,22 +1,22 @@
-var sanitizeHtml = require('sanitize-html');
-var _ = require('lodash');
+const sanitizeHtml = require('sanitize-html');
+const _ = require('lodash');
 
-module.exports = function (api) {
-  var client = api.client;
-  var q = client.queries;
+module.exports = (api) => {
+  const client = api.client;
+  const q = client.queries;
 
-  function error (code, message) {
-    var err = new Error(message);
+  const error = (code, message) => {
+    const err = new Error(message);
     err.statusCode = code;
     return err;
-  }
+  };
 
-  function get (keyspace, query, data, many, next) {
+  const get = (keyspace, query, data, many, next) => {
     client.execute(q(keyspace, query), data, {}, response(query, data, many, next));
-  }
+  };
 
-  function response (query, data, many, next) {
-    return function (err, result) {
+  const response = (query, data, many, next) => {
+    return (err, result) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
       if (!Array.isArray(result) || (many !== 'many' && result.length === 0)) {
@@ -24,18 +24,16 @@ module.exports = function (api) {
       }
       next(null, many === 'many' ? result : result[0]);
     };
-  }
+  };
 
-  function clean (input) {
-    return sanitizeHtml(input, {
-      allowedTags: [],
-      allowedAttributes: {}
-    });
-  }
+  const clean = input => sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {}
+  });
 
   // Deal with any content conversion to persist in cassandra
   // While not too many options will just switch
-  function convertContentToString (content, content_type) {
+  const convertContentToString = (content, content_type) => {
     switch (content_type) {
       case 'application/json':
         if (typeof content === 'object') {
@@ -45,13 +43,13 @@ module.exports = function (api) {
       default:
         return api.common.clean(content);
     }
-  }
+  };
 
   // Deal with any content conversion when retrieving from cassandra
-  function convertContentFromString (content, content_type) {
+  const convertContentFromString = (content, content_type) => {
     switch (content_type) {
       case 'application/json':
-        var json;
+        let json;
         try {
           json = JSON.parse(content);
         } catch (ex) {
@@ -61,40 +59,40 @@ module.exports = function (api) {
       default:
         return content;
     }
-  }
+  };
 
-  function expandEmbeddedObject (item, field, test, ignore) {
-    var prefix = field + '_';
-    var testField = prefix + test;
+  const expandEmbeddedObject = (item, field, test, ignore) => {
+    const prefix = field + '_';
+    const testField = prefix + test;
     if (item[testField]) {
-      var embed = {};
-      _.forOwn(item, function (value, key) {
+      const embed = {};
+      _.forOwn(item, (value, key) => {
         if (key.indexOf(prefix) === 0 && !_.includes(ignore, key)) {
-          var embedKey = key.replace(prefix, '');
+          const embedKey = key.replace(prefix, '');
           embed[embedKey] = value;
           delete item[key];
         }
       });
       return embed;
     }
-  }
+  };
 
-  function isUserGroupMember (keyspace, user, group, next) {
-    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, function (err, result) {
+  const isUserGroupMember = (keyspace, user, group, next) => {
+    client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
       next(null, result);
     });
-  }
+  };
 
   return {
-    error: error,
-    get: get,
-    response: response,
-    clean: clean,
-    convertContentToString: convertContentToString,
-    convertContentFromString: convertContentFromString,
-    expandEmbeddedObject: expandEmbeddedObject,
-    isUserGroupMember: isUserGroupMember
+    error,
+    get,
+    response,
+    clean,
+    convertContentToString,
+    convertContentFromString,
+    expandEmbeddedObject,
+    isUserGroupMember
   };
 };

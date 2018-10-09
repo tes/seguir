@@ -1,12 +1,12 @@
-var moment = require('moment');
-var async = require('async');
-var _ = require('lodash');
-var pressure = require('pressure-stream');
-var debug = require('debug')('seguir:feed');
+const moment = require('moment');
+const async = require('async');
+const _ = require('lodash');
+const pressure = require('pressure-stream');
+const debug = require('debug')('seguir:feed');
 
-var MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
-var FEEDS = ['feed_timeline', 'user_timeline'];
-var DEFAULT_PAGESIZE = 50;
+const MENTION = new RegExp('@[a-zA-Z0-9]+', 'g');
+const FEEDS = ['feed_timeline', 'user_timeline'];
+const DEFAULT_PAGESIZE = 50;
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -18,22 +18,22 @@ var DEFAULT_PAGESIZE = 50;
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (api) {
-  var client = api.client;
-  var messaging = api.messaging;
-  var q = client.queries;
+module.exports = (api) => {
+  const client = api.client;
+  const messaging = api.messaging;
+  const q = client.queries;
 
-  function insertFollowersTimeline (jobData, next) {
-    var read = 0;
-    var finished = 0;
-    var done = false;
+  const insertFollowersTimeline = (jobData, next) => {
+    let read = 0;
+    let finished = 0;
+    let done = false;
 
-    function nextIfFinished (doNotIncrement, cb) {
+    const nextIfFinished = (doNotIncrement, cb) => {
       if (!doNotIncrement) { finished++; }
       if (read === finished && done) { next(); } else {
         cb();
       }
-    }
+    };
 
     // If you are the recipient of a follow, do not copy this out to your follow graph - it will appear in your feed only
     if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
@@ -41,58 +41,58 @@ module.exports = function (api) {
     // If you the action is personal do not copy out to followers feeds
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
-    client.stream(q(jobData.keyspace, 'selectFollowers'), [jobData.user], function (err, stream) {
+    client.stream(q(jobData.keyspace, 'selectFollowers'), [jobData.user], (err, stream) => {
       if (err) { return next(err); }
 
-      function processRow (row, cb) {
-        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
-        var followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
+      const processRow = (row, cb) => {
+        let isPrivate = jobData.visibility === api.visibility.PRIVATE;
+        const followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
 
         // Follow is added to followers feed directly, not via the follow relationship
         if (followerIsFollower) {
           return nextIfFinished(false, cb);
         }
-        api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, function (err, isFriend) {
+        api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, (err, isFriend) => {
           if (err) {
             console.log('error while fetching is friend (' + row.user + ':' + row.user_follower + ')');
             return nextIfFinished(false, cb);
           }
           if (!isPrivate || (isPrivate && isFriend)) {
-            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, function () { nextIfFinished(false, cb); });
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, () => { nextIfFinished(false, cb); });
           } else {
             nextIfFinished(false, cb);
           }
         });
-      }
+      };
 
       stream
         .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
-        .on('data', function () {
+        .on('data', () => {
           read++;
         })
-        .on('end', function () {
+        .on('end', () => {
           done = true;
-          nextIfFinished(true, function () {});
+          nextIfFinished(true, () => {});
         })
-        .on('error', function (err) {
+        .on('error', err => {
           next(err);
         });
     });
-  }
+  };
 
-  function insertGroupsTimeline (jobData, next) {
-    var read = 0;
-    var finished = 0;
-    var done = false;
+  const insertGroupsTimeline = (jobData, next) => {
+    let read = 0;
+    let finished = 0;
+    let done = false;
 
-    function nextIfFinished (doNotIncrement, cb) {
+    const nextIfFinished = (doNotIncrement, cb) => {
       if (!doNotIncrement) { finished++; }
       if (read === finished && done) { next(); } else {
         cb();
       }
-    }
+    };
 
     // If you are the recipient of a follow, do not copy this out to your groups graph - it will appear in your feed only
     if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
@@ -101,85 +101,85 @@ module.exports = function (api) {
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
     function processRow (row, cb) {
-      upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, function () { nextIfFinished(false, cb); });
+      upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
     }
 
-    client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], function (err, stream) {
+    client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], (err, stream) => {
       if (err) { return next(err); }
       stream
         .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
-        .on('data', function () {
+        .on('data', () => {
           read++;
         })
-        .on('end', function () {
+        .on('end', () => {
           done = true;
-          nextIfFinished(true, function () {});
+          nextIfFinished(true, () => {});
         })
-        .on('error', function (err) {
+        .on('error', err => {
           next(err);
         });
     });
-  }
+  };
 
-  function insertMembersTimeline (jobData, next) {
-    var read = 0;
-    var finished = 0;
-    var done = false;
+  const insertMembersTimeline = (jobData, next) => {
+    let read = 0;
+    let finished = 0;
+    let done = false;
 
-    function nextIfFinished (doNotIncrement, cb) {
+    const nextIfFinished = (doNotIncrement, cb) => {
       if (!doNotIncrement) { finished++; }
       if (read === finished && done) { next(); } else {
         cb();
       }
-    }
+    };
 
     function processRow (row, cb) {
-      upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, function () { nextIfFinished(false, cb); });
+      upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, () => { nextIfFinished(false, cb); });
     }
 
-    client.stream(q(jobData.keyspace, 'selectGroupMembers'), [jobData.group], function (err, stream) {
+    client.stream(q(jobData.keyspace, 'selectGroupMembers'), [jobData.group], (err, stream) => {
       if (err) { return next(err); }
 
       stream
         .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
 
       stream
-        .on('data', function () {
+        .on('data', () => {
           read++;
         })
-        .on('end', function () {
+        .on('end', () => {
           done = true;
-          nextIfFinished(true, function () {});
+          nextIfFinished(true, () => {});
         })
-        .on('error', function (err) {
+        .on('error', err => {
           next(err);
         });
     });
-  }
+  };
 
-  function insertMentionedTimeline (jobData, next) {
-    var getPost = function (cb) {
-      api.post.getPost(jobData.keyspace, jobData.user, jobData.id, function (err, post) {
+  const insertMentionedTimeline = (jobData, next) => {
+    const getPost = cb => {
+      api.post.getPost(jobData.keyspace, jobData.user, jobData.id, (err, post) => {
         if (err || !post || post.content_type !== 'text/html') return cb();
         cb(null, post.content);
       });
     };
 
-    var getMentionedUsers = function (content, cb) {
-      if (!cb) { return content(); } // no mentioned users
-      var users = content.match(MENTION);
+    const getMentionedUsers = (content, cb) => {
+      if (!cb) {
+        return content();
+      } // no mentioned users
+      let users = content.match(MENTION);
       if (users && users.length > 0) {
-        users = users.map(function (user) {
-          return user.replace('@', '');
-        });
-        async.map(users, function (username, cb2) {
-          api.user.getUserByName(jobData.keyspace, username, function (err, mentionedUser) {
+        users = users.map(user => user.replace('@', ''));
+        async.map(users, (username, cb2) => {
+          api.user.getUserByName(jobData.keyspace, username, (err, mentionedUser) => {
             if (err || !mentionedUser) {
               return cb2();
             }
-            api.friend.isFriend(jobData.keyspace, mentionedUser.user, jobData.user, function (err, isFriend) {
+            api.friend.isFriend(jobData.keyspace, mentionedUser.user, jobData.user, (err, isFriend) => {
               if (err) return cb2(err);
               mentionedUser.isFriend = isFriend;
               cb2(null, mentionedUser);
@@ -191,24 +191,26 @@ module.exports = function (api) {
       }
     };
 
-    var getMentionedNotFollowers = function (mentioned, cb) {
-      if (!cb) { return mentioned(); } // no mentioned users
-      client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, function (err, data) {
-        if (err) { return cb(err); }
-        var followers = _.map(_.map(data || [], 'user_follower'), function (item) {
-          return item.toString();
-        });
-        var mentionedNotFollowers = _.filter(mentioned, function (mentionedUser) {
-          return !(_.includes(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === jobData.user.toString());
-        });
+    const getMentionedNotFollowers = (mentioned, cb) => {
+      if (!cb) {
+        return mentioned();
+      } // no mentioned users
+      client.execute(q(jobData.keyspace, 'selectFollowers'), [jobData.user], {}, (err, data) => {
+        if (err) {
+          return cb(err);
+        }
+        const followers = _.map(_.map(data || [], 'user_follower'), item => item.toString());
+        const mentionedNotFollowers = _.filter(mentioned, mentionedUser => !(_.includes(followers, mentionedUser.user.toString()) || mentionedUser.user.toString() === jobData.user.toString()));
         cb(null, mentionedNotFollowers);
       });
     };
 
-    var insertMentioned = function (users, cb) {
-      if (!cb) { return users(); } // no mentioned users
-      async.map(users, function (mentionedUser, cb2) {
-        var isPrivate = jobData.visibility === api.visibility.PRIVATE;
+    const insertMentioned = (users, cb) => {
+      if (!cb) {
+        return users();
+      } // no mentioned users
+      async.map(users, (mentionedUser, cb2) => {
+        const isPrivate = jobData.visibility === api.visibility.PRIVATE;
         if (!isPrivate || (isPrivate && mentionedUser.isFriend)) {
           upsertTimeline(jobData.keyspace, 'feed_timeline', mentionedUser.user, jobData.id, jobData.type, client.generateTimeId(jobData.timestamp), jobData.visibility, cb2);
         } else {
@@ -223,10 +225,10 @@ module.exports = function (api) {
       getMentionedNotFollowers,
       insertMentioned
     ], next);
-  }
+  };
 
-  function addFeedItem (keyspace, user, object, type, next) {
-    var jobData = {
+  const addFeedItem = (keyspace, user, object, type, next) => {
+    const jobData = {
       keyspace: keyspace,
       user: user,
       object: object,
@@ -238,7 +240,7 @@ module.exports = function (api) {
 
     debug('Adding feed item', user, object, type);
 
-    var _insertFollowersTimeline = function (cb) {
+    const _insertFollowersTimeline = cb => {
       if (messaging.enabled) {
         messaging.submit('seguir-publish-to-followers', jobData, cb);
       } else {
@@ -246,7 +248,7 @@ module.exports = function (api) {
       }
     };
 
-    var _insertGroupsTimeline = function (cb) {
+    const _insertGroupsTimeline = cb => {
       if (messaging.enabled) {
         messaging.submit('seguir-publish-to-groups', jobData, cb);
       } else {
@@ -254,8 +256,10 @@ module.exports = function (api) {
       }
     };
 
-    var _insertMentionedTimeline = function (cb) {
-      if (type !== 'post' || jobData.ispersonal) { return cb(); }
+    const _insertMentionedTimeline = cb => {
+      if (type !== 'post' || jobData.ispersonal) {
+        return cb();
+      }
       if (messaging.enabled) {
         messaging.submit('seguir-publish-mentioned', jobData, cb);
       } else {
@@ -263,8 +267,8 @@ module.exports = function (api) {
       }
     };
 
-    var insertUserTimelines = function (cb) {
-      async.map(FEEDS, function (timeline, cb2) {
+    const insertUserTimelines = cb => {
+      async.map(FEEDS, (timeline, cb2) => {
         upsertTimeline(keyspace, timeline, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, cb2);
       }, cb);
     };
@@ -275,10 +279,10 @@ module.exports = function (api) {
       _insertGroupsTimeline,
       _insertMentionedTimeline
     ], next);
-  }
+  };
 
-  function addFeedItemToGroup (keyspace, group, user, object, type, next) {
-    var jobData = {
+  const addFeedItemToGroup = (keyspace, group, user, object, type, next) => {
+    const jobData = {
       keyspace: keyspace,
       group: group,
       user: user,
@@ -291,18 +295,22 @@ module.exports = function (api) {
 
     debug('Adding feed item to group', group, user, object, type);
 
-    var insertUserTimelines = function (cb) {
+    const insertUserTimelines = cb => {
       async.parallel([
-        function (cb2) { upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2); },
-        function (cb2) { upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2); }
+        cb2 => {
+          upsertFeedTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, cb2);
+        },
+        cb2 => {
+          upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2);
+        }
       ], cb);
     };
 
-    var insertGroupTimeline = function (cb) {
+    const insertGroupTimeline = cb => {
       upsertGroupTimeline(jobData.keyspace, jobData.group, jobData.id, jobData.type, jobData.timestamp, cb);
     };
 
-    var _insertMembersTimeline = function (cb) {
+    const _insertMembersTimeline = cb => {
       if (messaging.enabled) {
         messaging.submit('seguir-publish-to-members', jobData, cb);
       } else {
@@ -315,26 +323,26 @@ module.exports = function (api) {
       insertGroupTimeline,
       _insertMembersTimeline
     ], next);
-  }
+  };
 
-  function notify (keyspace, action, user, item) {
-    var NOTIFY_Q = 'seguir-notify';
+  const notify = (keyspace, action, user, item) => {
+    const NOTIFY_Q = 'seguir-notify';
     if (!messaging.enabled || !messaging.feed) { return; }
     if (action === 'feed-add') {
-      var expander = feedExpanders[item.type];
+      const expander = feedExpanders[item.type];
       if (expander) {
-        api.user.getUser(keyspace, user, function (err, userObject) {
+        api.user.getUser(keyspace, user, (err, userObject) => {
           if (err) { return; }
-          expander(keyspace, user, item, function (err, expandedItem) {
+          expander(keyspace, user, item, (err, expandedItem) => {
             if (err) { return; }
             if (!expandedItem) {
               console.log('Unable to expand for notification user: ' + user + ', item: ' + JSON.stringify(item));
               return;
             }
             // Do not notify a user about things that they post or where they are the follower
-            var isUser = expandedItem.type === 'follow'
-            ? userObject.user.toString() === expandedItem.user_follower.user.toString()
-            : userObject.user.toString() === expandedItem.user.user.toString();
+            let isUser = expandedItem.type === 'follow'
+              ? userObject.user.toString() === expandedItem.user_follower.user.toString()
+              : userObject.user.toString() === expandedItem.user.user.toString();
             if (!isUser) {
               messaging.submit(NOTIFY_Q, {
                 action: action,
@@ -348,251 +356,253 @@ module.exports = function (api) {
       }
     }
     if (action === 'feed-remove') {
-      api.user.getUser(keyspace, user, function (err, userObject) {
+      api.user.getUser(keyspace, user, (err, userObject) => {
         if (err) { return; }
         messaging.submit(NOTIFY_Q, {action: action, user: userObject, item: item});
       });
     }
     if (action === 'feed-view') {
-      api.user.getUser(keyspace, user, function (err, userObject) {
+      api.user.getUser(keyspace, user, (err, userObject) => {
         if (err) { return; }
         messaging.submit(NOTIFY_Q, {action: action, user: userObject});
       });
     }
-  }
+  };
 
-  function upsertTimeline (keyspace, timeline, user, item, type, time, visibility, from_follow, next) {
+  const upsertTimeline = (keyspace, timeline, user, item, type, time, visibility, from_follow, next) => {
     if (!next) {
       next = from_follow;
       from_follow = null;
     }
     visibility = visibility || api.visibility.PUBLIC;
-    var data = [user, item, type, time, visibility, from_follow];
+    const data = [user, item, type, time, visibility, from_follow];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
     api.metrics.increment('feed.' + timeline + '.' + type);
-  }
+  };
 
-  function upsertFeedTimelineFromGroup (keyspace, user, item, type, time, from_group, next) {
-    var visibility = api.visibility.PERSONAL;
-    var data = [user, item, type, time, visibility, from_group];
+  const upsertFeedTimelineFromGroup = (keyspace, user, item, type, time, from_group, next) => {
+    const visibility = api.visibility.PERSONAL;
+    const data = [user, item, type, time, visibility, from_group];
     notify(keyspace, 'feed-add', user, {item: item, type: type});
     debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility, from_group);
     client.execute(q(keyspace, 'upsertFeedTimelineFromGroup'), data, {}, next);
     api.metrics.increment('feed.feed_timeline.' + type);
-  }
+  };
 
-  function upsertUserTimelineFromGroup (keyspace, user, item, type, time, next) {
-    var visibility = api.visibility.PERSONAL;
-    var data = [user, item, type, time, visibility];
+  const upsertUserTimelineFromGroup = (keyspace, user, item, type, time, next) => {
+    const visibility = api.visibility.PERSONAL;
+    const data = [user, item, type, time, visibility];
     debug('Upsert into timeline: ', 'user_timeline', user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimelineFromGroup'), data, {}, next);
     api.metrics.increment('feed.user_timeline.' + type);
-  }
+  };
 
-  function upsertGroupTimeline (keyspace, group, item, type, time, next) {
-    var data = [group, item, type, time];
+  const upsertGroupTimeline = (keyspace, group, item, type, time, next) => {
+    const data = [group, item, type, time];
     debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
     api.metrics.increment('feed.group_timeline.' + type);
-  }
+  };
 
-  function removeFeedsForItem (keyspace, item, next) {
-    async.map(FEEDS, function (timeline, cb) {
+  const removeFeedsForItem = (keyspace, item, next) => {
+    async.map(FEEDS, (timeline, cb) => {
       _removeFeedsForItemFromTimeline(keyspace, timeline, item, cb);
     }, next);
-  }
+  };
 
-  function _removeFeedsForItemFromTimeline (keyspace, timeline, item, next) {
-    var queryData = [item];
-    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {}, function (err, data) {
+  const _removeFeedsForItemFromTimeline = (keyspace, timeline, item, next) => {
+    const queryData = [item];
+    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {}, (err, data) => {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
-      async.map(data, function (row, cb) {
+      async.map(data, (row, cb) => {
         _removeFeedItemFromTimeline(keyspace, timeline, row.user, row.time, item, cb);
-      }, function (err, rows) {
+      }, err => {
         next(err);
       });
     });
-  }
+  };
 
-  function removeFeedsOlderThan (keyspace, user, time, next) {
-    async.map(FEEDS, function (timeline, cb) {
+  const removeFeedsOlderThan = (keyspace, user, time, next) => {
+    async.map(FEEDS, (timeline, cb) => {
       _removeFeedsOlderThanFromTimeline(keyspace, timeline, user, time, cb);
     }, next);
-  }
+  };
 
-  function _removeFeedsOlderThanFromTimeline (keyspace, timeline, user, time, next) {
-    var options = {raw: true, olderThan: client.generateTimeId(time), pageSize: 1000};
-    _getFeed(keyspace, user, timeline, user, options, function (err, feed) {
+  const _removeFeedsOlderThanFromTimeline = (keyspace, timeline, user, time, next) => {
+    const options = { raw: true, olderThan: client.generateTimeId(time), pageSize: 1000 };
+    _getFeed(keyspace, user, timeline, user, options, (err, feed) => {
       if (err) return next(err);
-      async.map(feed, function (row, cb) {
+      async.map(feed, (row, cb) => {
         _removeFeedItemFromTimeline(keyspace, timeline, user, row.time, row.item, cb);
       }, next);
     });
-  }
+  };
 
-  function _removeFeedItemFromTimeline (keyspace, timeline, user, time, item, next) {
-    var deleteData = [user, time];
+  const _removeFeedItemFromTimeline = (keyspace, timeline, user, time, item, next) => {
+    const deleteData = [user, time];
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
-    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {}, function (err, result) {
+    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {}, err => {
       if (err) return next(err);
       next(null, {status: 'removed'});
     });
-  }
+  };
 
-  function getUserFeed (keyspace, liu, user, options, next) {
+  const getUserFeed = (keyspace, liu, user, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
     _getFeed(keyspace, liu, 'user_timeline', user, options, next);
-  }
+  };
 
-  function getFeed (keyspace, liu, user, options, next) {
+  const getFeed = (keyspace, liu, user, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
     if (liu && liu.toString() === user.toString()) notify(keyspace, 'feed-view', user, {});
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
-  }
+  };
 
-  function getGroupFeed (keyspace, liu, group, options, next) {
+  const getGroupFeed = (keyspace, liu, group, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
-    api.common.isUserGroupMember(keyspace, liu, group, function (err) {
+    api.common.isUserGroupMember(keyspace, liu, group, err => {
       if (err) { return next(err); }
       _getFeed(keyspace, liu, 'group_timeline', group, options, next);
     });
-  }
+  };
 
-  function getGroupPreview (keyspace, group, next) {
+  const getGroupPreview = (keyspace, group, next) => {
     _getFeed(keyspace, null, 'group_timeline', group, {}, next);
-  }
+  };
 
-  function getRawFeed (keyspace, liu, user, options, next) {
+  const getRawFeed = (keyspace, liu, user, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
     _.merge(options, {raw: 'raw'});
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
-  }
+  };
 
-  function getReversedUserFeed (keyspace, liu, user, options, next) {
+  const getReversedUserFeed = (keyspace, liu, user, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
     _.merge(options, {raw: 'raw-reverse'});
     _getFeed(keyspace, liu, 'user_timeline', user, options, next);
-  }
+  };
 
   /**
    * A collection of helpers based on type that will expand an item in the feed
    */
-  var silentlyDropError = function (err, item, next) {
+  const silentlyDropError = (err, item, next) => {
     if (err && (err.statusCode === 403 || err.statusCode === 404)) {
       next(); // Silently drop posts from the feed
     } else {
-      if (err) { return next(err); }
+      if (err) {
+        return next(err);
+      }
       next(null, item);
     }
   };
 
-  function expandPost (keyspace, liu, item, expandUser, cb) {
+  const expandPost = (keyspace, liu, item, expandUser, cb) => {
     if (!cb) {
       cb = expandUser;
       expandUser = true;
     }
-    var hasEmbeddedPost = !!item.post_post;
+    const hasEmbeddedPost = !!item.post_post;
     if (hasEmbeddedPost) {
-      api.post.getPostFromObject(keyspace, liu, item, function (err, post) {
+      api.post.getPostFromObject(keyspace, liu, item, (err, post) => {
         silentlyDropError(err, post, cb);
       });
     } else {
-      api.post.getPost(keyspace, liu, item.item, expandUser, function (err, post) {
+      api.post.getPost(keyspace, liu, item.item, expandUser, (err, post) => {
         silentlyDropError(err, post, cb);
       });
     }
-  }
+  };
 
-  function expandLike (keyspace, liu, item, expandUser, cb) {
+  const expandLike = (keyspace, liu, item, expandUser, cb) => {
     if (!cb) {
       cb = expandUser;
       expandUser = true;
     }
-    var hasEmbeddedLike = !!item.like_like;
+    const hasEmbeddedLike = !!item.like_like;
     if (hasEmbeddedLike) {
       api.like.getLikeFromObject(keyspace, item, cb);
     } else {
       api.like.getLike(keyspace, item.item, expandUser, cb);
     }
-  }
+  };
 
-  function expandFollow (keyspace, liu, item, expandUser, cb) {
+  const expandFollow = (keyspace, liu, item, expandUser, cb) => {
     if (!cb) {
       cb = expandUser;
       expandUser = true;
     }
-    var hasEmbeddedFollow = !!item.follow_follow;
+    const hasEmbeddedFollow = !!item.follow_follow;
     if (hasEmbeddedFollow) {
-      api.follow.getFollowFromObject(keyspace, liu, item, function (err, follow) {
+      api.follow.getFollowFromObject(keyspace, liu, item, (err, follow) => {
         silentlyDropError(err, follow, cb);
       });
     } else {
-      api.follow.getFollow(keyspace, liu, item.item, expandUser, function (err, follow) {
+      api.follow.getFollow(keyspace, liu, item.item, expandUser, (err, follow) => {
         silentlyDropError(err, follow, cb);
       });
     }
-  }
+  };
 
-  function expandFriend (keyspace, liu, item, expandUser, cb) {
+  const expandFriend = (keyspace, liu, item, expandUser, cb) => {
     if (!cb) {
       cb = expandUser;
       expandUser = true;
     }
-    var hasEmbeddedFriend = !!item.friend_friend;
+    const hasEmbeddedFriend = !!item.friend_friend;
     if (hasEmbeddedFriend) {
-      api.friend.getFriendFromObject(keyspace, liu, item, function (err, friend) {
+      api.friend.getFriendFromObject(keyspace, liu, item, (err, friend) => {
         silentlyDropError(err, friend, cb);
       });
     } else {
-      api.friend.getFriend(keyspace, liu, item.item, expandUser, function (err, friend) {
+      api.friend.getFriend(keyspace, liu, item.item, expandUser, (err, friend) => {
         silentlyDropError(err, friend, cb);
       });
     }
-  }
+  };
 
-  function ensureFollowStillActive (keyspace, liu, item, cb) {
-    if (!item.from_follow) { return cb(); }
-    api.follow.getFollow(keyspace, liu, item.from_follow, function (err, follow) {
-      if (err) { return cb(err); }
-      cb();
-    });
-  }
-
-  var feedExpanders = {
+  const feedExpanders = {
     'post': expandPost,
     'like': expandLike,
     'follow': expandFollow,
     'friend': expandFriend
   };
 
-  function _getFeed (keyspace, liu, timeline, userOrGroup, options, next) {
-    var raw = options.raw;
-    var feedType = options.type;
-    var feedOlder = options.olderThan;
-    var pageState = options.pageState;
-    var pageSize = options.pageSize || DEFAULT_PAGESIZE;
-    var typeQuery = '';
-    var olderThanQuery = '';
-    var data = [userOrGroup];
-    var query;
+  const ensureFollowStillActive = (keyspace, liu, item, cb) => {
+    if (!item.from_follow) { return cb(); }
+    api.follow.getFollow(keyspace, liu, item.from_follow, err => {
+      if (err) { return cb(err); }
+      cb();
+    });
+  };
+
+  const _getFeed = (keyspace, liu, timeline, userOrGroup, options, next) => {
+    const raw = options.raw;
+    const feedType = options.type;
+    const feedOlder = options.olderThan;
+    const pageState = options.pageState;
+    const pageSize = options.pageSize || DEFAULT_PAGESIZE;
+    let typeQuery = '';
+    let olderThanQuery = '';
+    const data = [userOrGroup];
+    let query;
 
     if (feedType) {
       typeQuery = q(keyspace, 'typeQuery');
@@ -605,24 +615,24 @@ module.exports = function (api) {
       data.push(feedOlder);
     }
 
-    var queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
+    const queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
 
     query = q(keyspace, queryName, {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
 
     api.metrics.increment('feed.' + timeline + '.list');
 
-    client.execute(query, data, {pageState: pageState, pageSize: pageSize}, function (err, data, nextPageState) {
+    client.execute(query, data, {pageState: pageState, pageSize: pageSize}, (err, data, nextPageState) => {
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
         if (raw) { return next(null, data); }
 
-        var timeline = data;
-        var followCache = {};
-        var expandUser = false;
+        const timeline = data;
+        let followCache = {};
+        const expandUser = false;
 
-        var expand = function (item, cb) {
-          var expander = feedExpanders[item.type];
+        const expand = (item, cb) => {
+          const expander = feedExpanders[item.type];
           if (expander) {
             return expander(keyspace, liu, item, expandUser, cb);
           } else {
@@ -631,12 +641,12 @@ module.exports = function (api) {
           }
         };
 
-        async.mapSeries(timeline, function (item, cb) {
+        async.mapSeries(timeline, (item, cb) => {
           if (!item.from_follow) {
             return expand(item, cb);
           }
 
-          var cachedFollowStatus = followCache[item.from_follow.toString()];
+          const cachedFollowStatus = followCache[item.from_follow.toString()];
           if (cachedFollowStatus) {
             debug('follow cache HIT', item.from_follow.toString());
             if (cachedFollowStatus === 'active') {
@@ -647,7 +657,7 @@ module.exports = function (api) {
           }
 
           debug('follow cache MISS', item.from_follow.toString());
-          ensureFollowStillActive(keyspace, liu, item, function (err) {
+          ensureFollowStillActive(keyspace, liu, item, err => {
             if (err) {
               followCache[item.from_follow.toString()] = 'not-active';
               return cb();
@@ -662,13 +672,13 @@ module.exports = function (api) {
           /* istanbul ignore if */
           if (err || !results) { return next(err); }
 
-          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], function (err, resultsWithUsers) {
+          api.user.mapUserIdToUser(keyspace, results, ['user', 'user_follower', 'user_friend'], (err, resultsWithUsers) => {
             if (err) { return next(err); }
 
-            var feed = [];
-            resultsWithUsers.forEach(function (result, index) {
+            const feed = [];
+            resultsWithUsers.forEach((result, index) => {
               if (result) {
-                var currentResult = result;
+                const currentResult = result;
 
                 // Copy elements from feed
                 currentResult._item = timeline[index].item;
@@ -688,8 +698,8 @@ module.exports = function (api) {
                 currentResult.isFollow = currentResult.type === 'follow';
                 currentResult.isFriend = currentResult.type === 'friend';
 
-                var currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
-                var currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
+                const currentUserIsUser = liu && currentResult.user.user.toString() === liu.toString();
+                const currentUserIsFollower = liu && currentResult.user_follower ? currentResult.user_follower.user.toString() === liu.toString() : false;
                 currentResult.isUsersItem = currentUserIsUser || currentUserIsFollower;
                 currentResult.isFollower = currentUserIsFollower;
 
@@ -705,34 +715,34 @@ module.exports = function (api) {
         next(null, []);
       }
     });
-  }
+  };
 
-  function seedFeed (keyspace, user, userFollowing, backfill, follow, next) {
-    var feedOptions = {pageSize: Number(backfill), type: 'post'};
-    getReversedUserFeed(keyspace, user, userFollowing, feedOptions, function (err, feed) {
+  const seedFeed = (keyspace, user, userFollowing, backfill, follow, next) => {
+    const feedOptions = { pageSize: Number(backfill), type: 'post' };
+    getReversedUserFeed(keyspace, user, userFollowing, feedOptions, (err, feed) => {
       if (err) { return next(err); }
-      async.map(feed, function (item, cb) {
+      async.map(feed, (item, cb) => {
         if (item.visibility !== api.visibility.PUBLIC) return cb();
         upsertTimeline(keyspace, 'feed_timeline', user, item.item, item.type, item.time, item.visibility, follow.follow, cb);
       }, next);
     });
-  }
+  };
 
   return {
-    addFeedItem: addFeedItem,
-    addFeedItemToGroup: addFeedItemToGroup,
-    removeFeedsForItem: removeFeedsForItem,
-    removeFeedsOlderThan: removeFeedsOlderThan,
-    insertGroupsTimeline: insertGroupsTimeline,
-    insertMembersTimeline: insertMembersTimeline,
-    insertFollowersTimeline: insertFollowersTimeline,
-    insertMentionedTimeline: insertMentionedTimeline,
-    upsertTimeline: upsertTimeline,
-    getFeed: getFeed,
-    getGroupFeed: getGroupFeed,
-    getUserFeed: getUserFeed,
-    getRawFeed: getRawFeed,
-    getGroupPreview: getGroupPreview,
-    seedFeed: seedFeed
+    addFeedItem,
+    addFeedItemToGroup,
+    removeFeedsForItem,
+    removeFeedsOlderThan,
+    insertGroupsTimeline,
+    insertMembersTimeline,
+    insertFollowersTimeline,
+    insertMentionedTimeline,
+    upsertTimeline,
+    getFeed,
+    getGroupFeed,
+    getUserFeed,
+    getRawFeed,
+    getGroupPreview,
+    seedFeed
   };
 };
