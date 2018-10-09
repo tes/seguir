@@ -162,6 +162,50 @@ module.exports = function (api) {
     });
   }
 
+  function canModerate (keyspace, altid, user, group, next) {
+    function _isUserModerator (cb) {
+      api.common.isUserModerator(keyspace, user, function (err, moderator) {
+        if (err) { return next(err); }
+        cb(null, { isUserModerator: true });
+      });
+    }
+
+    function _isUserGroupModerator (cb) {
+      group && api.common.isUserGroupModerator(keyspace, altid, group, function (err, moderator) {
+        if (err) { return next(err); }
+        cb(null, { isUserModerator: true });
+      });
+      cb(null, null);
+    }
+
+    async.series([
+      _isUserModerator,
+      _isUserGroupModerator
+    ], function (err, results) {
+      if (err) { return next(err); }
+      if (results[0].isUserModerator || (results[1] && results[1].isUserModerator)) {
+        next(null, { isUserModerator: true });
+      }
+      next(null, null);
+    });
+  }
+
+  function moderatePost (keyspace, username, altid, user, group, post, next) {
+    canModerate(keyspace, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      var moderationData = [username, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.moderate');
+        client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, postItem) {
+          if (err) { return next(err); }
+          next(null, postItem);
+        });
+      });
+    });
+  }
+
   function _validatePost (keyspace, liu, post, expandUser, next) {
     post.content = api.common.convertContentFromString(post.content, post.content_type);
     api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
@@ -240,6 +284,7 @@ module.exports = function (api) {
     getPostsByAltid: getPostsByAltid,
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
-    updatePostByAltid: updatePostByAltid
+    updatePostByAltid: updatePostByAltid,
+    moderatePost: moderatePost
   };
 };

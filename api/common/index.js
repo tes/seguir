@@ -1,5 +1,7 @@
 var sanitizeHtml = require('sanitize-html');
-var _ = require('lodash');
+var _forOwn = require('lodash/forOwn');
+var _includes = require('lodash/includes');
+var _mapValues = require('lodash/mapValues');
 
 module.exports = function (api) {
   var client = api.client;
@@ -68,8 +70,8 @@ module.exports = function (api) {
     var testField = prefix + test;
     if (item[testField]) {
       var embed = {};
-      _.forOwn(item, function (value, key) {
-        if (key.indexOf(prefix) === 0 && !_.includes(ignore, key)) {
+      _forOwn(item, function (value, key) {
+        if (key.indexOf(prefix) === 0 && !_includes(ignore, key)) {
           var embedKey = key.replace(prefix, '');
           embed[embedKey] = value;
           delete item[key];
@@ -87,6 +89,28 @@ module.exports = function (api) {
     });
   }
 
+  function isUserModerator (keyspace, user, next) {
+    client.get(q(keyspace, 'selectModerator'), [user], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a moderator')); }
+      next(null, result);
+    });
+  }
+
+  function isUserGroupModerator (keyspace, user, group, next) {
+    client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
+      if (err) { return next(err); }
+      if (!result) { return next(api.common.error(404, 'Group ' + group + ' is not a valid group ')); }
+      var groupData = _mapValues(result.groupData, function (value) {
+        return value.toString();
+      });
+      if (groupData.admin === user.id) {
+        next(null, result);
+      }
+      next(null, null);
+    });
+  }
+
   return {
     error: error,
     get: get,
@@ -95,6 +119,8 @@ module.exports = function (api) {
     convertContentToString: convertContentToString,
     convertContentFromString: convertContentFromString,
     expandEmbeddedObject: expandEmbeddedObject,
-    isUserGroupMember: isUserGroupMember
+    isUserGroupMember: isUserGroupMember,
+    isUserModerator: isUserModerator,
+    isUserGroupModerator: isUserGroupModerator
   };
 };

@@ -80,14 +80,15 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE user = ?';
  * @apiExample {cql} Select Post
  *    SELECT post, content, user, posted FROM seguir.posts WHERE post = ?
  */
-queries.selectPost = 'SELECT post, content, content_type, user, group, posted, visibility, altid FROM {KEYSPACE}.posts WHERE post = ?';
-queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid FROM {KEYSPACE}.posts WHERE altid = ?';
+queries.selectPost = 'SELECT post, content, content_type, user, group, posted, visibility, altid, moderatedBy FROM {KEYSPACE}.posts WHERE post = ?';
+queries.selectPostByAltid = 'SELECT post, content, content_type, user, posted, visibility, altid, moderatedBy FROM {KEYSPACE}.posts WHERE altid = ?';
 queries.selectPostsByUser = 'SELECT post FROM {KEYSPACE}.posts WHERE user = ?';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, user, group, content, content_type, posted, visibility, altid) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post=?';
 queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid=?';
 queries.updatePost = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE post = ?';
 queries.updatePostByAltid = 'UPDATE {KEYSPACE}.posts SET content = ?, content_type = ?, visibility = ? WHERE altid = ?';
+queries.moderatePost = 'UPDATE {KEYSPACE}.posts SET moderatedBy = ? WHERE post = ?';
 
 /**
  * @apiDefine ExampleCqlFriends
@@ -218,3 +219,5 @@ queries.selectComment = 'SELECT comment, user, post, commented, commentdata FROM
 queries.insertCommentsTimeline = 'INSERT INTO {KEYSPACE}.comments_timeline (post, time, comment) VALUES(?, ?, ?);';
 queries.selectCommentsTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comments_timeline WHERE post = ?;';
 queries.selectCommentsByUser = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE user = ?;';
+
+queries.selectModerator = 'SELECT user FROM {KEYSPACE}.moderators WHERE user = ?;';
