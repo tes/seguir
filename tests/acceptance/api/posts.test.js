@@ -46,7 +46,7 @@ databases.forEach(function (db) {
     });
 
     describe('posts', function () {
-      var timestamp = new Date(1280296860145);
+      var timestamp = new Date(1280296860000);
 
       it('can post a message from a user', function (done) {
         api.post.addPost(keyspace, users['cliftonc'].user, 'Hello, this is a post', 'text/html', api.client.getTimestamp(), api.visibility.PUBLIC, 'ALTID', function (err, post) {
@@ -174,7 +174,7 @@ databases.forEach(function (db) {
       });
 
       it('can update an existing post by id', function (done) {
-        api.post.updatePost(keyspace, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, post) {
+        api.post.updatePost(keyspace, users['cliftonc'].user, postId, 'CHANGED!', 'text/html', api.visibility.PUBLIC, function (err, post) {
           expect(err).to.be(null);
           api.post.getPost(keyspace, users['json'].user, postId, function (err, getPost) {
             expect(err).to.be(null);

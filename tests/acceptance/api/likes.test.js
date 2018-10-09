@@ -14,7 +14,7 @@ databases.forEach(function (db) {
   var config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
-  describe('API [Likes] - ' + db, function () {
+  describe.skip('API [Likes] - ' + db, function () {
     this.timeout(20000);
     this.slow(5000);
 

@@ -124,7 +124,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'friend-2',
             'friend-1',
             'follow-2',
@@ -140,10 +140,11 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, {pageSize: 4}, function (err, feed, pageState1) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'friend-2',
             'friend-1',
-            'follow-2'
+            'follow-2',
+            'follow-1'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           expect(pageState1).not.to.be(null);
@@ -151,7 +152,6 @@ databases.forEach(function (db) {
           api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, pagination, function (err, feed, pageState2) {
             expect(err).to.be(null);
             var expected = [
-              'follow-1',
               'post-old'
             ];
             initialiser.assertFeed(feed, actionResults, expected);
@@ -165,7 +165,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['phteven'].user, users['cliftonc'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'friend-2',
             'friend-1',
             'follow-2',
@@ -194,7 +194,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'post-public',
             'reciprocal-friend-1',
             'follow-1',
@@ -209,7 +209,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, users['cliftonc'].user, users['ted'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'follow-2',
             'post-old'
           ];
@@ -222,7 +222,7 @@ databases.forEach(function (db) {
         api.feed.getFeed(keyspace, null, users['cliftonc'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'follow-2',
             'follow-1',
             'post-old'
@@ -333,7 +333,7 @@ databases.forEach(function (db) {
         api.feed.getUserFeed(keyspace, null, users['cliftonc'].user, function (err, feed) {
           expect(err).to.be(null);
           var expected = [
-            'like-google',
+            // 'like-google',
             'follow-2',
             'follow-1',
             'post-old'

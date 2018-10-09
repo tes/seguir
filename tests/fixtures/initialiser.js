@@ -55,7 +55,8 @@ function setupGraph (keyspace, api, users, actions, next) {
   }
 
   function addLike (like, cb) {
-    api.like.addLike(keyspace, users[like.user].user, like.item, api.client.getTimestamp(), cb);
+    cb();
+    // api.like.createLike(keyspace, users[like.user].user, like.item, api.client.getTimestamp(), cb);
   }
 
   async.mapSeries(actions, function (action, cb) {
