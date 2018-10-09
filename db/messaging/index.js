@@ -1,103 +1,103 @@
-var redis = require('../redis');
-var _ = require('lodash');
-var RSMQ = require('rsmq');
-var RSMQWorker = require('rsmq-worker');
-var clients = [];
+const redis = require('../redis');
+const _ = require('lodash');
+const RSMQ = require('rsmq');
+const RSMQWorker = require('rsmq-worker');
+const clients = [];
 
-module.exports = function (config) {
+module.exports = config => {
   if (!config || !config.messaging) {
     return { enabled: false };
   }
 
-  var redisClient = client(config);
-  var rsmq = new RSMQ({host: config.messaging.host, port: config.messaging.port, ns: 'rsmq'});
+  const redisClient = client(config);
+  const rsmq = new RSMQ({ host: config.messaging.host, port: config.messaging.port, ns: 'rsmq' });
 
   /**
    * Create queues on demand on first use
    */
-  function createOrSelectQueue (name, next) {
-    rsmq.listQueues(function (err, queues) {
+  const createOrSelectQueue = (name, next) => {
+    rsmq.listQueues((err, queues) => {
       if (err) { return next(err); }
       if (_.includes(queues, name)) { return next(); }
-      rsmq.createQueue({qname: name}, function (err) {
+      rsmq.createQueue({qname: name}, err => {
         next(err);
       });
     });
-  }
+  };
 
   /**
    * Submit a job for processing
    */
-  function submit (name, data, next) {
-    createOrSelectQueue(name, function (err) {
+  const submit = (name, data, next) => {
+    createOrSelectQueue(name, err => {
       if (err && err.name !== 'queueExists') { return next && next(err); }
-      rsmq.sendMessage({qname: name, message: JSON.stringify(data)}, function (err, response) {
+      rsmq.sendMessage({qname: name, message: JSON.stringify(data)}, (err, response) => {
         if (err) { return next && next(err); }
         return next && next(null, response);
       });
     });
-  }
+  };
 
   /**
    * Listen to a queue to process jobs
    */
-  function listen (name, callback, next) {
-    var worker = new RSMQWorker(name, {rsmq: rsmq, autostart: true});
-    worker.on('message', function (msg, cb) {
+  const listen = (name, callback, next) => {
+    const worker = new RSMQWorker(name, { rsmq: rsmq, autostart: true });
+    worker.on('message', (msg, cb) => {
       callback(JSON.parse(msg), cb);
     });
     return next && next();
-  }
+  };
 
   /**
    * Publish a notification onto a pubsub topic for downstream systems
    */
-  function publish (name, data, next) {
-    var channel = [config.messaging.namespace || 'seguir', name].join('.');
+  const publish = (name, data, next) => {
+    const channel = [config.messaging.namespace || 'seguir', name].join('.');
     redisClient.publish(channel, JSON.stringify(data));
-  }
+  };
 
   /**
    * Subscribe
    */
-  function subscribe (name, callback) {
+  const subscribe = (name, callback) => {
     // Redis subscriptions block the normal client, so we create another
-    var subscriberClient = client(config);
-    var channel = [config.messaging.namespace || 'seguir', name].join('.');
-    subscriberClient.on('message', function (channel, message) {
+    const subscriberClient = client(config);
+    const channel = [config.messaging.namespace || 'seguir', name].join('.');
+    subscriberClient.on('message', (channel, message) => {
       callback(JSON.parse(message));
     });
     subscriberClient.subscribe(channel);
-  }
+  };
 
   /**
    * Shutdown all active redis clients
    */
-  function shutdown () {
-    clients.forEach(function (client) {
+  const shutdown = () => {
+    clients.forEach(client => {
       client.unsubscribe();
       client.quit();
     });
-  }
+  };
 
   return {
-    submit: submit,
-    listen: listen,
-    publish: publish,
-    subscribe: subscribe,
+    submit,
+    listen,
+    publish,
+    subscribe,
     client: redisClient,
-    shutdown: shutdown,
+    shutdown,
     enabled: true,
     feed: config.messaging.feed
   };
 };
 
-function client (config) {
-  var redisConfig = config && config.messaging ? config.messaging : {};
-  var redisClient = redis(redisConfig);
+const client = (config) => {
+  const redisConfig = config && config.messaging ? config.messaging : {};
+  const redisClient = redis(redisConfig);
 
   // Keep a reference to it for later shutdown
   clients.push(redisClient);
 
   return redisClient;
-}
+};
