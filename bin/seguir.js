@@ -3,10 +3,10 @@
 /**
  * Command line client for seguir - used to setup a server.
  */
-var inquirer = require('inquirer');
-var program = require('commander');
-var _ = require('lodash');
-var path = require('path');
+const inquirer = require('inquirer');
+const program = require('commander');
+const _ = require('lodash');
+const path = require('path');
 
 program
   .version('0.0.1')
@@ -15,12 +15,12 @@ program
   .option('-d, --database [database]', 'Use database type cassandra|postgres')
   .parse(process.argv);
 
-var database = program.database || 'cassandra';
-var defaultConfig = '../config/' + database;
-var configFn;
+const database = program.database || 'cassandra';
+const defaultConfig = '../config/' + database;
+let configFn;
 
 if (program.config) {
-  var configFile = path.resolve('.', program.config);
+  const configFile = path.resolve('.', program.config);
   try {
     configFn = require(configFile);
   } catch (ex) {
@@ -28,28 +28,28 @@ if (program.config) {
     process.exit(1);
   }
 } else {
-  var originalConfig = require(defaultConfig);
-  configFn = function (next) {
+  const originalConfig = require(defaultConfig);
+  configFn = next => {
     next(null, originalConfig);
   };
 }
 
-function error (err) {
+const error = (err) => {
   console.log('Error: ' + err.message);
   process.exit(1);
-}
+};
 
 // Async load config
-configFn(function (err, config) {
+configFn((err, config) => {
   if (err) return error(err);
 
-  require('../api')(config, function (err, api) {
+  require('../api')(config, (err, api) => {
     if (err) { return process.exit(0); }
 
-    var setupFile = program.setup;
+    let setupFile = program.setup;
 
     if (setupFile) {
-      var setup;
+      let setup;
 
       setupFile = path.resolve('.', setupFile);
 
@@ -61,14 +61,14 @@ configFn(function (err, config) {
       }
 
       console.log('Setting up seguir based on: ' + setupFile);
-      api.client.setup.setupSeguir(api.client, setup.keyspace, function () {
-        setupAccount(setup.account, function (err, account) {
+      api.client.setup.setupSeguir(api.client, setup.keyspace, () => {
+        setupAccount(setup.account, (err, account) => {
           if (err) return error(err);
-          setupAccountUser(account.account, setup.account, setup.user, setup.password, setup.admin, function (err, user) {
+          setupAccountUser(account.account, setup.account, setup.user, setup.password, setup.admin, err => {
             if (err) return error(err);
-            setupApplication(account.account, setup.application, true, function (err, application) {
+            setupApplication(account.account, setup.application, true, (err, application) => {
               if (err) return error(err);
-              setupApplicationToken(application, setup.application, setup.appid, setup.appsecret, function (err) {
+              setupApplicationToken(application, setup.application, setup.appid, setup.appsecret, err => {
                 if (err) return error(err);
                 process.exit(0);
               });
@@ -77,7 +77,7 @@ configFn(function (err, config) {
         });
       });
     } else {
-      var tasks = {
+      const tasks = {
         '[setup]   Check current setup': checkSetup,
         '[setup]   Initialise a new database instance': coreSetup,
         '[setup]   Add a new account, user and application': promptAccount,
@@ -99,15 +99,15 @@ configFn(function (err, config) {
           name: 'task',
           choices: _.keys(tasks)
         }
-      ], function (answer) {
+      ], answer => {
         tasks[answer.task]();
       });
     }
 
-    function checkSetup () {
+    const checkSetup = () => {
       // Check that the DB exists
       console.log('Checking ' + api.client.type + ': ' + JSON.stringify(config[api.client.type]));
-      api.auth.getAccounts(function (err, accounts) {
+      api.auth.getAccounts((err, accounts) => {
         if (err) {
           console.log('An error was encountered: ' + err.message);
           if (err.message === 'Keyspace / schema seguir does not exist') {
@@ -122,10 +122,10 @@ configFn(function (err, config) {
         }
         process.exit();
       });
-    }
+    };
 
-    function migration () {
-      api.migrations.getMigrationsToApply(function (err, migrations) {
+    const migration = () => {
+      api.migrations.getMigrationsToApply((err, migrations) => {
         if (err) return error(err);
         if (migrations.length === 0) {
           console.log('No database migrations to apply - everything is up to date.');
@@ -138,18 +138,18 @@ configFn(function (err, config) {
         console.log('');
         confirmMigration(migrations);
       });
-    }
+    };
 
-    function confirmMigration (migrations) {
+    const confirmMigration = (migrations) => {
       inquirer.prompt([
         {
           type: 'confirm',
           message: 'Do you want to apply these migrations now?',
           name: 'confirm'
         }
-      ], function (confirm) {
+      ], confirm => {
         if (confirm.confirm) {
-          api.migrations.applyMigrations(migrations, function (err) {
+          api.migrations.applyMigrations(migrations, err => {
             console.dir(err);
             if (err) return error(err);
             console.log('Database migrations complete.');
@@ -159,16 +159,16 @@ configFn(function (err, config) {
           process.exit();
         }
       });
-    }
+    };
 
-    function listUsers () {
-      selectAccount(function (err, account, name) {
+    const listUsers = () => {
+      selectAccount((err, account, name) => {
         if (err) return error(err);
         console.log(name + ' users:');
-        api.auth.getAccountUsers(account, function (err, users) {
+        api.auth.getAccountUsers(account, (err, users) => {
           if (err) return error(err);
           if (users) {
-            users.forEach(function (user) {
+            users.forEach(user => {
               console.log(' - ' + user.username);
             });
           } else {
@@ -177,16 +177,16 @@ configFn(function (err, config) {
           process.exit();
         });
       });
-    }
+    };
 
-    function listApplications () {
-      selectAccount(function (err, account, name) {
+    const listApplications = () => {
+      selectAccount((err, account, name) => {
         if (err) return error(err);
         console.log(name + ' applications:');
-        api.auth.getApplications(account, function (err, apps) {
+        api.auth.getApplications(account, (err, apps) => {
           if (err) return error(err);
           if (apps) {
-            apps.forEach(function (app) {
+            apps.forEach(app => {
               console.log(' - [' + app.name + '] appid: ' + app.appid);
             });
           } else {
@@ -195,12 +195,12 @@ configFn(function (err, config) {
           process.exit();
         });
       });
-    }
+    };
 
-    function addToken () {
-      selectAccount(function (err, account, name) {
+    const addToken = () => {
+      selectAccount((err, account) => {
         if (err) return error(err);
-        selectApplication(account, function (err, application, name, appkeyspace) {
+        selectApplication(account, (err, application, name, appkeyspace) => {
           if (err) return error(err);
           inquirer.prompt([
             {
@@ -208,9 +208,9 @@ configFn(function (err, config) {
               message: 'Enter a token description:',
               name: 'description'
             }
-          ], function (output) {
+          ], output => {
             if (!output.description) { return; }
-            api.auth.addApplicationToken(application, appkeyspace, output.description, function (err, token) {
+            api.auth.addApplicationToken(application, appkeyspace, output.description, (err, token) => {
               if (err) return error(err);
               if (token) {
                 console.log(' Added token: ' + output.description);
@@ -221,18 +221,18 @@ configFn(function (err, config) {
           });
         });
       });
-    }
+    };
 
-    function listTokens () {
-      selectAccount(function (err, account, name) {
+    const listTokens = () => {
+      selectAccount((err, account) => {
         if (err) return error(err);
-        selectApplication(account, function (err, application, name) {
+        selectApplication(account, (err, application, name) => {
           if (err) return error(err);
           console.log(name + ' applications:');
-          api.auth.getApplicationTokens(application, function (err, tokens) {
+          api.auth.getApplicationTokens(application, (err, tokens) => {
             if (err) return error(err);
             if (tokens) {
-              tokens.forEach(function (token) {
+              tokens.forEach(token => {
                 console.log(' - [' + token.description + ' - ' + (token.enabled ? 'ENABLED' : 'DISABLED') + '] - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
               });
             } else {
@@ -242,39 +242,39 @@ configFn(function (err, config) {
           });
         });
       });
-    }
+    };
 
-    function promptToken (next) {
-      selectAccount(function (err, account) {
+    const promptToken = (next) => {
+      selectAccount((err, account) => {
         if (err) return error(err);
-        selectApplication(account, function (err, application) {
+        selectApplication(account, (err, application) => {
           if (err) return error(err);
-          selectApplicationToken(application, function (err, token) {
+          selectApplicationToken(application, (err, token) => {
             if (err) return error(err);
             next(null, token);
           });
         });
       });
-    }
+    };
 
-    function resetApplicationToken () {
-      promptToken(function (err, token) {
+    const resetApplicationToken = () => {
+      promptToken((err, token) => {
         if (err) return error(err);
         confirmResetToken(token);
       });
-    }
+    };
 
-    function disableApplicationToken () {
-      promptToken(function (err, token) {
+    const disableApplicationToken = () => {
+      promptToken((err, token) => {
         if (err) return error(err);
         confirmDisableToken(token);
       });
-    }
+    };
 
-    function selectAccount (next) {
-      api.auth.getAccounts(function (err, accounts) {
+    const selectAccount = (next) => {
+      api.auth.getAccounts((err, accounts) => {
         if (err) return error(err);
-        var accs = _.pluck(accounts, 'name');
+        const accs = _.pluck(accounts, 'name');
         inquirer.prompt([
           {
             type: 'list',
@@ -282,16 +282,16 @@ configFn(function (err, config) {
             name: 'name',
             choices: accs
           }
-        ], function (answer) {
+        ], answer => {
           next(null, _.result(_.find(accounts, { 'name': answer.name }), 'account'), answer.name);
         });
       });
-    }
+    };
 
-    function selectApplication (account, next) {
-      api.auth.getApplications(account, function (err, applications) {
+    const selectApplication = (account, next) => {
+      api.auth.getApplications(account, (err, applications) => {
         if (err) return error(err);
-        var apps = _.pluck(applications, 'name');
+        const apps = _.pluck(applications, 'name');
         inquirer.prompt([
           {
             type: 'list',
@@ -299,17 +299,17 @@ configFn(function (err, config) {
             name: 'name',
             choices: apps
           }
-        ], function (answer) {
-          var application = _.find(applications, { 'name': answer.name });
+        ], answer => {
+          const application = _.find(applications, { 'name': answer.name });
           next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
         });
       });
-    }
+    };
 
-    function selectApplicationToken (application, next) {
-      api.auth.getApplicationTokens(application, function (err, tokens) {
+    const selectApplicationToken = (application, next) => {
+      api.auth.getApplicationTokens(application, (err, tokens) => {
         if (err) return error(err);
-        var tokenDescriptions = _.pluck(tokens, 'description');
+        const tokenDescriptions = _.pluck(tokens, 'description');
         inquirer.prompt([
           {
             type: 'list',
@@ -317,23 +317,23 @@ configFn(function (err, config) {
             name: 'description',
             choices: tokenDescriptions
           }
-        ], function (answer) {
-          var token = _.find(tokens, { 'description': answer.description });
+        ], answer => {
+          const token = _.find(tokens, { 'description': answer.description });
           next(null, token);
         });
       });
-    }
+    };
 
-    function confirmResetToken (token) {
+    const confirmResetToken = token => {
       inquirer.prompt([
         {
           type: 'confirm',
           message: 'This will modify the tokensecret so that the consumer using that token can no longer access seguir?',
           name: 'confirm'
         }
-      ], function (confirm) {
+      ], confirm => {
         if (confirm.confirm) {
-          api.auth.updateApplicationTokenSecret(token.tokenid, function (err, token) {
+          api.auth.updateApplicationTokenSecret(token.tokenid, (err, token) => {
             if (!err) {
               console.log('Token updated, update the client application if you still want it to have access!');
               console.log('tokenid:     ' + token.tokenid);
@@ -347,19 +347,19 @@ configFn(function (err, config) {
           process.exit();
         }
       });
-    }
+    };
 
-    function confirmDisableToken (token) {
-      var message = token.enabled ? 'This will disable a token so that any applications using it can no longer access seguir - they will immediately stop working - continue?' : 'Re-enable token?';
+    const confirmDisableToken = token => {
+      const message = token.enabled ? 'This will disable a token so that any applications using it can no longer access seguir - they will immediately stop working - continue?' : 'Re-enable token?';
       inquirer.prompt([
         {
           type: 'confirm',
           message: message,
           name: 'confirm'
         }
-      ], function (confirm) {
+      ], confirm => {
         if (confirm.confirm) {
-          api.auth.updateApplicationToken(token.tokenid, !token.enabled, token.description, function (err, token) {
+          api.auth.updateApplicationToken(token.tokenid, !token.enabled, token.description, (err, token) => {
             if (!err) {
               console.log('Token is now: ' + (token.enabled ? 'ENABLED' : 'DISABLED'));
             } else {
@@ -371,77 +371,77 @@ configFn(function (err, config) {
           process.exit();
         }
       });
-    }
+    };
 
-    function coreSetup () {
+    const coreSetup = () => {
       inquirer.prompt([
         {
           type: 'confirm',
           message: 'This will DROP the existing keyspace if it already exists, are you sure you want to proceed?',
           name: 'confirm'
         }
-      ], function (confirm) {
+      ], confirm => {
         if (confirm.confirm) {
-          api.client.setup.setupSeguir(api.client, config.keyspace, function () {
+          api.client.setup.setupSeguir(api.client, config.keyspace, () => {
             console.log('Completed basic setup, you now need to create your first account and application.');
             promptAccount();
           });
         }
       });
-    }
+    };
 
-    function addUser () {
-      selectAccount(function (err, account, name) {
+    const addUser = () => {
+      selectAccount((err, account, name) => {
         if (err) return error(err);
-        promptAccountUser(account, name, function (err) {
+        promptAccountUser(account, name, err => {
           if (err) return error(err);
           process.exit(0);
         });
       });
-    }
+    };
 
-    function addApplication () {
-      selectAccount(function (err, account, name) {
+    const addApplication = () => {
+      selectAccount((err, account, name) => {
         if (err) return error(err);
-        promptApplication(account, name, function (err) {
+        promptApplication(account, name, err => {
           if (err) return error(err);
           process.exit(0);
         });
       });
-    }
+    };
 
-    function promptAccount () {
+    const promptAccount = () => {
       inquirer.prompt([
         {
           type: 'input',
           message: 'Enter an account name:',
           name: 'name'
         }
-      ], function (acc) {
-        setupAccount(acc.name, function (err, account) {
+      ], acc => {
+        setupAccount(acc.name, (err, account) => {
           if (err) return error(err);
-          promptAccountUser(account.account, account.name, function (err) {
+          promptAccountUser(account.account, account.name, err => {
             if (err) return error(err);
-            promptApplication(account.account, account.name, function (err, application) {
+            promptApplication(account.account, account.name, err => {
               if (err) return error(err);
               process.exit(0);
             });
           });
         });
       });
-    }
+    };
 
-    function setupAccount (accName, next) {
-      api.auth.addAccount(accName, true, true, function (err, account) {
+    const setupAccount = (accName, next) => {
+      api.auth.addAccount(accName, true, true, (err, account) => {
         if (err) {
           console.log(err.message);
           process.exit(0);
         }
         next(null, account);
       });
-    }
+    };
 
-    function promptAccountUser (account, name, next) {
+    const promptAccountUser = (account, name, next) => {
       inquirer.prompt([
         {
           type: 'input',
@@ -458,49 +458,49 @@ configFn(function (err, config) {
           message: 'Are they an administrator of the account (y/n)?',
           name: 'isadmin'
         }
-      ], function (user) {
+      ], user => {
         setupAccountUser(account, name, user.username, user.password, user.isadmin === 'y', next);
       });
-    }
+    };
 
-    function setupAccountUser (account, name, username, password, isadmin, next) {
-      api.auth.addAccountUser(account, username, password, isadmin, function (err, user) {
+    const setupAccountUser = (account, name, username, password, isadmin, next) => {
+      api.auth.addAccountUser(account, username, password, isadmin, err => {
         if (err) {
           console.log(err.message);
           process.exit(0);
         }
         next();
       });
-    }
+    };
 
-    function promptApplication (account, name, next) {
+    const promptApplication = (account, name, next) => {
       inquirer.prompt([
         {
           type: 'input',
           message: 'Enter application name (e.g. app-name) to add to account ' + name + ':',
           name: 'name'
         }
-      ], function (application) {
+      ], application => {
         setupApplication(account, application.name, next);
       });
-    }
+    };
 
-    function promptApplicationToken (application, next) {
+    const promptApplicationToken = (application, next) => {
       inquirer.prompt([
         {
           type: 'input',
           message: 'Enter application token description (e.g. first-consumer) to add to application ' + application.name + ':',
           name: 'name'
         }
-      ], function (token) {
+      ], token => {
         setupApplicationToken(application, token.name, next);
       });
-    }
+    };
 
-    function setupApplication (account, name, noToken, next) {
+    const setupApplication = (account, name, noToken, next) => {
       if (!next) { next = noToken; noToken = false; }
       console.log(' ... creating schema ...');
-      api.auth.addApplication(account, name, function (err, application) {
+      api.auth.addApplication(account, name, (err, application) => {
         if (err) {
           console.log(err.message);
           process.exit(0);
@@ -508,12 +508,12 @@ configFn(function (err, config) {
         if (noToken) return next(null, application);
         promptApplicationToken(application, next);
       });
-    }
+    };
 
-    function setupApplicationToken (application, name, tokenid, tokensecret, next) {
+    const setupApplicationToken = (application, name, tokenid, tokensecret, next) => {
       if (!next) { next = tokensecret; tokensecret = null; }
       if (!next) { next = tokenid; tokenid = null; }
-      api.auth.addApplicationToken(application.appid, application.appkeyspace, name, tokenid, tokensecret, function (err, token) {
+      api.auth.addApplicationToken(application.appid, application.appkeyspace, name, tokenid, tokensecret, (err, token) => {
         if (err) {
           console.log(err.message);
           process.exit(0);
@@ -524,6 +524,6 @@ configFn(function (err, config) {
         console.log('tokensecret: ' + token.tokensecret);
         next();
       });
-    }
+    };
   });
 });
