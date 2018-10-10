@@ -162,7 +162,7 @@ module.exports = function (api) {
     });
   }
 
-  function canModerate (keyspace, altid, user, group, next) {
+  function isUserModerator (keyspace, altid, user, group, next) {
     function _isUserModerator (cb) {
       api.common.isUserModerator(keyspace, user, function (err, moderator) {
         if (err) { return next(err); }
@@ -191,7 +191,7 @@ module.exports = function (api) {
   }
 
   function moderatePost (keyspace, username, altid, user, group, post, next) {
-    canModerate(keyspace, altid, user, group, function (err, moderator) {
+    isUserModerator(keyspace, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [username, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
@@ -200,6 +200,24 @@ module.exports = function (api) {
         api.metrics.increment('post.moderate');
         client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, postItem) {
           if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
+          next(null, postItem);
+        });
+      });
+    });
+  }
+
+  function unmoderatePost (keyspace, altid, user, group, post, next) {
+    isUserModerator(keyspace, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      var moderationData = [null, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.unmoderate');
+        client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, postItem) {
+          if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
           next(null, postItem);
         });
       });
@@ -285,6 +303,7 @@ module.exports = function (api) {
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
     updatePostByAltid: updatePostByAltid,
-    moderatePost: moderatePost
+    moderatePost: moderatePost,
+    unmoderatePost: unmoderatePost
   };
 };
