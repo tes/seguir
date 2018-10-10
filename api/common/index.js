@@ -92,7 +92,7 @@ module.exports = function (api) {
   function isUserModerator (keyspace, user, next) {
     client.get(q(keyspace, 'selectModerator'), [user], {}, function (err, result) {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a moderator')); }
+      // if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a moderator')); }
       next(null, result);
     });
   }

@@ -166,14 +166,14 @@ module.exports = function (api) {
     function _isUserModerator (cb) {
       api.common.isUserModerator(keyspace, user, function (err, moderator) {
         if (err) { return next(err); }
-        cb(null, { isUserModerator: true });
+        cb(null, { isUserModerator: !!moderator });
       });
     }
 
     function _isUserGroupModerator (cb) {
       group && api.common.isUserGroupModerator(keyspace, altid, group, function (err, moderator) {
         if (err) { return next(err); }
-        cb(null, { isUserModerator: true });
+        cb(null, { isUserModerator: !!moderator });
       });
       cb(null, null);
     }
@@ -186,7 +186,7 @@ module.exports = function (api) {
       if (results[0].isUserModerator || (results[1] && results[1].isUserModerator)) {
         next(null, { isUserModerator: true });
       }
-      next(null, null);
+      next(null, { isUserModerator: false });
     });
   }
 
@@ -303,6 +303,7 @@ module.exports = function (api) {
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
     updatePostByAltid: updatePostByAltid,
+    isUserModerator: isUserModerator,
     moderatePost: moderatePost,
     unmoderatePost: unmoderatePost
   };
