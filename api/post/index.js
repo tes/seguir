@@ -162,7 +162,7 @@ module.exports = function (api) {
     });
   }
 
-  function isUserModerator (keyspace, altid, user, group, next) {
+  function isUserModerator (keyspace, autoModeratedBy, altid, user, group, next) {
     function _isUserModerator (cb) {
       api.common.isUserModerator(keyspace, user, function (err, moderator) {
         if (err) { return next(err); }
@@ -183,17 +183,17 @@ module.exports = function (api) {
       _isUserGroupModerator
     ], function (err, results) {
       if (err) { return next(err); }
-      if (results[0].isUserModerator || (results[1] && results[1].isUserModerator)) {
+      if (autoModeratedBy || results[0].isUserModerator || (results[1] && results[1].isUserModerator)) {
         next(null, { isUserModerator: true });
       }
       next(null, { isUserModerator: false });
     });
   }
 
-  function moderatePost (keyspace, username, altid, user, group, post, next) {
-    isUserModerator(keyspace, altid, user, group, function (err, moderator) {
+  function moderatePost (keyspace, autoModeratedBy, username, altid, user, group, post, next) {
+    isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
-      var moderationData = [username, post];
+      var moderationData = [autoModeratedBy || username, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
         /* istanbul ignore if */
         if (err) { return next(err); }
@@ -208,7 +208,7 @@ module.exports = function (api) {
   }
 
   function unmoderatePost (keyspace, altid, user, group, post, next) {
-    isUserModerator(keyspace, altid, user, group, function (err, moderator) {
+    isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [null, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
