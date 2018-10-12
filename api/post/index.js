@@ -165,6 +165,9 @@ module.exports = function (api) {
   function moderatePost (keyspace, autoModeratedBy, username, altid, user, group, post, next) {
     api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the post, only moderator can moderate it.'));
+      }
       var moderationData = [autoModeratedBy || username, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
         /* istanbul ignore if */
@@ -182,6 +185,9 @@ module.exports = function (api) {
   function unmoderatePost (keyspace, altid, user, group, post, next) {
     api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the post, only moderator can moderate it.'));
+      }
       var moderationData = [null, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
         /* istanbul ignore if */

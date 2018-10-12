@@ -107,6 +107,9 @@ module.exports = function (api) {
   function moderateComment (keyspace, autoModeratedBy, username, altid, user, group, comment, next) {
     api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
       var moderationData = [autoModeratedBy || username, comment];
       client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
         if (err) { return next(err); }
@@ -122,6 +125,9 @@ module.exports = function (api) {
   function unmoderateComment (keyspace, altid, user, group, comment, next) {
     api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
       var moderationData = [null, comment];
       client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
         if (err) { return next(err); }

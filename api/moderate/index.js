@@ -1,5 +1,3 @@
-var _mapValues = require('lodash/mapValues');
-
 module.exports = function (api) {
   var client = api.client;
   var q = client.queries;
@@ -15,10 +13,7 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Group ' + group + ' is not a valid group ')); }
-      var groupData = _mapValues(result.groupdata, function (value) {
-        return value.toString();
-      });
-      if (groupData.admin === altid.toString()) {
+      if (result.groupdata.admin.toString() === altid.toString()) {
         return next(null, result);
       }
       next(null, null);
