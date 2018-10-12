@@ -171,11 +171,13 @@ module.exports = function (api) {
     }
 
     function _isUserGroupModerator (cb) {
-      group && api.common.isUserGroupModerator(keyspace, altid, group, function (err, moderator) {
+      if (!group) {
+        return cb(null, null);
+      }
+      api.common.isUserGroupModerator(keyspace, altid, group, function (err, moderator) {
         if (err) { return next(err); }
         cb(null, { isUserModerator: !!moderator });
       });
-      cb(null, null);
     }
 
     async.series([

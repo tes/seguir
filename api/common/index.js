@@ -92,20 +92,19 @@ module.exports = function (api) {
   function isUserModerator (keyspace, user, next) {
     client.get(q(keyspace, 'selectModerator'), [user], {}, function (err, result) {
       if (err) { return next(err); }
-      // if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a moderator')); }
       next(null, result);
     });
   }
 
-  function isUserGroupModerator (keyspace, user, group, next) {
+  function isUserGroupModerator (keyspace, altid, group, next) {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Group ' + group + ' is not a valid group ')); }
-      var groupData = _mapValues(result.groupData, function (value) {
+      var groupData = _mapValues(result.groupdata, function (value) {
         return value.toString();
       });
-      if (groupData.admin === user.id) {
-        next(null, result);
+      if (groupData.admin === altid.toString) {
+        return next(null, result);
       }
       next(null, null);
     });
