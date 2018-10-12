@@ -162,38 +162,8 @@ module.exports = function (api) {
     });
   }
 
-  function isUserModerator (keyspace, autoModeratedBy, altid, user, group, next) {
-    function _isUserModerator (cb) {
-      api.common.isUserModerator(keyspace, user, function (err, moderator) {
-        if (err) { return next(err); }
-        cb(null, { isUserModerator: !!moderator });
-      });
-    }
-
-    function _isUserGroupModerator (cb) {
-      if (!group) {
-        return cb(null, null);
-      }
-      api.common.isUserGroupModerator(keyspace, altid, group, function (err, moderator) {
-        if (err) { return next(err); }
-        cb(null, { isUserModerator: !!moderator });
-      });
-    }
-
-    async.series([
-      _isUserModerator,
-      _isUserGroupModerator
-    ], function (err, results) {
-      if (err) { return next(err); }
-      if (autoModeratedBy || results[0].isUserModerator || (results[1] && results[1].isUserModerator)) {
-        next(null, { isUserModerator: true });
-      }
-      next(null, { isUserModerator: false });
-    });
-  }
-
   function moderatePost (keyspace, autoModeratedBy, username, altid, user, group, post, next) {
-    isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [autoModeratedBy || username, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
@@ -210,7 +180,7 @@ module.exports = function (api) {
   }
 
   function unmoderatePost (keyspace, altid, user, group, post, next) {
-    isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [null, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
@@ -305,7 +275,6 @@ module.exports = function (api) {
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
     updatePostByAltid: updatePostByAltid,
-    isUserModerator: isUserModerator,
     moderatePost: moderatePost,
     unmoderatePost: unmoderatePost
   };

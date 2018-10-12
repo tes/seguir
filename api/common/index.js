@@ -1,7 +1,6 @@
 var sanitizeHtml = require('sanitize-html');
 var _forOwn = require('lodash/forOwn');
 var _includes = require('lodash/includes');
-var _mapValues = require('lodash/mapValues');
 
 module.exports = function (api) {
   var client = api.client;
@@ -89,27 +88,6 @@ module.exports = function (api) {
     });
   }
 
-  function isUserModerator (keyspace, user, next) {
-    client.get(q(keyspace, 'selectModerator'), [user], {}, function (err, result) {
-      if (err) { return next(err); }
-      next(null, result);
-    });
-  }
-
-  function isUserGroupModerator (keyspace, altid, group, next) {
-    client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
-      if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Group ' + group + ' is not a valid group ')); }
-      var groupData = _mapValues(result.groupdata, function (value) {
-        return value.toString();
-      });
-      if (groupData.admin === altid.toString) {
-        return next(null, result);
-      }
-      next(null, null);
-    });
-  }
-
   return {
     error: error,
     get: get,
@@ -118,8 +96,6 @@ module.exports = function (api) {
     convertContentToString: convertContentToString,
     convertContentFromString: convertContentFromString,
     expandEmbeddedObject: expandEmbeddedObject,
-    isUserGroupMember: isUserGroupMember,
-    isUserModerator: isUserModerator,
-    isUserGroupModerator: isUserGroupModerator
+    isUserGroupMember: isUserGroupMember
   };
 };

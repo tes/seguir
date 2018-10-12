@@ -105,7 +105,7 @@ module.exports = function (api) {
   }
 
   function moderateComment (keyspace, autoModeratedBy, username, altid, user, group, comment, next) {
-    api.post.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [autoModeratedBy || username, comment];
       client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
@@ -120,7 +120,7 @@ module.exports = function (api) {
   }
 
   function unmoderateComment (keyspace, altid, user, group, comment, next) {
-    api.post.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       var moderationData = [null, comment];
       client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
