@@ -186,7 +186,7 @@ module.exports = function (api) {
     api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
       if (err) { return next(err); }
       if (moderator && !moderator.isUserModerator) {
-        return next(new Error('Unable to moderate the post, only moderator can moderate it.'));
+        return next(new Error('Unable to unmoderate the post, only moderator can unmoderate it.'));
       }
       var moderationData = [null, post];
       client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {

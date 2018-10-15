@@ -13,7 +13,7 @@ module.exports = function (api) {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, function (err, result) {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Group ' + group + ' is not a valid group ')); }
-      if (result.groupdata.admin.toString() === altid.toString()) {
+      if (result.groupdata && result.groupdata.admin.toString() === altid.toString()) {
         return next(null, result);
       }
       next(null, null);
@@ -30,7 +30,7 @@ module.exports = function (api) {
       if (result) {
         return next(null, { isUserModerator: true });
       }
-      if (!group) {
+      if (!(group && altid)) {
         return next(null, { isUserModerator: false });
       }
       _isUserGroupModerator(keyspace, altid, group, function (err, group) {
