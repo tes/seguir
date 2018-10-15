@@ -104,6 +104,42 @@ module.exports = function (api) {
     });
   }
 
+  function moderateComment (keyspace, autoModeratedBy, username, altid, user, group, comment, next) {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
+      var moderationData = [autoModeratedBy || username, comment];
+      client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
+        if (err) { return next(err); }
+        api.metrics.increment('comment.moderate');
+        client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, commentItem) {
+          if (err) { return next(err); }
+          next(null, commentItem);
+        });
+      });
+    });
+  }
+
+  function unmoderateComment (keyspace, altid, user, group, comment, next) {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
+      var moderationData = [null, comment];
+      client.execute(q(keyspace, 'moderateComment'), moderationData, {cacheKey: 'comment:' + comment}, function (err, result) {
+        if (err) { return next(err); }
+        api.metrics.increment('comment.unmoderate');
+        client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, function (err, commentItem) {
+          if (err) { return next(err); }
+          next(null, commentItem);
+        });
+      });
+    });
+  }
+
   // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
   function getComments (keyspace, liu, post, next) {
     client.get(q(keyspace, 'selectCount', {TYPE: 'comment'}), [post.toString()], {cacheKey: 'count:comment:' + post}, function (err, result) {
@@ -146,6 +182,8 @@ module.exports = function (api) {
     getComments: getComments,
     updateComment: updateComment,
     deleteComment: deleteComment,
-    deleteCommentsByUser: deleteCommentsByUser
+    deleteCommentsByUser: deleteCommentsByUser,
+    moderateComment: moderateComment,
+    unmoderateComment: unmoderateComment
   };
 };

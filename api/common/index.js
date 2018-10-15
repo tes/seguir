@@ -1,5 +1,6 @@
 var sanitizeHtml = require('sanitize-html');
-var _ = require('lodash');
+var _forOwn = require('lodash/forOwn');
+var _includes = require('lodash/includes');
 
 module.exports = function (api) {
   var client = api.client;
@@ -68,8 +69,8 @@ module.exports = function (api) {
     var testField = prefix + test;
     if (item[testField]) {
       var embed = {};
-      _.forOwn(item, function (value, key) {
-        if (key.indexOf(prefix) === 0 && !_.includes(ignore, key)) {
+      _forOwn(item, function (value, key) {
+        if (key.indexOf(prefix) === 0 && !_includes(ignore, key)) {
           var embedKey = key.replace(prefix, '');
           embed[embedKey] = value;
           delete item[key];

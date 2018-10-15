@@ -162,6 +162,46 @@ module.exports = function (api) {
     });
   }
 
+  function moderatePost (keyspace, autoModeratedBy, username, altid, user, group, post, next) {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the post, only moderator can moderate it.'));
+      }
+      var moderationData = [autoModeratedBy || username, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.moderate');
+        client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, postItem) {
+          if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
+          next(null, postItem);
+        });
+      });
+    });
+  }
+
+  function unmoderatePost (keyspace, altid, user, group, post, next) {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, function (err, moderator) {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to unmoderate the post, only moderator can unmoderate it.'));
+      }
+      var moderationData = [null, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, {cacheKey: 'post:' + post}, function (err, result) {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.unmoderate');
+        client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, function (err, postItem) {
+          if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
+          next(null, postItem);
+        });
+      });
+    });
+  }
+
   function _validatePost (keyspace, liu, post, expandUser, next) {
     post.content = api.common.convertContentFromString(post.content, post.content_type);
     api.friend.userCanSeeItem(keyspace, liu, post, ['user'], function (err) {
@@ -240,6 +280,8 @@ module.exports = function (api) {
     getPostsByAltid: getPostsByAltid,
     getPostFromObject: getPostFromObject,
     updatePost: updatePost,
-    updatePostByAltid: updatePostByAltid
+    updatePostByAltid: updatePostByAltid,
+    moderatePost: moderatePost,
+    unmoderatePost: unmoderatePost
   };
 };
