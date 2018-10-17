@@ -108,11 +108,21 @@ module.exports = function (api) {
         next(null, result);
         return;
       }
-      api.common.isUserGroupMember(keyspace, liu, group, function (err) {
-        if (!err) {
-          result.isMember = true;
+      client.get(q(keyspace, 'selectCount', {TYPE: 'member'}), [group.toString()], {cacheKey: 'count:member:' + group}, function (err, countItems) {
+        if (err) { return next(err); }
+
+        if (countItems && +countItems.count > 0) {
+          result.memberCount = +countItems.count;
+          api.common.isUserGroupMember(keyspace, liu, group, function (err) {
+            if (!err) {
+              result.isMember = true;
+            }
+            next(null, result);
+          });
+        } else {
+          result.memberCount = 0;
+          next(null, result);
         }
-        next(null, result);
       });
     });
   }
