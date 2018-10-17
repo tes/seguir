@@ -2,6 +2,7 @@ var async = require('async');
 var _mapValues = require('lodash/mapValues');
 var _zipObject = require('lodash/zipObject');
 var _filter = require('lodash/filter');
+var debug = require('debug')('seguir:group');
 
 var DEFAULT_PAGESIZE = 50;
 
@@ -22,21 +23,29 @@ module.exports = function (api) {
     var memberValues = [group, user, timestamp];
     client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
       if (err) return cb(err);
-      getGroup(keyspace, group, null, function (err, result) {
-        if (err) return cb(err);
-        var joinGroupContent = {
-          category: 'social-group',
-          type: 'new-member',
-          data: {
-            group: {
-              id: group,
-              name: result.groupname
-            }
-          }
-        };
-        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', function (err, result) {
+
+      var memberUpdate = [1, group.toString()];
+      debug('update group counts:', 'counts', memberUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), memberUpdate, {cacheKey: 'count:member:' + group}, function (err) {
+        if (err) { return cb(err); }
+
+        api.metrics.increment('member.add');
+        getGroup(keyspace, group, null, function (err, result) {
           if (err) return cb(err);
-          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          var joinGroupContent = {
+            category: 'social-group',
+            type: 'new-member',
+            data: {
+              group: {
+                id: group,
+                name: result.groupname
+              }
+            }
+          };
+          api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', function (err, result) {
+            if (err) return cb(err);
+            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          });
         });
       });
     });
