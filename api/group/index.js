@@ -24,9 +24,9 @@ module.exports = function (api) {
     client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
       if (err) return cb(err);
 
-      var memberUpdate = [1, group.toString()];
-      debug('update group counts:', 'counts', memberUpdate);
-      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), memberUpdate, {cacheKey: 'count:member:' + group}, function (err) {
+      var countUpdate = [1, group.toString()];
+      debug('update group counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), countUpdate, {cacheKey: 'count:member:' + group}, function (err) {
         if (err) { return cb(err); }
 
         api.metrics.increment('member.add');
@@ -265,7 +265,13 @@ module.exports = function (api) {
     var memberValues = [group, user];
     client.execute(q(keyspace, 'removeMember'), memberValues, function (err) {
       if (err) return cb(err);
-      cb(null, { status: 'removed' });
+
+      var countUpdate = [-1, group.toString()];
+      debug('update member counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), countUpdate, {cacheKey: 'count:member:' + group}, function (err) {
+        if (err) return cb(err);
+        cb(null, { status: 'removed' });
+      });
     });
   }
 
