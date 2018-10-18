@@ -2,6 +2,7 @@ var async = require('async');
 var _mapValues = require('lodash/mapValues');
 var _zipObject = require('lodash/zipObject');
 var _filter = require('lodash/filter');
+var debug = require('debug')('seguir:group');
 
 var DEFAULT_PAGESIZE = 50;
 
@@ -22,21 +23,29 @@ module.exports = function (api) {
     var memberValues = [group, user, timestamp];
     client.execute(q(keyspace, 'upsertMember'), memberValues, function (err) {
       if (err) return cb(err);
-      getGroup(keyspace, group, null, function (err, result) {
-        if (err) return cb(err);
-        var joinGroupContent = {
-          category: 'social-group',
-          type: 'new-member',
-          data: {
-            group: {
-              id: group,
-              name: result.groupname
-            }
-          }
-        };
-        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', function (err, result) {
+
+      var countUpdate = [1, group.toString()];
+      debug('update group counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), countUpdate, {cacheKey: 'count:member:' + group}, function (err) {
+        if (err) { return cb(err); }
+
+        api.metrics.increment('member.add');
+        getGroup(keyspace, group, null, function (err, result) {
           if (err) return cb(err);
-          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          var joinGroupContent = {
+            category: 'social-group',
+            type: 'new-member',
+            data: {
+              group: {
+                id: group,
+                name: result.groupname
+              }
+            }
+          };
+          api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', function (err, result) {
+            if (err) return cb(err);
+            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          });
         });
       });
     });
@@ -99,11 +108,21 @@ module.exports = function (api) {
         next(null, result);
         return;
       }
-      api.common.isUserGroupMember(keyspace, liu, group, function (err) {
-        if (!err) {
-          result.isMember = true;
+      client.get(q(keyspace, 'selectCount', {TYPE: 'member'}), [group.toString()], {cacheKey: 'count:member:' + group}, function (err, countItems) {
+        if (err) { return next(err); }
+
+        if (countItems && +countItems.count > 0) {
+          result.memberCount = +countItems.count;
+          api.common.isUserGroupMember(keyspace, liu, group, function (err) {
+            if (!err) {
+              result.isMember = true;
+            }
+            next(null, result);
+          });
+        } else {
+          result.memberCount = 0;
+          next(null, result);
         }
-        next(null, result);
       });
     });
   }
@@ -256,7 +275,13 @@ module.exports = function (api) {
     var memberValues = [group, user];
     client.execute(q(keyspace, 'removeMember'), memberValues, function (err) {
       if (err) return cb(err);
-      cb(null, { status: 'removed' });
+
+      var countUpdate = [-1, group.toString()];
+      debug('update member counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', {TYPE: 'member'}), countUpdate, {cacheKey: 'count:member:' + group}, function (err) {
+        if (err) return cb(err);
+        cb(null, { status: 'removed' });
+      });
     });
   }
 
