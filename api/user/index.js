@@ -1,6 +1,6 @@
-var _ = require('lodash');
-var async = require('async');
-var debug = require('debug')('seguir:user');
+const _ = require('lodash');
+const async = require('async');
+const debug = require('debug')('seguir:user');
 
 /**
  * This is a collection of methods that allow you to create, update and delete social items.
@@ -12,22 +12,22 @@ var debug = require('debug')('seguir:user');
  * TODO: Exception may be creating a post on someone elses feed.
  *
  */
-module.exports = function (api) {
-  var client = api.client;
-  var q = client.queries;
+module.exports = (api) => {
+  const client = api.client;
+  const q = client.queries;
 
-  var _userCacheStats = {};
-  var userCacheStats = function (key, action) {
-    var keyType = key.split(':')[0];
+  let _userCacheStats = {};
+  const userCacheStats = (key, action) => {
+    const keyType = key.split(':')[0];
     _userCacheStats[keyType] = _userCacheStats[keyType] || {};
     _userCacheStats[keyType][action] = _userCacheStats[keyType][action] || 0;
     _userCacheStats[keyType][action] = _userCacheStats[keyType][action] + 1;
   };
-  var resetStats = function () {
+  const resetStats = () => {
     _userCacheStats = {};
   };
   // Clear each minute to avoid memory leaks
-  setInterval(function () {
+  setInterval(() => {
     resetStats();
   }, 60000);
 
@@ -42,22 +42,22 @@ module.exports = function (api) {
    * @param options.userid - If provided will be used as the id for this user (rather than generating one)
    * @param next
    */
-  function addUser (keyspace, username, altid, options, next) {
+  const addUser = (keyspace, username, altid, options, next) => {
     if (!next) {
       next = options;
       options = {};
     }
 
-    var initialise = options.initialise || {};
-    var userdata = options.userdata || {};
-    var userid = client.isValidId(options.userid) ? options.userid : client.generateId();
+    const initialise = options.initialise || {};
+    let userdata = options.userdata || {};
+    const userid = client.isValidId(options.userid) ? options.userid : client.generateId();
 
-    userdata = _.mapValues(userdata, function (value) {
+    userdata = _.mapValues(userdata, (value) => {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
 
     // Check user doesn't exist as per issue #36
-    getUserByAltId(keyspace, altid, function (err, existingUser) {
+    getUserByAltId(keyspace, altid, (err, existingUser) => {
       if (err && err.statusCode !== 404) { return next(err); }
       if (existingUser) {
         return next({
@@ -66,13 +66,13 @@ module.exports = function (api) {
         });
       }
 
-      var user = [userid, username, '' + altid, userdata];
+      const user = [userid, username, '' + altid, userdata];
 
       client.execute(q(keyspace, 'upsertUser'), user, {
         hints: [null, null, 'map']
-      }, function (err, result) {
+      }, (err, result) => {
         if (err) { return next(err); }
-        var tempUser = _.zipObject(['user', 'username', 'altid'], user);
+        const tempUser = _.zipObject(['user', 'username', 'altid'], user);
         tempUser.userdata = userdata;
         if (initialise) {
           initialiseUserWith(keyspace, tempUser, initialise, next);
@@ -81,38 +81,38 @@ module.exports = function (api) {
         }
       });
     });
-  }
+  };
 
-  function initialiseUserWith (keyspace, user, initialise, next) {
-    async.map(_.keys(initialise), function (type, cb) {
+  const initialiseUserWith = (keyspace, user, initialise, next) => {
+    async.map(_.keys(initialise), (type, cb) => {
       if (type === 'follow') {
         initialiseUserWithFollowers(keyspace, user, initialise[type], cb);
       }
-    }, function (err) {
+    }, (err) => {
       if (err) { return next(err); }
       next(null, user);
     });
-  }
+  };
 
-  function initialiseUserWithFollowers (keyspace, user, follow, next) {
-    var backfill = follow.backfill || 10;
-    api.auth.coerceUserToUuid(keyspace, follow.users, function (err, usersToFollow) {
+  const initialiseUserWithFollowers = (keyspace, user, follow, next) => {
+    const backfill = follow.backfill || 10;
+    api.auth.coerceUserToUuid(keyspace, follow.users, (err, usersToFollow) => {
       if (err) { return next(err); }
-      async.map(usersToFollow, function (userToFollow, cb) {
+      async.map(usersToFollow, (userToFollow, cb) => {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
         api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, function (err, follow) {
           if (err) { return cb(err); }
           api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, follow, cb);
         });
-      }, function (err) {
+      }, (err) => {
         if (err) { return next(err); }
         next();
       });
     });
-  }
+  };
 
-  function updateUser (keyspace, userid, username, altid, userdata, next) {
-    userdata = _.mapValues(userdata, function (value) {
+  const updateUser = (keyspace, userid, username, altid, userdata, next) => {
+    userdata = _.mapValues(userdata, (value) => {
       return value.toString();
     }); // Always ensure our userdata is <text,text>
 
@@ -120,47 +120,47 @@ module.exports = function (api) {
      * Retrieve the existing record as we need to clear the old caches assuming altid
      * or username can change
      */
-    getUser(keyspace, userid, function (err, user) {
+    getUser(keyspace, userid, (err, user) => {
       if (err) { return next(err); }
-      var cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
-      async.map(cachedItems, client.deleteCacheItem, function () {
-        var user = [username, '' + altid, userdata, userid];
+      const cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+      async.map(cachedItems, client.deleteCacheItem, () => {
+        const user = [username, '' + altid, userdata, userid];
         client.execute(q(keyspace, 'updateUser'), user, {
           cacheKey: 'user:' + userid,
           hints: [null, null, 'map']
-        }, function (err, result) {
+        }, (err, result) => {
           if (err) { return next(err); }
           next(null, {user: userid, username: username, altid: altid, userdata: userdata});
         });
       });
     });
-  }
+  };
 
-  function getUser (keyspace, user, next) {
-    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, function (err, result) {
+  const getUser = (keyspace, user, next) => {
+    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by id: ' + user)); }
       next(null, result);
     });
-  }
+  };
 
-  function getUserByName (keyspace, username, next) {
-    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, function (err, result) {
+  const getUserByName = (keyspace, username, next) => {
+    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by name: ' + username)); }
       next(null, result);
     });
-  }
+  };
 
-  function getUserByAltId (keyspace, altid, next) {
-    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, function (err, result) {
+  const getUserByAltId = (keyspace, altid, next) => {
+    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by altid: ' + altid)); }
       next(null, result);
     });
-  }
+  };
 
-  function mapUserIdToUser (keyspace, itemOrItems, fields, expandUser, userCache, next) {
+  const mapUserIdToUser = (keyspace, itemOrItems, fields, expandUser, userCache, next) => {
     // expandUser and userCache optional
     if (!next) { next = userCache; userCache = {}; }
     if (!next) { next = expandUser; expandUser = true; }
@@ -169,21 +169,21 @@ module.exports = function (api) {
       return next(null, itemOrItems);
     }
 
-    var getUsersForFields = function (item, cb) {
+    const getUsersForFields = (item, cb) => {
       if (!item) { return cb(); }
 
       // Always replace the longest embedded field to
       // ensure user_ and user_friend not replaced twice
-      fields.sort(function (a, b) { return b.length - a.length; });
+      fields.sort((a, b) => { return b.length - a.length; });
 
-      async.mapSeries(fields, function (field, eachCb) {
+      async.mapSeries(fields, (field, eachCb) => {
         if (!item[field]) { return eachCb(null); }
 
         // If the item is already expanded lets just move on
         if (item[field] && item[field].user) { return eachCb(null); }
 
         // First check if we have the object embedded
-        var userObject = api.common.expandEmbeddedObject(item, field, 'altid', fields);
+        const userObject = api.common.expandEmbeddedObject(item, field, 'altid', fields);
         if (userObject) {
           debug('cache expand', field);
           userCacheStats('user', 'EMBED');
@@ -191,25 +191,25 @@ module.exports = function (api) {
           return eachCb();
         }
 
-        var userKey = item[field].toString();
+        const userKey = item[field].toString();
         // Check if the user is already in the cache for this request
         userCacheStats('user', 'GET');
         if (userCache[userKey]) {
           userCacheStats('user', 'HIT');
           debug('cache hit', field, userKey);
           item[field] = userCache[userKey];
-          setImmediate(function () { eachCb(null); });
+          setImmediate(() => { eachCb(null); });
         } else {
           debug('cache miss', field, userKey);
           userCacheStats('user', 'MISS');
-          getUser(keyspace, userKey, function (err, user) {
+          getUser(keyspace, userKey, (err, user) => {
             item[field] = user;
             userCache[userKey] = user;
             userCacheStats('user', 'SET');
             eachCb(err);
           });
         }
-      }, function (err) {
+      }, (err) => {
         if (err) {
           return cb(err);
         }
@@ -219,7 +219,7 @@ module.exports = function (api) {
 
     if (Array.isArray(itemOrItems)) {
       // Sort to ensure we always replace the longest first
-      async.mapSeries(itemOrItems, getUsersForFields, function (err, result) {
+      async.mapSeries(itemOrItems, getUsersForFields, (err, result) => {
         if (err) {
           return next(err);
         }
@@ -228,9 +228,9 @@ module.exports = function (api) {
     } else {
       getUsersForFields(itemOrItems, next);
     }
-  }
+  };
 
-  function getUserRelationship (keyspace, user, other_user, next) {
+  const getUserRelationship = (keyspace, user, other_user, next) => {
     async.parallel({
       friend: async.apply(api.friend.isFriend, keyspace, user, other_user),
       friendRequest: async.apply(api.friend.isFriendRequestPending, keyspace, user, other_user),
@@ -239,10 +239,10 @@ module.exports = function (api) {
       inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user),
       followerCount: async.apply(api.follow.followerCount, keyspace, other_user),
       followingCount: async.apply(api.follow.followingCount, keyspace, other_user)
-    }, function (err, result) {
+    }, (err, result) => {
       if (err) { return next(err); }
 
-      var relationship = {
+      const relationship = {
         isFriend: result.friend[0],
         isFriendSince: result.friend[1],
         isFriendRequestPending: result.friendRequest[0],
@@ -265,10 +265,10 @@ module.exports = function (api) {
       next(null, relationship);
     });
     api.metrics.increment('user.relationship');
-  }
+  };
 
-  function removeUser (keyspace, userid, next) {
-    getUser(keyspace, userid, function (err, user) {
+  const removeUser = (keyspace, userid, next) => {
+    getUser(keyspace, userid, (err, user) => {
       if (err) { return next(err); }
       async.parallel({
         feed: async.apply(api.feed.removeFeedsForItem, keyspace, user.user),
@@ -279,22 +279,22 @@ module.exports = function (api) {
         posts: async.apply(api.post.removePostsByUser, keyspace, user.user),
         comments: async.apply(api.comment.deleteCommentsByUser, keyspace, user.user),
         likes: async.apply(api.like.deleteLikesByUser, keyspace, user.user)
-      }, function (err) {
+      }, (err) => {
         console.log('err', err);
         if (err) { return next(err); }
 
-        var cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
-        async.map(cachedItems, client.deleteCacheItem, function (err) {
+        const cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+        async.map(cachedItems, client.deleteCacheItem, (err) => {
           if (err) return next(err);
 
-          client.execute(q(keyspace, 'removeUser'), [user.user], function (err) {
+          client.execute(q(keyspace, 'removeUser'), [user.user], (err) => {
             if (err) return next(err);
             next(null, { status: 'removed' });
           });
         });
       });
     });
-  }
+  };
 
   return {
     addUser: addUser,
