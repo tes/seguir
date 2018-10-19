@@ -8,7 +8,7 @@ const redisCache = require('./cache');
 const async = require('async');
 const _ = require('lodash');
 
-function createClient (config, next) {
+const createClient = (config, next) => {
   redisCache(config, (err, cache) => {
     if (err) {
       /* Purposeful ignore of err - never sent */
@@ -21,7 +21,7 @@ function createClient (config, next) {
     }
 
     const client = new cassandra.Client(cassandraConfig);
-    client.on('log', function (level, className, message) {
+    client.on('log', (level, className, message) => {
       debugDriver('log event: %s -- %s', level, message);
     });
 
@@ -123,7 +123,7 @@ function createClient (config, next) {
           client.batch(_.map(queries, 'query'), {prepare: true}, (err) => {
             if (err) { return next(err); }
             // Clear the cache on batch if we have a cache key
-            async.each(queries, function (query, cb) { cache.del(query.cacheKey, cb); }, next);
+            async.each(queries, (query, cb) => { cache.del(query.cacheKey, cb); }, next);
           });
         }
       };
@@ -181,6 +181,6 @@ function createClient (config, next) {
       });
     });
   });
-}
+};
 
 module.exports = createClient;

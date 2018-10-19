@@ -1,10 +1,10 @@
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-module.exports = function (next) {
-  var config;
+module.exports = (next) => {
+  let config;
   if (process.env.SEGUIR_CONFIG) {
-    var configPath = path.resolve(process.env.SEGUIR_CONFIG);
+    const configPath = path.resolve(process.env.SEGUIR_CONFIG);
     console.log('Using config in: ' + configPath);
     if (fs.existsSync(configPath)) {
       config = require(configPath);
