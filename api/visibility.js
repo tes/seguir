@@ -17,7 +17,7 @@ module.exports = {
     return QUERY_PREFIX + (isFriend ? PRIVATE : PUBLIC);
   },
   // nothing to see here - move along.
-  mapToParameters: function (isUser, isFriend) {
+  mapToParameters: (isUser, isFriend) => {
     if (isUser) {
       return {PUBLIC: PUBLIC, PRIVATE: PRIVATE, PERSONAL: PERSONAL};
     }
