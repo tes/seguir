@@ -104,15 +104,15 @@ module.exports = function (api) {
         next(api.common.error(404, 'Unable to find group by id: ' + group));
         return;
       }
-      if (!liu) {
-        next(null, result);
-        return;
-      }
       client.get(q(keyspace, 'selectCount', {TYPE: 'member'}), [group.toString()], {cacheKey: 'count:member:' + group}, function (err, countItems) {
         if (err) { return next(err); }
 
         if (countItems && +countItems.count > 0) {
           result.memberCount = +countItems.count;
+          if (!liu) {
+            next(null, result);
+            return;
+          }
           api.common.isUserGroupMember(keyspace, liu, group, function (err) {
             if (!err) {
               result.isMember = true;
