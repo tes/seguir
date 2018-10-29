@@ -100,9 +100,9 @@ module.exports = (api) => {
     // If the action is personal do not copy out to groups feeds
     if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
 
-    function processRow (row, cb) {
+    const processRow = (row, cb) => {
       upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
-    }
+    };
 
     client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], (err, stream) => {
       if (err) { return next(err); }
@@ -135,9 +135,9 @@ module.exports = (api) => {
       }
     };
 
-    function processRow (row, cb) {
+    const processRow = (row, cb) => {
       upsertFeedTimelineFromGroup(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, jobData.group, () => { nextIfFinished(false, cb); });
-    }
+    };
 
     client.stream(q(jobData.keyspace, 'selectGroupMembers'), [jobData.group], (err, stream) => {
       if (err) { return next(err); }
@@ -665,7 +665,7 @@ module.exports = (api) => {
             followCache[item.from_follow.toString()] = 'active';
             expand(item, cb);
           });
-        }, function (err, results) {
+        }, (err, results) => {
           /* Ensure caches clear */
           followCache = null;
 

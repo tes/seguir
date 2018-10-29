@@ -8,68 +8,68 @@ const _ = require('lodash');
 
 let cleaned = false;
 
-function setupApi (keyspace, config, next) {
-  Api(config, function (err, api) {
+const setupApi = (keyspace, config, next) => {
+  Api(config, (err, api) => {
     if (err) { return next(err); }
     console.log('   Setting up keyspace in ' + api.client.type + '...');
-    api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', function (err, migrations) {
+    api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', (err, migrations) => {
       if (err) { return next(err); }
       const truncate = migrations.length === 0 && !process.env.CLEAN && !(process.env.CLEAN_ONCE && !cleaned);
       api.client.truncate = truncate;
-      api.client.setup.setupTenant(api.client, keyspace, truncate, function (err) {
+      api.client.setup.setupTenant(api.client, keyspace, truncate, (err) => {
         if (err) { return next(err); }
         if (!truncate) { cleaned = true; }
-        api.migrations.applyMigrations(migrations, function (err) {
+        api.migrations.applyMigrations(migrations, (err) => {
           if (err) { return next(err); }
           next(null, api);
         });
       });
     });
   });
-}
+};
 
-function setupUsers (keyspace, api, users, next) {
+const setupUsers = (keyspace, api, users, next) => {
   let userMap = {};
-  async.map(users, function (user, cb) {
+  async.map(users, (user, cb) => {
     api.user.addUser(keyspace, user.username, user.altid, {userdata: {'age': 15}}, cb);
-  }, function (err, results) {
+  }, (err, results) => {
     if (err) { return next(err); }
-    results.forEach(function (user) {
+    results.forEach((user) => {
       userMap[user.username] = user;
     });
     next(null, userMap);
   });
-}
+};
 
-function setupGraph (keyspace, api, users, actions, next) {
-  function addFollow (follow, cb) {
+const setupGraph = (keyspace, api, users, actions, next) => {
+  const addFollow = (follow, cb) => {
     api.follow.addFollower(keyspace, users[follow.user].user, users[follow.user_follower].user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, follow.backfill, cb);
-  }
+  };
 
-  function addFriend (friend, cb) {
+  const addFriend = (friend, cb) => {
     api.friend.addFriend(keyspace, users[friend.user].user, users[friend.user_friend].user, api.client.getTimestamp(), cb);
-  }
+  };
 
-  function addPost (post, cb) {
+  const addPost = (post, cb) => {
     api.post.addPost(keyspace, users[post.user].user, post.content, post.contentType, post.timestamp || api.client.getTimestamp(), post.visibility || api.visibility.PUBLIC, cb);
-  }
+  };
 
-  function addLike (like, cb) {
+  const addLike = (like, cb) => {
     cb();
     // api.like.createLike(keyspace, users[like.user].user, like.item, api.client.getTimestamp(), cb);
-  }
+  };
 
-  async.mapSeries(actions, function (action, cb) {
+  async.mapSeries(actions, (action, cb) => {
     if (action.type === 'follow') { return addFollow(action, cb); }
     if (action.type === 'friend') { return addFriend(action, cb); }
     if (action.type === 'post') { return addPost(action, cb); }
     if (action.type === 'like') { return addLike(action, cb); }
     return cb(null);
-  }, function (err, results) {
+  }, (err, results) => {
     if (err) return next(err);
     const actionResults = _.zipObject(_.map(actions, 'key'), results);
     // We need to add pseudo items for reciprocal friendships
-    _.mapKeys(actions, function (result, key) {
+    _.mapKeys(actions, (result, key) => {
       if (result.reciprocal) {
         const reciprocal = actionResults[result.key].reciprocal;
         const reciprocalKey = result.reciprocal;
@@ -78,11 +78,11 @@ function setupGraph (keyspace, api, users, actions, next) {
     });
     next(null, actionResults);
   });
-}
+};
 
-function assertFeed (feed, actionResults, expected) {
-  const feedKeys = _.map(feed, function (item) { return {item: item._item, type: item.type}; });
-  const expectedFeed = _.map(expected, function (key) {
+const assertFeed = (feed, actionResults, expected) => {
+  const feedKeys = _.map(feed, (item) => { return {item: item._item, type: item.type}; });
+  const expectedFeed = _.map(expected, (key) => {
     let type;
     // This is due to no common identifier and type - we should refactor to add these
     if (!actionResults[key]) { return; }
@@ -93,7 +93,7 @@ function assertFeed (feed, actionResults, expected) {
     return {item: actionResults[key][type], type: type};
   });
   expect(feedKeys).to.eql(expectedFeed);
-}
+};
 
 module.exports = {
   setupApi: setupApi,

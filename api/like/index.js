@@ -89,7 +89,7 @@ module.exports = (api) => {
   };
 
   const checkLike = (keyspace, user, item, next) => {
-    likeCount(keyspace, item, function (err, count) {
+    likeCount(keyspace, item, (err, count) => {
       if (err) { return next(err); }
       if (!user) {
         return next(null, {

@@ -100,7 +100,7 @@ module.exports = (api) => {
       if (err) { return next(err); }
       async.map(usersToFollow, (userToFollow, cb) => {
         debug(user.user + ' >> FOLLOW >> ' + userToFollow);
-        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, function (err, follow) {
+        api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, (err, follow) => {
           if (err) { return cb(err); }
           api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, follow, cb);
         });

@@ -149,7 +149,7 @@ module.exports = (api) => {
   };
 
   const getFriends = (keyspace, liu, user, next) => {
-    isFriend(keyspace, user, liu, function (err, ok) {
+    isFriend(keyspace, user, liu, (err, ok) => {
       if (err) { return next(err); }
       if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
       api.common.get(keyspace, 'selectFriends', [user], 'many', (err, friends) => {

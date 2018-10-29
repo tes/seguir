@@ -24,7 +24,7 @@ const generateSecret = (appid, next) => {
 };
 
 const hashPassword = (password, next) => {
-  bcrypt.genSalt(10, function (err, salt) {
+  bcrypt.genSalt(10, (err, salt) => {
     if (err) { return next(err); }
     bcrypt.hash(password, salt, next);
   });
