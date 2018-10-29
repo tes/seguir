@@ -9,26 +9,26 @@
 
 /* eslint-env node, mocha */
 
-var keyspace = 'test_seguir_app_api';
-var expect = require('expect.js');
-var initialiser = require('../../fixtures/initialiser');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
-var _ = require('lodash');
+const keyspace = 'test_seguir_app_api';
+const expect = require('expect.js');
+const initialiser = require('../../fixtures/initialiser');
+const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
+const _ = require('lodash');
 
-databases.forEach(function (db) {
-  var config = _.clone(require('../../fixtures/' + db + '.json'));
+databases.forEach((db) => {
+  const config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe('API [Feeds] - ' + db, function () {
     this.timeout(20000);
     this.slow(5000);
 
-    var api;
-    var users = {};
+    let api;
+    let users = {};
 
-    before(function (done) {
+    before((done) => {
       this.timeout(20000);
-      initialiser.setupApi(keyspace, config, function (err, seguirApi) {
+      initialiser.setupApi(keyspace, config, (err, seguirApi) => {
         expect(err).to.be(null);
         api = seguirApi;
         initialiser.setupUsers(keyspace, api, [
@@ -42,7 +42,7 @@ databases.forEach(function (db) {
           {username: 'json', altid: '8'},
           {username: 'backfill', altid: '9'},
           {username: 'backfill-follower', altid: '10'}
-        ], function (err, userMap) {
+        ], (err, userMap) => {
           expect(err).to.be(null);
           users = userMap;
           done();
@@ -50,11 +50,11 @@ databases.forEach(function (db) {
       });
     });
 
-    describe('feeds', function () {
-      var actionResults = {};
+    describe('feeds', () => {
+      let actionResults = {};
 
-      before(function (done) {
-        var actions = [
+      before((done) => {
+        const actions = [
           {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
           {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
           {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
@@ -111,7 +111,7 @@ databases.forEach(function (db) {
           {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
         ];
 
-        initialiser.setupGraph(keyspace, api, users, actions, function (err, results) {
+        initialiser.setupGraph(keyspace, api, users, actions, (err, results) => {
           expect(err).to.be(null);
           actionResults = results;
           done();
@@ -120,10 +120,10 @@ databases.forEach(function (db) {
 
       this.timeout(10000);
 
-      it('logged in - can get a feed for yourself that is in the correct order', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
+      it('logged in - can get a feed for yourself that is in the correct order', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'friend-2',
             'friend-1',
@@ -136,10 +136,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a feed for yourself that is paginated in the correct order', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, {pageSize: 4}, function (err, feed, pageState1) {
+      it('logged in - can get a feed for yourself that is paginated in the correct order', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, {pageSize: 4}, (err, feed, pageState1) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'friend-2',
             'friend-1',
@@ -148,10 +148,10 @@ databases.forEach(function (db) {
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           expect(pageState1).not.to.be(null);
-          var pagination = {pageSize: 4, pageState: pageState1};
-          api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, pagination, function (err, feed, pageState2) {
+          const pagination = {pageSize: 4, pageState: pageState1};
+          api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, pagination, (err, feed, pageState2) => {
             expect(err).to.be(null);
-            var expected = [
+            const expected = [
               'post-old'
             ];
             initialiser.assertFeed(feed, actionResults, expected);
@@ -161,10 +161,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a feed for a friend that is in the correct order', function (done) {
-        api.feed.getFeed(keyspace, users['phteven'].user, users['cliftonc'].user, function (err, feed) {
+      it('logged in - can get a feed for a friend that is in the correct order', (done) => {
+        api.feed.getFeed(keyspace, users['phteven'].user, users['cliftonc'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'friend-2',
             'friend-1',
@@ -177,10 +177,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a backfilled feed', function (done) {
-        api.feed.getFeed(keyspace, users['backfill-follower'].user, users['backfill-follower'].user, function (err, feed) {
+      it('logged in - can get a backfilled feed', (done) => {
+        api.feed.getFeed(keyspace, users['backfill-follower'].user, users['backfill-follower'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'follow-backfill',
             'post-backfill-3',
             'post-backfill-2'
@@ -190,10 +190,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a feed for a friend and follower that is in the correct order', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, function (err, feed) {
+      it('logged in - can get a feed for a friend and follower that is in the correct order', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'post-public',
             'reciprocal-friend-1',
@@ -205,10 +205,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a feed for a follower that is not a friend in the correct order', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['ted'].user, function (err, feed) {
+      it('logged in - can get a feed for a follower that is not a friend in the correct order', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['ted'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'follow-2',
             'post-old'
@@ -218,10 +218,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('anonymous - can get a feed that is in correct order', function (done) {
-        api.feed.getFeed(keyspace, null, users['cliftonc'].user, function (err, feed) {
+      it('anonymous - can get a feed that is in correct order', (done) => {
+        api.feed.getFeed(keyspace, null, users['cliftonc'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'follow-2',
             'follow-1',
@@ -232,10 +232,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can see private follows as the user', function (done) {
-        api.feed.getFeed(keyspace, users['harold'].user, users['harold'].user, function (err, feed) {
+      it('can see private follows as the user', (done) => {
+        api.feed.getFeed(keyspace, users['harold'].user, users['harold'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'reciprocal-friend-2',
             'follow-private'
           ];
@@ -244,19 +244,19 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can not see private follows as the anonymous user', function (done) {
-        api.feed.getFeed(keyspace, null, users['harold'].user, function (err, feed) {
+      it('can not see private follows as the anonymous user', (done) => {
+        api.feed.getFeed(keyspace, null, users['harold'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [];
+          const expected = [];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
         });
       });
 
-      it('can see personal follows as the user', function (done) {
-        api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, function (err, feed) {
+      it('can see personal follows as the user', (done) => {
+        api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-personal',
@@ -267,10 +267,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('cant see personal follows as another user', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['alfred'].user, function (err, feed) {
+      it('cant see personal follows as another user', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['alfred'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-3'
@@ -280,10 +280,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('cant see personal follows as the anonymous user', function (done) {
-        api.feed.getFeed(keyspace, null, users['alfred'].user, function (err, feed) {
+      it('cant see personal follows as the anonymous user', (done) => {
+        api.feed.getFeed(keyspace, null, users['alfred'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-3'
@@ -293,10 +293,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can see personal follows as the following user', function (done) {
-        api.feed.getFeed(keyspace, users['jenny'].user, users['jenny'].user, function (err, feed) {
+      it('can see personal follows as the following user', (done) => {
+        api.feed.getFeed(keyspace, users['jenny'].user, users['jenny'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'follow-personal'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
@@ -304,10 +304,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can get a feed for yourself contains mentions', function (done) {
-        api.feed.getFeed(keyspace, users['bill'].user, users['bill'].user, function (err, feed) {
+      it('can get a feed for yourself contains mentions', (done) => {
+        api.feed.getFeed(keyspace, users['bill'].user, users['bill'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-private',
@@ -318,10 +318,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can get a feed for yourself that contains posts you were mentioned in', function (done) {
-        api.feed.getFeed(keyspace, users['json'].user, users['json'].user, function (err, feed) {
+      it('can get a feed for yourself that contains posts you were mentioned in', (done) => {
+        api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
@@ -329,10 +329,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('cant see follows or mentions on a users personal feed, only direct items', function (done) {
-        api.feed.getUserFeed(keyspace, null, users['cliftonc'].user, function (err, feed) {
+      it('cant see follows or mentions on a users personal feed, only direct items', (done) => {
+        api.feed.getUserFeed(keyspace, null, users['cliftonc'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             // 'like-google',
             'follow-2',
             'follow-1',
@@ -343,10 +343,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a users personal feed as the user and see direct actions', function (done) {
-        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, function (err, feed) {
+      it('logged in - can get a users personal feed as the user and see direct actions', (done) => {
+        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-private',
@@ -357,20 +357,20 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a users personal feed as the user and see direct actions', function (done) {
-        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, {pageSize: 3}, function (err, feed, pageState1) {
+      it('logged in - can get a users personal feed as the user and see direct actions', (done) => {
+        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, {pageSize: 3}, (err, feed, pageState1) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-mention-follower',
             'post-mention',
             'follow-private'
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           expect(pageState1).not.to.be(null);
-          var pagination = {pageSize: 3, pageState: pageState1};
-          api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, pagination, function (err, feed, pageState2) {
+          const pagination = {pageSize: 3, pageState: pageState1};
+          api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, pagination, (err, feed, pageState2) => {
             expect(err).to.be(null);
-            var expected = [
+            const expected = [
               'follow-3'
             ];
             initialiser.assertFeed(feed, actionResults, expected);
@@ -380,10 +380,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('logged in - can get a users personal feed as a friend and see direct items private or public', function (done) {
-        api.feed.getUserFeed(keyspace, users['cliftonc'].user, users['phteven'].user, function (err, feed) {
+      it('logged in - can get a users personal feed as a friend and see direct items private or public', (done) => {
+        api.feed.getUserFeed(keyspace, users['cliftonc'].user, users['phteven'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-public',
             'reciprocal-friend-1',
             'follow-1'
@@ -393,10 +393,10 @@ databases.forEach(function (db) {
         });
       });
 
-      it('anonymous - can get a users personal feed anonymously and only see direct, public items', function (done) {
-        api.feed.getUserFeed(keyspace, null, users['phteven'].user, function (err, feed) {
+      it('anonymous - can get a users personal feed anonymously and only see direct, public items', (done) => {
+        api.feed.getUserFeed(keyspace, null, users['phteven'].user, (err, feed) => {
           expect(err).to.be(null);
-          var expected = [
+          const expected = [
             'post-public',
             'follow-1'
           ];
@@ -405,12 +405,12 @@ databases.forEach(function (db) {
         });
       });
 
-      it('if you unfollow someone their items are no longer visible in your feed', function (done) {
-        api.follow.removeFollower(keyspace, users['cliftonc'].user, users['phteven'].user, function (err) {
+      it('if you unfollow someone their items are no longer visible in your feed', (done) => {
+        api.follow.removeFollower(keyspace, users['cliftonc'].user, users['phteven'].user, (err) => {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, function (err, feed) {
+          api.feed.getFeed(keyspace, users['cliftonc'].user, users['phteven'].user, (err, feed) => {
             expect(err).to.be(null);
-            var expected = [
+            const expected = [
               'post-public',
               'reciprocal-friend-1'
             ];
@@ -420,13 +420,13 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can remove feed items older than a specific time', function (done) {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
+      it('can remove feed items older than a specific time', (done) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
           expect(err).to.be(null);
-          var feedLength = feed.length;
-          api.feed.removeFeedsOlderThan(keyspace, users['cliftonc'].user, new Date(2015, 10, 1), function (err) {
+          const feedLength = feed.length;
+          api.feed.removeFeedsOlderThan(keyspace, users['cliftonc'].user, new Date(2015, 10, 1), (err) => {
             expect(err).to.be(null);
-            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, function (err, feed) {
+            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
               expect(err).to.be(null);
               expect(feed.length).to.be(feedLength - 1);
               done();
