@@ -3,11 +3,11 @@ Migrations for the core seguir schema are placed here, of the form:
 ```
 // 1_migration-description.js
 
-function apply (keyspace, api, next) {
+const apply = (keyspace, api, next) => {
   next(null);
 }
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
 }
 
