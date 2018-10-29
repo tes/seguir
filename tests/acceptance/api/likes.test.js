@@ -4,27 +4,27 @@
 
 /* eslint-env node, mocha */
 
-var keyspace = 'test_seguir_app_api';
-var expect = require('expect.js');
-var initialiser = require('../../fixtures/initialiser');
-var databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
-var _ = require('lodash');
+const keyspace = 'test_seguir_app_api';
+const expect = require('expect.js');
+const initialiser = require('../../fixtures/initialiser');
+const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
+const _ = require('lodash');
 
-databases.forEach(function (db) {
-  var config = _.clone(require('../../fixtures/' + db + '.json'));
+databases.forEach((db) => {
+  const config = _.clone(require('../../fixtures/' + db + '.json'));
   config.keyspace = keyspace;
 
   describe.skip('API [Likes] - ' + db, function () {
     this.timeout(20000);
     this.slow(5000);
 
-    var api;
-    var users = {};
-    var likeId;
+    let api;
+    let users = {};
+    let likeId;
 
-    before(function (done) {
+    before((done) => {
       this.timeout(20000);
-      initialiser.setupApi(keyspace, config, function (err, seguirApi) {
+      initialiser.setupApi(keyspace, config, (err, seguirApi) => {
         expect(err).to.be(null);
         api = seguirApi;
         initialiser.setupUsers(keyspace, api, [
@@ -36,7 +36,7 @@ databases.forEach(function (db) {
           {username: 'jenny', altid: '6'},
           {username: 'alfred', altid: '7'},
           {username: 'json', altid: '8'}
-        ], function (err, userMap) {
+        ], (err, userMap) => {
           expect(err).to.be(null);
           users = userMap;
           done();
@@ -44,9 +44,9 @@ databases.forEach(function (db) {
       });
     });
 
-    describe('likes', function () {
-      it('can like an item from a user', function (done) {
-        api.like.addLike(keyspace, users['cliftonc'].user, 'http://github.com', api.client.getTimestamp(), function (err, like) {
+    describe('likes', () => {
+      it('can like an item from a user', (done) => {
+        api.like.addLike(keyspace, users['cliftonc'].user, 'http://github.com', api.client.getTimestamp(), (err, like) => {
           expect(err).to.be(null);
           expect(like.item).to.be('http://github.com');
           likeId = like.like;
@@ -54,8 +54,8 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can retrieve a like by id', function (done) {
-        api.like.getLike(keyspace, likeId, function (err, like) {
+      it('can retrieve a like by id', (done) => {
+        api.like.getLike(keyspace, likeId, (err, like) => {
           expect(err).to.be(null);
           expect(like.item).to.be('http://github.com');
           expect(like.user).to.eql(users['cliftonc']);
@@ -63,8 +63,8 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can check if a user likes an item', function (done) {
-        api.like.checkLike(keyspace, users['cliftonc'].user, 'http://github.com', function (err, like) {
+      it('can check if a user likes an item', (done) => {
+        api.like.checkLike(keyspace, users['cliftonc'].user, 'http://github.com', (err, like) => {
           expect(err).to.be(null);
           expect(like.like).to.eql(likeId);
           expect(like.user).to.eql(users['cliftonc']);
@@ -73,8 +73,8 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can check if a user likes an item if they dont like it', function (done) {
-        api.like.checkLike(keyspace, users['jenny'].user, 'http://github.com', function (err, like) {
+      it('can check if a user likes an item if they dont like it', (done) => {
+        api.like.checkLike(keyspace, users['jenny'].user, 'http://github.com', (err, like) => {
           expect(err).to.be(null);
           expect(like.like).to.be(undefined);
           expect(like.user).to.eql(users['jenny']);
@@ -83,8 +83,8 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can check if a user likes an item that has never been liked', function (done) {
-        api.like.checkLike(keyspace, users['jenny'].user, 'http://google.com', function (err, like) {
+      it('can check if a user likes an item that has never been liked', (done) => {
+        api.like.checkLike(keyspace, users['jenny'].user, 'http://google.com', (err, like) => {
           expect(err).to.be(null);
           expect(like.like).to.be(undefined);
           expect(like.user).to.eql(users['jenny']);
@@ -93,14 +93,14 @@ databases.forEach(function (db) {
         });
       });
 
-      it('can add and remove a like', function (done) {
-        api.like.addLike(keyspace, users['jenny'].user, 'http://seguir.calip.so', api.client.getTimestamp(), function (err, like) {
+      it('can add and remove a like', (done) => {
+        api.like.addLike(keyspace, users['jenny'].user, 'http://seguir.calip.so', api.client.getTimestamp(), (err, like) => {
           expect(err).to.be(null);
-          api.like.removeLike(keyspace, users['jenny'].user, 'http://seguir.calip.so', function (err, result) {
+          api.like.removeLike(keyspace, users['jenny'].user, 'http://seguir.calip.so', (err, result) => {
             expect(err).to.be(null);
-            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, function (err, feed) {
+            api.feed.getRawFeed(keyspace, users['jenny'].user, users['jenny'].user, (err, feed) => {
               expect(err).to.be(null);
-              var ids = _.map(_.map(feed, 'item'), function (item) { return item.toString(); });
+              const ids = _.map(_.map(feed, 'item'), (item) => { return item.toString(); });
               expect(ids).to.not.contain(like.like.toString());
               done();
             });
