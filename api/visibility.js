@@ -19,11 +19,11 @@ module.exports = {
   // nothing to see here - move along.
   mapToParameters: (isUser, isFriend) => {
     if (isUser) {
-      return {PUBLIC: PUBLIC, PRIVATE: PRIVATE, PERSONAL: PERSONAL};
+      return { PUBLIC, PRIVATE, PERSONAL };
     }
     if (isFriend) {
-      return {PUBLIC: PUBLIC, PRIVATE: PRIVATE, PERSONAL: PRIVATE};
+      return { PUBLIC, PRIVATE, PERSONAL: PRIVATE };
     }
-    return {PUBLIC: PUBLIC, PRIVATE: PUBLIC, PERSONAL: PUBLIC};
-  }
+    return { PUBLIC, PRIVATE: PUBLIC, PERSONAL: PUBLIC };
+  },
 };

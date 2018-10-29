@@ -56,7 +56,7 @@ const createClient = (config, next) => {
 
     const stream = (query, data, next) => {
       debug('stream', query, data);
-      return next(null, client.stream(query, data, {prepare: true, autoPage: true, fetchSize: 1000}));
+      return next(null, client.stream(query, data, { prepare: true, autoPage: true, fetchSize: 1000 }));
     };
 
     const execute = (query, data, options, next) => {
@@ -76,7 +76,7 @@ const createClient = (config, next) => {
         prepare: true,
         hints: options.hints,
         fetchSize: options.pageSize,
-        pageState: options.pageState
+        pageState: options.pageState,
       };
 
       debug('execute', query, data);
@@ -111,21 +111,21 @@ const createClient = (config, next) => {
     const batch = () => {
       const queries = [];
       return {
-        addQuery (query, data, cacheKey) {
-          queries.push({query: {query: query, params: data}, cacheKey: cacheKey});
+        addQuery(query, data, cacheKey) {
+          queries.push({ query: { query, params: data }, cacheKey });
           return this;
         },
-        execute (next) {
+        execute(next) {
           _.each(queries, (query) => {
             debug('batch', query.query, query.params);
           });
 
-          client.batch(_.map(queries, 'query'), {prepare: true}, (err) => {
+          client.batch(_.map(queries, 'query'), { prepare: true }, (err) => {
             if (err) { return next(err); }
             // Clear the cache on batch if we have a cache key
             async.each(queries, (query, cb) => { cache.del(query.cacheKey, cb); }, next);
           });
-        }
+        },
       };
     };
 
@@ -166,18 +166,18 @@ const createClient = (config, next) => {
         flushCache: cache.flush,
         cacheStats: cache.stats,
         resetStats: cache.resetStats,
-        generateId: generateId,
-        generateTimeId: generateTimeId,
+        generateId,
+        generateTimeId,
         isValidId,
         formatId,
         getTimestamp,
         migrations: path.resolve(__dirname, 'migrations'),
         queries: require('./queries'),
         setup: require('./setup'),
-        get batch () {
+        get batch() {
           return batch();
         },
-        stream
+        stream,
       });
     });
   });

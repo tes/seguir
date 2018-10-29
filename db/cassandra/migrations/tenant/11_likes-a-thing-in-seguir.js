@@ -6,7 +6,7 @@ const apply = (keyspace, api, next) => {
 
     'CREATE TABLE ' + keyspace + '.likes (like uuid, user uuid, item uuid, since timestamp, PRIMARY KEY (user, item))',
 
-    'CREATE INDEX ON ' + keyspace + '.likes(like)'
+    'CREATE INDEX ON ' + keyspace + '.likes(like)',
   ];
   async.mapSeries(cqls, api.client.execute, next);
 };
@@ -17,5 +17,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };

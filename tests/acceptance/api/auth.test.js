@@ -4,24 +4,29 @@
 /* eslint-env node, mocha */
 
 const expect = require('expect.js');
-const Api = require('../../../api');
+const apiInit = require('../../../api');
 const authUtils = require('../../../api/auth/utils');
 const _ = require('lodash');
 const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-redis'];
 const keyspace = 'test_seguir_auth';
 
 databases.forEach((db) => {
-  const config = _.clone(require('../../fixtures/' + db + '.json'));
+  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
   config.keyspace = keyspace;
 
-  describe('API [Account and Application] - ' + db, function () {
-    let api, auth, accountId, userId, appId, tokenId;
+  describe(`API [Account and Application] - ${db}`, function () {
+    let api;
+    let auth;
+    let accountId;
+    let userId;
+    let appId;
+    let tokenId;
 
     this.timeout(20000);
     this.slow(5000);
 
     before((done) => {
-      Api(config, (err, seguirApi) => {
+      apiInit(config, (err, seguirApi) => {
         expect(err).to.be(null);
         api = seguirApi;
         auth = api.auth;
@@ -50,7 +55,7 @@ databases.forEach((db) => {
       });
 
       it('can disable accounts', (done) => {
-        auth.updateAccount(accountId, 'bob', true, false, (err, account) => {
+        auth.updateAccount(accountId, 'bob', true, false, (err) => {
           expect(err).to.be(null);
           auth.getAccount(accountId, (err, account) => {
             expect(err).to.be(null);
@@ -106,7 +111,7 @@ databases.forEach((db) => {
       });
 
       it('cant login a user who is not enabled', (done) => {
-        auth.addAccountUser(accountId, 'test2', 'password', false, (err, user) => {
+        auth.addAccountUser(accountId, 'test2', 'password', false, (err) => {
           expect(err).to.be(null);
           auth.loginUser('test2', 'password', (err, login) => {
             expect(err).to.be(null);
@@ -183,7 +188,8 @@ databases.forEach((db) => {
     });
 
     describe('Server access checks', () => {
-      let application, token;
+      let application;
+      let token;
 
       before((done) => {
         auth.addApplication(accountId, 'another application', (err, anotherApplication) => {
@@ -206,10 +212,10 @@ databases.forEach((db) => {
       });
 
       it('can check if a provided user id is valid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc1', '1', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc1', '1', {}, (err, user) => {
           expect(err).to.be(null);
           userId = user.user;
-          auth.checkUser(config.keyspace + '_' + application.appkeyspace, user.user, (err, checkedUser) => {
+          auth.checkUser(`${config.keyspace}_${application.appkeyspace}`, user.user, (err, checkedUser) => {
             expect(err).to.be(null);
             expect(checkedUser.user).to.eql(user.user);
             done();
@@ -218,9 +224,9 @@ databases.forEach((db) => {
       });
 
       it('can check if a provided user id is valid - if passed an altid instead of a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc2', '2', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc2', '2', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.checkUser(config.keyspace + '_' + application.appkeyspace, '2', (err, checkedUser) => {
+          auth.checkUser(`${config.keyspace}_${application.appkeyspace}`, '2', (err, checkedUser) => {
             expect(err).to.be(null);
             expect(checkedUser.user).to.eql(user.user);
             done();
@@ -229,9 +235,9 @@ databases.forEach((db) => {
       });
 
       it('can check if a provided user id is valid - if passed a username instead of a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc3', '3', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc3', '3', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.checkUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc3', (err, checkedUser) => {
+          auth.checkUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc3', (err, checkedUser) => {
             expect(err).to.be(null);
             expect(checkedUser.user).to.eql(user.user);
             done();
@@ -240,9 +246,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce a display name to a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc4', '4', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc4', '4', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, 'cliftonc4', (err, id) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc4', (err, id) => {
             expect(err).to.be(null);
             expect(id).to.eql(user.user);
             done();
@@ -251,9 +257,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce an altid name to a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc5', '5', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc5', '5', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, '5', (err, id) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, '5', (err, id) => {
             expect(err).to.be(null);
             expect(id).to.eql(user.user);
             done();
@@ -262,9 +268,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce a uuid to a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc6', '6', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc6', '6', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, user.user, (err, id) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, user.user, (err, id) => {
             expect(err).to.be(null);
             expect(id).to.eql(user.user);
             done();
@@ -273,9 +279,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce a string uuid to a uuid', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc7', '7', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc7', '7', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, user.user.toString(), (err, id) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, user.user.toString(), (err, id) => {
             expect(err).to.be(null);
             expect(id).to.eql(user.user);
             done();
@@ -284,9 +290,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce an array of altids to uuids', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc8', '8', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc8', '8', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, ['8'], (err, ids) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, ['8'], (err, ids) => {
             expect(err).to.be(null);
             expect(ids[0]).to.eql(user.user);
             done();
@@ -295,7 +301,7 @@ databases.forEach((db) => {
       });
 
       it('returns null when coercing an empty id', (done) => {
-        auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, undefined, (err, id) => {
+        auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, undefined, (err, id) => {
           expect(err).to.be(null);
           expect(id).to.eql(null);
           done();
@@ -303,9 +309,9 @@ databases.forEach((db) => {
       });
 
       it('can coerce an array of altids to uuids, leaving gaps where empty ids were provided', (done) => {
-        api.user.addUser(config.keyspace + '_' + application.appkeyspace, 'cliftonc9', '9', {}, (err, user) => {
+        api.user.addUser(`${config.keyspace}_${application.appkeyspace}`, 'cliftonc9', '9', {}, (err, user) => {
           expect(err).to.be(null);
-          auth.coerceUserToUuid(config.keyspace + '_' + application.appkeyspace, [undefined, '9'], (err, ids) => {
+          auth.coerceUserToUuid(`${config.keyspace}_${application.appkeyspace}`, [undefined, '9'], (err, ids) => {
             expect(err).to.be(null);
             expect(ids[0]).to.eql(null);
             expect(ids[1]).to.eql(user.user);
@@ -316,12 +322,12 @@ databases.forEach((db) => {
 
       it('can check if a request has been signed by a valid client', (done) => {
         const request = {
-          headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret), {'x-seguir-user-token': userId})
+          headers: _.assign(authUtils.generateAuthorization(token.tokenid, token.tokensecret), { 'x-seguir-user-token': userId }),
         };
         const response = {
-          send: (response) => {
+          send: () => {
             // Not expected to be called
-          }
+          },
         };
         auth.checkRequest(request, response, (err) => {
           expect(err).to.be(null);
@@ -333,12 +339,12 @@ databases.forEach((db) => {
 
       it('can work with anonymous users', (done) => {
         const request = {
-          headers: authUtils.generateAuthorization(token.tokenid, token.tokensecret)
+          headers: authUtils.generateAuthorization(token.tokenid, token.tokensecret),
         };
         const response = {
-          send: (response) => {
+          send: () => {
             // Not expected to be called
-          }
+          },
         };
         auth.checkRequest(request, response, (err) => {
           expect(err).to.be(null);
@@ -350,11 +356,11 @@ databases.forEach((db) => {
 
       it('can fail requests with an invalid secret', (done) => {
         const request = {
-          headers: authUtils.generateAuthorization(token.tokenid, 'MY INVALID SECRET')
+          headers: authUtils.generateAuthorization(token.tokenid, 'MY INVALID SECRET'),
         };
         const response = {
-          send: (response) => {
-          }
+          send: () => {
+          },
         };
         auth.checkRequest(request, response, (err) => {
           // Not called

@@ -7,7 +7,7 @@ const apply = (keyspace, api, next) => {
     'CREATE INDEX ON ' + keyspace + '.followers_timeline(user_follower)',
     'CREATE INDEX ON ' + keyspace + '.followers_timeline(is_private)',
     'CREATE INDEX ON ' + keyspace + '.followers_timeline(is_personal)',
-    'CREATE INDEX ON ' + keyspace + '.followers_timeline(is_public)'
+    'CREATE INDEX ON ' + keyspace + '.followers_timeline(is_public)',
   ];
 
   async.series(
@@ -21,12 +21,12 @@ const apply = (keyspace, api, next) => {
         let done = false;
         const selectQuery = 'SELECT follow, user, user_follower, since, visibility FROM ' + keyspace + '.followers;';
         const insertQuery = 'INSERT INTO ' + keyspace + '.followers_timeline (follow, user, user_follower, time, since, is_private, is_personal, is_public) VALUES(?, ?, ?, ?, ?, ?, ?, ?);';
-        api.client._client.eachRow(selectQuery, [], {autoPage: true}, (index, row) => {
+        api.client._client.eachRow(selectQuery, [], { autoPage: true }, (index, row) => {
           read++;
           const isPrivate = api.visibility.isPrivate(row.visibility);
           const isPersonal = api.visibility.isPersonal(row.visibility);
           const isPublic = api.visibility.isPublic(row.visibility);
-          api.client.execute(insertQuery, [row.follow, row.user, row.user_follower, api.client.generateTimeId(row.since), row.since, isPrivate, isPersonal, isPublic], {prepare: true}, err => {
+          api.client.execute(insertQuery, [row.follow, row.user, row.user_follower, api.client.generateTimeId(row.since), row.since, isPrivate, isPersonal, isPublic], { prepare: true }, err => {
             if (err) {
               throw err;
             }
@@ -37,7 +37,7 @@ const apply = (keyspace, api, next) => {
         }, () => {
           done = true;
         });
-      }
+      },
     ], next);
 };
 
@@ -47,5 +47,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };

@@ -8,7 +8,7 @@ module.exports = (api) => {
 
   const getComment = (keyspace, liu, comment, next) => {
     debug('select comment:', 'comments', [comment]);
-    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, (err, result) => {
+    client.get(q(keyspace, 'selectComment'), [comment], { cacheKey: 'comment:' + comment }, (err, result) => {
       if (err || !result) { return next(err); }
 
       api.like.checkLike(keyspace, liu, comment, (err, likeStatus) => {
@@ -34,13 +34,13 @@ module.exports = (api) => {
         const newCommentTimelineRow = [post, client.generateTimeId(commented), comment];
         debug('insert into comments timeline:', 'comments_timeline', newCommentTimelineRow);
         client.execute(q(keyspace, 'insertCommentsTimeline'), newCommentTimelineRow, {}, cb);
-      }
+      },
     ], (err, results) => {
       if (err) { return next(err); }
 
       const countUpdate = [1, post.toString()];
       debug('update comment counts:', 'counts', countUpdate);
-      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + post}, err => {
+      client.execute(q(keyspace, 'updateCounter', { TYPE: 'comment' }), countUpdate, { cacheKey: 'count:comment:' + post }, err => {
         if (err) { return next(err); }
 
         api.metrics.increment('comment.add');
@@ -54,7 +54,7 @@ module.exports = (api) => {
 
   const updateComment = (keyspace, user, comment, commentdata, next) => {
     debug('select comment:', 'comments', [comment]);
-    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, (err, commentRecord) => {
+    client.get(q(keyspace, 'selectComment'), [comment], { cacheKey: 'comment:' + comment }, (err, commentRecord) => {
       if (err) { return next(err); }
       if (commentRecord.user.toString() !== user.toString()) {
         return next(new Error('Unable to update comment created by user ' + commentRecord.user));
@@ -62,7 +62,7 @@ module.exports = (api) => {
 
       const commentUpdate = [commentdata, comment];
       debug('update comment:', 'comments', commentUpdate);
-      client.execute(q(keyspace, 'updateComment'), commentUpdate, {cacheKey: 'comment:' + comment}, err => {
+      client.execute(q(keyspace, 'updateComment'), commentUpdate, { cacheKey: 'comment:' + comment }, err => {
         if (err) { return next(err); }
 
         getComment(keyspace, user, comment, (err, updatedComment) => {
@@ -76,17 +76,17 @@ module.exports = (api) => {
   const _deleteComment = (keyspace, comment, next) => {
     const commentDeletion = [comment.comment];
     debug('delete comment:', 'comments', commentDeletion);
-    client.execute(q(keyspace, 'deleteComment'), commentDeletion, {cacheKey: 'comment:' + comment.comment}, err => {
+    client.execute(q(keyspace, 'deleteComment'), commentDeletion, { cacheKey: 'comment:' + comment.comment }, err => {
       if (err) { return next(err); }
 
       const countUpdate = [-1, comment.post.toString()];
       debug('update comment counts:', 'counts', countUpdate);
-      client.execute(q(keyspace, 'updateCounter', {TYPE: 'comment'}), countUpdate, {cacheKey: 'count:comment:' + comment.post}, next);
+      client.execute(q(keyspace, 'updateCounter', { TYPE: 'comment' }), countUpdate, { cacheKey: 'count:comment:' + comment.post }, next);
     });
   };
 
   const deleteComment = (keyspace, user, comment, next) => {
-    client.get(q(keyspace, 'selectComment'), [comment], {cacheKey: 'comment:' + comment}, (err, commentRecord) => {
+    client.get(q(keyspace, 'selectComment'), [comment], { cacheKey: 'comment:' + comment }, (err, commentRecord) => {
       if (err) { return next(err); }
       if (commentRecord.user.toString() !== user.toString()) {
         return next(new Error('Unable to delete comment created by user ' + commentRecord.user));
@@ -106,7 +106,7 @@ module.exports = (api) => {
 
   // returns upto latest 5000 (default fetchSize of cassandra-driver) comments for a post
   const getComments = (keyspace, liu, post, next) => {
-    client.get(q(keyspace, 'selectCount', {TYPE: 'comment'}), [post.toString()], {cacheKey: 'count:comment:' + post}, (err, result) => {
+    client.get(q(keyspace, 'selectCount', { TYPE: 'comment' }), [post.toString()], { cacheKey: 'count:comment:' + post }, (err, result) => {
       if (err) { return next(err); }
 
       if (result && +result.count > 0) {
@@ -126,7 +126,7 @@ module.exports = (api) => {
               next(null, {
                 total: +result.count,
                 comments: commentsWithUser,
-                nextPageState: nextPageState
+                nextPageState,
               });
             });
           });
@@ -135,7 +135,7 @@ module.exports = (api) => {
         next(null, {
           total: 0,
           comments: [],
-          nextPageState: null
+          nextPageState: null,
         });
       }
     });
@@ -146,6 +146,6 @@ module.exports = (api) => {
     getComments,
     updateComment,
     deleteComment,
-    deleteCommentsByUser
+    deleteCommentsByUser,
   };
 };

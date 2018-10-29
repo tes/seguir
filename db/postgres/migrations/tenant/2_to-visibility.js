@@ -1,12 +1,12 @@
-function apply (keyspace, api, next) {
+function apply(keyspace, api, next) {
   next();
 }
 
-function rollback (keyspace, api, next) {
+function rollback(keyspace, api, next) {
   next();
 }
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback,
 };

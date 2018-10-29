@@ -35,7 +35,7 @@ const urls = {
   checkLike: '/user/:user/like/:item',
   removeLike: '/user/:user/like/:item',
   getFeed: '/feed/:user',
-  getUserFeed: '/feed/:user/direct'
+  getUserFeed: '/feed/:user/direct',
 };
 
 module.exports = (url, data) => {

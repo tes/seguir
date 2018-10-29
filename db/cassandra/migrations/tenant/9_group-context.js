@@ -16,7 +16,7 @@ const apply = (keyspace, api, next) => {
     'CREATE INDEX ON ' + keyspace + '.group_timeline (item)',
     'CREATE INDEX ON ' + keyspace + '.group_timeline (type)',
 
-    'ALTER TABLE ' + keyspace + '.feed_timeline ADD from_group uuid'
+    'ALTER TABLE ' + keyspace + '.feed_timeline ADD from_group uuid',
   ];
   async.mapSeries(cqls, api.client.execute, next);
 };
@@ -27,5 +27,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };

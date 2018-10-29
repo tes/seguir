@@ -22,7 +22,7 @@ module.exports = api => {
   const getMigrationsToApply = (next) => {
     async.series([
       async.apply(getMigrationsToApplyToKeyspace, api.config.keyspace, 'seguir'),
-      async.apply(getApplicationMigrationsToApply, api.config.keyspace)
+      async.apply(getApplicationMigrationsToApply, api.config.keyspace),
     ], (err, results) => {
       if (err) return next(err);
       const migrations = _.union(results[0], results[1]);
@@ -67,7 +67,7 @@ module.exports = api => {
   const getMigrationsToApplyToKeyspace = (keyspace, type, next) => {
     async.series([
       async.apply(selectSchemaVersions, keyspace),
-      async.apply(getMigrations, keyspace, type)
+      async.apply(getMigrations, keyspace, type),
     ], (err, results) => {
       if (err) return next(err);
       // Have to convert the schema version to an integer from cassandra Integer type
@@ -90,10 +90,10 @@ module.exports = api => {
 
           migrations.push({
             file: path.resolve(migrationsPath, f),
-            type: type,
-            keyspace: keyspace,
+            type,
+            keyspace,
             version: +version,
-            description: description
+            description,
           });
         }
       });
@@ -156,6 +156,6 @@ module.exports = api => {
     getMigrations,
     getMigrationsToApply,
     applyMigrations,
-    getMigrationsToApplyToKeyspace
+    getMigrationsToApplyToKeyspace,
   };
 };

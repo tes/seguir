@@ -1,14 +1,14 @@
-function apply (keyspace, api, next) {
+function apply(keyspace, api, next) {
   // Exists to keep schema versions in sync
   next();
 }
 
-function rollback (keyspace, api, next) {
+function rollback(keyspace, api, next) {
   next();
 }
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback,
 };
 

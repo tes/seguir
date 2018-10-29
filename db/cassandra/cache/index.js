@@ -42,7 +42,7 @@ module.exports = (config, next) => {
 
   // If no redis config, simply return a miss always
   const hasRedisConfig = config && config.redis;
-  if (!hasRedisConfig) { return next(null, {get: noCache, set: noCache, del: noCache, flush: noCache}); }
+  if (!hasRedisConfig) { return next(null, { get: noCache, set: noCache, del: noCache, flush: noCache }); }
 
   const redisClient = redis(config.redis);
 
@@ -158,7 +158,7 @@ module.exports = (config, next) => {
     del,
     flush,
     stats: getStats,
-    resetStats: resetStats
+    resetStats,
   };
 
   next(null, cache);

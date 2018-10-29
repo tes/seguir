@@ -9,5 +9,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };

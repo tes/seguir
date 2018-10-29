@@ -6,14 +6,14 @@ const apply = (keyspace, api, next) => {
   let write = 0;
   let done = false;
 
-  api.client._client.eachRow(selectFollowerQuery, [], {autoPage: true}, (index, row) => {
+  api.client._client.eachRow(selectFollowerQuery, [], { autoPage: true }, (index, row) => {
     read++;
-    api.client.execute(selectCountQuery, [row.user_follower], {prepare: true}, (err, result) => {
+    api.client.execute(selectCountQuery, [row.user_follower], { prepare: true }, (err, result) => {
       if (err) {
         throw err;
       }
       console.log('result ', result[0].count);
-      api.client.execute(insertCountQuery, [result[0].count, row.user_follower.toString()], {prepare: true}, (err1, result1) => {
+      api.client.execute(insertCountQuery, [result[0].count, row.user_follower.toString()], { prepare: true }, (err1, result1) => {
         if (err1) {
           throw err1;
         }
@@ -34,5 +34,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };

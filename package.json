@@ -8,7 +8,7 @@
     "lint": "echo 'Linting...' && eslint --ext .js .",
     "lint:fix": "eslint --ext .js --fix .",
     "test": "istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
-    "precommit": "eslint"
+    "precommit": "eslint --ext .js ."
   },
   "keywords": [
     "social",

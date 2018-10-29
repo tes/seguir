@@ -62,14 +62,14 @@ module.exports = (api) => {
       if (existingUser) {
         return next({
           statusCode: 409,
-          message: 'User with altid ' + altid + ' already exists, use updateUser to update.'
+          message: 'User with altid ' + altid + ' already exists, use updateUser to update.',
         });
       }
 
       const user = [userid, username, '' + altid, userdata];
 
       client.execute(q(keyspace, 'upsertUser'), user, {
-        hints: [null, null, 'map']
+        hints: [null, null, 'map'],
       }, (err, result) => {
         if (err) { return next(err); }
         const tempUser = _.zipObject(['user', 'username', 'altid'], user);
@@ -127,17 +127,17 @@ module.exports = (api) => {
         const user = [username, '' + altid, userdata, userid];
         client.execute(q(keyspace, 'updateUser'), user, {
           cacheKey: 'user:' + userid,
-          hints: [null, null, 'map']
+          hints: [null, null, 'map'],
         }, (err, result) => {
           if (err) { return next(err); }
-          next(null, {user: userid, username: username, altid: altid, userdata: userdata});
+          next(null, { user: userid, username, altid, userdata });
         });
       });
     });
   };
 
   const getUser = (keyspace, user, next) => {
-    client.get(q(keyspace, 'selectUser'), [user], {cacheKey: 'user:' + user}, (err, result) => {
+    client.get(q(keyspace, 'selectUser'), [user], { cacheKey: 'user:' + user }, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by id: ' + user)); }
       next(null, result);
@@ -145,7 +145,7 @@ module.exports = (api) => {
   };
 
   const getUserByName = (keyspace, username, next) => {
-    client.get(q(keyspace, 'selectUserByUsername'), [username], {cacheKey: 'username:' + username}, (err, result) => {
+    client.get(q(keyspace, 'selectUserByUsername'), [username], { cacheKey: 'username:' + username }, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by name: ' + username)); }
       next(null, result);
@@ -153,7 +153,7 @@ module.exports = (api) => {
   };
 
   const getUserByAltId = (keyspace, altid, next) => {
-    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], {cacheKey: 'useraltid:' + altid}, (err, result) => {
+    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], { cacheKey: 'useraltid:' + altid }, (err, result) => {
       if (err) { return next(err); }
       if (!result) { return next(api.common.error(404, 'Unable to find user by altid: ' + altid)); }
       next(null, result);
@@ -238,7 +238,7 @@ module.exports = (api) => {
       followBack: async.apply(api.follow.isFollower, keyspace, user, other_user),
       inCommon: async.apply(api.friend.friendsInCommon, keyspace, user, other_user),
       followerCount: async.apply(api.follow.followerCount, keyspace, other_user),
-      followingCount: async.apply(api.follow.followingCount, keyspace, other_user)
+      followingCount: async.apply(api.follow.followingCount, keyspace, other_user),
     }, (err, result) => {
       if (err) { return next(err); }
 
@@ -259,7 +259,7 @@ module.exports = (api) => {
         theyFollowPersonal: result.followBack[2] ? result.followBack[2].visibility === api.visibility.PERSONAL : null,
         inCommon: result.inCommon,
         followerCount: result.followerCount && result.followerCount.count ? +result.followerCount.count.toString() : 0,
-        followingCount: result.followingCount && result.followingCount.count ? +result.followingCount.count.toString() : 0
+        followingCount: result.followingCount && result.followingCount.count ? +result.followingCount.count.toString() : 0,
       };
 
       next(null, relationship);
@@ -278,7 +278,7 @@ module.exports = (api) => {
         members: async.apply(api.group.removeMembersByUser, keyspace, user.user),
         posts: async.apply(api.post.removePostsByUser, keyspace, user.user),
         comments: async.apply(api.comment.deleteCommentsByUser, keyspace, user.user),
-        likes: async.apply(api.like.deleteLikesByUser, keyspace, user.user)
+        likes: async.apply(api.like.deleteLikesByUser, keyspace, user.user),
       }, (err) => {
         console.log('err', err);
         if (err) { return next(err); }
@@ -297,14 +297,14 @@ module.exports = (api) => {
   };
 
   return {
-    addUser: addUser,
-    updateUser: updateUser,
-    getUser: getUser,
-    getUserByName: getUserByName,
-    getUserByAltId: getUserByAltId,
-    mapUserIdToUser: mapUserIdToUser,
-    getUserRelationship: getUserRelationship,
-    removeUser: removeUser,
-    userCacheStats: _userCacheStats
+    addUser,
+    updateUser,
+    getUser,
+    getUserByName,
+    getUserByAltId,
+    mapUserIdToUser,
+    getUserRelationship,
+    removeUser,
+    userCacheStats: _userCacheStats,
   };
 };

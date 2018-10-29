@@ -23,11 +23,11 @@ module.exports = (api) => {
       addFriendOneWay(keyspace, reciprocalFriend, user_friend, user, timestamp, (err) => {
         if (err) { return next(err); }
         const tempFriend = {
-          friend: friend,
+          friend,
           reciprocal: reciprocalFriend,
-          user: user,
-          user_friend: user_friend,
-          since: timestamp
+          user,
+          user_friend,
+          since: timestamp,
         };
         api.user.mapUserIdToUser(keyspace, tempFriend, ['user', 'user_friend'], next);
       });
@@ -53,7 +53,7 @@ module.exports = (api) => {
     client.execute(q(keyspace, 'upsertFriendRequest'), data, {}, (err) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      next(null, {friend_request: friend_request, user: user, user_friend: user_friend, message: cleanMessage, since: timestamp, visibility: api.visibility.PRIVATE});
+      next(null, { friend_request, user, user_friend, message: cleanMessage, since: timestamp, visibility: api.visibility.PRIVATE });
     });
     api.metrics.increment('friend_request.add');
   };
@@ -82,7 +82,7 @@ module.exports = (api) => {
           if (err) return next(err);
           api.feed.removeFeedsForItem(keyspace, friend.friend, (err) => {
             if (err) return next(err);
-            next(null, {status: 'removed'});
+            next(null, { status: 'removed' });
           });
         });
       });
@@ -96,7 +96,7 @@ module.exports = (api) => {
     if (!privacyCheckRequired) return next();
 
     // If the user is the anonymous user exit quickly
-    if (privacyCheckRequired && !user) return next({statusCode: 403, message: 'You are not allowed to see this item.'});
+    if (privacyCheckRequired && !user) return next({ statusCode: 403, message: 'You are not allowed to see this item.' });
 
     // First check if the user is one of the properties
     const userIsOnItem = _.reduce(user_properties, (match, prop) => {
@@ -114,12 +114,12 @@ module.exports = (api) => {
         });
       }, (err, ok) => {
         if (err) { return next(err); }
-        if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
+        if (!ok) { return next({ statusCode: 403, message: 'You are not allowed to see this item.' }); }
         next();
       });
     } else {
       // Otherwise they can't see it
-      next({statusCode: 403, message: 'You are not allowed to see this item.'});
+      next({ statusCode: 403, message: 'You are not allowed to see this item.' });
     }
   };
 
@@ -151,7 +151,7 @@ module.exports = (api) => {
   const getFriends = (keyspace, liu, user, next) => {
     isFriend(keyspace, user, liu, (err, ok) => {
       if (err) { return next(err); }
-      if (!ok) { return next({statusCode: 403, message: 'You are not allowed to see this item.'}); }
+      if (!ok) { return next({ statusCode: 403, message: 'You are not allowed to see this item.' }); }
       api.common.get(keyspace, 'selectFriends', [user], 'many', (err, friends) => {
         if (err) { return next(err); }
         api.user.mapUserIdToUser(keyspace, friends, ['user_friend'], next);
@@ -174,7 +174,7 @@ module.exports = (api) => {
           if (err) return cb(err);
           cb(null, _.map(result.rows, 'user_friend'));
         });
-      }
+      },
     ], (err, results) => {
       if (err) { return next(err); }
       const inCommon = _.uniq(_.filter(_.intersection(results[0], results[1]), (item) => { return (item === liu || item === user) ? null : item; }));
@@ -212,7 +212,7 @@ module.exports = (api) => {
       if (err) { return next(err); }
       getOutgoingFriendRequests(keyspace, liu, (err, outgoing) => {
         if (err) { return next(err); }
-        next(null, {incoming: incoming, outgoing: outgoing});
+        next(null, { incoming, outgoing });
       });
     });
   };
@@ -259,21 +259,21 @@ module.exports = (api) => {
   };
 
   return {
-    removeAllFriendsByUser: removeAllFriendsByUser,
-    addFriend: addFriend,
-    addFriendRequest: addFriendRequest,
-    removeFriend: removeFriend,
-    isFriend: isFriend,
-    acceptFriendRequest: acceptFriendRequest,
-    userCanSeeItem: userCanSeeItem,
-    getFriend: getFriend,
-    getFriendFromObject: getFriendFromObject,
-    getFriends: getFriends,
-    getFriendRequest: getFriendRequest,
-    getFriendRequests: getFriendRequests,
-    getIncomingFriendRequests: getIncomingFriendRequests,
-    getOutgoingFriendRequests: getOutgoingFriendRequests,
-    isFriendRequestPending: isFriendRequestPending,
-    friendsInCommon: friendsInCommon
+    removeAllFriendsByUser,
+    addFriend,
+    addFriendRequest,
+    removeFriend,
+    isFriend,
+    acceptFriendRequest,
+    userCanSeeItem,
+    getFriend,
+    getFriendFromObject,
+    getFriends,
+    getFriendRequest,
+    getFriendRequests,
+    getIncomingFriendRequests,
+    getOutgoingFriendRequests,
+    isFriendRequestPending,
+    friendsInCommon,
   };
 };

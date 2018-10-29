@@ -16,10 +16,10 @@ const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-re
 const _ = require('lodash');
 
 databases.forEach((db) => {
-  const config = _.clone(require('../../fixtures/' + db + '.json'));
+  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
   config.keyspace = keyspace;
 
-  describe('API [Feeds] - ' + db, function () {
+  describe(`API [Feeds] - ${db}`, function () {
     this.timeout(20000);
     this.slow(5000);
 
@@ -32,16 +32,16 @@ databases.forEach((db) => {
         expect(err).to.be(null);
         api = seguirApi;
         initialiser.setupUsers(keyspace, api, [
-          {username: 'cliftonc', altid: '1'},
-          {username: 'phteven', altid: '2'},
-          {username: 'ted', altid: '3'},
-          {username: 'bill', altid: '4'},
-          {username: 'harold', altid: '5'},
-          {username: 'jenny', altid: '6'},
-          {username: 'alfred', altid: '7'},
-          {username: 'json', altid: '8'},
-          {username: 'backfill', altid: '9'},
-          {username: 'backfill-follower', altid: '10'}
+          { username: 'cliftonc', altid: '1' },
+          { username: 'phteven', altid: '2' },
+          { username: 'ted', altid: '3' },
+          { username: 'bill', altid: '4' },
+          { username: 'harold', altid: '5' },
+          { username: 'jenny', altid: '6' },
+          { username: 'alfred', altid: '7' },
+          { username: 'json', altid: '8' },
+          { username: 'backfill', altid: '9' },
+          { username: 'backfill-follower', altid: '10' },
         ], (err, userMap) => {
           expect(err).to.be(null);
           users = userMap;
@@ -55,60 +55,60 @@ databases.forEach((db) => {
 
       before((done) => {
         const actions = [
-          {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
-          {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
-          {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
+          { key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven' },
+          { key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted' },
+          { key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred' },
           {
             key: 'follow-private',
             type: 'follow',
             user: 'harold',
             user_follower: 'bill',
-            visibility: api.visibility.PRIVATE
+            visibility: api.visibility.PRIVATE,
           },
           {
             key: 'follow-personal',
             type: 'follow',
             user: 'alfred',
             user_follower: 'jenny',
-            visibility: api.visibility.PERSONAL
+            visibility: api.visibility.PERSONAL,
           },
-          {key: 'post-backfill-1', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
-          {key: 'post-backfill-2', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
-          {key: 'post-backfill-3', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html'},
+          { key: 'post-backfill-1', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html' },
+          { key: 'post-backfill-2', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html' },
+          { key: 'post-backfill-3', type: 'post', user: 'backfill', content: 'hello', contentType: 'text/html' },
           {
             key: 'follow-backfill',
             type: 'follow',
             user: 'backfill',
             user_follower: 'backfill-follower',
             visibility: api.visibility.PUBLIC,
-            backfill: 2
+            backfill: 2,
           },
           {
             key: 'friend-1',
             reciprocal: 'reciprocal-friend-1',
             type: 'friend',
             user: 'cliftonc',
-            user_friend: 'phteven'
+            user_friend: 'phteven',
           },
-          {key: 'friend-2', reciprocal: 'reciprocal-friend-2', type: 'friend', user: 'cliftonc', user_friend: 'harold'},
+          { key: 'friend-2', reciprocal: 'reciprocal-friend-2', type: 'friend', user: 'cliftonc', user_friend: 'harold' },
           {
             key: 'post-old',
             type: 'post',
             user: 'cliftonc',
             content: 'hello',
             contentType: 'text/html',
-            timestamp: new Date(1280296860145)
+            timestamp: new Date(1280296860145),
           },
-          {key: 'post-public', type: 'post', user: 'phteven', content: 'hello', contentType: 'text/html'},
-          {key: 'post-mention', type: 'post', user: 'bill', content: 'mentioning @json', contentType: 'text/html'},
+          { key: 'post-public', type: 'post', user: 'phteven', content: 'hello', contentType: 'text/html' },
+          { key: 'post-mention', type: 'post', user: 'bill', content: 'mentioning @json', contentType: 'text/html' },
           {
             key: 'post-mention-follower',
             type: 'post',
             user: 'bill',
             content: 'mentioning @alfred',
-            contentType: 'text/html'
+            contentType: 'text/html',
           },
-          {key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com'}
+          { key: 'like-google', type: 'like', user: 'cliftonc', item: 'http://www.google.com' },
         ];
 
         initialiser.setupGraph(keyspace, api, users, actions, (err, results) => {
@@ -129,7 +129,7 @@ databases.forEach((db) => {
             'friend-1',
             'follow-2',
             'follow-1',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -137,24 +137,24 @@ databases.forEach((db) => {
       });
 
       it('logged in - can get a feed for yourself that is paginated in the correct order', (done) => {
-        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, {pageSize: 4}, (err, feed, pageState1) => {
+        api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 4 }, (err, feed, pageState1) => {
           expect(err).to.be(null);
           const expected = [
             // 'like-google',
             'friend-2',
             'friend-1',
             'follow-2',
-            'follow-1'
+            'follow-1',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           expect(pageState1).not.to.be(null);
-          const pagination = {pageSize: 4, pageState: pageState1};
-          api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, pagination, (err, feed, pageState2) => {
+          const pagination = { pageSize: 4, pageState: pageState1 };
+          api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, pagination, (err, feedItems, pageState2) => {
             expect(err).to.be(null);
-            const expected = [
-              'post-old'
+            const expectedItems = [
+              'post-old',
             ];
-            initialiser.assertFeed(feed, actionResults, expected);
+            initialiser.assertFeed(feedItems, actionResults, expectedItems);
             expect(pageState2).to.be(null);
             done();
           });
@@ -170,7 +170,7 @@ databases.forEach((db) => {
             'friend-1',
             'follow-2',
             'follow-1',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -183,7 +183,7 @@ databases.forEach((db) => {
           const expected = [
             'follow-backfill',
             'post-backfill-3',
-            'post-backfill-2'
+            'post-backfill-2',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -198,7 +198,7 @@ databases.forEach((db) => {
             'post-public',
             'reciprocal-friend-1',
             'follow-1',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -211,7 +211,7 @@ databases.forEach((db) => {
           const expected = [
             // 'like-google',
             'follow-2',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -225,7 +225,7 @@ databases.forEach((db) => {
             // 'like-google',
             'follow-2',
             'follow-1',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -237,7 +237,7 @@ databases.forEach((db) => {
           expect(err).to.be(null);
           const expected = [
             'reciprocal-friend-2',
-            'follow-private'
+            'follow-private',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -260,7 +260,7 @@ databases.forEach((db) => {
             'post-mention-follower',
             'post-mention',
             'follow-personal',
-            'follow-3'
+            'follow-3',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -273,7 +273,7 @@ databases.forEach((db) => {
           const expected = [
             'post-mention-follower',
             'post-mention',
-            'follow-3'
+            'follow-3',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -286,7 +286,7 @@ databases.forEach((db) => {
           const expected = [
             'post-mention-follower',
             'post-mention',
-            'follow-3'
+            'follow-3',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -297,7 +297,7 @@ databases.forEach((db) => {
         api.feed.getFeed(keyspace, users['jenny'].user, users['jenny'].user, (err, feed) => {
           expect(err).to.be(null);
           const expected = [
-            'follow-personal'
+            'follow-personal',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -311,7 +311,7 @@ databases.forEach((db) => {
             'post-mention-follower',
             'post-mention',
             'follow-private',
-            'follow-3'
+            'follow-3',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -322,7 +322,7 @@ databases.forEach((db) => {
         api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
           expect(err).to.be(null);
           const expected = [
-            'post-mention'
+            'post-mention',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -336,7 +336,7 @@ databases.forEach((db) => {
             // 'like-google',
             'follow-2',
             'follow-1',
-            'post-old'
+            'post-old',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -350,7 +350,7 @@ databases.forEach((db) => {
             'post-mention-follower',
             'post-mention',
             'follow-private',
-            'follow-3'
+            'follow-3',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -358,22 +358,22 @@ databases.forEach((db) => {
       });
 
       it('logged in - can get a users personal feed as the user and see direct actions', (done) => {
-        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, {pageSize: 3}, (err, feed, pageState1) => {
+        api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, { pageSize: 3 }, (err, feed, pageState1) => {
           expect(err).to.be(null);
           const expected = [
             'post-mention-follower',
             'post-mention',
-            'follow-private'
+            'follow-private',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           expect(pageState1).not.to.be(null);
-          const pagination = {pageSize: 3, pageState: pageState1};
-          api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, pagination, (err, feed, pageState2) => {
+          const pagination = { pageSize: 3, pageState: pageState1 };
+          api.feed.getUserFeed(keyspace, users['bill'].user, users['bill'].user, pagination, (err, feedItems, pageState2) => {
             expect(err).to.be(null);
-            const expected = [
-              'follow-3'
+            const expectedItems = [
+              'follow-3',
             ];
-            initialiser.assertFeed(feed, actionResults, expected);
+            initialiser.assertFeed(feedItems, actionResults, expectedItems);
             expect(pageState2).to.be(null);
             done();
           });
@@ -386,7 +386,7 @@ databases.forEach((db) => {
           const expected = [
             'post-public',
             'reciprocal-friend-1',
-            'follow-1'
+            'follow-1',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -398,7 +398,7 @@ databases.forEach((db) => {
           expect(err).to.be(null);
           const expected = [
             'post-public',
-            'follow-1'
+            'follow-1',
           ];
           initialiser.assertFeed(feed, actionResults, expected);
           done();
@@ -412,7 +412,7 @@ databases.forEach((db) => {
             expect(err).to.be(null);
             const expected = [
               'post-public',
-              'reciprocal-friend-1'
+              'reciprocal-friend-1',
             ];
             initialiser.assertFeed(feed, actionResults, expected);
             done();
@@ -426,9 +426,9 @@ databases.forEach((db) => {
           const feedLength = feed.length;
           api.feed.removeFeedsOlderThan(keyspace, users['cliftonc'].user, new Date(2015, 10, 1), (err) => {
             expect(err).to.be(null);
-            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
+            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feedItems) => {
               expect(err).to.be(null);
-              expect(feed.length).to.be(feedLength - 1);
+              expect(feedItems.length).to.be(feedLength - 1);
               done();
             });
           });

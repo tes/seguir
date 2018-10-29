@@ -122,6 +122,6 @@ module.exports = (client, options) => {
     initialiseSchemaVersion,
     truncate,
     flushCache,
-    waitForIndexes
+    waitForIndexes,
   };
 };

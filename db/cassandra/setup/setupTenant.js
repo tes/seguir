@@ -199,7 +199,7 @@ const defineTablesAndIndexes = (KEYSPACE) => {
   return {
     tables,
     indexes,
-    tableIndexes
+    tableIndexes,
   };
 };
 
@@ -222,7 +222,7 @@ const setup = (client, keyspace, truncateIfExists, next) => {
     helpers.createSecondaryIndexes,
     helpers.flushCache,
     helpers.waitForIndexes,
-    async.apply(helpers.initialiseSchemaVersion, schemaVersion)
+    async.apply(helpers.initialiseSchemaVersion, schemaVersion),
   ], (err, data) => {
     /* istanbul ignore if */
     if (err) return next(err);

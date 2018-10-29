@@ -5,7 +5,7 @@
 /* eslint-env node, mocha */
 
 const expect = require('expect.js');
-const messaging = require('../../../db/messaging')({messaging: {}});
+const messaging = require('../../../db/messaging')({ messaging: {} });
 
 describe('Messaging primitives', function () {
   this.timeout(5000);
@@ -30,7 +30,7 @@ describe('Messaging primitives', function () {
       });
 
       setTimeout(() => {
-        messaging.publish('test', {hello: 'world'});
+        messaging.publish('test', { hello: 'world' });
       }, 200);
     });
 
@@ -47,8 +47,8 @@ describe('Messaging primitives', function () {
         jobDone();
       });
 
-      messaging.submit('q1', {hello: 'world'});
-      messaging.submit('q2', {hello: 'world'});
+      messaging.submit('q1', { hello: 'world' });
+      messaging.submit('q2', { hello: 'world' });
 
       setTimeout(() => {
         expect(counter).to.be(2);

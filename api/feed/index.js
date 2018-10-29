@@ -223,19 +223,19 @@ module.exports = (api) => {
       getPost,
       getMentionedUsers,
       getMentionedNotFollowers,
-      insertMentioned
+      insertMentioned,
     ], next);
   };
 
   const addFeedItem = (keyspace, user, object, type, next) => {
     const jobData = {
-      keyspace: keyspace,
-      user: user,
-      object: object,
+      keyspace,
+      user,
+      object,
       id: object[type],
-      type: type,
+      type,
       timestamp: client.generateTimeId(object.timestamp),
-      visibility: object.visibility
+      visibility: object.visibility,
     };
 
     debug('Adding feed item', user, object, type);
@@ -277,20 +277,20 @@ module.exports = (api) => {
       insertUserTimelines,
       _insertFollowersTimeline,
       _insertGroupsTimeline,
-      _insertMentionedTimeline
+      _insertMentionedTimeline,
     ], next);
   };
 
   const addFeedItemToGroup = (keyspace, group, user, object, type, next) => {
     const jobData = {
-      keyspace: keyspace,
-      group: group,
-      user: user,
-      object: object,
+      keyspace,
+      group,
+      user,
+      object,
       id: object[type],
-      type: type,
+      type,
       timestamp: client.generateTimeId(object.timestamp),
-      visibility: object.visibility
+      visibility: object.visibility,
     };
 
     debug('Adding feed item to group', group, user, object, type);
@@ -302,7 +302,7 @@ module.exports = (api) => {
         },
         cb2 => {
           upsertUserTimelineFromGroup(keyspace, jobData.user, jobData.id, jobData.type, jobData.timestamp, cb2);
-        }
+        },
       ], cb);
     };
 
@@ -321,7 +321,7 @@ module.exports = (api) => {
     async.series([
       insertUserTimelines,
       insertGroupTimeline,
-      _insertMembersTimeline
+      _insertMembersTimeline,
     ], next);
   };
 
@@ -345,10 +345,10 @@ module.exports = (api) => {
               : userObject.user.toString() === expandedItem.user.user.toString();
             if (!isUser) {
               messaging.submit(NOTIFY_Q, {
-                action: action,
-                item: item,
+                action,
+                item,
                 user: userObject,
-                data: expandedItem
+                data: expandedItem,
               });
             }
           });
@@ -358,13 +358,13 @@ module.exports = (api) => {
     if (action === 'feed-remove') {
       api.user.getUser(keyspace, user, (err, userObject) => {
         if (err) { return; }
-        messaging.submit(NOTIFY_Q, {action: action, user: userObject, item: item});
+        messaging.submit(NOTIFY_Q, { action, user: userObject, item });
       });
     }
     if (action === 'feed-view') {
       api.user.getUser(keyspace, user, (err, userObject) => {
         if (err) { return; }
-        messaging.submit(NOTIFY_Q, {action: action, user: userObject});
+        messaging.submit(NOTIFY_Q, { action, user: userObject });
       });
     }
   };
@@ -376,16 +376,16 @@ module.exports = (api) => {
     }
     visibility = visibility || api.visibility.PUBLIC;
     const data = [user, item, type, time, visibility, from_follow];
-    if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, {item: item, type: type});
+    if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, { item, type });
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
-    client.execute(q(keyspace, 'upsertUserTimeline', {TIMELINE: timeline}), data, {}, next);
+    client.execute(q(keyspace, 'upsertUserTimeline', { TIMELINE: timeline }), data, {}, next);
     api.metrics.increment('feed.' + timeline + '.' + type);
   };
 
   const upsertFeedTimelineFromGroup = (keyspace, user, item, type, time, from_group, next) => {
     const visibility = api.visibility.PERSONAL;
     const data = [user, item, type, time, visibility, from_group];
-    notify(keyspace, 'feed-add', user, {item: item, type: type});
+    notify(keyspace, 'feed-add', user, { item, type });
     debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility, from_group);
     client.execute(q(keyspace, 'upsertFeedTimelineFromGroup'), data, {}, next);
     api.metrics.increment('feed.feed_timeline.' + type);
@@ -414,7 +414,7 @@ module.exports = (api) => {
 
   const _removeFeedsForItemFromTimeline = (keyspace, timeline, item, next) => {
     const queryData = [item];
-    client.execute(q(keyspace, 'selectAllItems', {TIMELINE: timeline}), queryData, {}, (err, data) => {
+    client.execute(q(keyspace, 'selectAllItems', { TIMELINE: timeline }), queryData, {}, (err, data) => {
       /* istanbul ignore if */
       if (err || data.length === 0) { return next(err); }
       async.map(data, (row, cb) => {
@@ -443,10 +443,10 @@ module.exports = (api) => {
 
   const _removeFeedItemFromTimeline = (keyspace, timeline, user, time, item, next) => {
     const deleteData = [user, time];
-    if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, {item: item, type: item.type});
-    client.execute(q(keyspace, 'removeFromTimeline', {TIMELINE: timeline}), deleteData, {}, err => {
+    if (timeline === 'feed_timeline') notify(keyspace, 'feed-remove', user, { item, type: item.type });
+    client.execute(q(keyspace, 'removeFromTimeline', { TIMELINE: timeline }), deleteData, {}, err => {
       if (err) return next(err);
-      next(null, {status: 'removed'});
+      next(null, { status: 'removed' });
     });
   };
 
@@ -487,7 +487,7 @@ module.exports = (api) => {
       next = options;
       options = {};
     }
-    _.merge(options, {raw: 'raw'});
+    _.merge(options, { raw: 'raw' });
     _getFeed(keyspace, liu, 'feed_timeline', user, options, next);
   };
 
@@ -496,7 +496,7 @@ module.exports = (api) => {
       next = options;
       options = {};
     }
-    _.merge(options, {raw: 'raw-reverse'});
+    _.merge(options, { raw: 'raw-reverse' });
     _getFeed(keyspace, liu, 'user_timeline', user, options, next);
   };
 
@@ -582,7 +582,7 @@ module.exports = (api) => {
     'post': expandPost,
     'like': expandLike,
     'follow': expandFollow,
-    'friend': expandFriend
+    'friend': expandFriend,
   };
 
   const ensureFollowStillActive = (keyspace, liu, item, cb) => {
@@ -617,11 +617,11 @@ module.exports = (api) => {
 
     const queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
 
-    query = q(keyspace, queryName, {TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery});
+    query = q(keyspace, queryName, { TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery });
 
     api.metrics.increment('feed.' + timeline + '.list');
 
-    client.execute(query, data, {pageState: pageState, pageSize: pageSize}, (err, data, nextPageState) => {
+    client.execute(query, data, { pageState, pageSize }, (err, data, nextPageState) => {
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
@@ -743,6 +743,6 @@ module.exports = (api) => {
     getUserFeed,
     getRawFeed,
     getGroupPreview,
-    seedFeed
+    seedFeed,
   };
 };

@@ -26,14 +26,14 @@ initialiser.setupApi(keyspace, config, (err, seguirApi) => {
   expect(err).to.be(null);
   api = seguirApi;
   initialiser.setupUsers(keyspace, api, [
-    {username: 'cliftonc', altid: '1'},
-    {username: 'phteven', altid: '2'},
-    {username: 'ted', altid: '3'},
-    {username: 'bill', altid: '4'},
-    {username: 'harold', altid: '5'},
-    {username: 'jenny', altid: '6'},
-    {username: 'alfred', altid: '7'},
-    {username: 'json', altid: '8'}
+    { username: 'cliftonc', altid: '1' },
+    { username: 'phteven', altid: '2' },
+    { username: 'ted', altid: '3' },
+    { username: 'bill', altid: '4' },
+    { username: 'harold', altid: '5' },
+    { username: 'jenny', altid: '6' },
+    { username: 'alfred', altid: '7' },
+    { username: 'json', altid: '8' },
   ], (err, userMap) => {
     if (err) {
       console.log(err);
@@ -48,34 +48,34 @@ initialiser.setupApi(keyspace, config, (err, seguirApi) => {
 
 const initialise = (next) => {
   const actions = [
-    {key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven'},
-    {key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted'},
-    {key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred'},
-    {key: 'follow-4', type: 'follow', user: 'alfred', user_follower: 'phteven'},
-    {key: 'follow-5', type: 'follow', user: 'phteven', user_follower: 'cliftonc'},
-    {key: 'follow-6', type: 'follow', user: 'phteven', user_follower: 'bill'},
-    {key: 'follow-7', type: 'follow', user: 'phteven', user_follower: 'alfred'},
-    {key: 'follow-8', type: 'follow', user: 'phteven', user_follower: 'jenny'},
+    { key: 'follow-1', type: 'follow', user: 'cliftonc', user_follower: 'phteven' },
+    { key: 'follow-2', type: 'follow', user: 'cliftonc', user_follower: 'ted' },
+    { key: 'follow-3', type: 'follow', user: 'bill', user_follower: 'alfred' },
+    { key: 'follow-4', type: 'follow', user: 'alfred', user_follower: 'phteven' },
+    { key: 'follow-5', type: 'follow', user: 'phteven', user_follower: 'cliftonc' },
+    { key: 'follow-6', type: 'follow', user: 'phteven', user_follower: 'bill' },
+    { key: 'follow-7', type: 'follow', user: 'phteven', user_follower: 'alfred' },
+    { key: 'follow-8', type: 'follow', user: 'phteven', user_follower: 'jenny' },
     {
       key: 'post-old',
       type: 'post',
       user: 'cliftonc',
       content: 'hello',
       contentType: 'text/html',
-      timestamp: new Date(1280296860145)
-    }
+      timestamp: new Date(1280296860145),
+    },
   ];
 
   let post, post2, like;
   // Intersperse likes and posts
   for (let i = 0; i < ITEMS; i++) {
-    post = {key: 'post-public-cc-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html'};
+    post = { key: 'post-public-cc-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html' };
     post.content = 'Hello there from iteraton number ' + i;
     actions.push(post);
-    post2 = {key: 'post-public-alf-' + i, type: 'post', user: 'alfred', content: 'goodbye', contentType: 'text/html'};
+    post2 = { key: 'post-public-alf-' + i, type: 'post', user: 'alfred', content: 'goodbye', contentType: 'text/html' };
     post2.content = 'Goodbye there from iteraton number ' + i;
     actions.push(post2);
-    like = {key: 'like-public-' + i, type: 'like', user: 'cliftonc', item: 'http://hello.com/' + i};
+    like = { key: 'like-public-' + i, type: 'like', user: 'cliftonc', item: 'http://hello.com/' + i };
     actions.push(like);
   }
 
@@ -150,7 +150,7 @@ const userStats = (api) => {
 const getFeed = (user, next) => {
   const start = process.hrtime();
   process.stdout.write('.');
-  api.feed.getFeed(keyspace, users[user].user, users[user].user, {pageSize: 50}, (err, feed) => {
+  api.feed.getFeed(keyspace, users[user].user, users[user].user, { pageSize: 50 }, (err, feed) => {
     if (err) {
       console.log(err);
       process.exit(1);

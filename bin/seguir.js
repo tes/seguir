@@ -89,7 +89,7 @@ configFn((err, config) => {
         '[tokens]  List application tokens': listTokens,
         '[tokens]  Add a token to an application': addToken,
         '[tokens]  Reset application token': resetApplicationToken,
-        '[tokens]  Enable / disable application token': disableApplicationToken
+        '[tokens]  Enable / disable application token': disableApplicationToken,
       };
 
       inquirer.prompt([
@@ -97,8 +97,8 @@ configFn((err, config) => {
           type: 'list',
           message: 'What would you like to do [DB: ' + database.green + ']:',
           name: 'task',
-          choices: _.keys(tasks)
-        }
+          choices: _.keys(tasks),
+        },
       ], answer => {
         tasks[answer.task]();
       });
@@ -145,8 +145,8 @@ configFn((err, config) => {
         {
           type: 'confirm',
           message: 'Do you want to apply these migrations now?',
-          name: 'confirm'
-        }
+          name: 'confirm',
+        },
       ], confirm => {
         if (confirm.confirm) {
           api.migrations.applyMigrations(migrations, err => {
@@ -206,8 +206,8 @@ configFn((err, config) => {
             {
               type: 'input',
               message: 'Enter a token description:',
-              name: 'description'
-            }
+              name: 'description',
+            },
           ], output => {
             if (!output.description) { return; }
             api.auth.addApplicationToken(application, appkeyspace, output.description, (err, token) => {
@@ -280,8 +280,8 @@ configFn((err, config) => {
             type: 'list',
             message: 'Select an account:',
             name: 'name',
-            choices: accs
-          }
+            choices: accs,
+          },
         ], answer => {
           next(null, _.result(_.find(accounts, { 'name': answer.name }), 'account'), answer.name);
         });
@@ -297,8 +297,8 @@ configFn((err, config) => {
             type: 'list',
             message: 'Select an application:',
             name: 'name',
-            choices: apps
-          }
+            choices: apps,
+          },
         ], answer => {
           const application = _.find(applications, { 'name': answer.name });
           next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
@@ -315,8 +315,8 @@ configFn((err, config) => {
             type: 'list',
             message: 'Select an application token:',
             name: 'description',
-            choices: tokenDescriptions
-          }
+            choices: tokenDescriptions,
+          },
         ], answer => {
           const token = _.find(tokens, { 'description': answer.description });
           next(null, token);
@@ -329,8 +329,8 @@ configFn((err, config) => {
         {
           type: 'confirm',
           message: 'This will modify the tokensecret so that the consumer using that token can no longer access seguir?',
-          name: 'confirm'
-        }
+          name: 'confirm',
+        },
       ], confirm => {
         if (confirm.confirm) {
           api.auth.updateApplicationTokenSecret(token.tokenid, (err, token) => {
@@ -354,9 +354,9 @@ configFn((err, config) => {
       inquirer.prompt([
         {
           type: 'confirm',
-          message: message,
-          name: 'confirm'
-        }
+          message,
+          name: 'confirm',
+        },
       ], confirm => {
         if (confirm.confirm) {
           api.auth.updateApplicationToken(token.tokenid, !token.enabled, token.description, (err, token) => {
@@ -378,8 +378,8 @@ configFn((err, config) => {
         {
           type: 'confirm',
           message: 'This will DROP the existing keyspace if it already exists, are you sure you want to proceed?',
-          name: 'confirm'
-        }
+          name: 'confirm',
+        },
       ], confirm => {
         if (confirm.confirm) {
           api.client.setup.setupSeguir(api.client, config.keyspace, () => {
@@ -415,8 +415,8 @@ configFn((err, config) => {
         {
           type: 'input',
           message: 'Enter an account name:',
-          name: 'name'
-        }
+          name: 'name',
+        },
       ], acc => {
         setupAccount(acc.name, (err, account) => {
           if (err) return error(err);
@@ -446,18 +446,18 @@ configFn((err, config) => {
         {
           type: 'input',
           message: 'Enter name of user to add to account ' + name + ':',
-          name: 'username'
+          name: 'username',
         },
         {
           type: 'input',
           message: 'Enter password for this user:',
-          name: 'password'
+          name: 'password',
         },
         {
           type: 'input',
           message: 'Are they an administrator of the account (y/n)?',
-          name: 'isadmin'
-        }
+          name: 'isadmin',
+        },
       ], user => {
         setupAccountUser(account, name, user.username, user.password, user.isadmin === 'y', next);
       });
@@ -478,8 +478,8 @@ configFn((err, config) => {
         {
           type: 'input',
           message: 'Enter application name (e.g. app-name) to add to account ' + name + ':',
-          name: 'name'
-        }
+          name: 'name',
+        },
       ], application => {
         setupApplication(account, application.name, next);
       });
@@ -490,8 +490,8 @@ configFn((err, config) => {
         {
           type: 'input',
           message: 'Enter application token description (e.g. first-consumer) to add to application ' + application.name + ':',
-          name: 'name'
-        }
+          name: 'name',
+        },
       ], token => {
         setupApplicationToken(application, token.name, next);
       });

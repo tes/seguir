@@ -11,10 +11,10 @@ const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-re
 const _ = require('lodash');
 
 databases.forEach((db) => {
-  const config = _.clone(require('../../fixtures/' + db + '.json'));
+  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
   config.keyspace = keyspace;
 
-  describe('API [Friends] - ' + db, function () {
+  describe(`API [Friends] - ${db}`, function () {
     this.timeout(20000);
     this.slow(5000);
 
@@ -31,14 +31,14 @@ databases.forEach((db) => {
         expect(err).to.be(null);
         api = seguirApi;
         initialiser.setupUsers(keyspace, api, [
-          {username: 'cliftonc', altid: '1'},
-          {username: 'phteven', altid: '2'},
-          {username: 'ted', altid: '3'},
-          {username: 'bill', altid: '4'},
-          {username: 'harold', altid: '5'},
-          {username: 'jenny', altid: '6'},
-          {username: 'alfred', altid: '7'},
-          {username: 'json', altid: '8'}
+          { username: 'cliftonc', altid: '1' },
+          { username: 'phteven', altid: '2' },
+          { username: 'ted', altid: '3' },
+          { username: 'bill', altid: '4' },
+          { username: 'harold', altid: '5' },
+          { username: 'jenny', altid: '6' },
+          { username: 'alfred', altid: '7' },
+          { username: 'json', altid: '8' },
         ], (err, userMap) => {
           expect(err).to.be(null);
           users = userMap;
@@ -50,47 +50,47 @@ databases.forEach((db) => {
 
     describe('friend requests', () => {
       it('can create a friend request', (done) => {
-        api.friend.addFriendRequest(keyspace, users['cliftonc'].user, users['phteven'].user, 'Please be my friend', api.client.getTimestamp(), (err, friend_request) => {
+        api.friend.addFriendRequest(keyspace, users['cliftonc'].user, users['phteven'].user, 'Please be my friend', api.client.getTimestamp(), (err, friendrequest) => {
           expect(err).to.be(null);
-          expect(friend_request.user).to.eql(users['cliftonc'].user);
-          expect(friend_request.user_friend).to.eql(users['phteven'].user);
-          friendRequestId = friend_request.friend_request;
+          expect(friendrequest.user).to.eql(users['cliftonc'].user);
+          expect(friendrequest.user_friend).to.eql(users['phteven'].user);
+          friendRequestId = friendrequest.friend_request;
           done();
         });
       });
 
       it('can see status of outbound friend requests', (done) => {
-        api.friend.getOutgoingFriendRequests(keyspace, users['cliftonc'].user, (err, friend_requests) => {
+        api.friend.getOutgoingFriendRequests(keyspace, users['cliftonc'].user, (err, friendrequests) => {
           expect(err).to.be(null);
-          expect(friend_requests[0].user.user).to.eql(users['cliftonc'].user);
-          expect(friend_requests[0].user_friend.user).to.eql(users['phteven'].user);
+          expect(friendrequests[0].user.user).to.eql(users['cliftonc'].user);
+          expect(friendrequests[0].user_friend.user).to.eql(users['phteven'].user);
           done();
         });
       });
 
       it('can see status of incoming friend requests', (done) => {
-        api.friend.getIncomingFriendRequests(keyspace, users['phteven'].user, (err, friend_requests) => {
+        api.friend.getIncomingFriendRequests(keyspace, users['phteven'].user, (err, friendrequests) => {
           expect(err).to.be(null);
-          expect(friend_requests[0].user.user).to.eql(users['cliftonc'].user);
-          expect(friend_requests[0].user_friend.user).to.eql(users['phteven'].user);
+          expect(friendrequests[0].user.user).to.eql(users['cliftonc'].user);
+          expect(friendrequests[0].user_friend.user).to.eql(users['phteven'].user);
           done();
         });
       });
 
       it('can see status of all friend requests for incoming', (done) => {
-        api.friend.getFriendRequests(keyspace, users['phteven'].user, (err, friend_requests) => {
+        api.friend.getFriendRequests(keyspace, users['phteven'].user, (err, friendrequests) => {
           expect(err).to.be(null);
-          expect(friend_requests.incoming[0].user.user).to.eql(users['cliftonc'].user);
-          expect(friend_requests.incoming[0].user_friend.user).to.eql(users['phteven'].user);
+          expect(friendrequests.incoming[0].user.user).to.eql(users['cliftonc'].user);
+          expect(friendrequests.incoming[0].user_friend.user).to.eql(users['phteven'].user);
           done();
         });
       });
 
       it('can see status of all friend requests for outgoing', (done) => {
-        api.friend.getFriendRequests(keyspace, users['cliftonc'].user, (err, friend_requests) => {
+        api.friend.getFriendRequests(keyspace, users['cliftonc'].user, (err, friendrequests) => {
           expect(err).to.be(null);
-          expect(friend_requests.outgoing[0].user.user).to.eql(users['cliftonc'].user);
-          expect(friend_requests.outgoing[0].user_friend.user).to.eql(users['phteven'].user);
+          expect(friendrequests.outgoing[0].user.user).to.eql(users['cliftonc'].user);
+          expect(friendrequests.outgoing[0].user_friend.user).to.eql(users['phteven'].user);
           done();
         });
       });
@@ -106,9 +106,9 @@ databases.forEach((db) => {
       });
 
       it('it deletes the friend request after it is accepted', (done) => {
-        api.friend.getFriendRequest(keyspace, users['phteven'].user, friendRequestId, (err, friend_request) => {
+        api.friend.getFriendRequest(keyspace, users['phteven'].user, friendRequestId, (err, friendrequest) => {
           expect(err).to.not.be(null);
-          expect(friend_request).to.eql(undefined);
+          expect(friendrequest).to.eql(undefined);
           done();
         });
       });
@@ -135,7 +135,7 @@ databases.forEach((db) => {
       });
 
       it('can not retrieve details of a friendship for someone that you are not friends with', (done) => {
-        api.friend.getFriend(keyspace, users['cliftonc'].user, otherFriendId, (err, friend) => {
+        api.friend.getFriend(keyspace, users['cliftonc'].user, otherFriendId, (err) => {
           expect(err.message).to.be('You are not allowed to see this item.');
           done();
         });
@@ -150,7 +150,7 @@ databases.forEach((db) => {
       });
 
       it('can not retrieve a list of friends for someone that you are not friends with', (done) => {
-        api.friend.getFriends(keyspace, users['cliftonc'].user, users['ted'].user, (err, friend) => {
+        api.friend.getFriends(keyspace, users['cliftonc'].user, users['ted'].user, (err) => {
           expect(err.message).to.be('You are not allowed to see this item.');
           done();
         });
@@ -178,9 +178,9 @@ databases.forEach((db) => {
         before(function (done) {
           this.timeout(20000);
 
-          const allUsers = [{username: 'dennis', altid: '20'}];
+          const allUsers = [{ username: 'dennis', altid: '20' }];
           for (let i = 0; i < 175; i++) {
-            allUsers.push({username: 'user' + i, altid: '' + i * 100});
+            allUsers.push({ username: `user${i}`, altid: `${i * 100}` });
           }
 
           initialiser.setupUsers(keyspace, api, allUsers, (err, userMap) => {
@@ -204,9 +204,9 @@ databases.forEach((db) => {
         });
 
         it('can remove all friends and friend requests for a user', (done) => {
-          api.friend.getFriends(keyspace, dennis, dennis, (err, result) => {
+          api.friend.getFriends(keyspace, dennis, dennis, (err, friends) => {
             expect(err).to.be(null);
-            expect(result.length).to.be(175);
+            expect(friends.length).to.be(175);
 
             api.friend.removeAllFriendsByUser(keyspace, dennis, (err) => {
               expect(err).to.be(null);

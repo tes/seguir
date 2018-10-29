@@ -18,13 +18,13 @@ module.exports = (api) => {
   const alterLikeCount = (keyspace, item, count, next) => {
     const data = [count, item.toString()];
     debug('updateCounter', data);
-    client.execute(q(keyspace, 'updateCounter', {TYPE: 'likes'}), data, {cacheKey: 'count:like:' + item}, next);
+    client.execute(q(keyspace, 'updateCounter', { TYPE: 'likes' }), data, { cacheKey: 'count:like:' + item }, next);
   };
 
   const likeCount = (keyspace, item, next) => {
     const data = [item.toString()];
     debug('selectCount', data);
-    client.get(q(keyspace, 'selectCount', {TYPE: 'likes'}), data, {cacheKey: 'count:like:' + item}, next);
+    client.get(q(keyspace, 'selectCount', { TYPE: 'likes' }), data, { cacheKey: 'count:like:' + item }, next);
   };
 
   const createLike = (keyspace, user, item, timestamp, next) => {
@@ -47,7 +47,7 @@ module.exports = (api) => {
       if (err || !like.userLiked) { return next(err); }
       const data = [user, item];
       debug('removeLike', data);
-      client.execute(q(keyspace, 'removeLike'), data, {cacheKey: 'like:' + like.like}, (err) => {
+      client.execute(q(keyspace, 'removeLike'), data, { cacheKey: 'like:' + like.like }, (err) => {
         if (err) return next(err);
         alterLikeCount(keyspace, item, -1, () => {
           client.deleteCacheItem('like:' + user + ':' + item, () => {
@@ -63,7 +63,7 @@ module.exports = (api) => {
     client.execute(q(keyspace, 'likesByUser'), [user], (err, results) => {
       if (err) return next(err);
       async.each(results, (like, cb) => {
-        client.execute(q(keyspace, 'removeLike'), [user, like.item], {cacheKey: 'like:' + like.like}, (err) => {
+        client.execute(q(keyspace, 'removeLike'), [user, like.item], { cacheKey: 'like:' + like.like }, (err) => {
           if (err) return cb(err);
           alterLikeCount(keyspace, like.item, -1, () => {
             client.deleteCacheItem('like:' + user + ':' + like.item, () => {
@@ -81,9 +81,9 @@ module.exports = (api) => {
   };
 
   const getLike = (keyspace, like, expandUser, next) => {
-    client.get(q(keyspace, 'selectLike'), [like], {cacheKey: 'like:' + like}, (err, result) => {
+    client.get(q(keyspace, 'selectLike'), [like], { cacheKey: 'like:' + like }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next({statusCode: 404, message: 'Like not found'}); }
+      if (!result) { return next({ statusCode: 404, message: 'Like not found' }); }
       api.user.mapUserIdToUser(keyspace, result, ['user'], expandUser, next);
     });
   };
@@ -95,19 +95,19 @@ module.exports = (api) => {
         return next(null, {
           userLiked: false,
           like: null,
-          likedTotal: count ? +count.count : 0
+          likedTotal: count ? +count.count : 0,
         });
       }
 
       const data = [user, item];
       debug('checkLike', [user, item]);
-      client.get(q(keyspace, 'checkLike'), data, {cacheKey: 'like:' + user + ':' + item}, (err, like) => {
+      client.get(q(keyspace, 'checkLike'), data, { cacheKey: 'like:' + user + ':' + item }, (err, like) => {
         if (err) { return next(err); }
 
         next(null, {
           userLiked: !!like,
           like: like && like.like,
-          likedTotal: count ? +count.count : 0
+          likedTotal: count ? +count.count : 0,
         });
       });
     });
@@ -115,11 +115,11 @@ module.exports = (api) => {
   };
 
   return {
-    createLike: createLike,
-    deleteLike: deleteLike,
-    deleteLikesByUser: deleteLikesByUser,
-    getLike: getLike,
-    getLikeFromObject: getLikeFromObject,
-    checkLike: checkLike
+    createLike,
+    deleteLike,
+    deleteLikesByUser,
+    getLike,
+    getLikeFromObject,
+    checkLike,
   };
 };

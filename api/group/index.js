@@ -30,9 +30,9 @@ module.exports = (api) => {
           data: {
             group: {
               id: group,
-              name: result.groupname
-            }
-          }
+              name: result.groupname,
+            },
+          },
         };
         api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err, result) => {
           if (err) return cb(err);
@@ -61,7 +61,7 @@ module.exports = (api) => {
       if (existingGroup) {
         return next({
           statusCode: 409,
-          message: 'Group with groupname ' + groupName + ' already exists for supergroupId ' + supergroupId
+          message: 'Group with groupname ' + groupName + ' already exists for supergroupId ' + supergroupId,
         });
       }
 
@@ -145,9 +145,9 @@ module.exports = (api) => {
         return next(new Error('Unable to remove the group, only admin can remove it.'));
       }
       const jobData = {
-        keyspace: keyspace,
-        user: user,
-        group: group
+        keyspace,
+        user,
+        group,
       };
 
       const _removeMembers = (cb) => {
@@ -165,7 +165,7 @@ module.exports = (api) => {
       };
       async.series([
         _removeMembers,
-        _removeGroup
+        _removeGroup,
       ], next);
     });
   };
@@ -203,7 +203,7 @@ module.exports = (api) => {
     const pageState = options.pageState;
     const pageSize = options.pageSize || DEFAULT_PAGESIZE;
 
-    client.execute(q(keyspace, 'selectGroupsBySupergroupId'), [supergroupId], {pageState: pageState, pageSize: pageSize}, (err, data, nextPageState) => {
+    client.execute(q(keyspace, 'selectGroupsBySupergroupId'), [supergroupId], { pageState, pageSize }, (err, data, nextPageState) => {
       if (err) { return next(err); }
 
       if (data && data.length > 0) {
@@ -242,17 +242,17 @@ module.exports = (api) => {
   };
 
   return {
-    addGroup: addGroup,
-    getGroup: getGroup,
-    getGroups: getGroups,
-    joinGroup: joinGroup,
-    leaveGroup: leaveGroup,
-    updateGroup: updateGroup,
-    removeGroup: removeGroup,
-    removeMembers: removeMembers,
-    getGroupsByUser: getGroupsByUser,
-    getGroupsBySupergroupId: getGroupsBySupergroupId,
-    getGroupMembers: getGroupMembers,
-    removeMembersByUser: removeMembersByUser
+    addGroup,
+    getGroup,
+    getGroups,
+    joinGroup,
+    leaveGroup,
+    updateGroup,
+    removeGroup,
+    removeMembers,
+    getGroupsByUser,
+    getGroupsBySupergroupId,
+    getGroupMembers,
+    removeMembersByUser,
   };
 };

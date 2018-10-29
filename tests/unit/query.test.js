@@ -11,7 +11,7 @@ describe('Queries', () => {
     });
 
     it('can specify extra type', (done) => {
-      expect(q('seguir', 'selectTimeline', {TYPEQUERY: 'hello-world'})).to.contain('hello-world');
+      expect(q('seguir', 'selectTimeline', { TYPEQUERY: 'hello-world' })).to.contain('hello-world');
       done();
     });
   });

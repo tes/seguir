@@ -1,7 +1,7 @@
 var async = require('async');
 var schemaVersion = 6;
 
-function defineTablesAndIndexes (KEYSPACE) {
+function defineTablesAndIndexes(KEYSPACE) {
   var tables = [];
   var indexes = [];
 
@@ -143,12 +143,12 @@ function defineTablesAndIndexes (KEYSPACE) {
   });
 
   return {
-    tables: tables,
-    indexes: indexes
+    tables,
+    indexes,
   };
 }
 
-function setup (client, keyspace, truncateIfExists, next) {
+function setup(client, keyspace, truncateIfExists, next) {
   if (!next) { next = truncateIfExists; truncateIfExists = false; }
 
   var options = defineTablesAndIndexes(keyspace);
@@ -161,7 +161,7 @@ function setup (client, keyspace, truncateIfExists, next) {
     helpers.createKeyspace,
     helpers.createTables,
     helpers.createSecondaryIndexes,
-    async.apply(helpers.initialiseSchemaVersion, schemaVersion)
+    async.apply(helpers.initialiseSchemaVersion, schemaVersion),
   ], function (err, data) {
     /* istanbul ignore if */
     if (err) return next(err);

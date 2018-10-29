@@ -101,14 +101,14 @@ module.exports = (api) => {
 
     const data = [convertedContent, content_type, visibility, post.post];
 
-    client.execute(q(keyspace, 'updatePost'), data, {cacheKey: 'post:' + post.post}, (err, result) => {
+    client.execute(q(keyspace, 'updatePost'), data, { cacheKey: 'post:' + post.post }, (err, result) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
       api.metrics.increment('post.update');
       next(null, Object.assign({}, post, {
         content: originalContent,
         conent_type: content_type,
-        visibility: visibility
+        visibility,
       }));
     });
   };
@@ -152,12 +152,12 @@ module.exports = (api) => {
 
   const _removePost = (keyspace, post, next) => {
     const deleteData = [post];
-    client.execute(q(keyspace, 'removePost'), deleteData, {cacheKey: 'post:' + post}, (err, result) => {
+    client.execute(q(keyspace, 'removePost'), deleteData, { cacheKey: 'post:' + post }, (err, result) => {
       if (err) return next(err);
       api.feed.removeFeedsForItem(keyspace, post, (err) => {
         if (err) return next(err);
         api.metrics.increment('post.remove');
-        next(null, {status: 'removed'});
+        next(null, { status: 'removed' });
       });
     });
   };
@@ -190,9 +190,9 @@ module.exports = (api) => {
 
   const getPost = (keyspace, liu, post, expandUser, next) => {
     if (!next) { next = expandUser; expandUser = true; }
-    client.get(q(keyspace, 'selectPost'), [post], {cacheKey: 'post:' + post}, (err, post) => {
+    client.get(q(keyspace, 'selectPost'), [post], { cacheKey: 'post:' + post }, (err, post) => {
       if (err) { return next(err); }
-      if (!post) { return next({statusCode: 404, message: 'Post not found'}); }
+      if (!post) { return next({ statusCode: 404, message: 'Post not found' }); }
       _validatePost(keyspace, liu, post, expandUser, next);
     });
   };
@@ -229,17 +229,17 @@ module.exports = (api) => {
   };
 
   return {
-    addPost: addPost,
-    addPostToGroup: addPostToGroup,
-    removePost: removePost,
-    removePostByAltid: removePostByAltid,
-    removePostsByAltid: removePostsByAltid,
-    removePostsByUser: removePostsByUser,
-    getPost: getPost,
-    getPostByAltid: getPostByAltid,
-    getPostsByAltid: getPostsByAltid,
-    getPostFromObject: getPostFromObject,
-    updatePost: updatePost,
-    updatePostByAltid: updatePostByAltid
+    addPost,
+    addPostToGroup,
+    removePost,
+    removePostByAltid,
+    removePostsByAltid,
+    removePostsByUser,
+    getPost,
+    getPostByAltid,
+    getPostsByAltid,
+    getPostFromObject,
+    updatePost,
+    updatePostByAltid,
   };
 };

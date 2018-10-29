@@ -19,7 +19,7 @@ module.exports = config => {
     rsmq.listQueues((err, queues) => {
       if (err) { return next(err); }
       if (_.includes(queues, name)) { return next(); }
-      rsmq.createQueue({qname: name}, err => {
+      rsmq.createQueue({ qname: name }, err => {
         next(err);
       });
     });
@@ -31,7 +31,7 @@ module.exports = config => {
   const submit = (name, data, next) => {
     createOrSelectQueue(name, err => {
       if (err && err.name !== 'queueExists') { return next && next(err); }
-      rsmq.sendMessage({qname: name, message: JSON.stringify(data)}, (err, response) => {
+      rsmq.sendMessage({ qname: name, message: JSON.stringify(data) }, (err, response) => {
         if (err) { return next && next(err); }
         return next && next(null, response);
       });
@@ -42,7 +42,7 @@ module.exports = config => {
    * Listen to a queue to process jobs
    */
   const listen = (name, callback, next) => {
-    const worker = new RSMQWorker(name, { rsmq: rsmq, autostart: true });
+    const worker = new RSMQWorker(name, { rsmq, autostart: true });
     worker.on('message', (msg, cb) => {
       callback(JSON.parse(msg), cb);
     });
@@ -88,7 +88,7 @@ module.exports = config => {
     client: redisClient,
     shutdown,
     enabled: true,
-    feed: config.messaging.feed
+    feed: config.messaging.feed,
   };
 };
 

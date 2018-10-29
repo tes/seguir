@@ -1,7 +1,7 @@
 /**
  * Helpers for initialising acceptance tests
  */
-const Api = require('../../api');
+const apiInit = require('../../api');
 const expect = require('expect.js');
 const async = require('async');
 const _ = require('lodash');
@@ -9,9 +9,9 @@ const _ = require('lodash');
 let cleaned = false;
 
 const setupApi = (keyspace, config, next) => {
-  Api(config, (err, api) => {
+  apiInit(config, (err, api) => {
     if (err) { return next(err); }
-    console.log('   Setting up keyspace in ' + api.client.type + '...');
+    console.log(`   Setting up keyspace in ${api.client.type} ...`);
     api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', (err, migrations) => {
       if (err) { return next(err); }
       const truncate = migrations.length === 0 && !process.env.CLEAN && !(process.env.CLEAN_ONCE && !cleaned);
@@ -29,9 +29,9 @@ const setupApi = (keyspace, config, next) => {
 };
 
 const setupUsers = (keyspace, api, users, next) => {
-  let userMap = {};
+  const userMap = {};
   async.map(users, (user, cb) => {
-    api.user.addUser(keyspace, user.username, user.altid, {userdata: {'age': 15}}, cb);
+    api.user.addUser(keyspace, user.username, user.altid, { userdata: { age: 15 } }, cb);
   }, (err, results) => {
     if (err) { return next(err); }
     results.forEach((user) => {
@@ -69,11 +69,11 @@ const setupGraph = (keyspace, api, users, actions, next) => {
     if (err) return next(err);
     const actionResults = _.zipObject(_.map(actions, 'key'), results);
     // We need to add pseudo items for reciprocal friendships
-    _.mapKeys(actions, (result, key) => {
+    _.mapKeys(actions, (result, key) => { // eslint-disable-line no-unused-vars
       if (result.reciprocal) {
         const reciprocal = actionResults[result.key].reciprocal;
         const reciprocalKey = result.reciprocal;
-        actionResults[reciprocalKey] = {friend: reciprocal};
+        actionResults[reciprocalKey] = { friend: reciprocal };
       }
     });
     next(null, actionResults);
@@ -81,7 +81,7 @@ const setupGraph = (keyspace, api, users, actions, next) => {
 };
 
 const assertFeed = (feed, actionResults, expected) => {
-  const feedKeys = _.map(feed, (item) => { return {item: item._item, type: item.type}; });
+  const feedKeys = _.map(feed, (item) => ({ item: item._item, type: item.type })); // eslint-disable-line no-underscore-dangle
   const expectedFeed = _.map(expected, (key) => {
     let type;
     // This is due to no common identifier and type - we should refactor to add these
@@ -90,14 +90,14 @@ const assertFeed = (feed, actionResults, expected) => {
     if (actionResults[key].post) { type = 'post'; }
     if (actionResults[key].friend) { type = 'friend'; }
     if (actionResults[key].follow) { type = 'follow'; }
-    return {item: actionResults[key][type], type: type};
+    return { item: actionResults[key][type], type };
   });
   expect(feedKeys).to.eql(expectedFeed);
 };
 
 module.exports = {
-  setupApi: setupApi,
-  setupUsers: setupUsers,
-  setupGraph: setupGraph,
-  assertFeed: assertFeed
+  setupApi,
+  setupUsers,
+  setupGraph,
+  assertFeed,
 };

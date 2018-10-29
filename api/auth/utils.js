@@ -9,7 +9,7 @@ const generateAuthorization = (appid, appsecret, type) => {
   type = type || 'SeguirApp';
   return {
     'date': d,
-    'authorization': type + ' ' + appid + ':' + generateHmac(d, appsecret)
+    'authorization': type + ' ' + appid + ':' + generateHmac(d, appsecret),
   };
 };
 
@@ -39,7 +39,7 @@ module.exports = {
   hashPassword,
   checkPassword,
   generateAuthorization,
-  validateAuthorization
+  validateAuthorization,
 };
 
 const generateHmac = (data, secret, algorithm, encoding) => {

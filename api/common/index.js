@@ -28,7 +28,7 @@ module.exports = (api) => {
 
   const clean = input => sanitizeHtml(input, {
     allowedTags: [],
-    allowedAttributes: {}
+    allowedAttributes: {},
   });
 
   // Deal with any content conversion to persist in cassandra
@@ -93,6 +93,6 @@ module.exports = (api) => {
     convertContentToString,
     convertContentFromString,
     expandEmbeddedObject,
-    isUserGroupMember
+    isUserGroupMember,
   };
 };

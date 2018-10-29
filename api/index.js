@@ -21,7 +21,7 @@ module.exports = (config, logger, metrics, next) => {
       config,
       messaging,
       urls,
-      visibility
+      visibility,
     };
 
     const modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', '../db/migrations'];

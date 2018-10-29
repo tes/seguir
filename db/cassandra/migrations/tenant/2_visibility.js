@@ -16,7 +16,7 @@ const apply = (keyspace, api, next) => {
     'ALTER TABLE ' + keyspace + '.feed_timeline DROP ispersonal',
     'ALTER TABLE ' + keyspace + '.user_timeline ADD visibility text',
     'ALTER TABLE ' + keyspace + '.user_timeline DROP isprivate',
-    'ALTER TABLE ' + keyspace + '.user_timeline DROP ispersonal'
+    'ALTER TABLE ' + keyspace + '.user_timeline DROP ispersonal',
   ];
 
   async.mapSeries(schemaVersionCql, api.client.execute, next);
@@ -28,5 +28,5 @@ const rollback = (keyspace, api, next) => {
 
 module.exports = {
   apply,
-  rollback
+  rollback,
 };
