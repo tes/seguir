@@ -1,8 +1,7 @@
 const st = require('string-template');
 const queries = {};
 
-module.exports = (keyspace, name, data) => {
-  data = data || {};
+module.exports = (keyspace, name, data = {}) => {
   data.KEYSPACE = keyspace; // Keyspace important and so explicit in method call
   return st(queries[name] || '', data);
 };

@@ -29,7 +29,7 @@ const Auth = (api) => {
   };
 
   const getAccount = (account, next) => {
-    client.get(q(keyspace, 'selectAccount'), [account], { cacheKey: 'account:' + account }, (err, result) => {
+    client.get(q(keyspace, 'selectAccount'), [account], { cacheKey: `account:${account}` }, (err, result) => {
       if (err) { return next(err); }
       next(null, result);
     });
@@ -51,7 +51,7 @@ const Auth = (api) => {
 
   const updateAccount = (account, name, isadmin, enabled, next) => {
     const accountData = [name, isadmin, enabled, account];
-    client.execute(q(keyspace, 'updateAccount'), accountData, { cacheKey: 'account:' + account }, err => {
+    client.execute(q(keyspace, 'updateAccount'), accountData, { cacheKey: `account:${account}` }, err => {
       if (err) { return next(err); }
       next(null, { account, name, isadmin, enabled });
     });
@@ -118,7 +118,7 @@ const Auth = (api) => {
    */
   const updateApplication = (appid, name, enabled, next) => {
     const application = [name, enabled, appid];
-    client.execute(q(keyspace, 'updateApplication'), application, { cacheKey: 'application:' + appid }, err => {
+    client.execute(q(keyspace, 'updateApplication'), application, { cacheKey: `application:${appid}` }, err => {
       next(err, { name, appid, enabled });
     });
   };
@@ -131,7 +131,7 @@ const Auth = (api) => {
     const app = [account, name, appkeyspace, appid, enabled];
     client.execute(q(keyspace, 'upsertApplication'), app, {}, err => {
       if (err) { return next(err); }
-      setupTenant(client, keyspace + '_' + appkeyspace, err => {
+      setupTenant(client, `${keyspace}_${appkeyspace}`, err => {
         if (err) { return next(err); }
         next(null, { account, name, appkeyspace, appid, enabled });
       });
@@ -194,7 +194,7 @@ const Auth = (api) => {
       return next(null);
     }
 
-    let appAuthorization = req.headers.authorization;
+    const appAuthorization = req.headers.authorization;
     const user = req.headers[userHeader];
 
     if (!appAuthorization) {
@@ -210,7 +210,7 @@ const Auth = (api) => {
       }
 
       if (authUtils.validateAuthorization(req.headers, token.tokenid, token.tokensecret)) {
-        req.keyspace = keyspace + '_' + token.appkeyspace;
+        req.keyspace = `${keyspace}_${token.appkeyspace}`;
         checkUser(req.keyspace, user, (err, user) => {
           if (err) { return next(err); }
           req.liu = user;
@@ -227,8 +227,8 @@ const Auth = (api) => {
       return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
     const token = [tokenid];
-    client.get(q(keyspace, 'checkApplicationToken'), token, { cacheKey: 'token:' + tokenid }, (err, result) => {
-      let token = result;
+    client.get(q(keyspace, 'checkApplicationToken'), token, { cacheKey: `token:${tokenid}` }, (err, result) => {
+      const token = result;
       if (err) { return next(err); }
       if (!token || !token.enabled) { return next(null, null); }
       next(null, token);
@@ -236,25 +236,25 @@ const Auth = (api) => {
   };
 
   const getUserBySeguirId = (user_keyspace, user, next) => {
-    client.get(q(user_keyspace, 'selectUser'), [user], { cacheKey: 'user:' + user }, (err, result) => {
+    client.get(q(user_keyspace, 'selectUser'), [user], { cacheKey: `user:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError('Specified user by seguir id "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by seguir id "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };
 
   const getUserByAltId = (user_keyspace, user, next) => {
-    client.get(q(user_keyspace, 'selectUserByAltId'), [user], { cacheKey: 'useraltid:' + user }, (err, result) => {
+    client.get(q(user_keyspace, 'selectUserByAltId'), [user], { cacheKey: `useraltid:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError('Specified user by alternate id "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by alternate id "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };
 
   const getUserByName = (user_keyspace, user, next) => {
-    client.get(q(user_keyspace, 'selectUserByUsername'), [user], { cacheKey: 'username:' + user }, (err, result) => {
+    client.get(q(user_keyspace, 'selectUserByUsername'), [user], { cacheKey: `username:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError('Specified user by name "' + user + '" in header "' + userHeader + '" does not exist.')); }
+      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by name "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };
@@ -277,7 +277,7 @@ const Auth = (api) => {
       }
 
       // Assume altid first, then try name
-      id = '' + id; // Ensure it is a string
+      id = `${id}`; // Ensure it is a string
       debug('Trying %s as altid', id);
       getUserByAltId(user_keyspace, id, (err, user) => {
         if (err) {

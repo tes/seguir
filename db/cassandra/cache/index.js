@@ -75,7 +75,7 @@ module.exports = (config, next) => {
     if (clone.userdata) { clone.userdata = JSON.stringify(clone.userdata); }
 
     // Trim any null properties as redis doesn't allow them in HMSET
-    for (let p in clone) {
+    for (const p in clone) { // eslint-disable-line no-restricted-syntax
       if (!clone[p]) delete clone[p];
     }
     return clone;

@@ -8,8 +8,8 @@ const generateAuthorization = (appid, appsecret, type) => {
   const d = new Date().toUTCString();
   type = type || 'SeguirApp';
   return {
-    'date': d,
-    'authorization': type + ' ' + appid + ':' + generateHmac(d, appsecret),
+    date: d,
+    authorization: `${type} ${appid}:${generateHmac(d, appsecret)}`,
   };
 };
 
@@ -19,9 +19,8 @@ const validateAuthorization = (headers, appid, appsecret) => {
   return hmac === generateHmac(d, appsecret);
 };
 
-const generateSecret = (appid, next) => {
-  return crypto.createHash('sha256').update(appid.toString()).update('salt').digest('hex');
-};
+const generateSecret = (appid) =>
+  crypto.createHash('sha256').update(appid.toString()).update('salt').digest('hex');
 
 const hashPassword = (password, next) => {
   bcrypt.genSalt(10, (err, salt) => {

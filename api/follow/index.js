@@ -39,7 +39,7 @@ module.exports = (api) => {
     };
 
     const addBidirectionalFeedItem = (follow, cb) => {
-      api.feed.addFeedItem(keyspace, user, follow, 'follow', (err, result) => {
+      api.feed.addFeedItem(keyspace, user, follow, 'follow', (err) => {
         if (err) { return next(err); }
         api.feed.addFeedItem(keyspace, user_follower, follow, 'follow', (err, result) => {
           if (err) { return next(err); }
@@ -70,10 +70,14 @@ module.exports = (api) => {
           /* istanbul ignore if */
           if (err) { return next(err); }
           alterFollowCounts(keyspace, user, user_follower, 1, () => {
-            addBidirectionalFeedItem(newFollow, (err, result) => {
+            addBidirectionalFeedItem(newFollow, (err) => {
               if (err) { return next(err); }
-              client.deleteCacheItem('follow:' + user + ':' + user_follower, () => {
-                backfill ? backfillFeed(newFollow) : mapFollowResponse(newFollow);
+              client.deleteCacheItem(`follow:${user}:${user_follower}`, () => {
+                if (backfill) {
+                  backfillFeed(newFollow);
+                } else {
+                  mapFollowResponse(newFollow);
+                }
               });
             });
           });
@@ -85,7 +89,7 @@ module.exports = (api) => {
   const alterFollowCounts = (keyspace, user, user_follower, count, next) => {
     const alterCount = (type, item, cb) => {
       const data = [count, item.toString()];
-      client.execute(q(keyspace, 'updateCounter', { TYPE: type }), data, { cacheKey: 'count:' + type + ':' + item.toString() }, cb);
+      client.execute(q(keyspace, 'updateCounter', { TYPE: type }), data, { cacheKey: `count:${type}:${item.toString()}` }, cb);
     };
 
     async.parallel([
@@ -120,7 +124,7 @@ module.exports = (api) => {
     const noop = () => { };
     next = next || noop;
     const data = [user.toString()];
-    const cacheKey = 'count:' + followType + ':' + user.toString();
+    const cacheKey = `count:${followType}:${user.toString()}`;
     const queryName = followType === 'followers' ? 'selectFollowersCount' : 'selectFollowingCount';
     client.get(q(keyspace, queryName, {}), data, { cacheKey }, (err, count) => {
       if (err) {
@@ -128,9 +132,9 @@ module.exports = (api) => {
       }
       if (!count) {
         // Manually set the cache as the default won't set a null
-        client.setCacheItem(cacheKey, { _: 0 }, () => {
-          return next(null, 0);
-        });
+        client.setCacheItem(cacheKey, { _: 0 }, () =>
+          next(null, 0)
+        );
       } else {
         return next(null, count);
       }
@@ -146,15 +150,15 @@ module.exports = (api) => {
       const deleteFollowingTimedata = [user_follower, followerTimeline.time];
 
       client.batch
-        .addQuery(q(keyspace, 'removeFollower'), deleteData, 'follow:' + followerTimeline.follow)
-        .addQuery(q(keyspace, 'removeFollowerTimeline'), deleteFollowerTimedata, 'follower_timeline:' + user + ':' + user_follower)
-        .addQuery(q(keyspace, 'removeFollowingTimeline'), deleteFollowingTimedata, 'follower_timeline:' + user + ':' + user_follower)
+        .addQuery(q(keyspace, 'removeFollower'), deleteData, `follow:${followerTimeline.follow}`)
+        .addQuery(q(keyspace, 'removeFollowerTimeline'), deleteFollowerTimedata, `follower_timeline:${user}:${user_follower}`)
+        .addQuery(q(keyspace, 'removeFollowingTimeline'), deleteFollowingTimedata, `follower_timeline:${user}:${user_follower}`)
         .execute((err) => {
           if (err) return next(err);
           alterFollowCounts(keyspace, user, user_follower, -1, () => {
             api.feed.removeFeedsForItem(keyspace, followerTimeline.follow, (err) => {
               if (err) return next(err);
-              client.deleteCacheItem('follow:' + user + ':' + user_follower, () => {
+              client.deleteCacheItem(`follow:${user}:${user_follower}`, () => {
                 next(null, { status: 'removed' });
               });
             });
@@ -166,14 +170,14 @@ module.exports = (api) => {
 
   const getFollowerTimeline = (keyspace, user, user_follower, next) => {
     if (!user || !user_follower) { return next(null, null); }
-    const cacheKey = 'follower_timeline:' + user + ':' + user_follower;
+    const cacheKey = `follower_timeline:${user}:${user_follower}`;
     client.get(q(keyspace, 'selectFollowFromTimeline'), [user, user_follower], { cacheKey }, (err, followerTimeline) => {
       if (err) { return next(err); }
       if (!followerTimeline) {
         // Manually set the cache as the default won't set a null
-        client.setCacheItem(cacheKey, { _: 0 }, () => {
-          return next();
-        });
+        client.setCacheItem(cacheKey, { _: 0 }, () =>
+          next()
+        );
       } else {
         next(null, followerTimeline);
       }
@@ -185,14 +189,14 @@ module.exports = (api) => {
     if (user.toString() === user_follower.toString()) {
       return next(null, false, null, {});
     }
-    const cacheKey = 'follow:' + user + ':' + user_follower;
+    const cacheKey = `follow:${user}:${user_follower}`;
     client.get(q(keyspace, 'isFollower'), [user, user_follower], { cacheKey }, (err, follow) => {
       if (err) { return next(null, false, null, {}); }
       if (!follow) {
         // Manually set the cache as the default won't set a null
-        client.setCacheItem(cacheKey, { _: 0 }, () => {
-          return next(null, false, null, {});
-        });
+        client.setCacheItem(cacheKey, { _: 0 }, () =>
+          next(null, false, null, {})
+        );
       } else {
         const isFollower = !!(follow && follow.follow);
         const isFollowerSince = isFollower ? follow.since : null;
@@ -219,7 +223,7 @@ module.exports = (api) => {
       next = expandUser;
       expandUser = true;
     }
-    client.get(q(keyspace, 'selectFollow'), [follow], { cacheKey: 'follow:' + follow }, (err, follower) => {
+    client.get(q(keyspace, 'selectFollow'), [follow], { cacheKey: `follow:${follow}` }, (err, follower) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
       if (!follower) { return next({ statusCode: 404, message: 'Follow not found' }); }

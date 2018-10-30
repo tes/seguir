@@ -34,7 +34,7 @@ module.exports = (api) => {
             },
           },
         };
-        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err, result) => {
+        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
           if (err) return cb(err);
           cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
         });
@@ -51,9 +51,9 @@ module.exports = (api) => {
     let groupData = options.groupData || {};
     const group = client.isValidId(options.group) ? options.group : client.generateId();
 
-    groupData = _mapValues(groupData, (value) => {
-      return value.toString();
-    }); // Always ensure our groupdata is <text,text>
+    groupData = _mapValues(groupData, (value) =>
+      value.toString()
+    ); // Always ensure our groupdata is <text,text>
 
     // Check group doesn't already exist with this name in this supergroup
     getGroupByNameWithinSupergroup(keyspace, groupName, supergroupId, (err, existingGroup) => {
@@ -61,15 +61,15 @@ module.exports = (api) => {
       if (existingGroup) {
         return next({
           statusCode: 409,
-          message: 'Group with groupname ' + groupName + ' already exists for supergroupId ' + supergroupId,
+          message: `Group with groupname ${groupName} already exists for supergroupId ${supergroupId}`,
         });
       }
 
       const groupValues = [group, groupData, groupName, supergroupId];
 
-      client.execute(q(keyspace, 'upsertGroup'), groupValues, {}, (err, result) => {
+      client.execute(q(keyspace, 'upsertGroup'), groupValues, {}, (err) => {
         if (err) { return next(err); }
-        joinGroup(keyspace, group, user, timestamp, (err, result) => {
+        joinGroup(keyspace, group, user, timestamp, (err) => {
           if (err) { return next(err); }
           next(null, _zipObject(['group', 'groupData', 'groupName', 'supergroupId'], groupValues));
         });
@@ -80,7 +80,7 @@ module.exports = (api) => {
   const getGroupByNameWithinSupergroup = (keyspace, groupName, supergroupId, next) => {
     client.get(q(keyspace, 'selectGroupByNameAndSupergroup'), [groupName, supergroupId], {}, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find group by groupName: ' + groupName + ' and supergroupId ' + supergroupId)); }
+      if (!result) { return next(api.common.error(404, `Unable to find group by groupName: ${groupName} and supergroupId ${supergroupId}`)); }
       next(null, result);
     });
   };
@@ -88,7 +88,7 @@ module.exports = (api) => {
   const getGroup = (keyspace, group, next) => {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find group by id: ' + group)); }
+      if (!result) { return next(api.common.error(404, `Unable to find group by id: ${group}`)); }
       next(null, result);
     });
   };
@@ -110,12 +110,12 @@ module.exports = (api) => {
         return next(new Error('Unable to update the group, only admin can update it.'));
       }
 
-      groupData = _mapValues(groupData, (value) => {
-        return value.toString();
-      }); // Always ensure our groupData is <text,text>
+      groupData = _mapValues(groupData, (value) =>
+        value.toString()
+      ); // Always ensure our groupData is <text,text>
 
       const groupValues = [groupName, supergroupId, groupData, group];
-      client.execute(q(keyspace, 'updateGroup'), groupValues, {}, (err, value) => {
+      client.execute(q(keyspace, 'updateGroup'), groupValues, {}, (err) => {
         if (err) { return next(err); }
         next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
       });
@@ -184,9 +184,9 @@ module.exports = (api) => {
           });
         }, (err, groups) => {
           if (err) { return next(err); }
-          const existingGroups = _filter(groups, (group) => {
-            return group !== null;
-          });
+          const existingGroups = _filter(groups, (group) =>
+            group !== null
+          );
           next(null, existingGroups);
         });
       } else {

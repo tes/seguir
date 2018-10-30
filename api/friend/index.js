@@ -76,9 +76,9 @@ module.exports = (api) => {
       if (err || !isFriend) { return next(err); }
       const deleteData = [user, user_friend];
       const deleteDataReciprocal = [user_friend, user];
-      client.execute(q(keyspace, 'removeFriend'), deleteData, {}, (err, result) => {
+      client.execute(q(keyspace, 'removeFriend'), deleteData, {}, (err) => {
         if (err) return next(err);
-        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {}, (err, result) => {
+        client.execute(q(keyspace, 'removeFriend'), deleteDataReciprocal, {}, (err) => {
           if (err) return next(err);
           api.feed.removeFeedsForItem(keyspace, friend.friend, (err) => {
             if (err) return next(err);
@@ -99,9 +99,8 @@ module.exports = (api) => {
     if (privacyCheckRequired && !user) return next({ statusCode: 403, message: 'You are not allowed to see this item.' });
 
     // First check if the user is one of the properties
-    const userIsOnItem = _.reduce(user_properties, (match, prop) => {
-      return match || user.toString() === item[prop].toString();
-    }, false);
+    const userIsOnItem = _.reduce(user_properties, (match, prop) =>
+      (match || user.toString() === item[prop].toString()), false);
     if (userIsOnItem) return next();
 
     // Now, if it is private they can see it if they are a friends with any
@@ -177,7 +176,7 @@ module.exports = (api) => {
       },
     ], (err, results) => {
       if (err) { return next(err); }
-      const inCommon = _.uniq(_.filter(_.intersection(results[0], results[1]), (item) => { return (item === liu || item === user) ? null : item; }));
+      const inCommon = _.uniq(_.filter(_.intersection(results[0], results[1]), (item) => (item === liu || item === user) ? null : item));
       async.map(inCommon, (id, cb) => {
         user.getUser(keyspace, id, cb);
       }, next);

@@ -48,21 +48,19 @@ module.exports = (url, data) => {
         if (item) {
           // Ensure item is URI encoded if it isn't already
           item = decodeURIComponent(item) !== item ? item : encodeURIComponent(item);
-          pattern = pattern.replace(':' + key, item);
+          pattern = pattern.replace(`:${key}`, item);
         }
       });
       if (data.query) {
-        pattern += '?' + data.query;
+        pattern += `?${data.query}`;
       }
       return pattern;
-    } else {
-      if (expectsData) {
-        console.log('No data provided to url: ' + url + ' > ' + urls[url]);
-      }
-      return urls[url];
     }
-  } else {
-    console.log('Unable to locate URL: ' + url);
-    return '';
+    if (expectsData) {
+      console.log(`No data provided to url: ${url} > ${urls[url]}`);
+    }
+    return urls[url];
   }
+  console.log(`Unable to locate URL: ${url}`);
+  return '';
 };

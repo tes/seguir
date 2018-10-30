@@ -8,9 +8,9 @@ const async = require('async');
  * clients, then removing the old.
  */
 const apply = (keyspace, api, next) => {
-  const addDescription = 'ALTER TABLE ' + keyspace + '.application_tokens ADD description text';
-  const getApplications = 'SELECT account, name, appkeyspace, appid, appsecret, enabled FROM ' + keyspace + '.applications';
-  const insertApplicationToken = 'INSERT INTO ' + keyspace + '.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES(?, ?, ?, ?, ?, ?)';
+  const addDescription = `ALTER TABLE ${keyspace}.application_tokens ADD description text`;
+  const getApplications = `SELECT account, name, appkeyspace, appid, appsecret, enabled FROM ${keyspace}.applications`;
+  const insertApplicationToken = `INSERT INTO ${keyspace}.application_tokens (appid, appkeyspace, tokenid, tokensecret, description, enabled) VALUES(?, ?, ?, ?, ?, ?)`;
 
   api.client.execute(addDescription, err => {
     if (err) return next(err);

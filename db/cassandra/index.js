@@ -1,3 +1,4 @@
+/* eslint-disable no-confusing-arrow */
 const cassandra = require('cassandra-driver');
 const Uuid = cassandra.types.Uuid;
 const TimeUuid = cassandra.types.TimeUuid;
@@ -89,7 +90,7 @@ const createClient = (config, next) => {
             const keyspace = query.split('FROM ')[1].split('.')[0];
             if (keyspace) {
               console.log('Truncating schema version to recover from index failure ...');
-              return execute('TRUNCATE ' + keyspace + '.schema_version;', () => {
+              return execute(`TRUNCATE ${keyspace}.schema_version;`, () => {
                 next(err);
               });
             }
@@ -129,21 +130,19 @@ const createClient = (config, next) => {
       };
     };
 
+    const isUuid = value => value instanceof Uuid;
+
     const generateId = uuid => {
       if (uuid) {
         if (isUuid(uuid)) {
           return uuid;
-        } else {
-          return Uuid.fromString(uuid);
         }
-      } else {
-        return Uuid.random();
+        return Uuid.fromString(uuid);
       }
+      return Uuid.random();
     };
 
     const generateTimeId = timestamp => timestamp ? TimeUuid.fromDate(timestamp) : TimeUuid.now();
-
-    const isUuid = value => value instanceof Uuid;
 
     const isStringUuid = value => typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4;
 
@@ -172,8 +171,8 @@ const createClient = (config, next) => {
         formatId,
         getTimestamp,
         migrations: path.resolve(__dirname, 'migrations'),
-        queries: require('./queries'),
-        setup: require('./setup'),
+        queries: require('./queries'), // eslint-disable-line global-require
+        setup: require('./setup'), // eslint-disable-line global-require
         get batch() {
           return batch();
         },

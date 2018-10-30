@@ -52,9 +52,9 @@ module.exports = (api) => {
     let userdata = options.userdata || {};
     const userid = client.isValidId(options.userid) ? options.userid : client.generateId();
 
-    userdata = _.mapValues(userdata, (value) => {
-      return value.toString();
-    }); // Always ensure our userdata is <text,text>
+    userdata = _.mapValues(userdata, (value) =>
+      value.toString()
+    ); // Always ensure our userdata is <text,text>
 
     // Check user doesn't exist as per issue #36
     getUserByAltId(keyspace, altid, (err, existingUser) => {
@@ -62,15 +62,15 @@ module.exports = (api) => {
       if (existingUser) {
         return next({
           statusCode: 409,
-          message: 'User with altid ' + altid + ' already exists, use updateUser to update.',
+          message: `User with altid ${altid} already exists, use updateUser to update.`,
         });
       }
 
-      const user = [userid, username, '' + altid, userdata];
+      const user = [userid, username, `${altid}`, userdata];
 
       client.execute(q(keyspace, 'upsertUser'), user, {
         hints: [null, null, 'map'],
-      }, (err, result) => {
+      }, (err) => {
         if (err) { return next(err); }
         const tempUser = _.zipObject(['user', 'username', 'altid'], user);
         tempUser.userdata = userdata;
@@ -99,7 +99,7 @@ module.exports = (api) => {
     api.auth.coerceUserToUuid(keyspace, follow.users, (err, usersToFollow) => {
       if (err) { return next(err); }
       async.map(usersToFollow, (userToFollow, cb) => {
-        debug(user.user + ' >> FOLLOW >> ' + userToFollow);
+        debug(`${user.user} >> FOLLOW >> ${userToFollow}`);
         api.follow.addFollower(keyspace, userToFollow, user.user, api.client.getTimestamp(), follow.visibility || api.visibility.PUBLIC, (err, follow) => {
           if (err) { return cb(err); }
           api.feed.seedFeed(keyspace, user.user, userToFollow, backfill, follow, cb);
@@ -112,9 +112,9 @@ module.exports = (api) => {
   };
 
   const updateUser = (keyspace, userid, username, altid, userdata, next) => {
-    userdata = _.mapValues(userdata, (value) => {
-      return value.toString();
-    }); // Always ensure our userdata is <text,text>
+    userdata = _.mapValues(userdata, (value) =>
+      value.toString()
+    ); // Always ensure our userdata is <text,text>
 
     /*
      * Retrieve the existing record as we need to clear the old caches assuming altid
@@ -122,13 +122,13 @@ module.exports = (api) => {
      */
     getUser(keyspace, userid, (err, user) => {
       if (err) { return next(err); }
-      const cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+      const cachedItems = [`username:${user.username}`, `useraltid:${user.altid}`];
       async.map(cachedItems, client.deleteCacheItem, () => {
-        const user = [username, '' + altid, userdata, userid];
+        const user = [username, `${altid}`, userdata, userid];
         client.execute(q(keyspace, 'updateUser'), user, {
-          cacheKey: 'user:' + userid,
+          cacheKey: `user:${userid}`,
           hints: [null, null, 'map'],
-        }, (err, result) => {
+        }, (err) => {
           if (err) { return next(err); }
           next(null, { user: userid, username, altid, userdata });
         });
@@ -137,25 +137,25 @@ module.exports = (api) => {
   };
 
   const getUser = (keyspace, user, next) => {
-    client.get(q(keyspace, 'selectUser'), [user], { cacheKey: 'user:' + user }, (err, result) => {
+    client.get(q(keyspace, 'selectUser'), [user], { cacheKey: `user:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find user by id: ' + user)); }
+      if (!result) { return next(api.common.error(404, `Unable to find user by id: ${user}`)); }
       next(null, result);
     });
   };
 
   const getUserByName = (keyspace, username, next) => {
-    client.get(q(keyspace, 'selectUserByUsername'), [username], { cacheKey: 'username:' + username }, (err, result) => {
+    client.get(q(keyspace, 'selectUserByUsername'), [username], { cacheKey: `username:${username}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find user by name: ' + username)); }
+      if (!result) { return next(api.common.error(404, `Unable to find user by name: ${username}`)); }
       next(null, result);
     });
   };
 
   const getUserByAltId = (keyspace, altid, next) => {
-    client.get(q(keyspace, 'selectUserByAltId'), ['' + altid], { cacheKey: 'useraltid:' + altid }, (err, result) => {
+    client.get(q(keyspace, 'selectUserByAltId'), [`${altid}`], { cacheKey: `useraltid:${altid}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'Unable to find user by altid: ' + altid)); }
+      if (!result) { return next(api.common.error(404, `Unable to find user by altid: ${altid}`)); }
       next(null, result);
     });
   };
@@ -174,7 +174,7 @@ module.exports = (api) => {
 
       // Always replace the longest embedded field to
       // ensure user_ and user_friend not replaced twice
-      fields.sort((a, b) => { return b.length - a.length; });
+      fields.sort((a, b) => b.length - a.length);
 
       async.mapSeries(fields, (field, eachCb) => {
         if (!item[field]) { return eachCb(null); }
@@ -283,7 +283,7 @@ module.exports = (api) => {
         console.log('err', err);
         if (err) { return next(err); }
 
-        const cachedItems = ['username:' + user.username, 'useraltid:' + user.altid];
+        const cachedItems = [`username:${user.username}`, `useraltid:${user.altid}`];
         async.map(cachedItems, client.deleteCacheItem, (err) => {
           if (err) return next(err);
 

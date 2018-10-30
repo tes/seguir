@@ -11,7 +11,7 @@ const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-re
 const keyspace = 'test_seguir_auth';
 
 databases.forEach((db) => {
-  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
+  const config = _.clone(require(`../../fixtures/${db}.json`));
   config.keyspace = keyspace;
 
   describe(`API [Account and Application] - ${db}`, function () {

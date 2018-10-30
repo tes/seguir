@@ -12,7 +12,7 @@ const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra-re
 const _ = require('lodash');
 
 databases.forEach((db) => {
-  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
+  const config = _.clone(require(`../../fixtures/${db}.json`));
   config.keyspace = keyspace;
 
   describe(`API [Follows] - ${db}`, function () {

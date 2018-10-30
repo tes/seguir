@@ -19,14 +19,51 @@ module.exports = api => {
     return _.filter(migrations, item => _.includes(toApplyVersions, item.version));
   };
 
-  const getMigrationsToApply = (next) => {
+  const getMigrations = (keyspace, type, next) => {
+    const migrationsPath = path.resolve(api.client.migrations, type);
+    const migrations = [];
+    fs.readdir(migrationsPath, (err, files) => {
+      if (err) return next(err);
+      files.forEach(f => {
+        const splitf = f.split('_');
+        if (splitf.length === 2 && path.extname(f) === '.js') {
+          const version = splitf[0];
+          const description = splitf[1].split('.')[0];
+
+          migrations.push({
+            file: path.resolve(migrationsPath, f),
+            type,
+            keyspace,
+            version: +version,
+            description,
+          });
+        }
+      });
+      next(null, migrations.sort((thisMigration, thatMigration) => thisMigration.version - thatMigration.version));
+    });
+  };
+
+  const selectSchemaVersions = (keyspace, next) => {
+    client.execute(q(keyspace, 'selectSchemaVersions'), [], {}, (err, result) => {
+      if (err) {
+        // If we get an error here - we will assume it is because we haven't yet created the 0 migration
+        // So we will return no migrations, so the zero migration applies
+        return next(null, []);
+      }
+      next(null, result);
+    });
+  };
+
+  const getMigrationsToApplyToKeyspace = (keyspace, type, next) => {
     async.series([
-      async.apply(getMigrationsToApplyToKeyspace, api.config.keyspace, 'seguir'),
-      async.apply(getApplicationMigrationsToApply, api.config.keyspace),
+      async.apply(selectSchemaVersions, keyspace),
+      async.apply(getMigrations, keyspace, type),
     ], (err, results) => {
       if (err) return next(err);
-      const migrations = _.union(results[0], results[1]);
-      next(null, migrations);
+      // Have to convert the schema version to an integer from cassandra Integer type
+      const schemaVersions = _.map(_.map(results[0], 'version'), v => +v.toString());
+      const migrations = results[1];
+      next(null, toApply(schemaVersions, migrations));
     });
   };
 
@@ -38,7 +75,7 @@ module.exports = api => {
         api.auth.getApplications(account.account, (err, applications) => {
           if (err) return cb(err);
           applications.forEach(app => {
-            applicationKeyspaces.push(api.config.keyspace + '_' + app.appkeyspace);
+            applicationKeyspaces.push(`${api.config.keyspace}_${app.appkeyspace}`);
           });
           cb(null);
         });
@@ -64,40 +101,14 @@ module.exports = api => {
     });
   };
 
-  const getMigrationsToApplyToKeyspace = (keyspace, type, next) => {
+  const getMigrationsToApply = (next) => {
     async.series([
-      async.apply(selectSchemaVersions, keyspace),
-      async.apply(getMigrations, keyspace, type),
+      async.apply(getMigrationsToApplyToKeyspace, api.config.keyspace, 'seguir'),
+      async.apply(getApplicationMigrationsToApply, api.config.keyspace),
     ], (err, results) => {
       if (err) return next(err);
-      // Have to convert the schema version to an integer from cassandra Integer type
-      const schemaVersions = _.map(_.map(results[0], 'version'), v => +v.toString());
-      const migrations = results[1];
-      next(null, toApply(schemaVersions, migrations));
-    });
-  };
-
-  const getMigrations = (keyspace, type, next) => {
-    const migrationsPath = path.resolve(api.client.migrations, type);
-    const migrations = [];
-    fs.readdir(migrationsPath, (err, files) => {
-      if (err) return next(err);
-      files.forEach(f => {
-        const split_f = f.split('_');
-        if (split_f.length === 2 && path.extname(f) === '.js') {
-          const version = split_f[0];
-          const description = split_f[1].split('.')[0];
-
-          migrations.push({
-            file: path.resolve(migrationsPath, f),
-            type,
-            keyspace,
-            version: +version,
-            description,
-          });
-        }
-      });
-      next(null, migrations.sort((thisMigration, thatMigration) => thisMigration.version - thatMigration.version));
+      const migrations = _.union(results[0], results[1]);
+      next(null, migrations);
     });
   };
 
@@ -108,10 +119,10 @@ module.exports = api => {
     } catch (ex) {
       return next(ex);
     }
-    console.log('Applying migration: ' + migration.type + ' / ' + migration.file);
+    console.log(`Applying migration: ${migration.type} / ${migration.file}`);
     migrationFn.apply(migration.keyspace, api, err => {
       if (err) {
-        console.error('Database migration: ' + migration.version + ' - ' + migration.description + ' FAILED: ' + err.message);
+        console.error(`Database migration: ${migration.version} - ${migration.description} FAILED: ${err.message}`);
         migrationFn.rollback(migration.keyspace, api, rollbackErr => {
           if (rollbackErr) return next(rollbackErr);
           next(err);
@@ -130,17 +141,6 @@ module.exports = api => {
 
   const getSchemaVersions = (next) => {
     selectSchemaVersions(api.config.keyspace, next);
-  };
-
-  const selectSchemaVersions = (keyspace, next) => {
-    client.execute(q(keyspace, 'selectSchemaVersions'), [], {}, (err, result) => {
-      if (err) {
-        // If we get an error here - we will assume it is because we haven't yet created the 0 migration
-        // So we will return no migrations, so the zero migration applies
-        return next(null, []);
-      }
-      next(null, result);
-    });
   };
 
   const insertSchemaVersion = (keyspace, version, description, next) => {

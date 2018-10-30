@@ -12,7 +12,7 @@ const path = require('path');
 const databases = process.env.DATABASE ? [process.env.DATABASE] : ['cassandra'];
 
 databases.forEach((db) => {
-  const config = _.clone(require(`../../fixtures/${db}.json`)); // eslint-disable-line global-require
+  const config = _.clone(require(`../../fixtures/${db}.json`));
   config.keyspace = keyspace;
 
   describe(`Seguir Database Migrations - ${db}`, function () {

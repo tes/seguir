@@ -81,7 +81,7 @@ const setupGraph = (keyspace, api, users, actions, next) => {
 };
 
 const assertFeed = (feed, actionResults, expected) => {
-  const feedKeys = _.map(feed, (item) => ({ item: item._item, type: item.type })); // eslint-disable-line no-underscore-dangle
+  const feedKeys = _.map(feed, (item) => ({ item: item._item, type: item.type }));
   const expectedFeed = _.map(expected, (key) => {
     let type;
     // This is due to no common identifier and type - we should refactor to add these

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 /**
  * Command line client for seguir - used to setup a server.
  */
@@ -16,7 +15,7 @@ program
   .parse(process.argv);
 
 const database = program.database || 'cassandra';
-const defaultConfig = '../config/' + database;
+const defaultConfig = `../config/${database}`;
 let configFn;
 
 if (program.config) {
@@ -24,7 +23,7 @@ if (program.config) {
   try {
     configFn = require(configFile);
   } catch (ex) {
-    console.log('Cant open config: ' + ex.message);
+    console.log(`Cant open config: ${ex.message}`);
     process.exit(1);
   }
 } else {
@@ -35,7 +34,7 @@ if (program.config) {
 }
 
 const error = (err) => {
-  console.log('Error: ' + err.message);
+  console.log(`Error: ${err.message}`);
   process.exit(1);
 };
 
@@ -56,11 +55,11 @@ configFn((err, config) => {
       try {
         setup = require(setupFile);
       } catch (ex) {
-        console.log('Cant open setup file: ' + ex.message);
+        console.log(`Cant open setup file: ${ex.message}`);
         process.exit(1);
       }
 
-      console.log('Setting up seguir based on: ' + setupFile);
+      console.log(`Setting up seguir based on: ${setupFile}`);
       api.client.setup.setupSeguir(api.client, setup.keyspace, () => {
         setupAccount(setup.account, (err, account) => {
           if (err) return error(err);
@@ -95,7 +94,7 @@ configFn((err, config) => {
       inquirer.prompt([
         {
           type: 'list',
-          message: 'What would you like to do [DB: ' + database.green + ']:',
+          message: `What would you like to do [DB: ${database.green}]:`,
           name: 'task',
           choices: _.keys(tasks),
         },
@@ -106,10 +105,10 @@ configFn((err, config) => {
 
     const checkSetup = () => {
       // Check that the DB exists
-      console.log('Checking ' + api.client.type + ': ' + JSON.stringify(config[api.client.type]));
+      console.log(`Checking ${api.client.type}: ${JSON.stringify(config[api.client.type])}`);
       api.auth.getAccounts((err, accounts) => {
         if (err) {
-          console.log('An error was encountered: ' + err.message);
+          console.log(`An error was encountered: ${err.message}`);
           if (err.message === 'Keyspace / schema seguir does not exist') {
             console.log('It looks like you need to initialise this instance, please re-run this command and select that option.');
           }
@@ -117,7 +116,7 @@ configFn((err, config) => {
           if (accounts.length === 0) {
             console.log('It looks like you need to create your first account, please re-run this command and select that option.');
           } else {
-            console.log('Configuration looks OK on the surface, ' + accounts.length + ' accounts were found.');
+            console.log(`Configuration looks OK on the surface, ${accounts.length} accounts were found.`);
           }
         }
         process.exit();
@@ -132,8 +131,8 @@ configFn((err, config) => {
           return process.exit();
         }
         console.log('\nMigrations to apply:\n');
-        migrations.forEach(function (migration) {
-          console.log(migration.type.green + '[' + migration.keyspace.cyan + ']: ' + migration.version + ' ' + migration.description);
+        migrations.forEach((migration) => {
+          console.log(`${migration.type.green} [${migration.keyspace.cyan}]: ${migration.version} ${migration.description}`);
         });
         console.log('');
         confirmMigration(migrations);
@@ -164,12 +163,12 @@ configFn((err, config) => {
     const listUsers = () => {
       selectAccount((err, account, name) => {
         if (err) return error(err);
-        console.log(name + ' users:');
+        console.log(`${name} users:`);
         api.auth.getAccountUsers(account, (err, users) => {
           if (err) return error(err);
           if (users) {
             users.forEach(user => {
-              console.log(' - ' + user.username);
+              console.log(` - ${user.username}`);
             });
           } else {
             console.log(' > No users for this account!');
@@ -182,12 +181,12 @@ configFn((err, config) => {
     const listApplications = () => {
       selectAccount((err, account, name) => {
         if (err) return error(err);
-        console.log(name + ' applications:');
+        console.log(`${name} applications:`);
         api.auth.getApplications(account, (err, apps) => {
           if (err) return error(err);
           if (apps) {
             apps.forEach(app => {
-              console.log(' - [' + app.name + '] appid: ' + app.appid);
+              console.log(` - [${app.name}] appid: ${app.appid}`);
             });
           } else {
             console.log(' > No apps for this account!');
@@ -213,8 +212,8 @@ configFn((err, config) => {
             api.auth.addApplicationToken(application, appkeyspace, output.description, (err, token) => {
               if (err) return error(err);
               if (token) {
-                console.log(' Added token: ' + output.description);
-                console.log(' - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+                console.log(` Added token: ${output.description}`);
+                console.log(` - tokenid: ${token.tokenid} / tokensecret: ${token.tokensecret}`);
               }
               process.exit();
             });
@@ -228,12 +227,12 @@ configFn((err, config) => {
         if (err) return error(err);
         selectApplication(account, (err, application, name) => {
           if (err) return error(err);
-          console.log(name + ' applications:');
+          console.log(`${name} applications:`);
           api.auth.getApplicationTokens(application, (err, tokens) => {
             if (err) return error(err);
             if (tokens) {
               tokens.forEach(token => {
-                console.log(' - [' + token.description + ' - ' + (token.enabled ? 'ENABLED' : 'DISABLED') + '] - tokenid: ' + token.tokenid + ' / tokensecret: ' + token.tokensecret);
+                console.log(` - [${token.description} - (${token.enabled ? 'ENABLED' : 'DISABLED'})] - tokenid: ${token.tokenid} / tokensecret: ${token.tokensecret}`);
               });
             } else {
               console.log(' > No tokens for this account!');
@@ -283,7 +282,7 @@ configFn((err, config) => {
             choices: accs,
           },
         ], answer => {
-          next(null, _.result(_.find(accounts, { 'name': answer.name }), 'account'), answer.name);
+          next(null, _.result(_.find(accounts, { name: answer.name }), 'account'), answer.name);
         });
       });
     };
@@ -300,7 +299,7 @@ configFn((err, config) => {
             choices: apps,
           },
         ], answer => {
-          const application = _.find(applications, { 'name': answer.name });
+          const application = _.find(applications, { name: answer.name });
           next(null, _.result(application, 'appid'), answer.name, _.result(application, 'appkeyspace'));
         });
       });
@@ -318,7 +317,7 @@ configFn((err, config) => {
             choices: tokenDescriptions,
           },
         ], answer => {
-          const token = _.find(tokens, { 'description': answer.description });
+          const token = _.find(tokens, { description: answer.description });
           next(null, token);
         });
       });
@@ -336,10 +335,10 @@ configFn((err, config) => {
           api.auth.updateApplicationTokenSecret(token.tokenid, (err, token) => {
             if (!err) {
               console.log('Token updated, update the client application if you still want it to have access!');
-              console.log('tokenid:     ' + token.tokenid);
-              console.log('tokensecret: ' + token.tokensecret);
+              console.log(`tokenid:     ${token.tokenid}`);
+              console.log(`tokensecret: ${token.tokensecret}`);
             } else {
-              console.log('ERROR: ' + err.message);
+              console.log(`ERROR: ${err.message}`);
             }
             process.exit();
           });
@@ -361,9 +360,9 @@ configFn((err, config) => {
         if (confirm.confirm) {
           api.auth.updateApplicationToken(token.tokenid, !token.enabled, token.description, (err, token) => {
             if (!err) {
-              console.log('Token is now: ' + (token.enabled ? 'ENABLED' : 'DISABLED'));
+              console.log(`Token is now: (${token.enabled ? 'ENABLED' : 'DISABLED'})`);
             } else {
-              console.log('ERROR: ' + err.message);
+              console.log(`ERROR: ${err.message}`);
             }
             process.exit();
           });
@@ -445,7 +444,7 @@ configFn((err, config) => {
       inquirer.prompt([
         {
           type: 'input',
-          message: 'Enter name of user to add to account ' + name + ':',
+          message: `Enter name of user to add to account ${name}:`,
           name: 'username',
         },
         {
@@ -477,7 +476,7 @@ configFn((err, config) => {
       inquirer.prompt([
         {
           type: 'input',
-          message: 'Enter application name (e.g. app-name) to add to account ' + name + ':',
+          message: `Enter application name (e.g. app-name) to add to account ${name}:`,
           name: 'name',
         },
       ], application => {
@@ -489,7 +488,7 @@ configFn((err, config) => {
       inquirer.prompt([
         {
           type: 'input',
-          message: 'Enter application token description (e.g. first-consumer) to add to application ' + application.name + ':',
+          message: `Enter application token description (e.g. first-consumer) to add to application ${application.name}:`,
           name: 'name',
         },
       ], token => {
@@ -519,9 +518,9 @@ configFn((err, config) => {
           process.exit(0);
         }
         console.log('Token details are:');
-        console.log('description: ' + token.description);
-        console.log('tokenid: ' + token.tokenid);
-        console.log('tokensecret: ' + token.tokensecret);
+        console.log(`description: ${token.description}`);
+        console.log(`tokenid: ${token.tokenid}`);
+        console.log(`tokensecret: ${token.tokensecret}`);
         next();
       });
     };

@@ -4,6 +4,16 @@ const RSMQ = require('rsmq');
 const RSMQWorker = require('rsmq-worker');
 const clients = [];
 
+const client = (config) => {
+  const redisConfig = config && config.messaging ? config.messaging : {};
+  const redisClient = redis(redisConfig);
+
+  // Keep a reference to it for later shutdown
+  clients.push(redisClient);
+
+  return redisClient;
+};
+
 module.exports = config => {
   if (!config || !config.messaging) {
     return { enabled: false };
@@ -52,7 +62,7 @@ module.exports = config => {
   /**
    * Publish a notification onto a pubsub topic for downstream systems
    */
-  const publish = (name, data, next) => {
+  const publish = (name, data) => {
     const channel = [config.messaging.namespace || 'seguir', name].join('.');
     redisClient.publish(channel, JSON.stringify(data));
   };
@@ -74,9 +84,9 @@ module.exports = config => {
    * Shutdown all active redis clients
    */
   const shutdown = () => {
-    clients.forEach(client => {
-      client.unsubscribe();
-      client.quit();
+    clients.forEach((redisclient) => {
+      redisclient.unsubscribe();
+      redisclient.quit();
     });
   };
 
@@ -90,14 +100,4 @@ module.exports = config => {
     enabled: true,
     feed: config.messaging.feed,
   };
-};
-
-const client = (config) => {
-  const redisConfig = config && config.messaging ? config.messaging : {};
-  const redisClient = redis(redisConfig);
-
-  // Keep a reference to it for later shutdown
-  clients.push(redisClient);
-
-  return redisClient;
 };

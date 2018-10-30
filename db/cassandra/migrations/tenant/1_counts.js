@@ -1,5 +1,5 @@
 const apply = (keyspace, api, next) => {
-  const schemaVersionCql = 'CREATE TABLE ' + keyspace + '.counts (item text, type text, count counter, PRIMARY KEY (item, type))';
+  const schemaVersionCql = `CREATE TABLE ${keyspace}.counts (item text, type text, count counter, PRIMARY KEY (item, type))`;
   api.client.execute(schemaVersionCql, next);
 };
 

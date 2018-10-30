@@ -17,8 +17,8 @@ module.exports = (client, options) => {
   const dropKeyspace = (next) => {
     client._client.connect(() => {
       if (client._client.metadata.keyspaces[KEYSPACE]) {
-        if (verbose) console.log('Dropping keyspace: ' + KEYSPACE + '...');
-        client.execute('DROP KEYSPACE ' + KEYSPACE, err => {
+        if (verbose) console.log(`Dropping keyspace: ${KEYSPACE}...`);
+        client.execute(`DROP KEYSPACE ${KEYSPACE}`, err => {
           if (err && err.code === 8960) { return next(); }
           return next(err);
         });
@@ -30,17 +30,20 @@ module.exports = (client, options) => {
 
   /* istanbul ignore next */
   const createKeyspace = (next) => {
-    if (verbose) console.log('Creating keyspace: ' + KEYSPACE + '...');
-    client.execute('CREATE KEYSPACE IF NOT EXISTS ' + KEYSPACE + ' WITH replication ' +
-                  '= {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};', next);
+    if (verbose) console.log(`Creating keyspace: ${KEYSPACE}...`);
+    client.execute(`CREATE KEYSPACE IF NOT EXISTS ${KEYSPACE} WITH replication = {\'class\' : \'SimpleStrategy\', \'replication_factor\' : 3};`, next);
+  };
+
+  const flushCache = (next) => {
+    client.flushCache(next);
   };
 
   const truncate = (next) => {
     console.log('    !! Truncating vs recreating tables ...');
     async.map(tables, (cql, cb) => {
-      const tableName = cql.split(KEYSPACE + '.')[1].split(' ')[0];
+      const tableName = cql.split(`${KEYSPACE}.`)[1].split(' ')[0];
       if (tableName !== 'schema_version') {
-        const truncateCql = 'TRUNCATE ' + KEYSPACE + '.' + tableName;
+        const truncateCql = `TRUNCATE ${KEYSPACE}.${tableName}`;
         client.execute(truncateCql, cb);
       } else {
         cb();
@@ -52,11 +55,11 @@ module.exports = (client, options) => {
 
   /* istanbul ignore next */
   const createTables = (next) => {
-    if (verbose) console.log('Creating tables in: ' + KEYSPACE + '...');
+    if (verbose) console.log(`Creating tables in: ${KEYSPACE}...`);
 
     async.map(tables, (cql, cb) => {
       if (verbose) console.log(cql);
-      client.execute(cql, function (err) {
+      client.execute(cql, (err) => {
         if (err && (err.code === 9216)) { // Already exists
           return cb();
         }
@@ -67,9 +70,9 @@ module.exports = (client, options) => {
 
   /* istanbul ignore next */
   const createSecondaryIndexes = (next) => {
-    if (verbose) console.log('Creating secondary indexes in: ' + KEYSPACE + '...');
+    if (verbose) console.log(`Creating secondary indexes in: ${KEYSPACE}...`);
     async.map(indexes, (cql, cb) => {
-      client.execute(cql, function (err) {
+      client.execute(cql, (err) => {
         if (err && (err.code === 9216 || err.code === 8704)) { // Already exists
           return cb();
         }
@@ -80,14 +83,10 @@ module.exports = (client, options) => {
 
    /* istanbul ignore next */
   const initialiseSchemaVersion = (version, next) => {
-    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(version), new Date(), 'Initial version'], () => {
+    client.execute(q(KEYSPACE, 'insertSchemaVersion'), [cassandra.types.Integer.fromInt(version), new Date(), 'Initial version'], () =>
       // Ignore error - as it may be that the schema_version table does not yet exist
-      return next();
-    });
-  };
-
-  const flushCache = (next) => {
-    client.flushCache(next);
+      next()
+    );
   };
 
   const waitForIndexes = (next) => {
@@ -96,14 +95,14 @@ module.exports = (client, options) => {
     const checkIndexes = () => {
       checkCount++;
       if (checkCount > checkLimit) {
-        return next(new Error('Unable to validate indexes in cassandra after ' + checkLimit + ' attempts!'));
+        return next(new Error(`Unable to validate indexes in cassandra after ${checkLimit} attempts!`));
       }
       client.execute(q(KEYSPACE, 'retrieveIndexes'), [KEYSPACE], (err, results) => {
         if (err) {
           return next(err);
         }
-        const indexes = _.compact(_.map(results, i => i.columnfamily_name + '.' + i.column_name));
-        const difference = _.difference(indexes, indexList);
+        const indexItems = _.compact(_.map(results, i => `${i.columnfamily_name}.${i.column_name}`));
+        const difference = _.difference(indexItems, indexList);
         if (difference.length === 0) {
           return next();
         }

@@ -8,7 +8,7 @@ module.exports = {
   PRIVATE,
   PERSONAL,
   isPrivate: visibility => visibility === PRIVATE || visibility === PUBLIC,
-  isPersonal: visibility => true,
+  isPersonal: visibility => true, // eslint-disable-line no-unused-vars
   isPublic: visibility => visibility === PUBLIC,
   mapToQuery: (isUser, isFriend) => {
     if (isUser) {

@@ -10,5 +10,5 @@ module.exports = (config, next) => {
   }
 
   debug('Using %s', clientType);
-  require('./' + clientType)(config, next);
+  require(`./${clientType}`)(config, next);
 };

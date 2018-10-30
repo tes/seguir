@@ -16,7 +16,7 @@ const LIMIT = +process.env.LIMIT || 10;
 const FEED = +process.env.FEED || 50;
 const ITEMS = +process.env.ITEMS || 500;
 
-const config = _.clone(require('../tests/fixtures/' + DATABASE + '.json'));
+const config = _.clone(require(`../tests/fixtures/${DATABASE}.json`));
 config.keyspace = keyspace;
 
 let api;
@@ -66,22 +66,24 @@ const initialise = (next) => {
     },
   ];
 
-  let post, post2, like;
+  let post;
+  let post2;
+  let like;
   // Intersperse likes and posts
   for (let i = 0; i < ITEMS; i++) {
-    post = { key: 'post-public-cc-' + i, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html' };
-    post.content = 'Hello there from iteraton number ' + i;
+    post = { key: `post-public-cc-${i}`, type: 'post', user: 'cliftonc', content: 'hello', contentType: 'text/html' };
+    post.content = `Hello there from iteraton number ${i}`;
     actions.push(post);
-    post2 = { key: 'post-public-alf-' + i, type: 'post', user: 'alfred', content: 'goodbye', contentType: 'text/html' };
-    post2.content = 'Goodbye there from iteraton number ' + i;
+    post2 = { key: `post-public-alf-${i}`, type: 'post', user: 'alfred', content: 'goodbye', contentType: 'text/html' };
+    post2.content = `Goodbye there from iteraton number ${i}`;
     actions.push(post2);
-    like = { key: 'like-public-' + i, type: 'like', user: 'cliftonc', item: 'http://hello.com/' + i };
+    like = { key: `like-public-${i}`, type: 'like', user: 'cliftonc', item: `http://hello.com/${i}` };
     actions.push(like);
   }
 
-  console.log('Initialising feed with ' + actions.length + ' actions');
+  console.log(`Initialising feed with ${actions.length} actions`);
   const start = process.hrtime();
-  initialiser.setupGraph(keyspace, api, users, actions, (err, results) => {
+  initialiser.setupGraph(keyspace, api, users, actions, (err) => {
     if (err) {
       console.log(err);
       process.exit(1);
@@ -98,11 +100,10 @@ const initialise = (next) => {
 };
 
 const benchmark = () => {
-  console.log('Starting benchmark with TIMES=' + TIMES + ', CONCURRENCY=' + LIMIT + ', FEED=' + FEED + ' ...\n');
+  console.log(`Starting benchmark with TIMES=${TIMES}, CONCURRENCY=${LIMIT}, FEED=${FEED} ...\n`);
   async.timesLimit(TIMES, LIMIT, (n, next) => {
     setTimeout(() => {
       getFollowers('phteven', (err, followTime) => {
-        if (err) {}
         getFeed('phteven', (err, feedTime) => {
           next(err, followTime + feedTime);
         });
@@ -116,10 +117,10 @@ const benchmark = () => {
     }
 
     console.log('Response Times:');
-    console.log('Min: ' + Math.floor(ss.min(result)) + 'ms');
-    console.log('Max: ' + Math.floor(ss.max(result)) + 'ms');
-    console.log('95th: ' + Math.floor(ss.quantile(result, 0.95)) + 'ms');
-    console.log('Std Dev: ' + Math.floor(ss.standardDeviation(result)) + 'ms');
+    console.log(`Min: ${Math.floor(ss.min(result))}ms`);
+    console.log(`Max: ${Math.floor(ss.max(result))}ms`);
+    console.log(`95th: ${Math.floor(ss.quantile(result, 0.95))}ms`);
+    console.log(`Std Dev: ${Math.floor(ss.standardDeviation(result))}ms`);
 
     console.log('\nRedis Cache:');
     redisStats(api);
@@ -133,24 +134,24 @@ const benchmark = () => {
   });
 };
 
-const redisStats = (api) => {
-  const rs = api.client.cacheStats();
-  if (rs.user) console.log('Hit Ratio [user] out of ' + rs.user.GET + ': ' + Math.floor((rs.user.HIT / rs.user.GET) * 100) + '%');
-  if (rs.post) console.log('Hit Ratio [post] out of ' + rs.post.GET + ': ' + Math.floor((rs.post.HIT / rs.post.GET) * 100) + '%');
-  if (rs.like) console.log('Hit Ratio [like] out of ' + rs.like.GET + ': ' + Math.floor((rs.like.HIT / rs.like.GET) * 100) + '%');
-  if (rs.follow) console.log('Hit Ratio [follow] out of ' + rs.follow.GET + ': ' + Math.floor((rs.follow.HIT / rs.follow.GET) * 100) + '%');
-  if (rs.count) console.log('Hit Ratio [count] out of ' + rs.count.GET + ': ' + Math.floor((rs.count.HIT / rs.count.GET) * 100) + '%');
+const redisStats = (clientApi) => {
+  const rs = clientApi.client.cacheStats();
+  if (rs.user) console.log(`Hit Ratio [user] out of ${rs.user.GET}: ${Math.floor((rs.user.HIT / rs.user.GET) * 100)}%`);
+  if (rs.post) console.log(`Hit Ratio [post] out of ${rs.post.GET}: ${Math.floor((rs.post.HIT / rs.post.GET) * 100)}%`);
+  if (rs.like) console.log(`Hit Ratio [like] out of ${rs.like.GET}: ${Math.floor((rs.like.HIT / rs.like.GET) * 100)}%`);
+  if (rs.follow) console.log(`Hit Ratio [follow] out of ${rs.follow.GET}: ${Math.floor((rs.follow.HIT / rs.follow.GET) * 100)}%`);
+  if (rs.count) console.log(`Hit Ratio [count] out of ${rs.count.GET}: ${Math.floor((rs.count.HIT / rs.count.GET) * 100)}%`);
 };
 
-const userStats = (api) => {
-  const us = api.client.cacheStats();
-  if (us.user) console.log('Hit Ratio [user]: ' + Math.floor((us.user.HIT / us.user.GET) * 100) + '%');
+const userStats = (clientApi) => {
+  const us = clientApi.client.cacheStats();
+  if (us.user) console.log(`Hit Ratio [user]: ${Math.floor((us.user.HIT / us.user.GET) * 100)}%`);
 };
 
 const getFeed = (user, next) => {
   const start = process.hrtime();
   process.stdout.write('.');
-  api.feed.getFeed(keyspace, users[user].user, users[user].user, { pageSize: 50 }, (err, feed) => {
+  api.feed.getFeed(keyspace, users[user].user, users[user].user, { pageSize: 50 }, (err) => {
     if (err) {
       console.log(err);
       process.exit(1);
@@ -163,7 +164,7 @@ const getFeed = (user, next) => {
 const getFollowers = (user, next) => {
   const start = process.hrtime();
   process.stdout.write('.');
-  api.follow.getFollowers(keyspace, users[user].user, users[user].user, (err, followers) => {
+  api.follow.getFollowers(keyspace, users[user].user, users[user].user, (err) => {
     if (err) {
       console.log(err);
       process.exit(1);

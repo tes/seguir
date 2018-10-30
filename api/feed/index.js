@@ -45,7 +45,7 @@ module.exports = (api) => {
       if (err) { return next(err); }
 
       const processRow = (row, cb) => {
-        let isPrivate = jobData.visibility === api.visibility.PRIVATE;
+        const isPrivate = jobData.visibility === api.visibility.PRIVATE;
         const followerIsFollower = jobData.type === 'follow' && (row.user_follower.toString() === jobData.object.user_follower.toString());
 
         // Follow is added to followers feed directly, not via the follow relationship
@@ -54,7 +54,7 @@ module.exports = (api) => {
         }
         api.friend.isFriend(jobData.keyspace, row.user, row.user_follower, (err, isFriend) => {
           if (err) {
-            console.log('error while fetching is friend (' + row.user + ':' + row.user_follower + ')');
+            console.log(`error while fetching is friend (${row.user}:${row.user_follower})`);
             return nextIfFinished(false, cb);
           }
           if (!isPrivate || (isPrivate && isFriend)) {
@@ -336,11 +336,11 @@ module.exports = (api) => {
           expander(keyspace, user, item, (err, expandedItem) => {
             if (err) { return; }
             if (!expandedItem) {
-              console.log('Unable to expand for notification user: ' + user + ', item: ' + JSON.stringify(item));
+              console.log(`Unable to expand for notification user: ${user}, item: ${JSON.stringify(item)}`);
               return;
             }
             // Do not notify a user about things that they post or where they are the follower
-            let isUser = expandedItem.type === 'follow'
+            const isUser = expandedItem.type === 'follow'
               ? userObject.user.toString() === expandedItem.user_follower.user.toString()
               : userObject.user.toString() === expandedItem.user.user.toString();
             if (!isUser) {
@@ -379,7 +379,7 @@ module.exports = (api) => {
     if (timeline === 'feed_timeline') notify(keyspace, 'feed-add', user, { item, type });
     debug('Upsert into timeline: ', timeline, user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimeline', { TIMELINE: timeline }), data, {}, next);
-    api.metrics.increment('feed.' + timeline + '.' + type);
+    api.metrics.increment(`feed.${timeline}.${type}`);
   };
 
   const upsertFeedTimelineFromGroup = (keyspace, user, item, type, time, from_group, next) => {
@@ -388,7 +388,7 @@ module.exports = (api) => {
     notify(keyspace, 'feed-add', user, { item, type });
     debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility, from_group);
     client.execute(q(keyspace, 'upsertFeedTimelineFromGroup'), data, {}, next);
-    api.metrics.increment('feed.feed_timeline.' + type);
+    api.metrics.increment(`feed.feed_timeline.${type}`);
   };
 
   const upsertUserTimelineFromGroup = (keyspace, user, item, type, time, next) => {
@@ -396,14 +396,14 @@ module.exports = (api) => {
     const data = [user, item, type, time, visibility];
     debug('Upsert into timeline: ', 'user_timeline', user, item, type, time, visibility);
     client.execute(q(keyspace, 'upsertUserTimelineFromGroup'), data, {}, next);
-    api.metrics.increment('feed.user_timeline.' + type);
+    api.metrics.increment(`feed.user_timeline.${type}`);
   };
 
   const upsertGroupTimeline = (keyspace, group, item, type, time, next) => {
     const data = [group, item, type, time];
     debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
-    api.metrics.increment('feed.group_timeline.' + type);
+    api.metrics.increment(`feed.group_timeline.${type}`);
   };
 
   const removeFeedsForItem = (keyspace, item, next) => {
@@ -579,10 +579,10 @@ module.exports = (api) => {
   };
 
   const feedExpanders = {
-    'post': expandPost,
-    'like': expandLike,
-    'follow': expandFollow,
-    'friend': expandFriend,
+    post: expandPost,
+    like: expandLike,
+    follow: expandFollow,
+    friend: expandFriend,
   };
 
   const ensureFollowStillActive = (keyspace, liu, item, cb) => {
@@ -602,7 +602,6 @@ module.exports = (api) => {
     let typeQuery = '';
     let olderThanQuery = '';
     const data = [userOrGroup];
-    let query;
 
     if (feedType) {
       typeQuery = q(keyspace, 'typeQuery');
@@ -617,9 +616,9 @@ module.exports = (api) => {
 
     const queryName = (timeline === 'group_timeline') ? 'selectGroupTimeline' : 'selectTimeline';
 
-    query = q(keyspace, queryName, { TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery });
+    const query = q(keyspace, queryName, { TIMELINE: timeline, TYPEQUERY: typeQuery, OLDERTHANQUERY: olderThanQuery });
 
-    api.metrics.increment('feed.' + timeline + '.list');
+    api.metrics.increment(`feed.${timeline}.list`);
 
     client.execute(query, data, { pageState, pageSize }, (err, data, nextPageState) => {
       if (err) { return next(err); }
@@ -635,10 +634,9 @@ module.exports = (api) => {
           const expander = feedExpanders[item.type];
           if (expander) {
             return expander(keyspace, liu, item, expandUser, cb);
-          } else {
-            console.log('Unable to expand unknown feed item type: ' + item.type);
-            cb();
           }
+          console.log(`Unable to expand unknown feed item type: ${item.type}`);
+          cb();
         };
 
         async.mapSeries(timeline, (item, cb) => {
@@ -651,9 +649,8 @@ module.exports = (api) => {
             debug('follow cache HIT', item.from_follow.toString());
             if (cachedFollowStatus === 'active') {
               return expand(item, cb);
-            } else {
-              return cb();
             }
+            return cb();
           }
 
           debug('follow cache MISS', item.from_follow.toString());

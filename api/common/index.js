@@ -15,16 +15,15 @@ module.exports = (api) => {
     client.execute(q(keyspace, query), data, {}, response(query, data, many, next));
   };
 
-  const response = (query, data, many, next) => {
-    return (err, result) => {
+  const response = (query, data, many, next) =>
+    (err, result) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
       if (!Array.isArray(result) || (many !== 'many' && result.length === 0)) {
-        return next(error(404, 'Item not found: "' + query + '"" for "' + data.join(', ') + '"'));
+        return next(error(404, `Item not found: "${query}" for "${data.join(', ')}"`));
       }
       next(null, many === 'many' ? result : result[0]);
     };
-  };
 
   const clean = input => sanitizeHtml(input, {
     allowedTags: [],
@@ -48,7 +47,7 @@ module.exports = (api) => {
   // Deal with any content conversion when retrieving from cassandra
   const convertContentFromString = (content, content_type) => {
     switch (content_type) {
-      case 'application/json':
+      case 'application/json': {
         let json;
         try {
           json = JSON.parse(content);
@@ -56,13 +55,15 @@ module.exports = (api) => {
           // Return null object on error
         }
         return json;
-      default:
+      }
+      default: {
         return content;
+      }
     }
   };
 
   const expandEmbeddedObject = (item, field, test, ignore) => {
-    const prefix = field + '_';
+    const prefix = `${field}_`;
     const testField = prefix + test;
     if (item[testField]) {
       const embed = {};
@@ -80,7 +81,7 @@ module.exports = (api) => {
   const isUserGroupMember = (keyspace, user, group, next) => {
     client.get(q(keyspace, 'selectMemberByUserAndGroup'), [user, group], {}, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, 'User ' + user + ' is not a member of group ' + group)); }
+      if (!result) { return next(api.common.error(404, `User ${user} is not a member of group ${group}`)); }
       next(null, result);
     });
   };

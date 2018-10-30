@@ -6,18 +6,18 @@ const schemaVersion = 1;
 
 const setup = (client, keyspace, next) => {
   const tables = [
-    'CREATE TABLE ' + keyspace + '.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))',
-    'CREATE TABLE ' + keyspace + '.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))',
-    'CREATE TABLE ' + keyspace + '.applications (appid uuid, name text, appkeyspace text, account uuid, enabled boolean, PRIMARY KEY (appid))',
-    'CREATE TABLE ' + keyspace + '.application_tokens (appid uuid, appkeyspace text, tokenid uuid,  tokensecret text, description text, enabled boolean, PRIMARY KEY (tokenid))',
-    'CREATE TABLE ' + keyspace + '.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)',
+    `CREATE TABLE ${keyspace}.accounts (account uuid, name text, isadmin boolean, enabled boolean, PRIMARY KEY (account))`,
+    `CREATE TABLE ${keyspace}.account_users (account uuid, username text, password text, enabled boolean, PRIMARY KEY (account, username))`,
+    `CREATE TABLE ${keyspace}.applications (appid uuid, name text, appkeyspace text, account uuid, enabled boolean, PRIMARY KEY (appid))`,
+    `CREATE TABLE ${keyspace}.application_tokens (appid uuid, appkeyspace text, tokenid uuid,  tokensecret text, description text, enabled boolean, PRIMARY KEY (tokenid))`,
+    `CREATE TABLE ${keyspace}.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)`,
   ];
 
   const indexes = [
-    'CREATE INDEX ON ' + keyspace + '.accounts(name)',
-    'CREATE INDEX ON ' + keyspace + '.applications(account)',
-    'CREATE INDEX ON ' + keyspace + '.account_users(username)',
-    'CREATE INDEX ON ' + keyspace + '.application_tokens(appid)',
+    `CREATE INDEX ON ${keyspace}.accounts(name)`,
+    `CREATE INDEX ON ${keyspace}.applications(account)`,
+    `CREATE INDEX ON ${keyspace}.account_users(username)`,
+    `CREATE INDEX ON ${keyspace}.application_tokens(appid)`,
   ];
 
   const tableIndexes = [
@@ -59,7 +59,7 @@ const setup = (client, keyspace, next) => {
     helpers.createSecondaryIndexes,
     helpers.waitForIndexes,
     async.apply(helpers.initialiseSchemaVersion, schemaVersion),
-  ], (err, data) => {
+  ], (err) => {
     /* istanbul ignore if */
     if (err) console.dir(err);
     next();
