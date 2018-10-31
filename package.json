@@ -1,7 +1,9 @@
 {
   "name": "seguir",
   "version": "1.0.0",
-  "engines" : { "node" : ">=8" },
+  "engines": {
+    "node": ">=8"
+  },
   "description": "Self-hosted social network backend and API",
   "main": "api/index.js",
   "scripts": {
