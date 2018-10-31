@@ -1,6 +1,7 @@
 const apply = (keyspace, api, next) => {
-  const schemaVersionCql = `CREATE TABLE ${keyspace}.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)`;
-  api.client.execute(schemaVersionCql, next);
+  // const schemaVersionCql = `CREATE TABLE ${keyspace}.schema_version (version varint, applied timestamp, description text, PRIMARY KEY (version, applied)) WITH CLUSTERING ORDER BY (applied DESC)`;
+  // api.client.execute(schemaVersionCql, next);
+  next();
 };
 
 const rollback = (keyspace, api, next) => {
