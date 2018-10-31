@@ -54,9 +54,9 @@ queries.removeApplicationToken = 'DELETE FROM {KEYSPACE}.application_tokens WHER
  */
 queries._userSelectFields = '{ALIAS}.user AS "{PREFIX}user", {ALIAS}.altid as {PREFIX}altid, {ALIAS}.username as {PREFIX}username, {ALIAS}.userdata as {PREFIX}userdata';
 queries.upsertUser = 'INSERT INTO {KEYSPACE}.users ("user", username, altid, userdata) VALUES($1, $2, $3, $4);';
-queries.selectUser = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u'}) + ' FROM {KEYSPACE}.users u WHERE u.user = $1';
-queries.selectUserByUsername = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u'}) + ' FROM {KEYSPACE}.users u WHERE u.username = $1';
-queries.selectUserByAltId = 'SELECT u.user, ' + q(null, '_userSelectFields', {ALIAS: 'u'}) + ' FROM {KEYSPACE}.users u WHERE u.altid = $1';
+queries.selectUser = 'SELECT u.user, ' + q(null, '_userSelectFields', { ALIAS: 'u' }) + ' FROM {KEYSPACE}.users u WHERE u.user = $1';
+queries.selectUserByUsername = 'SELECT u.user, ' + q(null, '_userSelectFields', { ALIAS: 'u' }) + ' FROM {KEYSPACE}.users u WHERE u.username = $1';
+queries.selectUserByAltId = 'SELECT u.user, ' + q(null, '_userSelectFields', { ALIAS: 'u' }) + ' FROM {KEYSPACE}.users u WHERE u.altid = $1';
 queries.updateUser = 'UPDATE {KEYSPACE}.users SET username = $1, altid = $2, userdata = $3 WHERE "user" = $4';
 queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE "user" = $1';
 
@@ -64,8 +64,8 @@ queries.removeUser = 'DELETE FROM {KEYSPACE}.users WHERE "user" = $1';
  * @apiDefine ExamplePostgresPosts
  */
 queries._postSelectFields = 'p.post AS {PREFIX}post, p.content AS {PREFIX}content, p.content_type AS {PREFIX}content_type, p."user" AS "{PREFIX}user", p.posted AS {PREFIX}posted, p.visibility AS {PREFIX}visibility, p.altid as {PREFIX}altid';
-queries.selectPost = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.post = $1';
-queries.selectPostByAltid = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.altid = $1';
+queries.selectPost = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.post = $1';
+queries.selectPostByAltid = 'SELECT ' + q(null, '_postSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ' FROM {KEYSPACE}.posts p, {KEYSPACE}.users u where u.user = p.user AND p.altid = $1';
 queries.upsertPost = 'INSERT INTO {KEYSPACE}.posts (post, "user", content, content_type, posted, visibility, altid) VALUES($1, $2, $3, $4, $5, $6, $7);';
 queries.removePost = 'DELETE FROM {KEYSPACE}.posts WHERE post = $1';
 queries.removePostByAltid = 'DELETE FROM {KEYSPACE}.posts WHERE altid = $1';
@@ -76,7 +76,7 @@ queries.updatePostByAltid = 'UPDATE {KEYSPACE}.posts SET content = $1, content_t
  * @apiDefine ExamplePostgresFriends
  */
 queries._friendSelectFields = 'f.friend AS {PREFIX}friend, f."user" AS "{PREFIX}user", f.user_friend AS {PREFIX}user_friend, f.since AS {PREFIX}since, f.visibility AS {PREFIX}visibility';
-queries.selectFriend = 'SELECT ' + q(null, '_friendSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_friend_'}) + ' FROM {KEYSPACE}.friends f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_friend = uf.user AND f.friend = $1';
+queries.selectFriend = 'SELECT ' + q(null, '_friendSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ', ' + q(null, '_userSelectFields', { ALIAS: 'uf', PREFIX: 'user_friend_' }) + ' FROM {KEYSPACE}.friends f, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE f.user = u.user AND f.user_friend = uf.user AND f.friend = $1';
 queries.selectFriends = 'SELECT user_friend, since from {KEYSPACE}.friends WHERE "user" = $1';
 queries.upsertFriend = 'INSERT INTO {KEYSPACE}.friends (friend, "user", user_friend, since, visibility) VALUES($1, $2, $3, $4, $5)';
 queries.removeFriend = 'DELETE FROM {KEYSPACE}.friends WHERE "user" = $1 AND user_friend=$2';
@@ -86,7 +86,7 @@ queries.isFriend = 'SELECT friend, since from {KEYSPACE}.friends WHERE "user" = 
  * @apiDefine ExamplePostgresFriendRequests
  */
 queries._friendRequestSelectFields = 'fr.friend_request AS {PREFIX}friend_request, fr."user" AS "{PREFIX}user", fr.user_friend AS {PREFIX}user_friend, fr.message AS {PREFIX}message, fr.since AS {PREFIX}since, fr.visibility AS {PREFIX}visibility';
-queries._selectFriendRequestBase = 'SELECT ' + q(null, '_friendRequestSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_friend_'}) + ' FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user';
+queries._selectFriendRequestBase = 'SELECT ' + q(null, '_friendRequestSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ', ' + q(null, '_userSelectFields', { ALIAS: 'uf', PREFIX: 'user_friend_' }) + ' FROM {KEYSPACE}.friend_request fr, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fr.user = u.user AND fr.user_friend = uf.user';
 queries.selectFriendRequest = queries._selectFriendRequestBase + ' AND fr.friend_request = $1';
 queries.selectIncomingFriendRequests = queries._selectFriendRequestBase + ' AND fr.user_friend = $1';
 queries.selectOutgoingFriendRequests = queries._selectFriendRequestBase + ' AND fr."user" = $1';
@@ -97,7 +97,7 @@ queries.acceptFriendRequest = 'DELETE FROM {KEYSPACE}.friend_request WHERE frien
  * @apiDefine ExamplePostgresFollows
  */
 queries._followSelectFields = 'fl.follow AS {PREFIX}follow, fl."user" AS "{PREFIX}user", fl.user_follower AS {PREFIX}user_follower, fl.since AS {PREFIX}since, fl.visibility AS {PREFIX}visibility';
-queries._followSelectBase = 'SELECT ' + q(null, '_followSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' + q(null, '_userSelectFields', {ALIAS: 'uf', PREFIX: 'user_follower_'}) + ' FROM {KEYSPACE}.followers fl, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fl.user = u.user AND fl.user_follower = uf.user';
+queries._followSelectBase = 'SELECT ' + q(null, '_followSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ', ' + q(null, '_userSelectFields', { ALIAS: 'uf', PREFIX: 'user_follower_' }) + ' FROM {KEYSPACE}.followers fl, {KEYSPACE}.users u, {KEYSPACE}.users uf WHERE fl.user = u.user AND fl.user_follower = uf.user';
 queries.selectFollow = queries._followSelectBase + ' AND fl.follow = $1';
 queries.selectFollowFromTimeline = queries._followSelectBase + ' AND fl.user = $1 AND fl.user_follower = $2';
 queries.selectFollowers = queries._followSelectBase + ' AND fl."user" = $1';
@@ -123,7 +123,7 @@ queries.selectCount = 'SELECT count(*) as "count" FROM {KEYSPACE}.{TYPE} WHERE "
  * @apiDefine ExamplePostgresLikes
  */
 queries._likeSelectFields = 'l."like" AS "{PREFIX}like", l.item AS {PREFIX}item, l."user" AS "{PREFIX}user", l.since AS {PREFIX}since, l.visibility AS {PREFIX}visibility';
-queries.selectLike = 'SELECT ' + q(null, '_likeSelectFields') + ', ' + q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ' FROM {KEYSPACE}.likes l, {KEYSPACE}.users u WHERE l.user = u.user AND l."like" = $1';
+queries.selectLike = 'SELECT ' + q(null, '_likeSelectFields') + ', ' + q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ' FROM {KEYSPACE}.likes l, {KEYSPACE}.users u WHERE l.user = u.user AND l."like" = $1';
 queries.checkLike = 'SELECT "like", "user", since FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
 queries.upsertLike = 'INSERT INTO {KEYSPACE}.likes ("like", "user", item, since, visibility) VALUES($1, $2, $3, $4, $5);';
 queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = $2';
@@ -132,11 +132,11 @@ queries.removeLike = 'DELETE FROM {KEYSPACE}.likes WHERE "user" = $1 AND item = 
  * @apiDefine ExamplePostgresFeed
  */
 queries.selectTimeline = 'SELECT tl."user", tl.time, tl.time as date, tl.item, tl.type, tl.visibility, tl.from_follow, ' +
-                         q(null, '_userSelectFields', {ALIAS: 'u', PREFIX: 'user_'}) + ', ' +
-                         q(null, '_postSelectFields', {PREFIX: 'post_'}) + ', ' +
-                         q(null, '_likeSelectFields', {PREFIX: 'like_'}) + ', ' +
-                         q(null, '_friendSelectFields', {PREFIX: 'friend_'}) + ', ' +
-                         q(null, '_followSelectFields', {PREFIX: 'follow_'}) + ' ' +
+                         q(null, '_userSelectFields', { ALIAS: 'u', PREFIX: 'user_' }) + ', ' +
+                         q(null, '_postSelectFields', { PREFIX: 'post_' }) + ', ' +
+                         q(null, '_likeSelectFields', { PREFIX: 'like_' }) + ', ' +
+                         q(null, '_friendSelectFields', { PREFIX: 'friend_' }) + ', ' +
+                         q(null, '_followSelectFields', { PREFIX: 'follow_' }) + ' ' +
                          'FROM {KEYSPACE}.{TIMELINE} tl ' +
                          'INNER JOIN {KEYSPACE}.users u ON (tl."user" = u."user") ' +
                          'LEFT OUTER JOIN {KEYSPACE}.posts p ON (tl.item = p.post and tl.type = \'post\') ' +

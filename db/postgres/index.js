@@ -5,14 +5,14 @@ var debug = require('debug')('seguir:postgres');
 var async = require('async');
 var QueryStream = require('pg-query-stream');
 
-function createClient (config, next) {
+function createClient(config, next) {
   var pgConfig = config.postgres;
 
-  function getConnectionString () {
+  function getConnectionString() {
     return 'postgres://' + pgConfig.user + ':' + (pgConfig.password || '') + '@' + (pgConfig.host || 'localhost') + '/' + pgConfig.database;
   }
 
-  function get (query, data, options, next) {
+  function get(query, data, options, next) {
     if (!next) {
       next = options;
       options = null;
@@ -33,7 +33,7 @@ function createClient (config, next) {
     });
   }
 
-  function stream (query, data, next) {
+  function stream(query, data, next) {
     pg.connect(getConnectionString(), function (err, client, done) {
       if (err) { return next(err); }
       debug('stream', query, data);
@@ -44,7 +44,7 @@ function createClient (config, next) {
     });
   }
 
-  function execute (query, data, options, next) {
+  function execute(query, data, options, next) {
     if (!next) {
       next = options;
       options = {};
@@ -80,7 +80,7 @@ function createClient (config, next) {
     });
   }
 
-  function getPageState (rows, pageState, pageSize) {
+  function getPageState(rows, pageState, pageSize) {
     // no pagination - no pagestate
     // if we didn't get the maximum number of rows
     if (!rows || rows.length <= pageSize) { return null; }
@@ -88,7 +88,7 @@ function createClient (config, next) {
     return (pageState || 0) + pageSize;
   }
 
-  function generateLimitStatement (offset, pageSize) {
+  function generateLimitStatement(offset, pageSize) {
     // get one extra one such that we know whether there is another page
     var limitStatement = ' LIMIT ' + (pageSize + 1);
     var offsetStatement = ' OFFSET ';
@@ -101,47 +101,47 @@ function createClient (config, next) {
     return limitStatement + offsetStatement;
   }
 
-  function batch () {
+  function batch() {
     var queries = [];
     return {
-      addQuery: function (query, data) {
-        queries.push({query: query, data: data});
+      addQuery(query, data) {
+        queries.push({ query, data });
         return this;
       },
-      execute: function (next) {
+      execute(next) {
         async.map(queries, function (query, cb) {
           execute(query.query, query.data, {}, cb);
         }, function (err, results) {
           if (err) { return next(err); }
           next(null, results);
         });
-      }
+      },
     };
   }
 
-  function generateId (suppliedUuid) {
+  function generateId(suppliedUuid) {
     if (suppliedUuid) return suppliedUuid;
     return uuid.v4();
   }
 
-  function generateTimeId (timestamp) {
+  function generateTimeId(timestamp) {
     if (timestamp) return timestamp;
     return new Date();
   }
 
-  function getTimestamp (value) {
+  function getTimestamp(value) {
     return value ? new Date(value) : new Date();
   }
 
-  function isValidId (value) {
+  function isValidId(value) {
     return (typeof value === 'string' && value.length === 36 && (value.match(/-/g) || []).length === 4);
   }
 
-  function formatId (value) {
+  function formatId(value) {
     return value;
   }
 
-  function noOpCache (key, value, cb) {
+  function noOpCache(key, value, cb) {
     if (!cb) {
       cb = value;
       value = null;
@@ -156,24 +156,24 @@ function createClient (config, next) {
   next(null, {
     type: 'postgres',
     config: pgConfig,
-    get: get,
-    execute: execute,
+    get,
+    execute,
     deleteCacheItem: noOpCache,
     setCacheItem: noOpCache,
     flushCache: noOpCache,
     cacheStats: {},
-    generateId: generateId,
-    generateTimeId: generateTimeId,
-    isValidId: isValidId,
-    formatId: formatId,
-    getTimestamp: getTimestamp,
+    generateId,
+    generateTimeId,
+    isValidId,
+    formatId,
+    getTimestamp,
     migrations: path.resolve(__dirname, 'migrations'),
     queries: require('./queries'),
     setup: require('./setup'),
-    get batch () {
+    get batch() {
       return batch();
     },
-    stream: stream
+    stream,
   });
 }
 

@@ -1,11 +1,8 @@
-/**
- * Default console logger
- */
-var debug = require('debug')('seguir:logger');
+const debug = require('debug')('seguir:logger');
 
 module.exports = {
-  info: function (msg) { debug('info', msg); },
-  error: function (msg) { debug('error', msg); },
-  warn: function (msg) { debug('warn', msg); },
-  debug: function (msg) { debug('debug', msg); }
+  info: (msg) => { debug('info', msg); },
+  error: (msg) => { debug('error', msg); },
+  warn: (msg) => { debug('warn', msg); },
+  debug: (msg) => { debug('debug', msg); },
 };

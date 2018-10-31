@@ -4,3 +4,5 @@ npm-debug.log
 .idea
 .DS_Store
 package-lock.json
+.eslintrc
+.nvmrc

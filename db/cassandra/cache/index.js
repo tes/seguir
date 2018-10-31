@@ -4,49 +4,47 @@
  * This configuration simply looks for a 'redis' config key, if it exists it will use it as a cache in front
  * of most of the elements that are retrieved in the news feed.
  */
+const TWENTY_FOUR_HOURS = 24 * 3600;
+const redis = require('../../redis');
+const _ = require('lodash');
+const cassandra = require('cassandra-driver');
+const Uuid = cassandra.types.Uuid;
+const Timeuuid = cassandra.types.Timeuuid;
+const Long = cassandra.types.Long;
+const debug = require('debug')('seguir:cassandra:cache');
+const UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'time'];
+const TIMEUUID_COLUMNS = ['time'];
+const LONG_COLUMNS = ['count'];
 
-var TWENTY_FOUR_HOURS = 24 * 3600;
-var redis = require('../../redis');
-var _ = require('lodash');
-var cassandra = require('cassandra-driver');
-var Uuid = cassandra.types.Uuid;
-var Timeuuid = cassandra.types.Timeuuid;
-var Long = cassandra.types.Long;
-var debug = require('debug')('seguir:cassandra:cache');
-var UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'time'];
-var TIMEUUID_COLUMNS = ['time'];
-var LONG_COLUMNS = ['count'];
-
-module.exports = function (config, next) {
-  var _stats = {};
-  var stats = function (key, action) {
-    var keyType = key.split(':')[0];
+module.exports = (config, next) => {
+  let _stats = {};
+  const stats = (key, action) => {
+    const keyType = key.split(':')[0];
     _stats[keyType] = _stats[keyType] || {};
     _stats[keyType][action] = _stats[keyType][action] || 0;
     _stats[keyType][action] = _stats[keyType][action] + 1;
   };
-  var resetStats = function () {
+  const resetStats = () => {
     _stats = {};
   };
-  var getStats = function () {
-    return _stats;
-  };
+  const getStats = () => _stats;
+
   // Clear each minute to avoid memory leaks
-  setInterval(function () {
+  setInterval(() => {
     resetStats();
   }, 60000);
 
-  var noCache = function (key, value, cb) {
+  const noCache = (key, value, cb) => {
     if (!cb) { cb = value; value = null; }
     if (!cb) { cb = key; key = null; }
     cb(null, value);
   };
 
   // If no redis config, simply return a miss always
-  var hasRedisConfig = config && config.redis;
-  if (!hasRedisConfig) { return next(null, {get: noCache, set: noCache, del: noCache, flush: noCache}); }
+  const hasRedisConfig = config && config.redis;
+  if (!hasRedisConfig) { return next(null, { get: noCache, set: noCache, del: noCache, flush: noCache }); }
 
-  var redisClient = redis(config.redis);
+  const redisClient = redis(config.redis);
 
   /**
    * Persisting objects in redis converts all of the values to strings.
@@ -58,7 +56,7 @@ module.exports = function (config, next) {
    *
    * Then we do the reverse on the way back
    */
-  var to_cache = function (object) {
+  const to_cache = (object) => {
     if (!object) return;
 
     // Clone via stringify / parse
@@ -66,10 +64,10 @@ module.exports = function (config, next) {
     // https://github.com/datastax/nodejs-driver/blob/master/lib/types/row.js
     // We do not want to persist these into the cache
     // May be a more performant way to do this later
-    var clone = Object.assign({}, object);
+    const clone = Object.assign({}, object);
 
-    var CONVERTABLE_COLUMNS = _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS);
-    CONVERTABLE_COLUMNS.forEach(function (item) {
+    const CONVERTABLE_COLUMNS = _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS);
+    CONVERTABLE_COLUMNS.forEach((item) => {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
 
@@ -77,25 +75,25 @@ module.exports = function (config, next) {
     if (clone.userdata) { clone.userdata = JSON.stringify(clone.userdata); }
 
     // Trim any null properties as redis doesn't allow them in HMSET
-    for (var p in clone) {
+    for (const p in clone) { // eslint-disable-line no-restricted-syntax
       if (!clone[p]) delete clone[p];
     }
     return clone;
   };
 
-  var from_cache = function (clone) {
+  const from_cache = (clone) => {
     if (!clone) return;
 
     // Convert all of the Cassandra IDs back
-    UUID_COLUMNS.forEach(function (item) {
+    UUID_COLUMNS.forEach((item) => {
       if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
     });
 
-    TIMEUUID_COLUMNS.forEach(function (item) {
+    TIMEUUID_COLUMNS.forEach((item) => {
       if (clone[item]) { clone[item] = Timeuuid.fromString(clone[item]); }
     });
 
-    LONG_COLUMNS.forEach(function (item) {
+    LONG_COLUMNS.forEach((item) => {
       if (clone[item]) { clone[item] = Long.fromString(clone[item]); }
     });
 
@@ -109,7 +107,7 @@ module.exports = function (config, next) {
     return clone;
   };
 
-  var set = function (key, value, cb) {
+  const set = (key, value, cb) => {
     if (!key) { return cb(null, value); }
     if (value === undefined || value === null) { return cb(null); }
     debug('SET', key);
@@ -117,50 +115,50 @@ module.exports = function (config, next) {
     redisClient.multi()
       .hmset(key, to_cache(value))
       .expire(key, config.redis.ttl || TWENTY_FOUR_HOURS)
-      .exec(function (err) {
+      .exec((err) => {
         if (err) { /* Purposeful ignore of err */ }
         cb(null, value);
       });
   };
 
-  var del = function (key, cb) {
+  const del = (key, cb) => {
     if (!key) { return cb(null); }
     debug('DEL', key);
     stats(key, 'DEL');
-    redisClient.del(key, function (err) {
+    redisClient.del(key, (err) => {
       if (err) { /* Purposeful ignore of err */ }
       cb(null);
     });
   };
 
-  var flush = function (cb) {
+  const flush = (cb) => {
     debug('FLUSH');
-    redisClient.flushdb(function (err) {
+    redisClient.flushdb((err) => {
       if (err) { /* Purposeful ignore of err */ }
       cb(null);
     });
   };
 
-  var get = function (key, cb) {
+  const get = (key, cb) => {
     if (!key) { return cb(null); }
     debug('GET', key);
     stats(key, 'GET');
-    redisClient.hgetall(key, function (err, object) {
+    redisClient.hgetall(key, (err, object) => {
       if (err) { /* Purposeful ignore of err */ }
-      var hitOrMiss = object ? 'HIT' : 'MISS';
+      const hitOrMiss = object ? 'HIT' : 'MISS';
       debug(hitOrMiss, key);
       stats(key, hitOrMiss);
       cb(null, object ? from_cache(object) : null);
     });
   };
 
-  var cache = {
-    get: get,
-    set: set,
-    del: del,
-    flush: flush,
+  const cache = {
+    get,
+    set,
+    del,
+    flush,
     stats: getStats,
-    resetStats: resetStats
+    resetStats,
   };
 
   next(null, cache);

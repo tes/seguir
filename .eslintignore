@@ -1,0 +1,6 @@
+./*.js
+coverage/
+node_modules/
+dist/
+.git
+db/postgres/

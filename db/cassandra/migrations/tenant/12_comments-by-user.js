@@ -1,17 +1,17 @@
-var async = require('async');
+const async = require('async');
 
-function apply (keyspace, api, next) {
-  var cqls = [
-    'CREATE INDEX ON ' + keyspace + '.comments(user)'
+const apply = (keyspace, api, next) => {
+  const cqls = [
+    `CREATE INDEX ON ${keyspace}.comments(user)`,
   ];
   async.mapSeries(cqls, api.client.execute, next);
-}
+};
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
-}
+};
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback,
 };

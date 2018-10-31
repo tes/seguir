@@ -1,18 +1,18 @@
-var async = require('async');
+const async = require('async');
 
-function apply (keyspace, api, next) {
-  var addPostAltidCql = [
-    'ALTER TABLE ' + keyspace + '.posts ADD altid text',
-    'CREATE INDEX ON ' + keyspace + '.posts(altid)'
+const apply = (keyspace, api, next) => {
+  const addPostAltidCql = [
+    `ALTER TABLE ${keyspace}.posts ADD altid text`,
+    `CREATE INDEX ON ${keyspace}.posts(altid)`,
   ];
   async.mapSeries(addPostAltidCql, api.client.execute, next);
-}
+};
 
-function rollback (keyspace, api, next) {
+const rollback = (keyspace, api, next) => {
   next();
-}
+};
 
 module.exports = {
-  apply: apply,
-  rollback: rollback
+  apply,
+  rollback,
 };

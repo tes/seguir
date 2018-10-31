@@ -1,9 +1,9 @@
 /**
  * Templates for the urls shared between client and server
  */
-var _ = require('lodash');
+const _ = require('lodash');
 
-var urls = {
+const urls = {
   addUser: '/user',
   getUser: '/user/:user',
   updateUser: '/user/:user',
@@ -35,34 +35,32 @@ var urls = {
   checkLike: '/user/:user/like/:item',
   removeLike: '/user/:user/like/:item',
   getFeed: '/feed/:user',
-  getUserFeed: '/feed/:user/direct'
+  getUserFeed: '/feed/:user/direct',
 };
 
-module.exports = function (url, data) {
+module.exports = (url, data) => {
   if (urls[url]) {
-    var expectsData = url.indexOf(':') > 0;
+    const expectsData = url.indexOf(':') > 0;
     if (data) {
-      var pattern = urls[url];
-      _.keys(data).forEach(function (key) {
-        var item = data[key];
+      let pattern = urls[url];
+      _.keys(data).forEach((key) => {
+        let item = data[key];
         if (item) {
           // Ensure item is URI encoded if it isn't already
           item = decodeURIComponent(item) !== item ? item : encodeURIComponent(item);
-          pattern = pattern.replace(':' + key, item);
+          pattern = pattern.replace(`:${key}`, item);
         }
       });
       if (data.query) {
-        pattern += '?' + data.query;
+        pattern += `?${data.query}`;
       }
       return pattern;
-    } else {
-      if (expectsData) {
-        console.log('No data provided to url: ' + url + ' > ' + urls[url]);
-      }
-      return urls[url];
     }
-  } else {
-    console.log('Unable to locate URL: ' + url);
-    return '';
+    if (expectsData) {
+      console.log(`No data provided to url: ${url} > ${urls[url]}`);
+    }
+    return urls[url];
   }
+  console.log(`Unable to locate URL: ${url}`);
+  return '';
 };

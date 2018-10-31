@@ -1,17 +1,17 @@
 /* eslint-env node, mocha */
 
-var expect = require('expect.js');
-var q = require('../../db/cassandra/queries');
+const expect = require('expect.js');
+const q = require('../../db/cassandra/queries');
 
-describe('Queries', function () {
-  describe('query selection', function () {
-    it('looks up a query based on name', function (done) {
+describe('Queries', () => {
+  describe('query selection', () => {
+    it('looks up a query based on name', (done) => {
       expect(q('seguir', 'selectFriend')).to.contain('SELECT friend');
       done();
     });
 
-    it('can specify extra type', function (done) {
-      expect(q('seguir', 'selectTimeline', {TYPEQUERY: 'hello-world'})).to.contain('hello-world');
+    it('can specify extra type', (done) => {
+      expect(q('seguir', 'selectTimeline', { TYPEQUERY: 'hello-world' })).to.contain('hello-world');
       done();
     });
   });

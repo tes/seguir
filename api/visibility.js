@@ -1,35 +1,29 @@
-var PUBLIC = 'public';
-var PRIVATE = 'private';
-var PERSONAL = 'personal';
-var QUERY_PREFIX = 'is_';
+const PUBLIC = 'public';
+const PRIVATE = 'private';
+const PERSONAL = 'personal';
+const QUERY_PREFIX = 'is_';
 
 module.exports = {
-  PUBLIC: PUBLIC,
-  PRIVATE: PRIVATE,
-  PERSONAL: PERSONAL,
-  isPrivate: function (visibility) {
-    return visibility === PRIVATE || visibility === PUBLIC;
-  },
-  isPersonal: function (visibility) {
-    return true;
-  },
-  isPublic: function (visibility) {
-    return visibility === PUBLIC;
-  },
-  mapToQuery: function (isUser, isFriend) {
+  PUBLIC,
+  PRIVATE,
+  PERSONAL,
+  isPrivate: visibility => visibility === PRIVATE || visibility === PUBLIC,
+  isPersonal: visibility => true, // eslint-disable-line no-unused-vars
+  isPublic: visibility => visibility === PUBLIC,
+  mapToQuery: (isUser, isFriend) => {
     if (isUser) {
       return QUERY_PREFIX + PERSONAL;
     }
     return QUERY_PREFIX + (isFriend ? PRIVATE : PUBLIC);
   },
   // nothing to see here - move along.
-  mapToParameters: function (isUser, isFriend) {
+  mapToParameters: (isUser, isFriend) => {
     if (isUser) {
-      return {PUBLIC: PUBLIC, PRIVATE: PRIVATE, PERSONAL: PERSONAL};
+      return { PUBLIC, PRIVATE, PERSONAL };
     }
     if (isFriend) {
-      return {PUBLIC: PUBLIC, PRIVATE: PRIVATE, PERSONAL: PRIVATE};
+      return { PUBLIC, PRIVATE, PERSONAL: PRIVATE };
     }
-    return {PUBLIC: PUBLIC, PRIVATE: PUBLIC, PERSONAL: PUBLIC};
-  }
+    return { PUBLIC, PRIVATE: PUBLIC, PERSONAL: PUBLIC };
+  },
 };

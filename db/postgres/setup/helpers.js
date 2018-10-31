@@ -13,7 +13,7 @@ module.exports = function (client, options) {
   var indexes = options.indexes || [];
 
   /* istanbul ignore next */
-  function dropKeyspace (next) {
+  function dropKeyspace(next) {
     debug('Dropping keyspace: ' + KEYSPACE + '...');
     client.execute('DROP SCHEMA IF EXISTS ' + KEYSPACE + ' CASCADE', function (err) {
       return next(err);
@@ -21,13 +21,13 @@ module.exports = function (client, options) {
   }
 
   /* istanbul ignore next */
-  function createKeyspace (next) {
+  function createKeyspace(next) {
     debug('Creating keyspace: ' + KEYSPACE + '...');
     client.execute('CREATE SCHEMA ' + KEYSPACE, next);
   }
 
   /* istanbul ignore next */
-  function createTables (next) {
+  function createTables(next) {
     debug('Creating tables in: ' + KEYSPACE + '...');
     async.mapSeries(tables, function (cql, cb) {
       debug(cql);
@@ -38,7 +38,7 @@ module.exports = function (client, options) {
   }
 
   /* istanbul ignore next */
-  function createSecondaryIndexes (next) {
+  function createSecondaryIndexes(next) {
     debug('Creating secondary indexes in: ' + KEYSPACE + '...');
     async.mapSeries(indexes, function (cql, cb) {
       debug(cql);
@@ -49,7 +49,7 @@ module.exports = function (client, options) {
   }
 
   /* istanbul ignore next */
-  function initialiseSchemaVersion (version, next) {
+  function initialiseSchemaVersion(version, next) {
     debug('Initialising schema version for ' + KEYSPACE + '...');
     client.execute(q(KEYSPACE, 'insertSchemaVersion'), [version, client.getTimestamp(), 'Initial version'], function () {
       // Ignore error as we may not yet have a schema version
@@ -58,10 +58,10 @@ module.exports = function (client, options) {
   }
 
   return {
-    dropKeyspace: dropKeyspace,
-    createKeyspace: createKeyspace,
-    createTables: createTables,
-    createSecondaryIndexes: createSecondaryIndexes,
-    initialiseSchemaVersion: initialiseSchemaVersion
+    dropKeyspace,
+    createKeyspace,
+    createTables,
+    createSecondaryIndexes,
+    initialiseSchemaVersion,
   };
 };

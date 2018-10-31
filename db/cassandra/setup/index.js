@@ -1,4 +1,4 @@
 module.exports = {
   setupTenant: require('./setupTenant'),
-  setupSeguir: require('./setupSeguir')
+  setupSeguir: require('./setupSeguir'),
 };
