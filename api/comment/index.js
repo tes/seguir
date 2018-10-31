@@ -141,11 +141,49 @@ module.exports = (api) => {
     });
   };
 
+  const moderateComment = (keyspace, autoModeratedBy, username, altid, user, group, comment, next) => {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, (err, moderator) => {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
+      const moderationData = [autoModeratedBy || username, comment];
+      client.execute(q(keyspace, 'moderateComment'), moderationData, { cacheKey: `comment:${comment}` }, (err) => {
+        if (err) { return next(err); }
+        api.metrics.increment('comment.moderate');
+        client.get(q(keyspace, 'selectComment'), [comment], { cacheKey: `comment:${comment}` }, (err, commentItem) => {
+          if (err) { return next(err); }
+          next(null, commentItem);
+        });
+      });
+    });
+  };
+
+  const unmoderateComment = (keyspace, altid, user, group, comment, next) => {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, (err, moderator) => {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the comment, only moderator can moderate it.'));
+      }
+      const moderationData = [null, comment];
+      client.execute(q(keyspace, 'moderateComment'), moderationData, { cacheKey: `comment:${comment}` }, (err) => {
+        if (err) { return next(err); }
+        api.metrics.increment('comment.unmoderate');
+        client.get(q(keyspace, 'selectComment'), [comment], { cacheKey: `comment:${comment}` }, (err, commentItem) => {
+          if (err) { return next(err); }
+          next(null, commentItem);
+        });
+      });
+    });
+  };
+
   return {
     createComment,
     getComments,
     updateComment,
     deleteComment,
     deleteCommentsByUser,
+    moderateComment,
+    unmoderateComment,
   };
 };

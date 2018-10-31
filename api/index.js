@@ -24,7 +24,7 @@ module.exports = (config, logger, metrics, next) => {
       visibility,
     };
 
-    const modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', '../db/migrations'];
+    const modules = ['auth', 'common', 'user', 'post', 'like', 'feed', 'friend', 'follow', 'group', 'comment', 'moderate', '../db/migrations'];
     modules.forEach((module) => {
       const moduleName = path.basename(module);
       api[moduleName] = require(path.resolve(__dirname, module))(api);

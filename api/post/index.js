@@ -228,6 +228,46 @@ module.exports = (api) => {
     });
   };
 
+  const moderatePost = (keyspace, autoModeratedBy, username, altid, user, group, post, next) => {
+    api.moderate.isUserModerator(keyspace, autoModeratedBy, altid, user, group, (err, moderator) => {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to moderate the post, only moderator can moderate it.'));
+      }
+      const moderationData = [autoModeratedBy || username, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, { cacheKey: `post:${post}` }, (err) => {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.moderate');
+        client.get(q(keyspace, 'selectPost'), [post], { cacheKey: `post:${post}` }, (err, postItem) => {
+          if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
+          next(null, postItem);
+        });
+      });
+    });
+  };
+
+  const unmoderatePost = (keyspace, altid, user, group, post, next) => {
+    api.moderate.isUserModerator(keyspace, null, altid, user, group, (err, moderator) => {
+      if (err) { return next(err); }
+      if (moderator && !moderator.isUserModerator) {
+        return next(new Error('Unable to unmoderate the post, only moderator can unmoderate it.'));
+      }
+      const moderationData = [null, post];
+      client.execute(q(keyspace, 'moderatePost'), moderationData, { cacheKey: `post:${post}` }, (err) => {
+        /* istanbul ignore if */
+        if (err) { return next(err); }
+        api.metrics.increment('post.unmoderate');
+        client.get(q(keyspace, 'selectPost'), [post], { cacheKey: `post:${post}` }, (err, postItem) => {
+          if (err) { return next(err); }
+          postItem.content = api.common.convertContentFromString(postItem.content, postItem.content_type);
+          next(null, postItem);
+        });
+      });
+    });
+  };
+
   return {
     addPost,
     addPostToGroup,
@@ -241,5 +281,7 @@ module.exports = (api) => {
     getPostFromObject,
     updatePost,
     updatePostByAltid,
+    moderatePost,
+    unmoderatePost,
   };
 };
