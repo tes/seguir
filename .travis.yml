@@ -20,4 +20,4 @@ notifications:
 before_install:
   - sudo rm -rf /var/lib/cassandra/*
   - wget https://archive.apache.org/dist/cassandra/2.2.5/apache-cassandra-2.2.5-bin.tar.gz && tar -xvzf apache-cassandra-2.2.5-bin.tar.gz && sudo sh apache-cassandra-2.2.5/bin/cassandra
-script: BUILD_ONCE=true npm test
+script: CLEAN_ONCE=true npm test
