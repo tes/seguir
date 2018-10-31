@@ -2,6 +2,7 @@ const async = require('async');
 const _mapValues = require('lodash/mapValues');
 const _zipObject = require('lodash/zipObject');
 const _filter = require('lodash/filter');
+const debug = require('debug')('seguir:group');
 
 const DEFAULT_PAGESIZE = 50;
 
@@ -20,23 +21,32 @@ module.exports = (api) => {
 
   const joinGroup = (keyspace, group, user, timestamp, cb) => {
     const memberValues = [group, user, timestamp];
+    const countUpdate = [1, group.toString()];
+
     client.execute(q(keyspace, 'upsertMember'), memberValues, (err) => {
       if (err) return cb(err);
-      getGroup(keyspace, group, (err, result) => {
-        if (err) return cb(err);
-        const joinGroupContent = {
-          category: 'social-group',
-          type: 'new-member',
-          data: {
-            group: {
-              id: group,
-              name: result.groupname,
-            },
-          },
-        };
-        api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
+
+      debug('update group counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', { TYPE: 'member' }), countUpdate, { cacheKey: `count:member:${group}` }, (err) => {
+        if (err) { return cb(err); }
+
+        api.metrics.increment('member.add');
+        getGroup(keyspace, group, null, (err, result) => {
           if (err) return cb(err);
-          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          const joinGroupContent = {
+            category: 'social-group',
+            type: 'new-member',
+            data: {
+              group: {
+                id: group,
+                name: result.groupname,
+              },
+            },
+          };
+          api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
+            if (err) return cb(err);
+            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+          });
         });
       });
     });
@@ -85,11 +95,36 @@ module.exports = (api) => {
     });
   };
 
-  const getGroup = (keyspace, group, next) => {
+  const getGroup = (keyspace, group, liu, next) => {
     client.get(q(keyspace, 'selectGroupById'), [group], {}, (err, result) => {
-      if (err) { return next(err); }
-      if (!result) { return next(api.common.error(404, `Unable to find group by id: ${group}`)); }
-      next(null, result);
+      if (err) {
+        next(err);
+        return;
+      }
+      if (!result) {
+        next(api.common.error(404, `Unable to find group by id: ${group}`));
+        return;
+      }
+      client.get(q(keyspace, 'selectCount', { TYPE: 'member' }), [group.toString()], { cacheKey: `count:member:${group}` }, (err, countItems) => {
+        if (err) { return next(err); }
+
+        if (countItems && +countItems.count > 0) {
+          result.memberCount = +countItems.count;
+          if (!liu) {
+            next(null, result);
+            return;
+          }
+          api.common.isUserGroupMember(keyspace, liu, group, (err) => {
+            if (!err) {
+              result.isMember = true;
+            }
+            next(null, result);
+          });
+        } else {
+          result.memberCount = 0;
+          next(null, result);
+        }
+      });
     });
   };
 
@@ -237,7 +272,13 @@ module.exports = (api) => {
     const memberValues = [group, user];
     client.execute(q(keyspace, 'removeMember'), memberValues, (err) => {
       if (err) return cb(err);
-      cb(null, { status: 'removed' });
+
+      const countUpdate = [-1, group.toString()];
+      debug('update member counts:', 'counts', countUpdate);
+      client.execute(q(keyspace, 'updateCounter', { TYPE: 'member' }), countUpdate, { cacheKey: `count:member:${group}` }, (err) => {
+        if (err) return cb(err);
+        cb(null, { status: 'removed' });
+      });
     });
   };
 
