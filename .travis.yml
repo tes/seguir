@@ -2,15 +2,12 @@ language: node_js
 dist: trusty
 sudo: required
 node_js:
-  - '4'
-  - '5'
-  - '6'
+  - '8'
 services:
   - redis-server
 env:
   - CXX=g++-4.8
 addons:
-  postgresql: '9.3'
   apt:
     sources:
       - ubuntu-toolchain-r-test
