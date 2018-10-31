@@ -11,14 +11,13 @@ let cleaned = false;
 const setupApi = (keyspace, config, next) => {
   apiInit(config, (err, api) => {
     if (err) { return next(err); }
-    console.log(`   Setting up keyspace in ${api.client.type} ...`);
-    api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', (err, migrations) => {
+    const truncate = !process.env.CLEAN && !(process.env.CLEAN_ONCE && !cleaned);
+    api.client.truncate = truncate;
+    api.client.setup.setupTenant(api.client, keyspace, truncate, (err) => {
       if (err) { return next(err); }
-      const truncate = migrations.length === 0 && !process.env.CLEAN && !(process.env.CLEAN_ONCE && !cleaned);
-      api.client.truncate = truncate;
-      api.client.setup.setupTenant(api.client, keyspace, truncate, (err) => {
+      if (!truncate) { cleaned = true; }
+      api.migrations.getMigrationsToApplyToKeyspace(keyspace, 'tenant', (err, migrations) => {
         if (err) { return next(err); }
-        if (!truncate) { cleaned = true; }
         api.migrations.applyMigrations(migrations, (err) => {
           if (err) { return next(err); }
           next(null, api);
