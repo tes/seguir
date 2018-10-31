@@ -258,13 +258,17 @@ module.exports = (api) => {
     });
   };
 
-  const getGroupMembers = (keyspace, group, next) => {
-    client.execute(q(keyspace, 'selectGroupMembers'), [group], {}, (err, groupMembers) => {
+  const getGroupMembers = (keyspace, group, options, next) => {
+    const pageState = options.pageState;
+    const pageSize = options.pageSize || 50;
+    const selectOptions = { pageState, pageSize };
+    client.execute(q(keyspace, 'selectGroupMembers'), [group], selectOptions, (err, groupMembers, nextPageState) => {
       if (err) { return next(err); }
 
-      async.mapSeries(groupMembers, (member, cb) => {
-        api.user.mapUserIdToUser(keyspace, member, ['user'], cb);
-      }, next);
+      api.user.mapUserIdToUser(keyspace, groupMembers, ['user'], (err, members) => {
+        if (err) { return next(err); }
+        next(null, members, nextPageState);
+      });
     });
   };
 
