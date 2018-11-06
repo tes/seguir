@@ -43,7 +43,7 @@ module.exports = (api) => {
               },
             },
           };
-          api.post.addPost(keyspace, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
+          api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
             if (err) return cb(err);
             cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
           });
