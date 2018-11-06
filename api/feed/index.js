@@ -82,47 +82,6 @@ module.exports = (api) => {
     });
   };
 
-  const insertGroupsTimeline = (jobData, next) => {
-    let read = 0;
-    let finished = 0;
-    let done = false;
-
-    const nextIfFinished = (doNotIncrement, cb) => {
-      if (!doNotIncrement) { finished++; }
-      if (read === finished && done) { next(); } else {
-        cb();
-      }
-    };
-
-    // If you are the recipient of a follow, do not copy this out to your groups graph - it will appear in your feed only
-    if (jobData.type === 'follow' && (jobData.user.toString() === jobData.object.user.toString())) { return next(); }
-
-    // If the action is personal do not copy out to groups feeds
-    if (jobData.visibility === api.visibility.PERSONAL) { return next(); }
-
-    const processRow = (row, cb) => {
-      upsertGroupTimeline(jobData.keyspace, row.group, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
-    };
-
-    client.stream(q(jobData.keyspace, 'selectGroupsForUser'), [jobData.user], (err, stream) => {
-      if (err) { return next(err); }
-      stream
-        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
-
-      stream
-        .on('data', () => {
-          read++;
-        })
-        .on('end', () => {
-          done = true;
-          nextIfFinished(true, () => {});
-        })
-        .on('error', err => {
-          next(err);
-        });
-    });
-  };
-
   const insertMembersTimeline = (jobData, next) => {
     let read = 0;
     let finished = 0;
@@ -248,14 +207,6 @@ module.exports = (api) => {
       }
     };
 
-    const _insertGroupsTimeline = cb => {
-      if (messaging.enabled) {
-        messaging.submit('seguir-publish-to-groups', jobData, cb);
-      } else {
-        insertGroupsTimeline(jobData, cb);
-      }
-    };
-
     const _insertMentionedTimeline = cb => {
       if (type !== 'post' || jobData.ispersonal) {
         return cb();
@@ -276,7 +227,6 @@ module.exports = (api) => {
     async.series([
       insertUserTimelines,
       _insertFollowersTimeline,
-      _insertGroupsTimeline,
       _insertMentionedTimeline,
     ], next);
   };
@@ -730,7 +680,6 @@ module.exports = (api) => {
     addFeedItemToGroup,
     removeFeedsForItem,
     removeFeedsOlderThan,
-    insertGroupsTimeline,
     insertMembersTimeline,
     insertFollowersTimeline,
     insertMentionedTimeline,
