@@ -12,9 +12,11 @@ const Uuid = cassandra.types.Uuid;
 const Timeuuid = cassandra.types.Timeuuid;
 const Long = cassandra.types.Long;
 const debug = require('debug')('seguir:cassandra:cache');
-const UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'time'];
+const UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'comment', 'group', 'item'];
+const MAP_COLUMNS = ['userdata', 'commentdata', 'groupdata'];
 const TIMEUUID_COLUMNS = ['time'];
 const LONG_COLUMNS = ['count'];
+const TIMESTAMP_COLUMNS = ['since', 'posted', 'commented'];
 
 module.exports = (config, next) => {
   let _stats = {};
@@ -66,13 +68,14 @@ module.exports = (config, next) => {
     // May be a more performant way to do this later
     const clone = Object.assign({}, object);
 
-    const CONVERTABLE_COLUMNS = _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS);
-    CONVERTABLE_COLUMNS.forEach((item) => {
+    _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS).forEach((item) => {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
 
     // Convert any embedded object to JSON
-    if (clone.userdata) { clone.userdata = JSON.stringify(clone.userdata); }
+    MAP_COLUMNS.forEach((item) => {
+      if (clone[item]) { clone[item] = JSON.stringify(clone[item]); }
+    });
 
     // Trim any null properties as redis doesn't allow them in HMSET
     for (const p in clone) { // eslint-disable-line no-restricted-syntax
@@ -98,11 +101,14 @@ module.exports = (config, next) => {
     });
 
     // Convert any embedded object from JSON
-    if (clone.userdata) { clone.userdata = JSON.parse(clone.userdata); }
+    MAP_COLUMNS.forEach((item) => {
+      if (clone[item]) { clone[item] = JSON.parse(clone[item]); }
+    });
 
     // Convert any timestamps back from strings
-    if (clone.since) { clone.since = new Date(clone.since); }
-    if (clone.posted) { clone.posted = new Date(clone.posted); }
+    TIMESTAMP_COLUMNS.forEach((item) => {
+      if (clone[item]) { clone[item] = new Date(clone[item]); }
+    });
 
     return clone;
   };
