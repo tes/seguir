@@ -134,7 +134,9 @@ module.exports = (api) => {
         if (err) return cb();
         cb(null, result);
       });
-    }, next);
+    }, (err, results) => {
+      next(err, results.filter((result) => result));
+    });
   };
 
   const updateGroup = (keyspace, userAltid, group, groupName, supergroupId, groupData, next) => {
