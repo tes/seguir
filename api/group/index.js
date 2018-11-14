@@ -52,7 +52,7 @@ module.exports = (api) => {
     });
   };
 
-  const addGroup = (keyspace, groupName, supergroupId, user, timestamp, options, next) => {
+  const addGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, next) => {
     if (!next) {
       next = options;
       options = {};
@@ -76,12 +76,11 @@ module.exports = (api) => {
       }
 
       const groupValues = [group, groupData, groupName, supergroupId];
-
       client.execute(q(keyspace, 'upsertGroup'), groupValues, {}, (err) => {
         if (err) { return next(err); }
-        joinGroup(keyspace, group, user, timestamp, (err) => {
+        joinGroup(keyspace, group, liu, timestamp, (err) => {
           if (err) { return next(err); }
-          next(null, _zipObject(['group', 'groupData', 'groupName', 'supergroupId'], groupValues));
+          getGroup(keyspace, group, liu, next);
         });
       });
     });
