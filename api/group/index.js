@@ -30,23 +30,14 @@ module.exports = (api) => {
       client.execute(q(keyspace, 'updateCounter', { TYPE: 'member' }), countUpdate, { cacheKey: `count:member:${group}` }, (err) => {
         if (err) { return cb(err); }
 
+        const joinGroupContent = {
+          category: 'social-group',
+          type: 'new-member',
+        };
         api.metrics.increment('member.add');
-        getGroup(keyspace, group, null, (err, result) => {
+        api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
           if (err) return cb(err);
-          const joinGroupContent = {
-            category: 'social-group',
-            type: 'new-member',
-            data: {
-              group: {
-                id: group,
-                name: result.groupname,
-              },
-            },
-          };
-          api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
-            if (err) return cb(err);
-            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
-          });
+          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
         });
       });
     });
