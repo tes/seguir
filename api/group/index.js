@@ -30,23 +30,14 @@ module.exports = (api) => {
       client.execute(q(keyspace, 'updateCounter', { TYPE: 'member' }), countUpdate, { cacheKey: `count:member:${group}` }, (err) => {
         if (err) { return cb(err); }
 
+        const joinGroupContent = {
+          category: 'social-group',
+          type: 'new-member',
+        };
         api.metrics.increment('member.add');
-        getGroup(keyspace, group, null, (err, result) => {
+        api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
           if (err) return cb(err);
-          const joinGroupContent = {
-            category: 'social-group',
-            type: 'new-member',
-            data: {
-              group: {
-                id: group,
-                name: result.groupname,
-              },
-            },
-          };
-          api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
-            if (err) return cb(err);
-            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
-          });
+          cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
         });
       });
     });
@@ -76,7 +67,7 @@ module.exports = (api) => {
       }
 
       const groupValues = [group, groupData, groupName, supergroupId];
-      client.execute(q(keyspace, 'upsertGroup'), groupValues, {}, (err) => {
+      client.execute(q(keyspace, 'upsertGroup'), groupValues, { cacheKey: `group:${group}` }, (err) => {
         if (err) { return next(err); }
         joinGroup(keyspace, group, liu, timestamp, (err) => {
           if (err) { return next(err); }
@@ -95,7 +86,7 @@ module.exports = (api) => {
   };
 
   const getGroup = (keyspace, group, liu, next) => {
-    client.get(q(keyspace, 'selectGroupById'), [group], {}, (err, result) => {
+    client.get(q(keyspace, 'selectGroupById'), [group], { cacheKey: `group:${group}` }, (err, result) => {
       if (err) {
         next(err);
         return;
@@ -151,7 +142,7 @@ module.exports = (api) => {
       ); // Always ensure our groupData is <text,text>
 
       const groupValues = [groupName, supergroupId, groupData, group];
-      client.execute(q(keyspace, 'updateGroup'), groupValues, {}, (err) => {
+      client.execute(q(keyspace, 'updateGroup'), groupValues, { cacheKey: `group:${group}` }, (err) => {
         if (err) { return next(err); }
         next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
       });
@@ -194,7 +185,7 @@ module.exports = (api) => {
         }
       };
       const _removeGroup = (cb) => {
-        client.execute(q(keyspace, 'removeGroup'), [group], (err) => {
+        client.execute(q(keyspace, 'removeGroup'), [group], { cacheKey: `group:${group}` }, (err) => {
           if (err) return cb(err);
           cb(null, { status: 'removed' });
         });
