@@ -176,7 +176,19 @@ module.exports = (api) => {
           if (err) { return next(err); }
 
           post.commentsTimeline = commentsTimeline;
-          api.user.mapUserIdToUser(keyspace, post, ['user'], expandUser, next);
+          api.user.mapUserIdToUser(keyspace, post, ['user'], expandUser, (err, post) => {
+            if (err) { return next(err); }
+
+            if (!post.group) {
+              return next(null, post);
+            }
+            api.group.getGroup(keyspace, post.group, liu, (err, group) => {
+              if (err) { return next(err); }
+
+              post.group = group;
+              next(null, post);
+            });
+          });
         });
       });
     });
