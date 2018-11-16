@@ -9,8 +9,8 @@ const redisCache = require('./cache');
 const async = require('async');
 const _ = require('lodash');
 
-const createClient = (config, next) => {
-  redisCache(config, (err, cache) => {
+const createClient = (config, logger, next) => {
+  redisCache(config, logger, (err, cache) => {
     if (err) {
       /* Purposeful ignore of err - never sent */
     }

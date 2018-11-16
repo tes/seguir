@@ -6,7 +6,7 @@ module.exports = (config, logger, metrics, next) => {
   if (!next) { next = metrics; metrics = { increment: _.noop }; }
   if (!next) { next = logger; logger = consoleLogger; }
 
-  require('../db')(config, (err, client) => {
+  require('../db')(config, logger, (err, client) => {
     if (err) { return next(err); }
 
     const messaging = require('../db/messaging')(config);

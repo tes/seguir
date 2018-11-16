@@ -5,7 +5,7 @@ var debug = require('debug')('seguir:postgres');
 var async = require('async');
 var QueryStream = require('pg-query-stream');
 
-function createClient(config, next) {
+function createClient(config, logger, next) {
   var pgConfig = config.postgres;
 
   function getConnectionString() {

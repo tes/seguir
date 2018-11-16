@@ -18,7 +18,7 @@ const TIMEUUID_COLUMNS = ['time'];
 const LONG_COLUMNS = ['count'];
 const TIMESTAMP_COLUMNS = ['since', 'posted', 'commented'];
 
-module.exports = (config, next) => {
+module.exports = (config, logger, next) => {
   let _stats = {};
   const stats = (key, action) => {
     const keyType = key.split(':')[0];
@@ -113,7 +113,7 @@ module.exports = (config, next) => {
 
       return clone;
     } catch (err) {
-      debug('Failed to deserialise object from cache, returning null', clone);
+      logger.error(err, 'Failed to deserialise object from cache, returning null', clone);
       return null;
     }
   };
