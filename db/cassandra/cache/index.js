@@ -85,32 +85,37 @@ module.exports = (config, next) => {
   };
 
   const from_cache = (clone) => {
-    if (!clone) return;
+    try {
+      if (!clone) return;
 
-    // Convert all of the Cassandra IDs back
-    UUID_COLUMNS.forEach((item) => {
-      if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
-    });
+      // Convert all of the Cassandra IDs back
+      UUID_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = Uuid.fromString(clone[item]); }
+      });
 
-    TIMEUUID_COLUMNS.forEach((item) => {
-      if (clone[item]) { clone[item] = Timeuuid.fromString(clone[item]); }
-    });
+      TIMEUUID_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = Timeuuid.fromString(clone[item]); }
+      });
 
-    LONG_COLUMNS.forEach((item) => {
-      if (clone[item]) { clone[item] = Long.fromString(clone[item]); }
-    });
+      LONG_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = Long.fromString(clone[item]); }
+      });
 
-    // Convert any embedded object from JSON
-    MAP_COLUMNS.forEach((item) => {
-      if (clone[item]) { clone[item] = JSON.parse(clone[item]); }
-    });
+      // Convert any embedded object from JSON
+      MAP_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = JSON.parse(clone[item]); }
+      });
 
-    // Convert any timestamps back from strings
-    TIMESTAMP_COLUMNS.forEach((item) => {
-      if (clone[item]) { clone[item] = new Date(clone[item]); }
-    });
+      // Convert any timestamps back from strings
+      TIMESTAMP_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = new Date(clone[item]); }
+      });
 
-    return clone;
+      return clone;
+    } catch (err) {
+      debug('Failed to deserialise object from cache, returning null', clone);
+      return null;
+    }
   };
 
   const set = (key, value, cb) => {
