@@ -15,8 +15,17 @@ module.exports = (api) => {
   const client = api.client;
   const q = client.queries;
 
-  const addPost = (keyspace, user, content, content_type, timestamp, visibility, altid, next) => {
-    if (!next) { next = altid; altid = null; }
+  const addPost = (keyspace, user, content, content_type, timestamp, visibility, altid, propagateTo, next) => {
+    if (!next) {
+      if (!propagateTo) { // addPost(keyspace, user, content, content_type, timestamp, visibility, next)
+        next = altid;
+        propagateTo = [];
+        altid = null;
+      } else { // addPost(keyspace, user, content, content_type, timestamp, visibility, altid, next)
+        next = propagateTo;
+        propagateTo = [];
+      }
+    }
 
     const group = null;
     const post = client.generateId();
@@ -31,7 +40,7 @@ module.exports = (api) => {
       if (err) { return next(err); }
 
       const object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
-      api.feed.addFeedItem(keyspace, user, object, 'post', (err) => {
+      api.feed.addFeedItem(keyspace, user, object, 'post', propagateTo, (err) => {
         if (err) { return next(err); }
         getPost(keyspace, user, post, true, next);
         api.metrics.increment('post.add');
