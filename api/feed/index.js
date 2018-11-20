@@ -31,7 +31,7 @@ module.exports = (api) => {
     const nextIfFinished = (doNotIncrement, cb) => {
       if (!doNotIncrement) { finished++; }
       if (read === finished && done) {
-        async.each(jobData.propagateTo, ({ user }, cb) => {
+        async.each(jobData.propagateTo, (user, cb) => {
           upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, null, () => cb());
         }, next);
       } else {
@@ -63,7 +63,7 @@ module.exports = (api) => {
           }
           if (!isPrivate || (isPrivate && isFriend)) {
             upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, (err) => {
-              if (!err) { jobData.propagateTo = jobData.propagateTo.filter(({ user }) => !user.equals(row.user_follower)); }
+              if (!err) { jobData.propagateTo = jobData.propagateTo.filter((user) => !user.equals(row.user_follower)); }
               nextIfFinished(false, cb);
             });
           } else {
