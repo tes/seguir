@@ -62,10 +62,7 @@ module.exports = (api) => {
             return nextIfFinished(false, cb);
           }
           if (!isPrivate || (isPrivate && isFriend)) {
-            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, (err) => {
-              if (!err) { jobData.propagateTo = jobData.propagateTo.filter((user) => !user.equals(row.user_follower)); }
-              nextIfFinished(false, cb);
-            });
+            upsertTimeline(jobData.keyspace, 'feed_timeline', row.user_follower, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, row.follow, () => { nextIfFinished(false, cb); });
           } else {
             nextIfFinished(false, cb);
           }
