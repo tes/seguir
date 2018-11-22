@@ -30,7 +30,11 @@ module.exports = (api) => {
 
     const nextIfFinished = (doNotIncrement, cb) => {
       if (!doNotIncrement) { finished++; }
-      if (read === finished && done) { next(); } else {
+      if (read === finished && done) {
+        async.each(jobData.propagateTo, (user, cb) => {
+          upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, jobData.visibility, null, () => cb());
+        }, next);
+      } else {
         cb();
       }
     };
@@ -186,7 +190,12 @@ module.exports = (api) => {
     ], next);
   };
 
-  const addFeedItem = (keyspace, user, object, type, next) => {
+  const addFeedItem = (keyspace, user, object, type, propagateTo, next) => {
+    if (!next) {
+      next = propagateTo;
+      propagateTo = [];
+    }
+
     const jobData = {
       keyspace,
       user,
@@ -195,6 +204,7 @@ module.exports = (api) => {
       type,
       timestamp: client.generateTimeId(object.timestamp),
       visibility: object.visibility,
+      propagateTo,
     };
 
     debug('Adding feed item', user, object, type);
