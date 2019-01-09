@@ -10,7 +10,7 @@
     "seguir": "node ./bin/seguir",
     "lint": "echo 'Linting...' && eslint --ext .js .",
     "lint:fix": "eslint --ext .js --fix .",
-    "test": "istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
+    "test": "CLEAN_ONCE=true istanbul cover _mocha -- -b -R spec tests/unit/* tests/acceptance/*",
     "precommit": "eslint --ext .js ."
   },
   "keywords": [
