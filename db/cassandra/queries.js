@@ -229,3 +229,4 @@ queries.selectModerator = 'SELECT user FROM {KEYSPACE}.moderators WHERE user = ?
  * Interests
  */
 queries.upsertInterest = 'INSERT INTO {KEYSPACE}.interests (user, type, keyword) VALUES(?, ?, ?);';
+queries.selectUsersByInterest = 'SELECT user FROM {KEYSPACE}.interests WHERE type = ? AND keyword = ?';

@@ -9,7 +9,7 @@ databases.forEach((db) => {
   const config = _.clone(require(`../../fixtures/${db}.json`));
   config.keyspace = keyspace;
 
-  describe.only(`API [Interests] - ${db}`, function () {
+  describe(`API [Interests] - ${db}`, function () {
     this.timeout(20000);
     this.slow(5000);
 
@@ -44,6 +44,16 @@ databases.forEach((db) => {
           expect(interest.user).to.be(users['cliftonc'].user);
           expect(interest.type).to.be('subject');
           expect(interest.keyword).to.be('english');
+          done();
+        });
+      });
+
+      it('can retrieve users by interest', (done) => {
+        api.interest.getUsers(keyspace, 'subject', 'english', (err, result) => {
+          expect(err).to.be(null);
+          const interestedUsers = _.map(result, (item) => item.toString());
+          expect(interestedUsers.length).to.be(1);
+          expect(interestedUsers[0]).to.be(users['cliftonc'].user.toString());
           done();
         });
       });
