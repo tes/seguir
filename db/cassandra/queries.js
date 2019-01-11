@@ -230,3 +230,4 @@ queries.selectModerator = 'SELECT user FROM {KEYSPACE}.moderators WHERE user = ?
  */
 queries.upsertInterest = 'INSERT INTO {KEYSPACE}.interests (user, type, keyword) VALUES(?, ?, ?);';
 queries.selectUsersByInterest = 'SELECT user FROM {KEYSPACE}.interests WHERE type = ? AND keyword = ?';
+queries.upsertFeedTimeline = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
