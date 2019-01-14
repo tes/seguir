@@ -44,19 +44,34 @@ databases.forEach((db) => {
           expect(interest.user).to.be(users['cliftonc'].user);
           expect(interest.type).to.be('subject');
           expect(interest.keyword).to.be('english');
-          done();
+          api.interest.addInterest(keyspace, users['phteven'].user, 'subject', 'english', (err, interest) => {
+            expect(err).to.be(null);
+            expect(interest.user).to.be(users['phteven'].user);
+            expect(interest.type).to.be('subject');
+            expect(interest.keyword).to.be('english');
+            api.interest.addInterest(keyspace, users['ted'].user, 'subject', 'english', (err, interest) => {
+              expect(interest.user).to.be(users['ted'].user);
+              expect(interest.type).to.be('subject');
+              expect(interest.keyword).to.be('english');
+              done();
+            });
+          });
         });
       });
 
-      it('can retrieve users by interest', (done) => {
-        api.interest.getUsers(keyspace, 'subject', 'english', (err, result) => {
+      it('can retrieve multiple users by interest', (done) => {
+        api.interest.getUsers(keyspace, 'subject', 'english', (err, results) => {
           expect(err).to.be(null);
-          const interestedUsers = _.map(result, (item) => item.toString());
-          expect(interestedUsers.length).to.be(1);
-          expect(interestedUsers[0]).to.be(users['cliftonc'].user.toString());
+          const interestedUsers = results.map((result) => _.map(result, (item) => item.toString()));
+          const interestedUsersFlatten = [].concat.apply([], interestedUsers);
+          expect(interestedUsersFlatten.length).to.be(3);
+          expect(interestedUsersFlatten).to.contain(users['ted'].user.toString());
+          expect(interestedUsersFlatten).to.contain(users['phteven'].user.toString());
+          expect(interestedUsersFlatten).to.contain(users['cliftonc'].user.toString());
           done();
         });
       });
     });
   });
 });
+
