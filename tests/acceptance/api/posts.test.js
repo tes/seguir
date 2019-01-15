@@ -239,7 +239,7 @@ databases.forEach((db) => {
       });
 
       it('can post message to interested users', (done) => {
-        api.interest.addInterest(keyspace, users['json'].user, 'country', 'australia', (err, interest) => {
+        api.interest.addInterest(keyspace, users['alfred'].user, 'country', 'australia', (err, interest) => {
           expect(err).to.be(null);
           expect(interest.keyword).to.be('australia');
           api.interest.addInterest(keyspace, users['cliftonc'].user, 'country', 'australia', (err, interest) => {
@@ -249,13 +249,17 @@ databases.forEach((db) => {
               expect(err).to.be(null);
               expect(post.altid).to.be('P-1234');
               expect(post.content).to.eql({ hello: 'This is australian...' });
-              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
+              api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
                 expect(err).to.be(null);
                 expect(feed[0].content).to.eql({ hello: 'This is australian...' });
                 api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
                   expect(err).to.be(null);
                   expect(feed[0].content).to.eql({ hello: 'This is australian...' });
-                  done();
+                  api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, feed) => {
+                    expect(err).to.be(null);
+                    expect(feed).to.eql([]);
+                    done();
+                  });
                 });
               });
             });
