@@ -137,7 +137,7 @@ module.exports = (api) => {
       upsertFeedTimelineForInterest(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
     };
 
-    const { type: interest_type, keyword } = api.common.convertContentFromString(jobData.interest, jobData.content_type);
+    const { type: interest_type, keyword } = jobData.interest;
 
     client.stream(q(jobData.keyspace, 'selectUsersByInterest'), [interest_type, keyword], (err, stream) => {
       if (err) { return next(err); }
@@ -322,12 +322,11 @@ module.exports = (api) => {
     ], next);
   };
 
-  const addFeedItemToInterestedUsers = (keyspace, user, object, type, next) => {
+  const addFeedItemToInterestedUsers = (keyspace, user, object, interest, type, next) => {
     const jobData = {
       keyspace,
       user,
-      object,
-      interest: object.interest,
+      interest,
       content_type: object.content_type,
       id: object[type],
       type,
@@ -762,6 +761,7 @@ module.exports = (api) => {
     insertMembersTimeline,
     insertFollowersTimeline,
     insertMentionedTimeline,
+    insertInterestedUsersTimelines,
     upsertTimeline,
     getFeed,
     getGroupFeed,

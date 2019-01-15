@@ -100,9 +100,8 @@ module.exports = (api) => {
     client.execute(q(keyspace, 'upsertPost'), data, {}, (err) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
-      data.push(api.common.convertContentToString(interest, content_type));
-      const object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid', 'interest'], data);
-      api.feed.addFeedItemToInterestedUsers(keyspace, user, object, 'post', (err) => {
+      const object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+      api.feed.addFeedItemToInterestedUsers(keyspace, user, object, interest, 'post', (err) => {
         if (err) { return next(err); }
         getPost(keyspace, user, post, true, next);
         api.metrics.increment('post.toInterestedUsers.add');
