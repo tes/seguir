@@ -11,9 +11,8 @@ module.exports = (api) => {
   };
 
   const getUsers = (keyspace, type, keyword, next) => {
-    api.common.get(keyspace, 'selectUsersByInterest', [type, keyword], 'many', (err, results) => {
+    client.execute(q(keyspace, 'selectUsersByInterest'), [type, keyword], {}, (err, results) => {
       if (err) { return next(err); }
-      if (!results) { return next(api.common.error(404, `Unable to find users by interest: ${type}:${keyword}`)); }
       next(null, results);
     });
   };
