@@ -44,7 +44,6 @@ databases.forEach((db) => {
         });
       });
     });
-
     describe('posts', () => {
       const timestamp = new Date(1280296860000);
 
@@ -232,6 +231,35 @@ databases.forEach((db) => {
                   expect(err).to.be(null);
                   expect(retrievedPosts.length).to.be(1);
                   done();
+                });
+              });
+            });
+          });
+        });
+      });
+
+      it('can post message to interested users', (done) => {
+        api.interest.addInterest(keyspace, users['alfred'].user, 'country', 'australia', (err, interest) => {
+          expect(err).to.be(null);
+          expect(interest.keyword).to.be('australia');
+          api.interest.addInterest(keyspace, users['cliftonc'].user, 'country', 'australia', (err, interest) => {
+            expect(err).to.be(null);
+            expect(interest.keyword).to.be('australia');
+            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, { type: 'country', keyword: 'australia' }, 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
+              expect(err).to.be(null);
+              expect(post.altid).to.be('P-1234');
+              expect(post.content).to.eql({ hello: 'This is australian...' });
+              api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
+                expect(err).to.be(null);
+                expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
+                  expect(err).to.be(null);
+                  expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                  api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, feed) => {
+                    expect(err).to.be(null);
+                    expect(feed).to.eql([]);
+                    done();
+                  });
                 });
               });
             });

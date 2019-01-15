@@ -86,6 +86,29 @@ module.exports = (api) => {
     });
   };
 
+  const addPostToInterestedUsers = (keyspace, user, content, interest, content_type, timestamp, visibility, altid, next) => {
+    if (!next) { next = altid; altid = null; }
+
+    const post = client.generateId();
+    const group = null;
+
+    const convertedContent = api.common.convertContentToString(content, content_type);
+    const originalContent = api.common.convertContentFromString(convertedContent, content_type);
+    if (!originalContent) { return next(new Error('Unable to parse input content, post not saved.')); }
+
+    const data = [post, user, group, convertedContent, content_type, timestamp, visibility, altid];
+    client.execute(q(keyspace, 'upsertPost'), data, {}, (err) => {
+      /* istanbul ignore if */
+      if (err) { return next(err); }
+      const object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
+      api.feed.addFeedItemToInterestedUsers(keyspace, user, object, interest, 'post', (err) => {
+        if (err) { return next(err); }
+        getPost(keyspace, user, post, true, next);
+        api.metrics.increment('post.toInterestedUsers.add');
+      });
+    });
+  };
+
   const updatePost = (keyspace, user, post, content, content_type, visibility, next) => {
     getPost(keyspace, user, post, (err, postItem) => {
       if (err) { return next(err); }
@@ -292,6 +315,7 @@ module.exports = (api) => {
   return {
     addPost,
     addPostToGroup,
+    addPostToInterestedUsers,
     removePost,
     removePostByAltid,
     removePostsByAltid,

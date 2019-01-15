@@ -210,7 +210,9 @@ queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, ite
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
 queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
 queries.selectGroupTimeline = 'SELECT group, time, dateOf(time) AS date, item, type FROM {KEYSPACE}.{TIMELINE} WHERE group = ? {TYPEQUERY} {OLDERTHANQUERY}';
-
+/**
+ * Comments
+ */
 queries.insertComment = 'INSERT INTO {KEYSPACE}.comments (comment, user, post, commented, commentdata) VALUES(?, ?, ?, ?, ?);';
 queries.updateComment = 'UPDATE {KEYSPACE}.comments SET commentdata = ? WHERE comment = ?';
 queries.deleteComment = 'DELETE FROM {KEYSPACE}.comments WHERE comment = ?';
@@ -219,5 +221,13 @@ queries.insertCommentsTimeline = 'INSERT INTO {KEYSPACE}.comments_timeline (post
 queries.selectCommentsTimeline = 'SELECT post, time, dateOf(time) AS date, comment FROM {KEYSPACE}.comments_timeline WHERE post = ?;';
 queries.selectCommentsByUser = 'SELECT comment, user, post, commented, commentdata FROM {KEYSPACE}.comments WHERE user = ?;';
 queries.moderateComment = 'UPDATE {KEYSPACE}.comments SET moderatedby = ? WHERE comment = ?';
-
+/**
+ * Moderators
+ */
 queries.selectModerator = 'SELECT user FROM {KEYSPACE}.moderators WHERE user = ?;';
+/**
+ * Interests
+ */
+queries.upsertInterest = 'INSERT INTO {KEYSPACE}.interests (user, type, keyword) VALUES(?, ?, ?);';
+queries.selectUsersByInterest = 'SELECT user FROM {KEYSPACE}.interests WHERE type = ? AND keyword = ?';
+queries.upsertFeedTimeline = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';

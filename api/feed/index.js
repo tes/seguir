@@ -122,6 +122,43 @@ module.exports = (api) => {
     });
   };
 
+  const insertInterestedUsersTimelines = (jobData, next) => {
+    let read = 0;
+    let finished = 0;
+    let done = false;
+    const nextIfFinished = (doNotIncrement, cb) => {
+      if (!doNotIncrement) { finished++; }
+      if (read === finished && done) { next(); } else {
+        cb();
+      }
+    };
+
+    const processRow = (row, cb) => {
+      upsertFeedTimelineForInterest(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
+    };
+
+    const { type: interest_type, keyword } = jobData.interest;
+
+    client.stream(q(jobData.keyspace, 'selectUsersByInterest'), [interest_type, keyword], (err, stream) => {
+      if (err) { return next(err); }
+
+      stream
+        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
+
+      stream
+        .on('data', () => {
+          read++;
+        })
+        .on('end', () => {
+          done = true;
+          nextIfFinished(true, () => {});
+        })
+        .on('error', err => {
+          next(err);
+        });
+    });
+  };
+
   const insertMentionedTimeline = (jobData, next) => {
     const getPost = cb => {
       api.post.getPost(jobData.keyspace, jobData.user, jobData.id, (err, post) => {
@@ -285,6 +322,27 @@ module.exports = (api) => {
     ], next);
   };
 
+  const addFeedItemToInterestedUsers = (keyspace, user, object, interest, type, next) => {
+    const jobData = {
+      keyspace,
+      user,
+      interest,
+      content_type: object.content_type,
+      id: object[type],
+      type,
+      timestamp: client.generateTimeId(object.timestamp),
+      visibility: object.visibility,
+    };
+
+    debug('Adding feed item', user, object, type);
+
+    if (messaging.enabled) {
+      messaging.submit('seguir-publish-to-interested-users', jobData, next);
+    } else {
+      insertInterestedUsersTimelines(jobData, next);
+    }
+  };
+
   const notify = (keyspace, action, user, item) => {
     const NOTIFY_Q = 'seguir-notify';
     if (!messaging.enabled || !messaging.feed) { return; }
@@ -364,6 +422,15 @@ module.exports = (api) => {
     debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
     api.metrics.increment(`feed.group_timeline.${type}`);
+  };
+
+  const upsertFeedTimelineForInterest = (keyspace, user, item, type, time, next) => {
+    const visibility = api.visibility.PERSONAL;
+    const data = [user, item, type, time, visibility];
+    notify(keyspace, 'feed-add', user, { item, type });
+    debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility);
+    client.execute(q(keyspace, 'upsertFeedTimeline'), data, {}, next);
+    api.metrics.increment(`feed.feed_timeline.${type}`);
   };
 
   const removeFeedsForItem = (keyspace, item, next) => {
@@ -688,11 +755,13 @@ module.exports = (api) => {
   return {
     addFeedItem,
     addFeedItemToGroup,
+    addFeedItemToInterestedUsers,
     removeFeedsForItem,
     removeFeedsOlderThan,
     insertMembersTimeline,
     insertFollowersTimeline,
     insertMentionedTimeline,
+    insertInterestedUsersTimelines,
     upsertTimeline,
     getFeed,
     getGroupFeed,
