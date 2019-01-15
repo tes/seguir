@@ -239,17 +239,25 @@ databases.forEach((db) => {
       });
 
       it('can post message to interested users', (done) => {
-        api.interest.addInterest(keyspace, users['alfred'].user, 'country', 'australia', (err, interest) => {
+        api.interest.addInterest(keyspace, users['json'].user, 'country', 'australia', (err, interest) => {
           expect(err).to.be(null);
           expect(interest.keyword).to.be('australia');
-          api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, { type: 'country', keyword: 'australia' }, 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
+          api.interest.addInterest(keyspace, users['cliftonc'].user, 'country', 'australia', (err, interest) => {
             expect(err).to.be(null);
-            expect(post.altid).to.be('P-1234');
-            expect(post.content).to.eql({ hello: 'This is australian...' });
-            api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
+            expect(interest.keyword).to.be('australia');
+            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, { type: 'country', keyword: 'australia' }, 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
               expect(err).to.be(null);
-              expect(feed[0].content).to.eql({ hello: 'This is australian...' });
-              done();
+              expect(post.altid).to.be('P-1234');
+              expect(post.content).to.eql({ hello: 'This is australian...' });
+              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
+                expect(err).to.be(null);
+                expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
+                  expect(err).to.be(null);
+                  expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                  done();
+                });
+              });
             });
           });
         });

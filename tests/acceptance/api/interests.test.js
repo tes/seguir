@@ -62,16 +62,14 @@ databases.forEach((db) => {
       it('can retrieve multiple users by interest', (done) => {
         api.interest.getUsers(keyspace, 'subject', 'english', (err, results) => {
           expect(err).to.be(null);
-          const interestedUsers = results.map((result) => _.map(result, (item) => item.toString()));
-          const interestedUsersFlatten = [].concat.apply([], interestedUsers);
-          expect(interestedUsersFlatten.length).to.be(3);
-          expect(interestedUsersFlatten).to.contain(users['ted'].user.toString());
-          expect(interestedUsersFlatten).to.contain(users['phteven'].user.toString());
-          expect(interestedUsersFlatten).to.contain(users['cliftonc'].user.toString());
+          const interestedUsers = results.map((result) => result.user.toString());
+          expect(interestedUsers.length).to.be(3);
+          expect(interestedUsers).to.contain(users['ted'].user.toString());
+          expect(interestedUsers).to.contain(users['phteven'].user.toString());
+          expect(interestedUsers).to.contain(users['cliftonc'].user.toString());
           done();
         });
       });
     });
   });
 });
-
