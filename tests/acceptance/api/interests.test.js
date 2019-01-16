@@ -37,29 +37,28 @@ databases.forEach((db) => {
       });
     });
 
-    describe('interests', () => {
+    describe.only('interests', () => {
       it('can add user\'s interest and retrieve multiple users by interest', (done) => {
-        api.interest.addInterest(keyspace, users['cliftonc'].user, 'subject', 'english', (err, interest) => {
+        api.interest.upsertInterests(keyspace, users['cliftonc'].user, [ {type: 'subject', keyword: 'english'}, {type: 'workplace', keyword: 'primary'} ], (err, interest) => {
           expect(err).to.be(null);
-          expect(interest.user).to.be(users['cliftonc'].user);
-          expect(interest.type).to.be('subject');
-          expect(interest.keyword).to.be('english');
-          api.interest.addInterest(keyspace, users['phteven'].user, 'subject', 'english', (err, interest) => {
+          // expect(interest.user).to.be(users['cliftonc'].user);
+          // expect(interest.type).to.be('subject');
+          // expect(interest.keyword).to.be('english');
+          api.interest.upsertInterests(keyspace, users['cliftonc'].user, [ {type: 'subject', keyword: 'math'}, {type: 'workplace', keyword: 'primary'} ], (err, interest) => {
             expect(err).to.be(null);
-            expect(interest.user).to.be(users['phteven'].user);
-            expect(interest.type).to.be('subject');
-            expect(interest.keyword).to.be('english');
-            api.interest.addInterest(keyspace, users['ted'].user, 'subject', 'english', (err, interest) => {
-              expect(interest.user).to.be(users['ted'].user);
-              expect(interest.type).to.be('subject');
-              expect(interest.keyword).to.be('english');
+            // expect(interest.user).to.be(users['phteven'].user);
+            // expect(interest.type).to.be('subject');
+            // expect(interest.keyword).to.be('english');
+            api.interest.upsertInterests(keyspace, users['ted'].user, [ {type: 'subject', keyword: 'english'}, {type: 'workplace', keyword: 'primary'} ], (err, interest) => {
+              expect(err).to.be(null);
+              // expect(interest.user).to.be(users['ted'].user);
+              // expect(interest.type).to.be('subject');
+              // expect(interest.keyword).to.be('english');
               api.interest.getUsers(keyspace, 'subject', 'english', (err, results) => {
                 expect(err).to.be(null);
                 const interestedUsers = results.map((result) => result.user.toString());
-                expect(interestedUsers.length).to.be(3);
+                expect(interestedUsers.length).to.be(1);
                 expect(interestedUsers).to.contain(users['ted'].user.toString());
-                expect(interestedUsers).to.contain(users['phteven'].user.toString());
-                expect(interestedUsers).to.contain(users['cliftonc'].user.toString());
                 done();
               });
             });
