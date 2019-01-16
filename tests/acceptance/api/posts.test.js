@@ -243,7 +243,7 @@ databases.forEach((db) => {
           expect(err).to.be(null);
           api.interest.upsertInterests(keyspace, users['cliftonc'].user, [{ type: 'country', keyword: 'australia' }], (err) => {
             expect(err).to.be(null);
-            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, { type: 'country', keyword: 'australia' }, 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
+            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, [{ type: 'country', keyword: 'australia' }], 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
               expect(err).to.be(null);
               expect(post.altid).to.be('P-1234');
               expect(post.content).to.eql({ hello: 'This is australian...' });

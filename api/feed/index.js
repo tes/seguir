@@ -123,39 +123,24 @@ module.exports = (api) => {
   };
 
   const insertInterestedUsersTimelines = (jobData, next) => {
-    let read = 0;
-    let finished = 0;
-    let done = false;
-    const nextIfFinished = (doNotIncrement, cb) => {
-      if (!doNotIncrement) { finished++; }
-      if (read === finished && done) { next(); } else {
-        cb();
-      }
+    const processRow = (user, cb) => {
+      upsertFeedTimelineForInterest(jobData.keyspace, user, jobData.id, jobData.type, jobData.timestamp, cb);
     };
 
-    const processRow = (row, cb) => {
-      upsertFeedTimelineForInterest(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
+    const selectUsersByInterest = (memo, { type, keyword }, cb, pageState = null) => {
+      client.execute(q(jobData.keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (err, results, nextPageState) => {
+        if (err) { return cb(err); }
+        const users = memo.concat(results.map(({ user }) => user));
+        if (nextPageState) {
+          return selectUsersByInterest(users, { type, keyword }, cb, nextPageState);
+        }
+        return cb(null, users);
+      });
     };
 
-    const { type: interest_type, keyword } = jobData.interest;
-
-    client.stream(q(jobData.keyspace, 'selectUsersByInterest'), [interest_type, keyword], (err, stream) => {
+    async.reduce(jobData.interests, [], selectUsersByInterest, (err, users) => {
       if (err) { return next(err); }
-
-      stream
-        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
-
-      stream
-        .on('data', () => {
-          read++;
-        })
-        .on('end', () => {
-          done = true;
-          nextIfFinished(true, () => {});
-        })
-        .on('error', err => {
-          next(err);
-        });
+      async.each(_.uniq(users), processRow, next);
     });
   };
 
@@ -322,11 +307,11 @@ module.exports = (api) => {
     ], next);
   };
 
-  const addFeedItemToInterestedUsers = (keyspace, user, object, interest, type, next) => {
+  const addFeedItemToInterestedUsers = (keyspace, user, object, interests, type, next) => {
     const jobData = {
       keyspace,
       user,
-      interest,
+      interests,
       content_type: object.content_type,
       id: object[type],
       type,

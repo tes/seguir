@@ -86,7 +86,7 @@ module.exports = (api) => {
     });
   };
 
-  const addPostToInterestedUsers = (keyspace, user, content, interest, content_type, timestamp, visibility, altid, next) => {
+  const addPostToInterestedUsers = (keyspace, user, content, interests, content_type, timestamp, visibility, altid, next) => {
     if (!next) { next = altid; altid = null; }
 
     const post = client.generateId();
@@ -101,7 +101,7 @@ module.exports = (api) => {
       /* istanbul ignore if */
       if (err) { return next(err); }
       const object = _.zipObject(['post', 'user', 'group', 'convertedContent', 'content_type', 'timestamp', 'visibility', 'altid'], data);
-      api.feed.addFeedItemToInterestedUsers(keyspace, user, object, interest, 'post', (err) => {
+      api.feed.addFeedItemToInterestedUsers(keyspace, user, object, interests, 'post', (err) => {
         if (err) { return next(err); }
         getPost(keyspace, user, post, true, next);
         api.metrics.increment('post.toInterestedUsers.add');
