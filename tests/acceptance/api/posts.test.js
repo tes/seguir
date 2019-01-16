@@ -239,12 +239,10 @@ databases.forEach((db) => {
       });
 
       it('can post message to interested users', (done) => {
-        api.interest.addInterest(keyspace, users['alfred'].user, 'country', 'australia', (err, interest) => {
+        api.interest.upsertInterests(keyspace, users['alfred'].user, [{ type: 'country', keyword: 'australia' }], (err) => {
           expect(err).to.be(null);
-          expect(interest.keyword).to.be('australia');
-          api.interest.addInterest(keyspace, users['cliftonc'].user, 'country', 'australia', (err, interest) => {
+          api.interest.upsertInterests(keyspace, users['cliftonc'].user, [{ type: 'country', keyword: 'australia' }], (err) => {
             expect(err).to.be(null);
-            expect(interest.keyword).to.be('australia');
             api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, { type: 'country', keyword: 'australia' }, 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
               expect(err).to.be(null);
               expect(post.altid).to.be('P-1234');
