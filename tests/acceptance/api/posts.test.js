@@ -239,23 +239,24 @@ databases.forEach((db) => {
       });
 
       it('can post message to interested users', (done) => {
-        api.interest.upsertInterests(keyspace, users['alfred'].user, [{ type: 'country', keyword: 'australia' }], (err) => {
+        const australia = { type: 'country', keyword: 'australia' };
+        const primary = { type: 'workplace', keyword: 'primary' };
+        const filterPost = (feed, id) => feed.filter(({ type }) => type === 'post').map(({ post }) => post.toString()).filter((postId) => postId === id);
+        api.interest.upsertInterests(keyspace, users['alfred'].user, [australia, primary], (err) => {
           expect(err).to.be(null);
-          api.interest.upsertInterests(keyspace, users['cliftonc'].user, [{ type: 'country', keyword: 'australia' }], (err) => {
+          api.interest.upsertInterests(keyspace, users['cliftonc'].user, [australia], (err) => {
             expect(err).to.be(null);
-            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, [{ type: 'country', keyword: 'australia' }], 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
+            api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, [australia, primary], 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
               expect(err).to.be(null);
-              expect(post.altid).to.be('P-1234');
-              expect(post.content).to.eql({ hello: 'This is australian...' });
               api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
                 expect(err).to.be(null);
-                expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                expect(filterPost(feed, post.post.toString())).to.have.length(1);
                 api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
                   expect(err).to.be(null);
-                  expect(feed[0].content).to.eql({ hello: 'This is australian...' });
+                  expect(filterPost(feed, post.post.toString())).to.have.length(1);
                   api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, feed) => {
                     expect(err).to.be(null);
-                    expect(feed).to.eql([]);
+                    expect(filterPost(feed, post.post.toString())).to.have.length(0);
                     done();
                   });
                 });
