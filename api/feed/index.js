@@ -123,17 +123,16 @@ module.exports = (api) => {
   };
 
   const insertInterestedUsersTimelines = (jobData, next) => {
-    const process = (user, cb) => {
-      upsertFeedTimelineForInterest(jobData.keyspace, user, jobData.id, jobData.type, jobData.timestamp, cb);
-    };
-
     const selectUsersByInterest = (memo, interest, cb, pageState = null) => {
       const { type, keyword } = interest;
-      api.logger.info('Finding users by interest', { interest, pageState });
-      client.execute(q(jobData.keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (err, results, nextPageState) => {
-        if (err) { return cb(err); }
+      api.logger.info('Finding users by interest', { jobData, interest, pageState });
+      client.execute(q(jobData.keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (error, results, nextPageState) => {
+        if (error) {
+          api.logger.error('Error finding users by interest', { error, jobData, interest, pageState });
+          return cb(error);
+        }
         const users = memo.concat(results.map(({ user }) => user));
-        api.logger.info('Found users by interest', { interest, found: results.length, numberOfInterestedUsers: users.length });
+        api.logger.info('Found users by interest', { jobData, interest, found: results.length, numberOfInterestedUsers: users.length });
         if (nextPageState) {
           return selectUsersByInterest(users, interest, cb, nextPageState);
         }
@@ -146,7 +145,9 @@ module.exports = (api) => {
       const interestedUsers = _.uniq(users);
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for interested users timeline', context);
-      async.each(interestedUsers, process, (err) => {
+      async.each(interestedUsers, (user, cb) => {
+        upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, cb);
+      }, (err) => {
         if (err) { return next(err); }
         api.logger.info('Processed job for interested users timeline', context);
         next();
@@ -417,15 +418,6 @@ module.exports = (api) => {
     debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
     api.metrics.increment(`feed.group_timeline.${type}`);
-  };
-
-  const upsertFeedTimelineForInterest = (keyspace, user, item, type, time, next) => {
-    const visibility = api.visibility.PERSONAL;
-    const data = [user, item, type, time, visibility];
-    notify(keyspace, 'feed-add', user, { item, type });
-    debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility);
-    client.execute(q(keyspace, 'upsertFeedTimeline'), data, {}, next);
-    api.metrics.increment(`feed.feed_timeline.${type}`);
   };
 
   const removeFeedsForItem = (keyspace, item, next) => {
