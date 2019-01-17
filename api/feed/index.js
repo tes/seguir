@@ -123,16 +123,19 @@ module.exports = (api) => {
   };
 
   const insertInterestedUsersTimelines = (jobData, next) => {
-    const processRow = (user, cb) => {
+    const process = (user, cb) => {
       upsertFeedTimelineForInterest(jobData.keyspace, user, jobData.id, jobData.type, jobData.timestamp, cb);
     };
 
-    const selectUsersByInterest = (memo, { type, keyword }, cb, pageState = null) => {
+    const selectUsersByInterest = (memo, interest, cb, pageState = null) => {
+      const { type, keyword } = interest;
+      api.logger.info('Finding users by interest', { interest, pageState });
       client.execute(q(jobData.keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (err, results, nextPageState) => {
         if (err) { return cb(err); }
         const users = memo.concat(results.map(({ user }) => user));
+        api.logger.info('Found users by interest', { interest, found: results.length, numberOfInterestedUsers: users.length });
         if (nextPageState) {
-          return selectUsersByInterest(users, { type, keyword }, cb, nextPageState);
+          return selectUsersByInterest(users, interest, cb, nextPageState);
         }
         return cb(null, users);
       });
@@ -140,7 +143,14 @@ module.exports = (api) => {
 
     async.reduce(jobData.interests, [], selectUsersByInterest, (err, users) => {
       if (err) { return next(err); }
-      async.each(_.uniq(users), processRow, next);
+      const interestedUsers = _.uniq(users);
+      const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
+      api.logger.info('Processing job for interested users timeline', context);
+      async.each(interestedUsers, process, (err) => {
+        if (err) { return next(err); }
+        api.logger.info('Processed job for interested users timeline', context);
+        next();
+      });
     });
   };
 
