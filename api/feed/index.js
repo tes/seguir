@@ -123,38 +123,28 @@ module.exports = (api) => {
   };
 
   const insertInterestedUsersTimelines = (jobData, next) => {
-    const selectUsersByInterest = (memo, interest, cb, pageState = null) => {
-      const { type, keyword } = interest;
-      const context = { jobData, interest, pageState };
-      api.logger.info('Finding users by interest', context);
-      client.execute(q(jobData.keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (error, results, nextPageState) => {
+    const selectUsersByInterest = (memo, interest, cb) => {
+      api.interest.getUsers(jobData.keyspace, interest, memo, cb);
+    };
+    const upsertPostToFeedTimeline = (context) => (user, cb) => {
+      upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, (error) => {
         if (error) {
-          api.logger.error('Error finding users by interest', Object.assign({}, context, { error }));
+          api.logger.error('Error processing job for interested user', Object.assign({ }, context, { error }));
           return cb(error);
         }
-        const users = memo.concat(results.map(({ user }) => user));
-        api.logger.info('Found users by interest', Object.assign({}, context, { found: results.length, numberOfInterestedUsers: users.length }));
-        if (nextPageState) {
-          return selectUsersByInterest(users, interest, cb, nextPageState);
-        }
-        return cb(null, users);
+        cb();
       });
     };
 
-    async.reduce(jobData.interests, [], selectUsersByInterest, (err, users) => {
-      if (err) { return next(err); }
+    async.reduce(jobData.interests, [], selectUsersByInterest, (error, users) => {
+      if (error) {
+        api.logger.error('Error finding users by interests', { jobData, error });
+        return next(error);
+      }
       const interestedUsers = _.uniq(users);
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for interested users timeline', context);
-      async.each(interestedUsers, (user, cb) => {
-        upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, (error) => {
-          if (error) {
-            api.logger.error('Error processing job for interested user', Object.assign({ }, context, { error }));
-            return cb(error);
-          }
-          cb();
-        });
-      }, (err) => {
+      async.each(interestedUsers, upsertPostToFeedTimeline(context), (err) => {
         if (err) { return next(err); }
         api.logger.info('Processed job for interested users timeline', context);
         next();

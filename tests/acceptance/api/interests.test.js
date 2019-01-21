@@ -45,12 +45,12 @@ databases.forEach((db) => {
             expect(err).to.be(null);
             api.interest.upsertInterests(keyspace, users['ted'].user, [{ type: 'subject', keyword: 'english' }, { type: 'workplace', keyword: 'primary' }], (err) => {
               expect(err).to.be(null);
-              api.interest.getUsers(keyspace, 'subject', 'english', (err, results) => {
+              api.interest.getUsers(keyspace, { type: 'subject', keyword: 'english' }, (err, results) => {
                 expect(err).to.be(null);
                 const interestedUsers = results.map((result) => result.user.toString());
                 expect(interestedUsers.length).to.be(1);
                 expect(interestedUsers).to.contain(users['ted'].user.toString());
-                api.interest.getUsers(keyspace, 'workplace', 'primary', (err, results) => {
+                api.interest.getUsers(keyspace, { type: 'workplace', keyword: 'primary' }, (err, results) => {
                   expect(err).to.be(null);
                   const interestedUsers = results.map((result) => result.user.toString());
                   expect(interestedUsers.length).to.be(2);

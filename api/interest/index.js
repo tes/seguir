@@ -19,10 +19,31 @@ module.exports = (api) => {
     });
   };
 
-  const getUsers = (keyspace, type, keyword, next) => {
-    client.execute(q(keyspace, 'selectUsersByInterest'), [type, keyword], {}, (err, results) => {
-      if (err) { return next(err); }
-      next(null, results);
+  const getUsers = (keyspace, interest, memo, options, next) => {
+    if (!next) { // getAllUsers(interest, memo, next)
+      next = options;
+      options = {};
+    }
+    if (!next) { // getAllUsers(interest, next)
+      next = memo;
+      memo = [];
+    }
+
+    const { type, keyword } = interest;
+    const { pageState } = options;
+    const context = { interest, pageState };
+    api.logger.info('Finding users by interest', context);
+    client.execute(q(keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (error, results, nextPageState) => {
+      if (error) {
+        api.logger.error('Error finding users by interest', Object.assign({}, context, { error }));
+        return next(error);
+      }
+      const users = memo.concat(results.map(({ user }) => user));
+      api.logger.info('Found users by interest', Object.assign({}, context, { found: results.length, numberOfInterestedUsers: users.length }));
+      if (nextPageState) {
+        return getUsers(keyspace, interest, users, { pageState: nextPageState }, next);
+      }
+      return next(null, users);
     });
   };
 
