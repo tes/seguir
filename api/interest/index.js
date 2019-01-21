@@ -20,11 +20,11 @@ module.exports = (api) => {
   };
 
   const getUsers = (keyspace, interest, memo, options, next) => {
-    if (!next) { // getAllUsers(interest, memo, next)
+    if (!next) { // getAllUsers(keyspace, interest, memo, next)
       next = options;
       options = {};
     }
-    if (!next) { // getAllUsers(interest, next)
+    if (!next) { // getAllUsers(keyspace, interest, next)
       next = memo;
       memo = [];
     }
@@ -38,7 +38,7 @@ module.exports = (api) => {
         api.logger.error('Error finding users by interest', Object.assign({}, context, { error }));
         return next(error);
       }
-      const users = memo.concat(results.map(({ user }) => user));
+      const users = memo.concat(results);
       api.logger.info('Found users by interest', Object.assign({}, context, { found: results.length, numberOfInterestedUsers: users.length }));
       if (nextPageState) {
         return getUsers(keyspace, interest, users, { pageState: nextPageState }, next);

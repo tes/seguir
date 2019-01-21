@@ -141,7 +141,7 @@ module.exports = (api) => {
         api.logger.error('Error finding users by interests', { jobData, error });
         return next(error);
       }
-      const interestedUsers = _.uniq(users);
+      const interestedUsers = _.uniq(users.map(({ user }) => user));
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for interested users timeline', context);
       async.each(interestedUsers, upsertPostToFeedTimeline(context), (err) => {
