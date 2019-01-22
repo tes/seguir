@@ -123,39 +123,32 @@ module.exports = (api) => {
   };
 
   const insertInterestedUsersTimelines = (jobData, next) => {
-    let read = 0;
-    let finished = 0;
-    let done = false;
-    const nextIfFinished = (doNotIncrement, cb) => {
-      if (!doNotIncrement) { finished++; }
-      if (read === finished && done) { next(); } else {
+    const selectUsersByInterest = (memo, interest, cb) => {
+      api.interest.getUsers(jobData.keyspace, interest, memo, cb);
+    };
+    const upsertPostToFeedTimeline = (context) => (user, cb) => {
+      upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, (error) => {
+        if (error) {
+          api.logger.error('Error processing job for interested user', Object.assign({ }, context, { error }));
+          return cb(error);
+        }
         cb();
+      });
+    };
+
+    async.reduce(jobData.interests, [], selectUsersByInterest, (error, users) => {
+      if (error) {
+        api.logger.error('Error finding users by interests', { jobData, error });
+        return next(error);
       }
-    };
-
-    const processRow = (row, cb) => {
-      upsertFeedTimelineForInterest(jobData.keyspace, row.user, jobData.id, jobData.type, jobData.timestamp, () => { nextIfFinished(false, cb); });
-    };
-
-    const { type: interest_type, keyword } = jobData.interest;
-
-    client.stream(q(jobData.keyspace, 'selectUsersByInterest'), [interest_type, keyword], (err, stream) => {
-      if (err) { return next(err); }
-
-      stream
-        .pipe(pressure(processRow, { high: 10, low: 5, max: 20 }));
-
-      stream
-        .on('data', () => {
-          read++;
-        })
-        .on('end', () => {
-          done = true;
-          nextIfFinished(true, () => {});
-        })
-        .on('error', err => {
-          next(err);
-        });
+      const interestedUsers = _.uniq(users.map(({ user }) => user));
+      const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
+      api.logger.info('Processing job for interested users timeline', context);
+      async.each(interestedUsers, upsertPostToFeedTimeline(context), (err) => {
+        if (err) { return next(err); }
+        api.logger.info('Processed job for interested users timeline', context);
+        next();
+      });
     });
   };
 
@@ -322,11 +315,11 @@ module.exports = (api) => {
     ], next);
   };
 
-  const addFeedItemToInterestedUsers = (keyspace, user, object, interest, type, next) => {
+  const addFeedItemToInterestedUsers = (keyspace, user, object, interests, type, next) => {
     const jobData = {
       keyspace,
       user,
-      interest,
+      interests,
       content_type: object.content_type,
       id: object[type],
       type,
@@ -422,15 +415,6 @@ module.exports = (api) => {
     debug('Upsert into timeline: ', 'group_timeline', group, item, type, time);
     client.execute(q(keyspace, 'upsertGroupTimeline'), data, {}, next);
     api.metrics.increment(`feed.group_timeline.${type}`);
-  };
-
-  const upsertFeedTimelineForInterest = (keyspace, user, item, type, time, next) => {
-    const visibility = api.visibility.PERSONAL;
-    const data = [user, item, type, time, visibility];
-    notify(keyspace, 'feed-add', user, { item, type });
-    debug('Upsert into timeline: ', 'feed_timeline', user, item, type, time, visibility);
-    client.execute(q(keyspace, 'upsertFeedTimeline'), data, {}, next);
-    api.metrics.increment(`feed.feed_timeline.${type}`);
   };
 
   const removeFeedsForItem = (keyspace, item, next) => {
