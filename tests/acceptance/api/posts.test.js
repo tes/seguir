@@ -238,7 +238,7 @@ databases.forEach((db) => {
         });
       });
 
-      it('can post message to interested users', (done) => {
+      it('can post message to interested users feed', (done) => {
         const australia = { type: 'country', keyword: 'australia' };
         const primary = { type: 'workplace', keyword: 'primary' };
         const filterPost = (feed, id) => feed.filter(({ type }) => type === 'post').map(({ post }) => post.toString()).filter((postId) => postId === id);
