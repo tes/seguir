@@ -1,6 +1,6 @@
 {
   "name": "seguir",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "engines": {
     "node": ">=8"
   },
