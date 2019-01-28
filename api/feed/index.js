@@ -132,7 +132,7 @@ module.exports = (api) => {
           api.logger.error('Error processing addFeedItemToInterestedUsers job', Object.assign({ }, context, { error }));
           return cb(error);
         }
-        if (index % 1000 === 0) {
+        if (index % 100 === 0) {
           api.logger.info('Job for addFeedItemToInterestedUsers is in progress', Object.assign({ }, context, { index }));
         }
         cb();
@@ -147,7 +147,7 @@ module.exports = (api) => {
       const interestedUsers = _.uniq(users.map(({ user }) => user));
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for addFeedItemToInterestedUsers', context);
-      async.eachOfLimit(interestedUsers, 1000, upsertPostToFeedTimeline(context), (err) => {
+      async.eachOfLimit(interestedUsers, 100, upsertPostToFeedTimeline(context), (err) => {
         if (err) { return next(err); }
         api.logger.info('Processed job for addFeedItemToInterestedUsers', context);
         next();
