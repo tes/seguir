@@ -126,11 +126,14 @@ module.exports = (api) => {
     const selectUsersByInterest = (memo, interest, cb) => {
       api.interest.getUsers(jobData.keyspace, interest, memo, cb);
     };
-    const upsertPostToFeedTimeline = (context) => (user, cb) => {
+    const upsertPostToFeedTimeline = (context) => (user, index, cb) => {
       upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, (error) => {
         if (error) {
-          api.logger.error('Error processing job for interested user', Object.assign({ }, context, { error }));
+          api.logger.error('Error processing addFeedItemToInterestedUsers job', Object.assign({ }, context, { error }));
           return cb(error);
+        }
+        if (index % 1000 === 0) {
+          api.logger.info('Job for addFeedItemToInterestedUsers is in progress', Object.assign({ }, context, { index }));
         }
         cb();
       });
@@ -143,10 +146,10 @@ module.exports = (api) => {
       }
       const interestedUsers = _.uniq(users.map(({ user }) => user));
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
-      api.logger.info('Processing job for interested users timeline', context);
-      async.eachLimit(interestedUsers, 5000, upsertPostToFeedTimeline(context), (err) => {
+      api.logger.info('Processing job for addFeedItemToInterestedUsers', context);
+      async.eachOfLimit(interestedUsers, 1000, upsertPostToFeedTimeline(context), (err) => {
         if (err) { return next(err); }
-        api.logger.info('Processed job for interested users timeline', context);
+        api.logger.info('Processed job for addFeedItemToInterestedUsers', context);
         next();
       });
     });
