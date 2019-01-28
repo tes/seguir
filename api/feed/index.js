@@ -144,7 +144,7 @@ module.exports = (api) => {
       const interestedUsers = _.uniq(users.map(({ user }) => user));
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for interested users timeline', context);
-      async.each(interestedUsers, upsertPostToFeedTimeline(context), (err) => {
+      async.eachLimit(interestedUsers, 5000, upsertPostToFeedTimeline(context), (err) => {
         if (err) { return next(err); }
         api.logger.info('Processed job for interested users timeline', context);
         next();
