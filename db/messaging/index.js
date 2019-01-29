@@ -51,8 +51,14 @@ module.exports = config => {
   /**
    * Listen to a queue to process jobs
    */
-  const listen = (name, callback, next) => {
-    const worker = new RSMQWorker(name, { rsmq, autostart: true });
+  const listen = (name, options, callback, next) => {
+    if (!next) { // listen(name, callback, next)
+      next = callback;
+      callback = options;
+      options = null;
+    }
+
+    const worker = new RSMQWorker(name, Object.assign({}, options, { rsmq, autostart: true }));
     worker.on('message', (msg, cb) => {
       callback(JSON.parse(msg), cb);
     });
