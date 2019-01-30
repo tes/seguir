@@ -47,12 +47,12 @@ databases.forEach((db) => {
               expect(err).to.be(null);
               api.interest.getUsers(keyspace, { type: 'subject', keyword: 'english' }, (err, results) => {
                 expect(err).to.be(null);
-                const interestedUsers = results.map((result) => result.user.toString());
+                const interestedUsers = results.map((user) => user.toString());
                 expect(interestedUsers.length).to.be(1);
                 expect(interestedUsers).to.contain(users['ted'].user.toString());
                 api.interest.getUsers(keyspace, { type: 'workplace', keyword: 'primary' }, (err, results) => {
                   expect(err).to.be(null);
-                  const interestedUsers = results.map((result) => result.user.toString());
+                  const interestedUsers = results.map((user) => user.toString());
                   expect(interestedUsers.length).to.be(2);
                   expect(interestedUsers).to.contain(users['cliftonc'].user.toString());
                   expect(interestedUsers).to.contain(users['ted'].user.toString());

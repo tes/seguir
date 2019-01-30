@@ -144,7 +144,7 @@ module.exports = (api) => {
         api.logger.error('Error finding users by interests', { jobData, error });
         return next(error);
       }
-      const interestedUsers = _.uniq(users.map(({ user }) => user));
+      const interestedUsers = _.uniq(users);
       const context = { jobData, numberOfInterestedUsers: interestedUsers.length };
       api.logger.info('Processing job for addFeedItemToInterestedUsers', context);
       async.eachOfLimit(interestedUsers, 100, upsertPostToFeedTimeline(context), (err) => {
