@@ -196,7 +196,7 @@ queries.retrieveIndexes = 'SELECT columnfamily_name, column_name, index_name, in
  */
 queries.upsertGroup = 'INSERT INTO {KEYSPACE}.groups (group, groupdata, groupname, supergroupid) VALUES(?, ?, ?, ?);';
 queries.updateGroup = 'UPDATE {KEYSPACE}.groups SET groupname = ?, supergroupid = ?, groupdata = ? WHERE group = ?;';
-queries.upsertMember = 'INSERT INTO {KEYSPACE}.members (group, user, since) VALUES(?, ?, ?);';
+queries.upsertMember = 'INSERT INTO {KEYSPACE}.members (group, user, since, from_supergroupid) VALUES(?, ?, ?, ?);';
 queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?;';
 queries.removeMember = 'DELETE FROM {KEYSPACE}.members WHERE group = ? AND user = ?;';
 queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?;';

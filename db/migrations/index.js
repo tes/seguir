@@ -29,7 +29,6 @@ module.exports = api => {
         if (splitf.length === 2 && path.extname(f) === '.js') {
           const version = splitf[0];
           const description = splitf[1].split('.')[0];
-
           migrations.push({
             file: path.resolve(migrationsPath, f),
             type,
