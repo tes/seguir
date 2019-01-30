@@ -114,9 +114,10 @@ module.exports = (api) => {
             next(null, result);
             return;
           }
-          api.common.isUserGroupMember(keyspace, liu, group, (err) => {
+          api.common.isUserGroupMember(keyspace, liu, group, (err, member) => {
             if (!err) {
               result.isMember = true;
+              result.from_supergroupid = member.from_supergroupid;
             }
             next(null, result);
           });

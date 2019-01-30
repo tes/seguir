@@ -37,11 +37,12 @@ databases.forEach((db) => {
       });
     });
 
-    describe.only('group', () => {
+    describe('group', () => {
       it('can join a group under a supergroup', (done) => {
-        api.group.addGroup(keyspace, 'No Nonsense', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a no nonsense group....', image: '/img/1.png' } }, '2', (err, group) => {
+        api.group.addGroup(keyspace, 'No Nonsense', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a no nonsense group....', image: '/img/1.png' } }, '1', (err, group) => {
           expect(err).to.be(null);
           expect(group.groupname).to.be('No Nonsense');
+          expect(group.from_supergroupid).to.be('1');
           api.group.joinGroup(keyspace, group.group, users['phteven'].user, api.client.getTimestamp(), '2', (err, result) => {
             expect(err).to.be(null);
             expect(result.group).to.be(group.group);

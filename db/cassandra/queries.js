@@ -205,7 +205,7 @@ queries.selectGroupMembers = 'SELECT user, since from {KEYSPACE}.members WHERE g
 queries.selectGroupsBySupergroupId = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE supergroupid = ?;';
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
 queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ? ALLOW FILTERING;';
-queries.selectMemberByUserAndGroup = 'SELECT group, user, since from {KEYSPACE}.members WHERE user = ? AND group = ?;';
+queries.selectMemberByUserAndGroup = 'SELECT group, user, since, from_supergroupid from {KEYSPACE}.members WHERE user = ? AND group = ?;';
 queries.upsertGroupTimeline = 'INSERT INTO {KEYSPACE}.group_timeline (group, item, type, time) VALUES(?, ?, ?, ?);';
 queries.upsertFeedTimelineFromGroup = 'INSERT INTO {KEYSPACE}.feed_timeline (user, item, type, time, visibility, from_group) VALUES(?, ?, ?, ?, ?, ?);';
 queries.upsertUserTimelineFromGroup = 'INSERT INTO {KEYSPACE}.user_timeline (user, item, type, time, visibility) VALUES(?, ?, ?, ?, ?);';
