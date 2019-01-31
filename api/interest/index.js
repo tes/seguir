@@ -38,7 +38,7 @@ module.exports = (api) => {
         api.logger.error('Error finding users by interest', Object.assign({}, context, { error }));
         return next(error);
       }
-      const users = memo.concat(results);
+      const users = memo.concat(results.map(({ user }) => user));
       api.logger.info('Found users by interest', Object.assign({}, context, { found: results.length, numberOfInterestedUsers: users.length }));
       if (nextPageState) {
         return getUsers(keyspace, interest, users, { pageState: nextPageState }, next);
