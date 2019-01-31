@@ -19,8 +19,8 @@ module.exports = (api) => {
   const messaging = api.messaging;
   const q = client.queries;
 
-  const joinGroup = (keyspace, group, user, timestamp, cb) => {
-    const memberValues = [group, user, timestamp];
+  const joinGroup = (keyspace, group, user, timestamp, supergroupid, cb) => {
+    const memberValues = [group, user, timestamp, supergroupid];
     const countUpdate = [1, group.toString()];
 
     client.execute(q(keyspace, 'upsertMember'), memberValues, (err) => {
@@ -45,14 +45,14 @@ module.exports = (api) => {
           };
           api.post.addPostToGroup(keyspace, group, user, joinGroupContent, 'application/json', timestamp, 'public', (err) => {
             if (err) return cb(err);
-            cb(null, _zipObject(['group', 'user', 'timestamp'], memberValues));
+            cb(null, _zipObject(['group', 'user', 'timestamp', 'from_supergroupid'], memberValues));
           });
         });
       });
     });
   };
 
-  const addGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, next) => {
+  const addGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, next) => {
     if (!next) {
       next = options;
       options = {};
@@ -78,7 +78,8 @@ module.exports = (api) => {
       const groupValues = [group, groupData, groupName, supergroupId];
       client.execute(q(keyspace, 'upsertGroup'), groupValues, { cacheKey: `group:${group}` }, (err) => {
         if (err) { return next(err); }
-        joinGroup(keyspace, group, liu, timestamp, (err) => {
+        const supergroup = from_supergroupid || supergroupId;
+        joinGroup(keyspace, group, liu, timestamp, supergroup, (err) => {
           if (err) { return next(err); }
           getGroup(keyspace, group, liu, next);
         });
@@ -113,9 +114,10 @@ module.exports = (api) => {
             next(null, result);
             return;
           }
-          api.common.isUserGroupMember(keyspace, liu, group, (err) => {
+          api.common.isUserGroupMember(keyspace, liu, group, (err, member) => {
             if (!err) {
               result.isMember = true;
+              result.from_supergroupid = member.from_supergroupid;
             }
             next(null, result);
           });
