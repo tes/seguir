@@ -140,7 +140,7 @@ databases.forEach((db) => {
       it('you can add a completely personal post that only appears in the users feed', (done) => {
         api.post.addPost(keyspace, users['jenny'].user, 'Shh - this is only for me.', 'text/html', api.client.getTimestamp(), api.visibility.PERSONAL, (err, post) => {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, users['harold'].user, users['jenny'].user, (err, feed) => {
+          api.feed.getFeed(keyspace, users['harold'].user, users['jenny'].user, (err, { feed }) => {
             expect(err).to.be(null);
             const ids = _.map(_.map(feed, 'post'), (item) => item.toString());
             expect(ids).to.not.contain(post.post.toString());
@@ -156,7 +156,7 @@ databases.forEach((db) => {
           api.post.getPost(keyspace, users['json'].user, post.post, (err, getPost) => {
             expect(err).to.be(null);
             expect(getPost.content.hello).to.be('world');
-            api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
+            api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, { feed }) => {
               expect(err).to.be(null);
               expect(feed[0].content.hello).to.be('world');
               done();
@@ -248,13 +248,13 @@ databases.forEach((db) => {
             expect(err).to.be(null);
             api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, [australia, primary], 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
               expect(err).to.be(null);
-              api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, feed) => {
+              api.feed.getFeed(keyspace, users['alfred'].user, users['alfred'].user, (err, { feed }) => {
                 expect(err).to.be(null);
                 expect(filterPost(feed, post.post.toString())).to.have.length(1);
-                api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
+                api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, { feed }) => {
                   expect(err).to.be(null);
                   expect(filterPost(feed, post.post.toString())).to.have.length(1);
-                  api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, feed) => {
+                  api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, { feed }) => {
                     expect(err).to.be(null);
                     expect(filterPost(feed, post.post.toString())).to.have.length(0);
                     done();
