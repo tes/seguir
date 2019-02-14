@@ -270,7 +270,7 @@ module.exports = (api) => {
 
       api.user.mapUserIdToUser(keyspace, groupMembers, ['user'], (err, members) => {
         if (err) { return next(err); }
-        next(null, members, nextPageState);
+        next(null, { members, nextPageState });
       });
     });
   };
