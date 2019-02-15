@@ -47,8 +47,32 @@ module.exports = (api) => {
     });
   };
 
+  const eachUsers = (keyspace, interest, options, next) => {
+    if (!next) { // eachUsers(keyspace, interest, next)
+      next = options;
+      options = {};
+    }
+
+    const { type, keyword } = interest;
+    const { pageState } = options;
+    const context = { interest, pageState };
+    api.logger.info('Paging users by interest', context);
+    client.execute(q(keyspace, 'selectUsersByInterest'), [type, keyword], { pageState }, (error, results, nextPageState) => {
+      if (error) {
+        api.logger.error('Error paging users by interest', Object.assign({}, context, { error }));
+        return next(error);
+      }
+      const users = results.map(({ user }) => user);
+      api.logger.info('Paged users by interest', Object.assign({}, context, { found: results.length }));
+      next(null, users, nextPageState && (() => {
+        eachUsers(keyspace, interest, { pageState: nextPageState }, next);
+      }));
+    });
+  };
+
   return {
     upsertInterests,
     getUsers,
+    eachUsers,
   };
 };

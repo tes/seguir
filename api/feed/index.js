@@ -139,26 +139,51 @@ module.exports = (api) => {
 
     const context = { jobData };
     api.logger.info('Processing job for insertInterestedUsersTimelines', context);
-    async.reduce(jobData.interests, [], selectUsersByInterest, (error, users) => {
-      if (error) {
-        api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, context, { error }));
-        api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_find_target_audience']);
-        return next(error);
-      }
-      const interestedUsers = _.uniq(users);
-      const subContext = Object.assign({}, context, { numberOfInterestedUsers: interestedUsers.length });
-      api.logger.info('Propagating post for insertInterestedUsersTimelines', subContext);
-      async.eachOfLimit(interestedUsers, propagationBatchSize, upsertPostToFeedTimeline(subContext), (err) => {
-        if (err) {
-          api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, subContext, { error }));
-          api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_propagate']);
-          return next(err);
+    if (jobData.interests.length === 1) {
+      api.interest.eachUsers(jobData.keyspace, jobData.interests[0], (error, users, nextUsers) => {
+        if (error) {
+          api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, context, { error }));
+          api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_find_target_audience']);
+          return next(error);
         }
-        api.metrics.increment('feed.interested_users_timeline.propagation');
-        api.logger.info('Processed job for insertInterestedUsersTimelines', subContext);
-        next();
+
+        async.eachOfLimit(users, propagationBatchSize, upsertPostToFeedTimeline(context), (err) => {
+          if (err) {
+            api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, context, { error }));
+            api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_propagate']);
+            return next(err);
+          }
+          if (nextUsers) {
+            return nextUsers();
+          }
+
+          api.metrics.increment('feed.interested_users_timeline.propagation');
+          api.logger.info('Processed job for insertInterestedUsersTimelines', context);
+          return next();
+        });
       });
-    });
+    } else {
+      async.reduce(jobData.interests, [], selectUsersByInterest, (error, users) => {
+        if (error) {
+          api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, context, { error }));
+          api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_find_target_audience']);
+          return next(error);
+        }
+        const interestedUsers = _.uniq(users);
+        const subContext = Object.assign({}, context, { numberOfInterestedUsers: interestedUsers.length });
+        api.logger.info('Propagating post for insertInterestedUsersTimelines', subContext);
+        async.eachOfLimit(interestedUsers, propagationBatchSize, upsertPostToFeedTimeline(subContext), (err) => {
+          if (err) {
+            api.logger.error('Failed to process job for insertInterestedUsersTimelines', Object.assign({}, subContext, { error }));
+            api.metrics.increment('feed.interested_users_timeline.propagation.error', undefined, ['error_type:failed_to_propagate']);
+            return next(err);
+          }
+          api.metrics.increment('feed.interested_users_timeline.propagation');
+          api.logger.info('Processed job for insertInterestedUsersTimelines', subContext);
+          next();
+        });
+      });
+    }
   };
 
   const insertMentionedTimeline = (jobData, next) => {
