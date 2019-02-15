@@ -273,10 +273,10 @@ databases.forEach((db) => {
           expect(err).to.be(null);
           api.post.addPostToInterestedUsers(keyspace, users['json'].user, { hello: 'This is australian...' }, [australia], 'application/json', api.client.getTimestamp(), api.visibility.PUBLIC, 'P-1234', (err, post) => {
             expect(err).to.be(null);
-            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, feed) => {
+            api.feed.getFeed(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, { feed }) => {
               expect(err).to.be(null);
               expect(filterPost(feed, post.post.toString())).to.have.length(1);
-              api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, feed) => {
+              api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, { feed }) => {
                 expect(err).to.be(null);
                 expect(filterPost(feed, post.post.toString())).to.have.length(0);
                 done();
