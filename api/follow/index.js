@@ -289,7 +289,7 @@ module.exports = (api) => {
             if (err) { return next(err); }
             api.user.mapUserIdToUser(keyspace, follows, [queryField], (err, mappedFollowers) => {
               if (err) { return next(err); }
-              next(null, mappedFollowers, nextPageState);
+              next(null, { follows: mappedFollowers, pageState: nextPageState });
             });
           });
         } else {
@@ -310,7 +310,7 @@ module.exports = (api) => {
               if (err) {
                 return next(err);
               }
-              next(null, mappedFollowers, nextPageState);
+              next(null, { follows: mappedFollowers, pageState: nextPageState });
             });
           });
         }
@@ -375,7 +375,7 @@ module.exports = (api) => {
 
   // can't use pageState as per usual, as we are removing values. simply use it as indicator of more records
   const removeAllFollowersByUser = (keyspace, user, next) => {
-    getFollowers(keyspace, user, user, {}, (err, followers, pageState) => {
+    getFollowers(keyspace, user, user, {}, (err, { follows: followers, pageState }) => {
       if (err) { return next(err); }
       async.map(followers, (follower, cb) => {
         removeFollower(keyspace, user, follower.user_follower.user, cb);
@@ -388,7 +388,7 @@ module.exports = (api) => {
   };
 
   const removeAllFollowingByUser = (keyspace, user, next) => {
-    getFollowing(keyspace, user, user, {}, (err, followings, pageState) => {
+    getFollowing(keyspace, user, user, {}, (err, { follows: followings, pageState }) => {
       if (err) { return next(err); }
       async.map(followings, (following, cb) => {
         removeFollower(keyspace, following.user.user, user, cb);

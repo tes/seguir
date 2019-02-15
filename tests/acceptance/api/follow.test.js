@@ -155,7 +155,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user and get it in the right order', (done) => {
-        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds[0]).to.be(users['ted'].user.toString());
@@ -165,7 +165,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user and get it in the right order', (done) => {
-        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds[0]).to.be(users['bill'].user.toString());
@@ -175,18 +175,18 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user and paginate through it', (done) => {
-        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1 }, (err1, followers1, pageState1) => {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1 }, (err1, { follows: followers1, pageState: pageState1 }) => {
           expect(err1).to.be(null);
           expect(followers1.length).to.be(1);
           expect(followers1[0].user_follower.user.toString()).to.be(users['ted'].user.toString());
           expect(pageState1).not.to.be(null);
-          api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState1 }, (err2, followers2, pageState2) => {
+          api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState1 }, (err2, { follows: followers2, pageState: pageState2 }) => {
             expect(err2).to.be(null);
             expect(followers2.length).to.be(1);
             expect(followers2[0].user_follower.user.toString()).to.be(users['phteven'].user.toString());
             if (pageState2) {
               // Cassandra specific: Cassandra returns a page state unless there are zero results
-              api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState2 }, (err3, followers3, pageState3) => {
+              api.follow.getFollowers(keyspace, users['cliftonc'].user, users['cliftonc'].user, { pageSize: 1, pageState: pageState2 }, (err3, { pageState: pageState3 }) => {
                 expect(pageState3).to.be(null);
                 done();
               });
@@ -198,7 +198,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user and paginate through it', (done) => {
-        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, { pageSize: 1 }, (err1, following1, pageState1) => {
+        api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, { pageSize: 1 }, (err1, { follows: following1, pageState: pageState1 }) => {
           expect(err1).to.be(null);
           expect(following1.length).to.be(1);
           expect(following1[0].user.username.toString()).to.be(users['bill'].username.toString());
@@ -206,7 +206,7 @@ databases.forEach((db) => {
           api.follow.getFollowing(keyspace, users['aamir'].user, users['aamir'].user, {
             pageSize: 2,
             pageState: pageState1,
-          }, (err2, following2, pageState2) => {
+          }, (err2, { follows: following2, pageState: pageState2 }) => {
             expect(err2).to.be(null);
             expect(following2.length).to.be(1);
             expect(following2[0].user.username.toString()).to.be(users['json'].username.toString());
@@ -233,7 +233,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user when not logged in', (done) => {
-        api.follow.getFollowers(keyspace, null, users['cliftonc'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, null, users['cliftonc'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds).to.contain(users['phteven'].user.toString());
@@ -243,7 +243,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user when not logged in', (done) => {
-        api.follow.getFollowing(keyspace, null, users['aamir'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, null, users['aamir'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.contain(users['json'].user.toString());
@@ -253,7 +253,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user but will not show personal if not the user', (done) => {
-        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['alfred'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['alfred'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           expect(followers.length).to.be(0);
           done();
@@ -261,7 +261,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user but will not show personal if not the user', (done) => {
-        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.not.contain(users['bill'].user.toString());
@@ -270,7 +270,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user but will show personal if one of the two users', (done) => {
-        api.follow.getFollowers(keyspace, users['alfred'].user, users['alfred'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, users['alfred'].user, users['alfred'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds).to.contain(users['jenny'].user.toString());
@@ -279,7 +279,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user but will show personal if one of the two users', (done) => {
-        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.contain(users['bill'].user.toString());
@@ -288,7 +288,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user but will show private if one of the two users', (done) => {
-        api.follow.getFollowers(keyspace, users['harold'].user, users['harold'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, users['harold'].user, users['harold'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds).to.contain(users['jenny'].user.toString());
@@ -297,7 +297,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user but will show private if one of the two users', (done) => {
-        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, users['paul'].user, users['paul'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.contain(users['json'].user.toString());
@@ -306,7 +306,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user but will not show private if not a friend', (done) => {
-        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds).to.not.contain(users['jenny'].user.toString());
@@ -315,7 +315,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user but will not show private if not a friend', (done) => {
-        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, users['cliftonc'].user, users['paul'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.not.contain(users['json'].user.toString());
@@ -324,7 +324,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of followers for a user but will not show private if not logged in', (done) => {
-        api.follow.getFollowers(keyspace, null, users['harold'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, null, users['harold'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
           expect(followerIds).to.not.contain(users['jenny'].user.toString());
@@ -333,7 +333,7 @@ databases.forEach((db) => {
       });
 
       it('can retrieve a list of following for a user but will not show private if not logged in', (done) => {
-        api.follow.getFollowing(keyspace, null, users['paul'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, null, users['paul'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
           expect(followingIds).to.not.contain(users['json'].user.toString());
@@ -344,7 +344,7 @@ databases.forEach((db) => {
       it('can retrieve a list of followers for a user but will show private if a friend', (done) => {
         api.friend.addFriend(keyspace, users['cliftonc'].user, users['harold'].user, api.client.getTimestamp(), (err) => {
           expect(err).to.be(null);
-          api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, (err, followers) => {
+          api.follow.getFollowers(keyspace, users['cliftonc'].user, users['harold'].user, (err, { follows: followers }) => {
             expect(err).to.be(null);
             const followerIds = _.map(_.map(followers, 'user_follower'), (item) => item.user.toString());
             expect(followerIds).to.contain(users['jenny'].user.toString());
@@ -356,7 +356,7 @@ databases.forEach((db) => {
       it('can retrieve a list of following for a user but will show private if a friend', (done) => {
         api.friend.addFriend(keyspace, users['cliftonc'].user, users['jenny'].user, api.client.getTimestamp(), (err) => {
           expect(err).to.be(null);
-          api.follow.getFollowing(keyspace, users['cliftonc'].user, users['jenny'].user, (err, following) => {
+          api.follow.getFollowing(keyspace, users['cliftonc'].user, users['jenny'].user, (err, { follows: following }) => {
             expect(err).to.be(null);
             const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
             expect(followingIds).to.contain(users['harold'].user.toString());
@@ -378,7 +378,7 @@ databases.forEach((db) => {
               done();
             });
 
-            api.follow.getFollowing(keyspace, users['harold'].user, users['harold'].user, (err, following) => {
+            api.follow.getFollowing(keyspace, users['harold'].user, users['harold'].user, (err, { follows: following }) => {
               expect(err).to.be(null);
               const followingIds = _.map(_.map(following, 'user'), (item) => item.user.toString());
               expect(followingIds).to.not.contain(users['bill'].user.toString());
@@ -414,7 +414,7 @@ databases.forEach((db) => {
       it('can see the status of your relationship with another users followers', (done) => {
         api.follow.addFollower(keyspace, users['jenny'].user, users['phteven'].user, api.client.getTimestamp(), api.visibility.PUBLIC, (err) => {
           expect(err).to.be(null);
-          api.follow.getFollowers(keyspace, users['phteven'].user, users['cliftonc'].user, (err, followers) => {
+          api.follow.getFollowers(keyspace, users['phteven'].user, users['cliftonc'].user, (err, { follows: followers }) => {
             expect(err).to.be(null);
             expect(followers[0].liuIsFollowing).to.be(true);
             expect(followers[0].liuIsUser).to.be(false);
@@ -434,7 +434,7 @@ databases.forEach((db) => {
       });
 
       it('can see the follower and following Counts for non-logged in followers', (done) => {
-        api.follow.getFollowers(keyspace, null, users['cliftonc'].user, (err, followers) => {
+        api.follow.getFollowers(keyspace, null, users['cliftonc'].user, (err, { follows: followers }) => {
           expect(err).to.be(null);
           expect(followers[0].followerCount).to.be(2);
           expect(followers[0].followingCount).to.be(3);
@@ -447,7 +447,7 @@ databases.forEach((db) => {
       });
 
       it('can see the follower and following Counts for non-logged in following', (done) => {
-        api.follow.getFollowing(keyspace, null, users['cliftonc'].user, (err, following) => {
+        api.follow.getFollowing(keyspace, null, users['cliftonc'].user, (err, { follows: following }) => {
           expect(err).to.be(null);
           expect(following[0].followerCount).to.be(2);
           expect(following[0].followingCount).to.be(3);

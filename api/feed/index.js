@@ -749,12 +749,13 @@ module.exports = (api) => {
               }
             });
 
-            next(null, feed, nextPageState);
+
+            next(null, { feed, nextPageState });
           });
         });
       } else {
         if (err) { return next(err); }
-        next(null, []);
+        next(null, { feed: [] });
       }
     });
   };

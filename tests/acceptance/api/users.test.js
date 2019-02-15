@@ -174,7 +174,7 @@ databases.forEach((db) => {
           userdata: { type: 'sheep' },
         }, (err, user) => {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, user.user, user.user, (err, feed) => {
+          api.feed.getFeed(keyspace, user.user, user.user, (err, { feed }) => {
             expect(err).to.be(null);
             expect(feed[2].post).to.eql(actionResults['post-public'].post);
             done();
@@ -187,7 +187,7 @@ databases.forEach((db) => {
           expect(err).to.be(null);
           api.follow.addFollower(keyspace, users['cliftonc'].user, user.user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', (err, follow) => {
             expect(err).to.be(null);
-            api.feed.getFeed(keyspace, user.user, user.user, (err, feed) => {
+            api.feed.getFeed(keyspace, user.user, user.user, (err, { feed }) => {
               expect(err).to.be(null);
               expect(feed[0].follow).to.eql(follow.follow);
               expect(feed[1].post).to.eql(actionResults['post-public'].post);
@@ -200,13 +200,13 @@ databases.forEach((db) => {
       it('if I unfollow a user who I backfilled I no longer see their items in my feed', (done) => {
         api.follow.addFollower(keyspace, users['cliftonc'].user, users['json'].user, api.client.getTimestamp(), api.visibility.PUBLIC, '1d', (err, follow) => {
           expect(err).to.be(null);
-          api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feed) => {
+          api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, { feed }) => {
             expect(err).to.be(null);
             expect(feed[0].follow).to.eql(follow.follow);
             expect(feed[1].post).to.eql(actionResults['post-public'].post);
             api.follow.removeFollower(keyspace, users['cliftonc'].user, users['json'].user, (err) => {
               expect(err).to.be(null);
-              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, feedItems) => {
+              api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, { feed: feedItems }) => {
                 expect(err).to.be(null);
                 expect(feedItems.length).to.eql(0);
                 done();
