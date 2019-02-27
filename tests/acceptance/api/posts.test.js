@@ -257,7 +257,12 @@ databases.forEach((db) => {
                   api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, { feed }) => {
                     expect(err).to.be(null);
                     expect(filterPost(feed, post.post.toString())).to.have.length(0);
-                    done();
+                    // the author should get the post as well
+                    api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, { feed }) => {
+                      expect(err).to.be(null);
+                      expect(filterPost(feed, post.post.toString())).to.have.length(1);
+                      done();
+                    });
                   });
                 });
               });

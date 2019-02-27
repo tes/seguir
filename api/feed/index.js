@@ -363,11 +363,14 @@ module.exports = (api) => {
 
     debug('Adding feed item', user, object, type);
 
-    if (messaging.enabled) {
-      messaging.submit('seguir-publish-to-interested-users', jobData, next);
-    } else {
-      insertInterestedUsersTimelines(jobData, next);
-    }
+    upsertTimeline(jobData.keyspace, 'feed_timeline', user, jobData.id, jobData.type, jobData.timestamp, api.visibility.PERSONAL, (error) => {
+      if (error) { return next(error); }
+      if (messaging.enabled) {
+        messaging.submit('seguir-publish-to-interested-users', jobData, next);
+      } else {
+        insertInterestedUsersTimelines(jobData, next);
+      }
+    });
   };
 
   const notify = (keyspace, action, user, item) => {
