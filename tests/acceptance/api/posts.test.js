@@ -238,7 +238,7 @@ databases.forEach((db) => {
         });
       });
 
-      it('can post message to interested users feed', (done) => {
+      it.only('can post message to interested users feed', (done) => {
         const australia = { type: 'country', keyword: 'australia' };
         const primary = { type: 'workplace', keyword: 'primary' };
         const filterPost = (feed, id) => feed.filter(({ type }) => type === 'post').map(({ post }) => post.toString()).filter((postId) => postId === id);
@@ -257,7 +257,12 @@ databases.forEach((db) => {
                   api.feed.getFeed(keyspace, users['ted'].user, users['ted'].user, (err, { feed }) => {
                     expect(err).to.be(null);
                     expect(filterPost(feed, post.post.toString())).to.have.length(0);
-                    done();
+                    // the author should get the post as well
+                    api.feed.getFeed(keyspace, users['json'].user, users['json'].user, (err, { feed }) => {
+                      expect(err).to.be(null);
+                      expect(filterPost(feed, post.post.toString())).to.have.length(1);
+                      done();
+                    });
                   });
                 });
               });
