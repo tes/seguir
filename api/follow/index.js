@@ -375,8 +375,9 @@ module.exports = (api) => {
 
   // can't use pageState as per usual, as we are removing values. simply use it as indicator of more records
   const removeAllFollowersByUser = (keyspace, user, next) => {
-    getFollowers(keyspace, user, user, {}, (err, { follows: followers, pageState }) => {
+    getFollowers(keyspace, user, user, {}, (err, result) => {
       if (err) { return next(err); }
+      const { follows: followers, pageState } = result;
       async.map(followers, (follower, cb) => {
         removeFollower(keyspace, user, follower.user_follower.user, cb);
       }, (err) => {
@@ -388,8 +389,9 @@ module.exports = (api) => {
   };
 
   const removeAllFollowingByUser = (keyspace, user, next) => {
-    getFollowing(keyspace, user, user, {}, (err, { follows: followings, pageState }) => {
+    getFollowing(keyspace, user, user, {}, (err, result) => {
       if (err) { return next(err); }
+      const { follows: followings, pageState } = result;
       async.map(followings, (following, cb) => {
         removeFollower(keyspace, following.user.user, user, cb);
       }, (err) => {
