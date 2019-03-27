@@ -1,4 +1,3 @@
-const restify = require('restify');
 const async = require('async');
 const userHeader = 'x-seguir-user-token';
 const authUtils = require('./utils');
@@ -198,7 +197,7 @@ const Auth = (api) => {
     const user = req.headers[userHeader];
 
     if (!appAuthorization) {
-      return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
+      return next(api.common.error(409, 'You must provide an valid Authorization header to access seguir the seguir API.'));
     }
 
     const appId = appAuthorization.split(':')[0].split(' ')[1];
@@ -206,7 +205,7 @@ const Auth = (api) => {
     checkApplicationToken(appId, (err, token) => {
       if (err) { return next(err); }
       if (!token) {
-        return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
+        return next(api.common.error(409, 'You must provide an valid Authorization header to access seguir the seguir API.'));
       }
 
       if (authUtils.validateAuthorization(req.headers, token.tokenid, token.tokensecret)) {
@@ -217,14 +216,14 @@ const Auth = (api) => {
           next(null);
         });
       } else {
-        return next(new restify.InvalidArgumentError('You must provide an valid Authorization header to access seguir the seguir API.'));
+        return next(api.common.error(409, 'You must provide an valid Authorization header to access seguir the seguir API.'));
       }
     });
   };
 
   const checkApplicationToken = (tokenid, next) => {
     if (!tokenid) {
-      return next(new restify.UnauthorizedError('You must provide an token id via the Authorization header to access seguir the seguir API.'));
+      return next(api.common.error(403, 'You must provide an token id via the Authorization header to access seguir the seguir API.'));
     }
     const token = [tokenid];
     client.get(q(keyspace, 'checkApplicationToken'), token, { cacheKey: `token:${tokenid}` }, (err, result) => {
@@ -238,7 +237,7 @@ const Auth = (api) => {
   const getUserBySeguirId = (user_keyspace, user, next) => {
     client.get(q(user_keyspace, 'selectUser'), [user], { cacheKey: `user:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by seguir id "${user}" in header "${userHeader}" does not exist.`)); }
+      if (!result) { return next(api.common.error(409, `Specified user by seguir id "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };
@@ -246,7 +245,7 @@ const Auth = (api) => {
   const getUserByAltId = (user_keyspace, user, next) => {
     client.get(q(user_keyspace, 'selectUserByAltId'), [user], { cacheKey: `useraltid:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by alternate id "${user}" in header "${userHeader}" does not exist.`)); }
+      if (!result) { return next(api.common.error(409, `Specified user by alternate id "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };
@@ -254,7 +253,7 @@ const Auth = (api) => {
   const getUserByName = (user_keyspace, user, next) => {
     client.get(q(user_keyspace, 'selectUserByUsername'), [user], { cacheKey: `username:${user}` }, (err, result) => {
       if (err) { return next(err); }
-      if (!result) { return next(new restify.InvalidArgumentError(`Specified user by name "${user}" in header "${userHeader}" does not exist.`)); }
+      if (!result) { return next(api.common.error(409, `Specified user by name "${user}" in header "${userHeader}" does not exist.`)); }
       next(null, result);
     });
   };

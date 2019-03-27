@@ -42,7 +42,6 @@
     "pg-query-stream": "^1.0.0",
     "pressure-stream": "^1.0.0",
     "redis": "^2.6.0-0",
-    "restify": "^4.0.3",
     "rsmq": "^0.7.1",
     "rsmq-worker": "^0.5.0",
     "sanitize-html": "^1.11.4",
