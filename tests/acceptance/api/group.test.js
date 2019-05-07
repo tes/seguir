@@ -38,6 +38,16 @@ databases.forEach((db) => {
     });
 
     describe('group', () => {
+      it('can create a public group', (done) => {
+        api.group.addGroup(keyspace, 'A public group', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a public group....', image: '/img/1.png' } }, '1', (err, group) => {
+          expect(err).to.be(null);
+          expect(group.groupname).to.be('A public group');
+          expect(group.member_from_supergroupid).to.be('1');
+          expect(group.is_private).to.be(false);
+          done();
+        });
+      });
+
       it('can join a group under a supergroup', (done) => {
         api.group.addGroup(keyspace, 'No Nonsense', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a no nonsense group....', image: '/img/1.png' } }, '1', (err, group) => {
           expect(err).to.be(null);
