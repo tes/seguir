@@ -14,6 +14,7 @@ const Long = cassandra.types.Long;
 const debug = require('debug')('seguir:cassandra:cache');
 const UUID_COLUMNS = ['account', 'tokenid', 'appid', 'post', 'user', 'follow', 'user_follower', 'friend', 'user_friend', 'friend_request', 'like', 'comment', 'group', 'item'];
 const MAP_COLUMNS = ['userdata', 'commentdata', 'groupdata'];
+const BOOLEAN_COLUMNS = ['is_private'];
 const TIMEUUID_COLUMNS = ['time'];
 const LONG_COLUMNS = ['count'];
 const TIMESTAMP_COLUMNS = ['since', 'posted', 'commented'];
@@ -68,7 +69,7 @@ module.exports = (config, logger, next) => {
     // May be a more performant way to do this later
     const clone = Object.assign({}, object);
 
-    _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS).forEach((item) => {
+    _.union(UUID_COLUMNS, TIMEUUID_COLUMNS, LONG_COLUMNS, BOOLEAN_COLUMNS).forEach((item) => {
       if (clone[item]) { clone[item] = clone[item].toString(); }
     });
 
@@ -79,7 +80,9 @@ module.exports = (config, logger, next) => {
 
     // Trim any null properties as redis doesn't allow them in HMSET
     for (const p in clone) { // eslint-disable-line no-restricted-syntax
-      if (!clone[p]) delete clone[p];
+      if (clone[p] === undefined || clone[p] === null) {
+        delete clone[p];
+      }
     }
     return clone;
   };
@@ -109,6 +112,10 @@ module.exports = (config, logger, next) => {
       // Convert any timestamps back from strings
       TIMESTAMP_COLUMNS.forEach((item) => {
         if (clone[item]) { clone[item] = new Date(clone[item]); }
+      });
+
+      BOOLEAN_COLUMNS.forEach((item) => {
+        if (clone[item]) { clone[item] = clone[item] === 'true'; }
       });
 
       return clone;
