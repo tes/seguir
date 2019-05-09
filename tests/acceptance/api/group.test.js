@@ -48,6 +48,16 @@ databases.forEach((db) => {
         });
       });
 
+      it('can create a private group', (done) => {
+        api.group.addPrivateGroup(keyspace, 'A private group', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a private group....', image: '/img/1.png' } }, '1', (err, group) => {
+          expect(err).to.be(null);
+          expect(group.groupname).to.be('A private group');
+          expect(group.member_from_supergroupid).to.be('1');
+          expect(group.is_private).to.be(true);
+          done();
+        });
+      });
+
       it('can join a group under a supergroup', (done) => {
         api.group.addGroup(keyspace, 'No Nonsense', '1', users['cliftonc'].user, api.client.getTimestamp(), { groupData: { description: 'this is a no nonsense group....', image: '/img/1.png' } }, '1', (err, group) => {
           expect(err).to.be(null);

@@ -52,7 +52,7 @@ module.exports = (api) => {
     });
   };
 
-  const addGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, next) => {
+  const createGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, is_private, next) => {
     if (!next) {
       next = options;
       options = {};
@@ -75,7 +75,6 @@ module.exports = (api) => {
         });
       }
 
-      const is_private = false;
       const groupValues = [group, groupData, groupName, supergroupId, is_private];
       client.execute(q(keyspace, 'upsertGroup'), groupValues, { cacheKey: `group:${group}` }, (err) => {
         if (err) { return next(err); }
@@ -88,6 +87,12 @@ module.exports = (api) => {
     });
   };
 
+  const addGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, next) =>
+    createGroup(keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, false, next);
+
+  const addPrivateGroup = (keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, next) =>
+    createGroup(keyspace, groupName, supergroupId, liu, timestamp, options, from_supergroupid, true, next);
+
   const getGroupByNameWithinSupergroup = (keyspace, groupName, supergroupId, next) => {
     client.get(q(keyspace, 'selectGroupByNameAndSupergroup'), [groupName, supergroupId], {}, (err, result) => {
       if (err) { return next(err); }
@@ -97,7 +102,7 @@ module.exports = (api) => {
   };
 
   const getGroup = (keyspace, group, liu, next) => {
-    client.get(q(keyspace, 'selectGroupById'), [group], { cacheKey: `group:${group}` }, (err, result) => {
+    client.get(q(keyspace, 'selectGroupById'), [group], { }, (err, result) => {
       if (err) {
         next(err);
         return;
@@ -292,6 +297,7 @@ module.exports = (api) => {
 
   return {
     addGroup,
+    addPrivateGroup,
     getGroup,
     getGroups,
     joinGroup,
