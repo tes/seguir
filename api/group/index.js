@@ -153,8 +153,7 @@ module.exports = (api) => {
         value.toString()
       ); // Always ensure our groupData is <text,text>
 
-      const is_private = false;
-      const groupValues = [groupName, supergroupId, groupData, group, is_private];
+      const groupValues = [groupName, supergroupId, groupData, group];
       client.execute(q(keyspace, 'updateGroup'), groupValues, { cacheKey: `group:${group}` }, (err) => {
         if (err) { return next(err); }
         next(null, _zipObject(['groupName', 'supergroupId', 'groupData', 'group'], groupValues));
