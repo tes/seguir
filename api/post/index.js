@@ -216,7 +216,6 @@ module.exports = (api) => {
             }
             api.group.getGroup(keyspace, post.group, liu, (err, group) => {
               if (err) { return next(err); }
-
               post.group = group;
               next(null, post);
             });
