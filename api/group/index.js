@@ -102,7 +102,7 @@ module.exports = (api) => {
   };
 
   const getGroup = (keyspace, group, liu, next) => {
-    client.get(q(keyspace, 'selectGroupById'), [group], { }, (err, result) => {
+    client.get(q(keyspace, 'selectGroupById'), [group], { cacheKey: `group:${group}` }, (err, result) => {
       if (err) {
         next(err);
         return;
