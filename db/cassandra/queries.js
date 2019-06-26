@@ -201,7 +201,7 @@ queries.removeGroup = 'DELETE FROM {KEYSPACE}.groups WHERE group = ?;';
 queries.removeMember = 'DELETE FROM {KEYSPACE}.members WHERE group = ? AND user = ?;';
 queries.removeMembers = 'DELETE FROM {KEYSPACE}.members WHERE group = ?;';
 queries.selectGroupById = 'SELECT group, groupdata, groupname, supergroupid, is_private from {KEYSPACE}.groups WHERE group = ?;';
-queries.selectGroupMembers = 'SELECT user, since from {KEYSPACE}.members WHERE group = ?;';
+queries.selectGroupMembers = 'SELECT * from {KEYSPACE}.members WHERE group = ?;';
 queries.selectGroupsBySupergroupId = 'SELECT group, groupdata, groupname, supergroupid, is_private from {KEYSPACE}.groups WHERE supergroupid = ?;';
 queries.selectGroupsForUser = 'SELECT group, since from {KEYSPACE}.members WHERE user = ?;';
 queries.selectGroupByNameAndSupergroup = 'SELECT group, groupdata, groupname, supergroupid, is_private from {KEYSPACE}.groups WHERE groupname = ? AND supergroupid = ? ALLOW FILTERING;';
